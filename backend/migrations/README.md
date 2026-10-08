@@ -1,10 +1,10 @@
 # Migrations — Vitalis (one table per file)
 
-31 canonical files: `001_users.sql` … `029_workout_logs.sql` + `030_seeds.sql` + `031_landing_visits.sql`.
+31 canonical files: `001_users.sql` … `029_workout_logs.sql` + `030_seeds.sql` + `031_landing_visits.sql` + `032_personal_plans.sql`.
 Each table file is self-contained (`SET FOREIGN_KEY_CHECKS=0/1` + single
 `CREATE TABLE IF NOT EXISTS`). Seeds use `INSERT IGNORE`.
 Runner `src/db/migrate.js` applies pending `*.sql` in lexicographic order,
-tracked in `_migrations`. Next migration: `032_<slug>.sql`
+tracked in `_migrations`. Next migration: `033_<slug>.sql`
 (`npm run db:create -- <slug>`).
 
 ## History
