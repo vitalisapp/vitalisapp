@@ -1,0 +1,11 @@
+# Vitalis frontend — standalone fallback (root .gitignore already covers monorepo)
+.env*
+!.env.example
+node_modules/
+dist/
+coverage/
+.nyc_output/
+*.log
+.vite/
+*.tsbuildinfo
+.DS_Store

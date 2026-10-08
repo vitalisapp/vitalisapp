@@ -9,7 +9,7 @@ each file commits per statement; re-running converges (duplicates are skipped).
 
 ```
 backend/
-├── migrations/              # canonical — 31 files, one table each (001-029) + 030_seeds + 031_landing_visits
+├── migrations/              # canonical — 32 files, one table each (001-029) + 030_seeds + 031_landing_visits + 032_personal_plans
 │   ├── 001_users.sql        # parents first (users → plans → contents → exercises…)
 │   ├── 002_plans.sql … 029_workout_logs.sql  # then alphabetical, each self-contained
 │   ├── 030_seeds.sql        # plan seeds (INSERT IGNORE)

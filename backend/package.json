@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Vitalis backend — Express + MySQL + Socket.io API",
   "main": "server.js",
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\"",
@@ -21,9 +21,9 @@
   "engines": {
     "node": ">=20"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["fitness", "express", "mysql"],
+  "author": "Vitalis",
+  "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^3.0.3",
