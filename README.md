@@ -19,6 +19,8 @@ Copy-Item frontend/.env.example frontend/.env
 Set-Location frontend; npm install; npm run dev
 ```
 
-Backend: http://localhost:3000/api/health — Frontend: http://localhost:5173
+Backend health: http://localhost:3000/api/health — Routes (dev): http://localhost:3000/api/_routes
+Frontend dev: http://localhost:5173 — Preview (after build): http://localhost:4173
+API base: http://localhost:3000/api
 
 > Secrets: never commit `.env`. Only `.env.example` is tracked.
