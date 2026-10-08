@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vitalis — Offline</title>
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #000000; color: #f1f5f1; display: flex; min-height: 100dvh; align-items: center; justify-content: center; text-align: center; padding: 32px; }
+    .card { max-width: 420px; }
+    h1 { font-size: 22px; margin: 16px 0 8px; }
+    p { opacity: .7; font-size: 14px; color: #a8c0a8; }
+    button { margin-top: 16px; padding: 12px 20px; border-radius: 12px; border: 0; background: #2E5233; color: #fff; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="font-size:44px">📶</div>
+    <h1>You're offline</h1>
+    <p>Vitalis needs a connection for fresh data. Cached dashboard and map tiles may still work. Reconnect and retry.</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+</body>
+</html>

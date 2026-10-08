@@ -1,0 +1,49 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\"",
+    "test:unit": "node --test \"tests/unit/**/*.test.js\"",
+    "test:integration": "node --test \"tests/integration/**/*.test.js\"",
+    "test:watch": "node --test --watch \"tests/**/*.test.js\"",
+    "test:coverage": "node --test --experimental-test-coverage \"tests/**/*.test.js\"",
+    "lint": "node scripts/check-syntax.js",
+    "start": "node server.js",
+    "start:prod": "node start-prod.js",
+    "dev": "node --watch server.js",
+    "db:migrate": "node src/db/migrate.js",
+    "db:migrate:dry": "node src/db/migrate.js --dry-run",
+    "db:status": "node src/db/migrate.js --dry-run",
+    "db:create": "node src/db/create-migration.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^7.4.1",
+    "google-auth-library": "^10.6.2",
+    "groq-sdk": "^1.1.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.20.0",
+    "nodemailer": "^8.0.7",
+    "socket.io": "^4.8.3",
+    "ua-parser-js": "^2.0.9",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "supertest": "^6.3.4"
+  }
+}

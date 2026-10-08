@@ -1,0 +1,19 @@
+export { default as Icon } from './Icon.jsx';
+export { default as Sidebar } from './Sidebar.jsx';
+export { default as SidebarAnalytics } from './SidebarAnalytics.jsx';
+export { default as Topbar } from './Topbar.jsx';
+export { default as BottomNav } from './BottomNav.jsx';
+export { default as LogActivityModal } from './LogActivityModal.jsx';
+export { default as FAB } from './FAB.jsx';
+// Previously deep-import only — re-exported for consistency (no logic change).
+export { default as ThemeToggle } from './ThemeToggle.jsx';
+export { default as FeedbackModal } from './FeedbackModal.jsx';
+export { default as ErrorBoundary } from './ErrorBoundary.jsx';
+export { default as Button } from './ui/Button.jsx';
+export { default as Dropdown } from './ui/Dropdown.jsx';
+export { default as Input } from './ui/Input.jsx';
+export { default as Modal } from './ui/Modal.jsx';
+export { default as Spinner } from './ui/Spinner.jsx';
+export { default as EmptyState } from './feedback/EmptyState.jsx';
+export { default as ErrorState } from './feedback/ErrorState.jsx';
+export { default as LoadingState } from './feedback/LoadingState.jsx';
