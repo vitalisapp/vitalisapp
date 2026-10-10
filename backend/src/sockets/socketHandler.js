@@ -145,6 +145,70 @@ module.exports = (io) => {
       }
     });
 
+    // Relay-only chat: the client persists via POST /api/messages first, then
+    // emits the saved row here for instant delivery. This handler NEVER
+    // writes to the DB — it only validates and forwards to the receiver's
+    // room. Friends-only: strangers can't push into anyone's room.
+    const CHAT_WINDOW_MS = 60 * 1000;
+    const CHAT_MAX_PER_WINDOW = 30; // matches REST messages limiter
+    socket.on("send-chat", async (payload) => {
+      try {
+        const senderId = socket.data.userId || getUserIdFromSocket(socket);
+        if (!senderId) {
+          socket.emit("unauthorized", { message: "Not authenticated" });
+          return;
+        }
+        const body = payload && typeof payload === "object" ? payload : {};
+        const msgSenderId = body.sender_id != null ? String(body.sender_id) : "";
+        const receiverId = body.receiver_id != null ? String(body.receiver_id) : "";
+        const content = typeof body.content === "string" ? body.content.trim() : "";
+        // Sender must be self (no impersonation), ids numeric, content bounded
+        // exactly like POST /api/messages (2000 chars).
+        if (
+          !/^\d+$/.test(msgSenderId) ||
+          !/^\d+$/.test(receiverId) ||
+          msgSenderId !== String(senderId) ||
+          content.length === 0 ||
+          content.length > 2000
+        ) {
+          socket.emit("forbidden", { message: "Invalid chat payload" });
+          return;
+        }
+        // Per-socket rate limit (socket events bypass HTTP limiters).
+        const now = Date.now();
+        const stamps = Array.isArray(socket.data.chatStamps) ? socket.data.chatStamps : [];
+        const fresh = stamps.filter((t) => now - t < CHAT_WINDOW_MS);
+        if (fresh.length >= CHAT_MAX_PER_WINDOW) {
+          socket.emit("rate-limited", { message: "Too many messages. Slow down." });
+          return;
+        }
+        fresh.push(now);
+        socket.data.chatStamps = fresh;
+        // Friends-only: accepted or close_friend in either direction.
+        const db = require("../config/db");
+        const [friends] = await db.execute(
+          `SELECT 1 FROM friendships
+           WHERE ((user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?))
+             AND status IN ('accepted', 'close_friend') LIMIT 1`,
+          [senderId, receiverId, receiverId, senderId]
+        );
+        if (!friends[0]) {
+          socket.emit("forbidden", { message: "Can only message friends" });
+          return;
+        }
+        // Forward a whitelisted shape — never blind-spread client payloads.
+        io.to(String(receiverId)).emit("receive-chat", {
+          id: body.id ?? null,
+          sender_id: Number(msgSenderId),
+          receiver_id: Number(receiverId),
+          content,
+          time: typeof body.time === "string" ? body.time.slice(0, 16) : undefined,
+        });
+      } catch (e) {
+        log.warn("[socket] send-chat failed:", e.message);
+      }
+    });
+
     socket.on("disconnect", () => {
       clearInterval(reverifyTimer);
     });
