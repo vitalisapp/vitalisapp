@@ -1,0 +1,10 @@
+# Vitalis — normalize line endings to LF on commit, keep working-tree handling automatic.
+* text=auto eol=lf
+
+# Binary assets must not be touched.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
