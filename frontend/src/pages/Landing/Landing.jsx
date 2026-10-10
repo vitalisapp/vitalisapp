@@ -130,22 +130,15 @@ const Landing = () => {
   return (
     <>
       <style>{`
-        /* Landing-only dark-mode refinement. The global dark theme uses an
-           electric-lime accent + green-tinted grays (neon-on-black = instant
-           AI look). Scope a mature palette here; the in-app theme is untouched.
+        /* Landing-only dark-mode refinement. The global dark theme now uses
+           the same muted leaf-green accent, so only Landing's neutral-gray
+           text and image treatment are scoped here.
            Light theme already ships professional greens — no overrides needed. */
         :root:not(.light-theme) .landing-scope,
         .dark-theme .landing-scope {
-          --accent: #57B26A;
-          --accent-dark: #3E8A51;
-          --accent-light: #7CCB8D;
-          --accent-bg: rgba(87, 178, 106, 0.12);
-          --accent-border: rgba(87, 178, 106, 0.30);
-          --accent-hover: #6CC07D;
           --text-secondary: #B9C0BB;
           --text-muted: #8E968F;
           --text-disabled: #6E7672;
-          --shadow-glow: none;
         }
         :root:not(.light-theme) .landing-scope img,
         .dark-theme .landing-scope img { filter: saturate(0.92); }

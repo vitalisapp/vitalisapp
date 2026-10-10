@@ -203,8 +203,8 @@ const ForgotPassword = () => {
     if (/[A-Z]/.test(newPassword))        score++;
     if (/[0-9]/.test(newPassword))        score++;
     if (/[^A-Za-z0-9]/.test(newPassword)) score++;
-    if (score <= 1) return { label: 'Weak',   color: '#ef4444', pct: '33%'  };
-    if (score <= 3) return { label: 'Medium', color: '#f59e0b', pct: '66%'  };
+    if (score <= 1) return { label: 'Weak',   color: 'var(--error)', pct: '33%'  };
+    if (score <= 3) return { label: 'Medium', color: 'var(--warning)', pct: '66%'  };
     return              { label: 'Strong', color: 'var(--accent)',  pct: '100%' };
   })();
 

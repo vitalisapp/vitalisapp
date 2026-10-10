@@ -24,10 +24,10 @@ const computeBMI = (heightCm, weightKg) => {
 };
 const bmiCategory = (bmi) => {
   if (bmi == null) return { label: '—', color: 'var(--text-disabled)' };
-  if (bmi < 18.5) return { label: 'Underweight', color: '#60a5fa' };
+  if (bmi < 18.5) return { label: 'Underweight', color: 'var(--info)' };
   if (bmi < 25) return { label: 'Normal', color: 'var(--accent)' };
-  if (bmi < 30) return { label: 'Overweight', color: '#f59e0b' };
-  return { label: 'Obese', color: '#f87171' };
+  if (bmi < 30) return { label: 'Overweight', color: 'var(--warning)' };
+  return { label: 'Obese', color: 'var(--error)' };
 };
 const calcBMR = (weight, height, age, gender) => {
   if (!weight || !height || !age) return null;
@@ -332,10 +332,10 @@ const SectionRow = ({ icon, title, subtitle, expanded, onClick, danger, rightIco
     className={`w-full flex items-center gap-3 px-4 py-4 min-h-[64px] text-left transition-colors focus-visible:outline-2 focus-visible:outline-[var(--accent)] ${danger ? 'hover:bg-red-500/5' : 'hover:bg-[var(--bg-hover)] active:bg-[var(--bg-hover)]'}`}
   >
     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border ${danger ? 'bg-red-500/10 border-red-500/20' : 'bg-[var(--bg-hover)] border-[var(--border-light)]'}`}>
-      <span className={`material-symbols-outlined text-[18px] ${danger ? 'text-[#f87171]' : 'text-[var(--accent)]'}`}>{icon}</span>
+      <span className={`material-symbols-outlined text-[18px] ${danger ? 'text-[var(--error)]' : 'text-[var(--accent)]'}`}>{icon}</span>
     </div>
     <div className="flex-1 min-w-0">
-      <p className={`text-[13px] font-bold leading-tight truncate ${danger ? 'text-[#f87171]' : 'text-[var(--text-primary)]'}`}>{title}</p>
+      <p className={`text-[13px] font-bold leading-tight truncate ${danger ? 'text-[var(--error)]' : 'text-[var(--text-primary)]'}`}>{title}</p>
       <p className="text-[11px] text-[var(--text-muted)] truncate mt-0.5">{subtitle}</p>
     </div>
     <span className={`material-symbols-outlined text-[20px] shrink-0 transition-transform text-[var(--text-muted)] ${expanded ? 'rotate-180' : ''}`}>

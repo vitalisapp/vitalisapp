@@ -82,8 +82,8 @@ function EarlyExitDialog({ mode, reps, holdSecs, minReps, minHoldSecs, elapsedMi
           <button
             onClick={onConfirm}
             className="flex-1 py-2.5 min-h-[48px] rounded-xl font-bold text-sm transition-all"
-            style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171',
-                     border: '1px solid rgba(239,68,68,0.3)' }}
+            style={{ background: 'var(--error-bg)', color: 'var(--error)',
+                     border: '1px solid var(--error)' }}
           >
             End Anyway
           </button>
