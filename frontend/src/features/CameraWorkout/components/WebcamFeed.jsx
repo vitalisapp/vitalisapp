@@ -239,7 +239,7 @@ export default function WebcamFeed({
             {cameraSupported && (
               <button
                 onClick={off ? handleTurnOn : handleRetry}
-                className="shrink-0 px-4 py-2 min-h-[40px] rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-bold active:scale-95 transition-transform"
+                className="shrink-0 px-4 py-2 min-h-[40px] rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-bold active:scale-95 transition-transform"
               >
                 {off ? 'Turn on' : 'Retry'}
               </button>
@@ -320,7 +320,7 @@ export default function WebcamFeed({
           </p>
           {streamError && (
             <button onClick={handleRetry}
-              className="px-4 py-2 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-bold">
+              className="px-4 py-2 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-bold">
               Retry camera
             </button>
           )}

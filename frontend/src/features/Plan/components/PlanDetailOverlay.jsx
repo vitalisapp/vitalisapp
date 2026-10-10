@@ -27,7 +27,7 @@ const PlanDetailOverlay = ({ plan, onClose, onStart }) => {
             />
             <div className="absolute bottom-3 sm:bottom-4 left-4 sm:left-6 flex gap-2">
               <span
-                className="px-2 py-0.5 rounded text-[9px] font-black tracking-widest uppercase bg-[var(--accent)] text-[var(--text-inverse)]"
+                className="px-2 py-0.5 rounded text-[9px] font-black tracking-widest uppercase bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]"
               >
                 {plan.tag}
               </span>

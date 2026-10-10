@@ -56,7 +56,7 @@ export default function CalendarPopup({ currentDate, today, onPick }) {
               onClick={() => pick(day)}
               className={`h-9 w-9 mx-auto rounded-full text-[13px] font-semibold flex items-center justify-center transition-colors ${
                 isSel
-                  ? 'bg-[var(--accent)] text-[var(--text-inverse)]'
+                  ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]'
                   : future
                     ? 'text-[var(--text-muted)] opacity-30'
                     : isToday

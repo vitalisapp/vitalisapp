@@ -114,7 +114,7 @@ const HelpSupport = () => {
             <div className="grid grid-cols-2 gap-2 mt-3">
               <button
                 onClick={() => setFeedbackOpen(true)}
-                className="h-10 px-3 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-bold hover:brightness-110 active:scale-[0.99] transition-all truncate"
+                className="h-10 px-3 rounded-[12px] bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-bold hover:brightness-110 active:scale-[0.99] transition-all truncate"
               >
                 Send Feedback
               </button>

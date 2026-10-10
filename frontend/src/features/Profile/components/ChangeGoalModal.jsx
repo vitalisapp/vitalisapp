@@ -122,7 +122,7 @@ const ChangeGoalModal = ({ userId, currentGoal, onClose, onUpdated, showToast })
                   <div className="flex gap-2 mt-1 flex-wrap">
                     {paceOptions.map((p) => (
                       <button type="button" key={p} onClick={() => setPace(p)}
-                        className={`h-10 px-4 rounded-full text-[12px] font-bold uppercase tracking-wider border transition-colors ${pace === p ? 'bg-[var(--accent)] text-[var(--text-inverse)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
+                        className={`h-10 px-4 rounded-full text-[12px] font-bold uppercase tracking-wider border transition-colors ${pace === p ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
                         {p}
                       </button>
                     ))}
@@ -137,7 +137,7 @@ const ChangeGoalModal = ({ userId, currentGoal, onClose, onUpdated, showToast })
             <div className="flex gap-2 mt-1 flex-wrap">
               {ACTIVITY_LEVELS.map((a) => (
                 <button type="button" key={a.key} onClick={() => setActivityLevel(a.key)} aria-pressed={activityLevel === a.key}
-                  className={`h-10 px-4 rounded-full text-[12px] font-bold uppercase tracking-wider border transition-colors ${activityLevel === a.key ? 'bg-[var(--accent)] text-[var(--text-inverse)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
+                  className={`h-10 px-4 rounded-full text-[12px] font-bold uppercase tracking-wider border transition-colors ${activityLevel === a.key ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
                   {a.label}
                 </button>
               ))}
@@ -162,7 +162,7 @@ const ChangeGoalModal = ({ userId, currentGoal, onClose, onUpdated, showToast })
               <div className="flex gap-2 mt-1 flex-wrap">
                 {opts.map((o) => (
                   <button type="button" key={o} onClick={() => set(o)} aria-pressed={val === o}
-                    className={`h-10 px-4 rounded-full text-[12px] font-bold uppercase tracking-wider border transition-colors ${val === o ? 'bg-[var(--accent)] text-[var(--text-inverse)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
+                    className={`h-10 px-4 rounded-full text-[12px] font-bold uppercase tracking-wider border transition-colors ${val === o ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
                     {humanizeOption(o)}
                   </button>
                 ))}
@@ -174,7 +174,7 @@ const ChangeGoalModal = ({ userId, currentGoal, onClose, onUpdated, showToast })
             <button type="button" onClick={onClose}
               className="flex-1 h-12 rounded-[12px] border border-[var(--border-light)] font-bold text-[13px]">Cancel</button>
             <button type="submit" disabled={saving}
-              className="flex-1 h-12 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[13px] disabled:opacity-50">
+              className="flex-1 h-12 rounded-[12px] bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[13px] disabled:opacity-50">
               {saving ? 'Updating…' : 'Update Goal'}
             </button>
           </div>

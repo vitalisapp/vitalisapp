@@ -226,7 +226,7 @@ const BottomNav = ({
                     tabIndex={menuOpen ? 0 : -1}
                     className={`group relative w-12 h-12 rounded-full flex items-center justify-center border shadow-lg transition-all duration-200 hover:scale-110 active:scale-95 ${
                       item.primary
-                        ? 'bg-[var(--accent)] border-[var(--accent-border)] text-[var(--text-inverse)]'
+                        ? 'bg-[var(--accent-solid)] border-[var(--accent-border)] text-[var(--accent-solid-fg)]'
                         : 'bg-[var(--bg-card)] border-[var(--border-light)] text-[var(--accent)] hover:bg-[var(--bg-hover)]'
                     } ${item.active ? 'ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg-card)]' : ''}`}
                   >
@@ -242,7 +242,7 @@ const BottomNav = ({
               onClick={handlePlusClick}
               aria-label={menuOpen ? 'Close menu' : 'More actions'}
               aria-expanded={menuOpen}
-              className={`relative w-14 h-14 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] flex items-center justify-center border-2 border-[var(--bg-card)] hover:scale-[1.06] active:scale-90 cursor-pointer touch-manipulation select-none shadow-lg shadow-[var(--accent)]/30 ${menuOpen ? 'rotate-45 scale-95' : 'rotate-0 scale-100'}`}
+              className={`relative w-14 h-14 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] flex items-center justify-center border-2 border-[var(--bg-card)] hover:scale-[1.06] active:scale-90 cursor-pointer touch-manipulation select-none shadow-lg shadow-[var(--accent)]/30 ${menuOpen ? 'rotate-45 scale-95' : 'rotate-0 scale-100'}`}
               style={{
                 zIndex: 2,
                 transition:
@@ -394,7 +394,7 @@ const BottomNav = ({
               </div>
               <button
                 type="submit"
-                className="w-full h-11 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[13px] flex items-center justify-center gap-1.5"
+                className="w-full h-11 rounded-[12px] bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[13px] flex items-center justify-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-[18px]">check</span> Save
               </button>

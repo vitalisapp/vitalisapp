@@ -51,7 +51,7 @@ function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose
           <Icon name="notifications" className="text-(--accent) text-[16px]" />
           <span className="text-[13px] font-bold text-(--text-primary) tracking-tight">Notifications</span>
           {unreadCount > 0 && (
-            <span className="text-[10px] font-black bg-(--accent) text-[var(--text-inverse)] px-1.5 py-0.5 rounded-full leading-none">
+            <span className="text-[10px] font-black bg-(--accent-solid) text-[var(--accent-solid-fg)] px-1.5 py-0.5 rounded-full leading-none">
               {unreadCount}
             </span>
           )}

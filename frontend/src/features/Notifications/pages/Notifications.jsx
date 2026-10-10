@@ -92,7 +92,7 @@ const Notifications = () => {
           <div className="flex gap-2 mt-4" role="group" aria-label="Read status filter">
             {['all', 'unread'].map((f) => (
               <button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f}
-                className={`h-9 px-4 rounded-full text-[12px] font-bold capitalize ${filter === f ? 'bg-[var(--accent)] text-[var(--text-inverse)]' : 'bg-[var(--bg-card)] border border-[var(--border-light)]'}`}>
+                className={`h-9 px-4 rounded-full text-[12px] font-bold capitalize ${filter === f ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]' : 'bg-[var(--bg-card)] border border-[var(--border-light)]'}`}>
                 {f}
               </button>
             ))}
@@ -100,7 +100,7 @@ const Notifications = () => {
           <div className="flex gap-2 mt-2 flex-wrap" role="group" aria-label="Category filter">
             {['ALL', ...CATS].map((c) => (
               <button key={c} onClick={() => setCat(c)} aria-pressed={cat === c}
-                className={`h-8 px-3 rounded-full text-[11px] font-bold ${cat === c ? 'bg-[var(--accent)] text-[var(--text-inverse)]' : 'bg-[var(--bg-card)] border border-[var(--border-light)] text-[var(--text-muted)]'}`}>
+                className={`h-8 px-3 rounded-full text-[11px] font-bold ${cat === c ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]' : 'bg-[var(--bg-card)] border border-[var(--border-light)] text-[var(--text-muted)]'}`}>
                 {c.charAt(0) + c.slice(1).toLowerCase()}
               </button>
             ))}

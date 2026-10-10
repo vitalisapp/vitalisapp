@@ -111,13 +111,13 @@ export function WeekStrip({ selectedDate, onDateChange }) {
               disabled={future}
               onClick={() => onDateChange(key)}
               className={`flex flex-col items-center gap-1 py-2 rounded-2xl transition-colors disabled:opacity-30 min-h-[64px] justify-center ${
-                isSel ? "bg-[var(--accent)]" : "hover:bg-[var(--bg-hover)]"
+                isSel ? "bg-[var(--accent-solid)]" : "hover:bg-[var(--bg-hover)]"
               }`}
             >
-              <span className={`text-[10px] font-semibold ${isSel ? "text-[var(--text-inverse)]" : "text-[var(--text-muted)]"}`}>
+              <span className={`text-[10px] font-semibold ${isSel ? "text-[var(--accent-solid-fg)]" : "text-[var(--text-muted)]"}`}>
                 {WEEK_LABELS[d.getDay()].slice(0, 3)}
               </span>
-              <span className={`text-[14px] font-bold tabular-nums ${isSel ? "text-[var(--text-inverse)]" : "text-[var(--text-primary)]"}`}>
+              <span className={`text-[14px] font-bold tabular-nums ${isSel ? "text-[var(--accent-solid-fg)]" : "text-[var(--text-primary)]"}`}>
                 {d.getDate()}
               </span>
             </button>

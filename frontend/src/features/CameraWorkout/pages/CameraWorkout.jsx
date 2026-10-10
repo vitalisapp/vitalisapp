@@ -668,7 +668,7 @@ const CameraWorkout = () => {
               <div className="flex items-center gap-2 flex-wrap">
                 {[30, 45, 60, 90].map((s) => (
                   <button key={s} onClick={() => setHoldTarget(s)} disabled={isRecording}
-                    className={`px-4 py-2.5 min-h-[44px] rounded-xl text-[12px] font-bold border transition-all active:scale-95 ${holdTarget === s ? 'bg-[var(--accent)] text-[var(--text-inverse)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
+                    className={`px-4 py-2.5 min-h-[44px] rounded-xl text-[12px] font-bold border transition-all active:scale-95 ${holdTarget === s ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
                     {s}s
                   </button>
                 ))}
@@ -685,7 +685,7 @@ const CameraWorkout = () => {
               <div className="flex items-center gap-2 flex-wrap">
                 {[5, 10, 15, 20].map((r) => (
                   <button key={r} onClick={() => { setRepTarget(r); setRepCustom(''); }} disabled={isRecording}
-                    className={`px-4 py-2.5 min-h-[44px] rounded-xl text-[12px] font-bold border transition-all active:scale-95 ${repTarget === r ? 'bg-[var(--accent)] text-[var(--text-inverse)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
+                    className={`px-4 py-2.5 min-h-[44px] rounded-xl text-[12px] font-bold border transition-all active:scale-95 ${repTarget === r ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
                     {r}
                   </button>
                 ))}

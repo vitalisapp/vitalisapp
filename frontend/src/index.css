@@ -35,6 +35,11 @@
   --accent-bg: rgba(78, 155, 95, 0.08);
   --accent-border: rgba(78, 155, 95, 0.22);
   --accent-hover: #5FA46E;
+  /* Solid fills: the exact light-theme green in both themes (white text).
+     Text/icons on black keep --accent — #2e5233 on black is 2.2:1 (fails AA). */
+  --accent-solid: #2e5233;
+  --accent-solid-fg: #ffffff;
+  --accent-solid-hover: #244127;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
@@ -114,6 +119,10 @@
   --accent-bg: rgba(46, 82, 51, 0.1);
   --accent-border: rgba(46, 82, 51, 0.24);
   --accent-hover: #244127;
+  /* Solid fills: identical deep green + white text in both themes. */
+  --accent-solid: #2e5233;
+  --accent-solid-fg: #ffffff;
+  --accent-solid-hover: #244127;
   --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
   --shadow-md: 0 2px 8px rgba(16, 24, 40, 0.07);
   --shadow-lg: 0 4px 16px rgba(16, 24, 40, 0.08);

@@ -21,8 +21,8 @@ export default function WorkoutSummary({ summary, onDone }) {
       role="dialog" aria-modal="true" aria-label="Workout complete">
       <div className="w-full sm:max-w-md bg-[var(--bg-primary)] border border-[var(--border-light)] rounded-t-3xl sm:rounded-3xl p-6 sm:p-8 max-h-[90dvh] overflow-y-auto">
         <div className="flex flex-col items-center text-center">
-          <span className="w-14 h-14 rounded-full bg-[var(--accent)] flex items-center justify-center mb-4">
-            <Icon name="check" className="text-[28px] text-[var(--text-inverse)]" />
+          <span className="w-14 h-14 rounded-full bg-[var(--accent-solid)] flex items-center justify-center mb-4">
+            <Icon name="check" className="text-[28px] text-[var(--accent-solid-fg)]" />
           </span>
           <h2 className="font-extrabold tracking-tight text-[var(--text-primary)]"
             style={{ fontFamily: 'var(--font-display)', fontSize: '1.7rem', lineHeight: 1.2 }}>
@@ -82,7 +82,7 @@ export default function WorkoutSummary({ summary, onDone }) {
 
         <button
           onClick={onDone}
-          className="mt-6 w-full py-3.5 rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] text-[15px] font-bold hover:bg-[var(--accent-hover)] active:scale-[0.99] transition-all min-h-[52px]"
+          className="mt-6 w-full py-3.5 rounded-xl bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[15px] font-bold hover:bg-[var(--accent-hover)] active:scale-[0.99] transition-all min-h-[52px]"
         >
           Done
         </button>

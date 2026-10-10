@@ -15,7 +15,7 @@ const StepBar = ({ current }) => (
         <React.Fragment key={label}>
           <div className="flex items-center gap-1.5">
             <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold transition-all duration-300
-              ${done   ? 'bg-[var(--accent)] text-[var(--text-inverse)]' : ''}
+              ${done   ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]' : ''}
               ${active ? 'bg-[var(--accent)]/15 border border-[var(--accent)]/50 text-[var(--accent)]' : ''}
               ${!done && !active ? 'bg-white/5 border border-white/10 text-white/20' : ''}
             `}>
@@ -100,7 +100,7 @@ const SubmitBtn = ({ loading, label, disabled = false }) => (
   <button
     type="submit"
     disabled={loading || disabled}
-    className="btn-primary w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-[15px] rounded-[10px] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 relative overflow-hidden disabled:opacity-40 disabled:cursor-not-allowed"
+    className="btn-primary w-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[11px] tracking-[0.25em] uppercase p-[15px] rounded-[10px] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 relative overflow-hidden disabled:opacity-40 disabled:cursor-not-allowed"
   >
     {loading ? (
       <><div className="w-[13px] h-[13px] rounded-full animate-spin border-2 border-black border-t-transparent" /> Processing...</>
@@ -237,9 +237,9 @@ const ForgotPassword = () => {
 
           {/* Logo */}
           <div className="flex items-center gap-2.5 mb-7">
-            <div className="w-[34px] h-[34px] bg-[var(--accent)] rounded-lg flex items-center justify-center">
+            <div className="w-[34px] h-[34px] bg-[var(--accent-solid)] rounded-lg flex items-center justify-center">
               <svg className="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none">
-                <path d="M3 12h3l3-8 4 16 3-10 2 2h3" stroke="var(--text-inverse)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 12h3l3-8 4 16 3-10 2 2h3" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             <span className="font-display font-extrabold text-[21px] tracking-[0.12em] text-[#e5e2e1]">VITALIS</span>

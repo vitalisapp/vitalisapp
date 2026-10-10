@@ -27,7 +27,7 @@ const KudosButton = ({ active, count, onToggle }) => (
     aria-label="Give kudos"
     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] font-semibold transition-all active:scale-95 ${
       active
-        ? 'bg-[var(--accent)] border-[var(--accent)] text-[var(--text-inverse)]'
+        ? 'bg-[var(--accent-solid)] border-[var(--accent-solid)] text-[var(--accent-solid-fg)]'
         : 'border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
     }`}
   >
@@ -109,7 +109,7 @@ const ActivityCard = ({
   <article className="glass-card border border-[var(--border-light)] rounded-2xl overflow-hidden">
     {/* Athlete header */}
     <div className="flex items-center gap-3 px-4 pt-4">
-      <div className="w-10 h-10 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] flex items-center justify-center font-bold text-[15px] shrink-0">
+      <div className="w-10 h-10 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] flex items-center justify-center font-bold text-[15px] shrink-0">
         {(userName || 'Y').charAt(0).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">

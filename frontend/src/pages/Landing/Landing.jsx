@@ -190,7 +190,7 @@ const Landing = () => {
             </button>
             <button
               onClick={goPrimary}
-              className="hidden sm:block px-4 py-2 rounded-lg bg-[var(--accent)] text-[var(--text-inverse)] text-[14px] font-semibold hover:bg-[var(--accent-hover)] transition-colors"
+              className="hidden sm:block px-4 py-2 rounded-lg bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[14px] font-semibold hover:bg-[var(--accent-hover)] transition-colors"
             >
               {isAuthenticated ? "Dashboard" : "Get started"}
             </button>
@@ -231,7 +231,7 @@ const Landing = () => {
                 <div className="mt-8 flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={goPrimary}
-                    className="px-6 py-3 rounded-lg bg-[var(--accent)] text-[var(--text-inverse)] text-[15px] font-semibold hover:bg-[var(--accent-hover)] transition-colors text-center"
+                    className="px-6 py-3 rounded-lg bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[15px] font-semibold hover:bg-[var(--accent-hover)] transition-colors text-center"
                   >
                     {isAuthenticated ? "Open dashboard" : "Get started free"}
                   </button>

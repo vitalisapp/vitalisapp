@@ -120,9 +120,9 @@ export default function CameraScanner({ onCapture, onClose }) {
             <button
               onClick={capture}
               aria-label="Capture meal photo"
-              className="mx-auto w-[72px] h-[72px] rounded-full bg-[var(--accent)] flex items-center justify-center ring-4 ring-[var(--accent)]/30 hover:brightness-110 active:scale-95 transition-all"
+              className="mx-auto w-[72px] h-[72px] rounded-full bg-[var(--accent-solid)] flex items-center justify-center ring-4 ring-[var(--accent)]/30 hover:brightness-110 active:scale-95 transition-all"
             >
-              <Icon name="photo_camera" className="text-[28px] text-[var(--text-inverse)]" />
+              <Icon name="photo_camera" className="text-[28px] text-[var(--accent-solid-fg)]" />
             </button>
           </>
         )}

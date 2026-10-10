@@ -107,7 +107,7 @@ const CheckEmail = () => {
                 className="w-full bg-white/5 border border-white/10 rounded-xl text-sm p-3 outline-none focus:border-[var(--accent)]/50 placeholder:text-white/10" />
               <div className="flex gap-2">
                 <button type="button" onClick={() => setChanging(false)} className="flex-1 bg-white/5 border border-white/10 rounded-xl text-[11px] font-semibold uppercase p-3">Cancel</button>
-                <button type="submit" disabled={busy} className="flex-1 bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] uppercase p-3 rounded-xl disabled:opacity-50">
+                <button type="submit" disabled={busy} className="flex-1 bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[11px] uppercase p-3 rounded-xl disabled:opacity-50">
                   {busy ? 'Saving...' : 'Update'}
                 </button>
               </div>

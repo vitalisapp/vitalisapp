@@ -72,7 +72,7 @@ export default function PersonalPlanSheet({ open, onClose, acting, error, onCrea
             type="button"
             onClick={submit}
             disabled={!valid || acting}
-            className="flex-1 h-12 min-h-[44px] px-4 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] text-[13px] font-bold disabled:opacity-40 active:scale-[0.98] transition-all"
+            className="flex-1 h-12 min-h-[44px] px-4 rounded-[12px] bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[13px] font-bold disabled:opacity-40 active:scale-[0.98] transition-all"
           >
             {acting ? 'Saving…' : isEdit ? 'Save changes' : 'Create plan'}
           </button>

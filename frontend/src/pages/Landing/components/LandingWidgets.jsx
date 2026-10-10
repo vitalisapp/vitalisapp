@@ -98,7 +98,7 @@ export const MobileMenu = ({ open, onClose, navigate }) => (
                 navigate("/register");
                 onClose();
               }}
-              className="py-3 rounded-lg bg-[var(--accent)] text-[var(--text-inverse)] text-[13px] font-bold"
+              className="py-3 rounded-lg bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[13px] font-bold"
             >
               Get started
             </button>

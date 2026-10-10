@@ -86,7 +86,7 @@ const BodyMetricsPanel = ({ USER_ID, initialWeight, initialHeight, onboarding, s
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <button onClick={()=>setEditing(false)} className="flex-1 h-12 min-h-[44px] rounded-xl border border-[var(--border-light)] text-[12px] font-bold text-[var(--text-muted)] active:scale-[0.98] transition-all">Cancel</button>
-            <button onClick={handleSave} disabled={isSaving || !weight || !height} className="flex-1 h-12 min-h-[44px] rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-black disabled:opacity-50 active:scale-[0.98] transition-all">{isSaving ? 'Saving…' : 'Save & Calculate'}</button>
+            <button onClick={handleSave} disabled={isSaving || !weight || !height} className="flex-1 h-12 min-h-[44px] rounded-xl bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-black disabled:opacity-50 active:scale-[0.98] transition-all">{isSaving ? 'Saving…' : 'Save & Calculate'}</button>
           </div>
         </div>
       ) : hasResult ? (
@@ -107,10 +107,10 @@ const BodyMetricsPanel = ({ USER_ID, initialWeight, initialHeight, onboarding, s
                 <div className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] p-3 text-center"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Gender</p><p className="text-[13px] font-bold text-[var(--text-primary)] mt-1 capitalize">{gender}</p></div>
                 <div className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] p-3 text-center"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Activity</p><p className="text-[11px] font-bold text-[var(--text-primary)] mt-1 leading-snug">{activity}</p></div>
               </div>
-              <div className="rounded-[16px] p-4 text-center bg-[var(--accent)]">
-                <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-[var(--text-inverse)]/80">Total Daily Energy Expenditure</p>
-                <p className="text-[28px] font-black text-[var(--text-inverse)] mt-1 tabular-nums">{tdee.toLocaleString()} <span className="text-[12px] font-bold text-[var(--text-inverse)]/70">kcal</span></p>
-                <p className="text-[10px] font-bold text-[var(--text-inverse)]/70 mt-1 tabular-nums">BMR {bmr.toLocaleString()} <span className="opacity-40">|</span> Activity {activityKcal}</p>
+              <div className="rounded-[16px] p-4 text-center bg-[var(--accent-solid)]">
+                <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-[var(--accent-solid-fg)]/80">Total Daily Energy Expenditure</p>
+                <p className="text-[28px] font-black text-[var(--accent-solid-fg)] mt-1 tabular-nums">{tdee.toLocaleString()} <span className="text-[12px] font-bold text-[var(--accent-solid-fg)]/70">kcal</span></p>
+                <p className="text-[10px] font-bold text-[var(--accent-solid-fg)]/70 mt-1 tabular-nums">BMR {bmr.toLocaleString()} <span className="opacity-40">|</span> Activity {activityKcal}</p>
               </div>
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Calorie Targets</p>
               <div className="grid grid-cols-3 gap-2 [&>div]:min-w-0">
@@ -126,7 +126,7 @@ const BodyMetricsPanel = ({ USER_ID, initialWeight, initialHeight, onboarding, s
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] shrink-0">Macronutrients</p>
                 <div className="flex gap-1 bg-[var(--bg-hover)] rounded-full p-1 overflow-x-auto no-scrollbar max-w-full">
                   {['MODERATE CARB','LOWER CARB','HIGHER CARB'].map(m=>(
-                    <button key={m} onClick={()=>setMacroMode(m)} aria-pressed={macroMode===m} className={`px-3 py-1.5 rounded-full text-[10px] font-bold tracking-[0.08em] whitespace-nowrap shrink-0 min-h-[32px] ${macroMode===m ? 'bg-[var(--accent)] text-[var(--text-inverse)]' : 'text-[var(--text-muted)]'}`}>{m}</button>
+                    <button key={m} onClick={()=>setMacroMode(m)} aria-pressed={macroMode===m} className={`px-3 py-1.5 rounded-full text-[10px] font-bold tracking-[0.08em] whitespace-nowrap shrink-0 min-h-[32px] ${macroMode===m ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]' : 'text-[var(--text-muted)]'}`}>{m}</button>
                   ))}
                 </div>
               </div>

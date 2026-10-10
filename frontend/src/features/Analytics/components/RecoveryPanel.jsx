@@ -31,7 +31,7 @@ export default function RecoveryPanel({ userId }) {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
       <div className="col-span-1 lg:col-span-12">
         <button onClick={() => setCheckInOpen(true)}
-          className="w-full p-4 rounded-2xl bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[13px] flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-transform">
+          className="w-full p-4 rounded-2xl bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[13px] flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-transform">
           <span className="material-symbols-outlined text-[18px]">fact_check</span> Daily Check-In
         </button>
       </div>

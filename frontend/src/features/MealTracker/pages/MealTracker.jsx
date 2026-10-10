@@ -65,7 +65,7 @@ function ScannerCard({ preview, isAnalyzing, onCamera, onManual, onClear }) {
           onClick={a.onPress}
           className={`flex items-center gap-3 p-4 rounded-2xl text-left transition-all active:scale-[0.99] ${
             a.primary
-              ? "bg-[var(--accent)] text-[var(--text-inverse)] shadow-md hover:bg-[var(--accent-hover)]"
+              ? "bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] shadow-md hover:bg-[var(--accent-hover)]"
               : "glass-card border border-[var(--border-light)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
           }`}
         >
@@ -340,7 +340,7 @@ export default function MealTracker() {  const { user } = useAuth();
                           aria-pressed={active}
                           className={`py-2 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all min-w-0 truncate ${
                             active
-                              ? "bg-[var(--accent)] text-[var(--text-inverse)] shadow-md"
+                              ? "bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] shadow-md"
                               : "bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                           }`}
                         >

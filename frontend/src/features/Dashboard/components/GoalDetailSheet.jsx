@@ -121,7 +121,7 @@ export default function GoalDetailSheet({ userId, goal, currentWeightKg, progres
             </button>
             <button
               onClick={() => { onClose?.(); navigate('/dashboard/plans'); }}
-              className="flex-1 h-12 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[13px] flex items-center justify-center gap-1.5"
+              className="flex-1 h-12 rounded-[12px] bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[13px] flex items-center justify-center gap-1.5"
             >
               <span className="material-symbols-outlined text-[18px]">book</span> View Plans
             </button>

@@ -52,7 +52,7 @@ const DayTracker = ({ plan, content, progress, onClose, onCompleteDay }) => {
           </p>
           <button
             onClick={onClose}
-            className="mt-2 px-6 py-2.5 rounded-lg font-bold text-sm bg-[var(--accent)] text-[var(--text-inverse)]"
+            className="mt-2 px-6 py-2.5 rounded-lg font-bold text-sm bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]"
           >
             Back to Plans
           </button>
@@ -338,7 +338,7 @@ const DayTracker = ({ plan, content, progress, onClose, onCompleteDay }) => {
                   <button
                     onClick={handleComplete}
                     disabled={completing}
-                    className="flex-1 py-3.5 min-h-[48px] rounded-xl font-black text-xs sm:text-sm tracking-wide uppercase transition-all flex items-center justify-center gap-2 bg-[var(--accent)] text-[var(--text-inverse)] disabled:opacity-70"
+                    className="flex-1 py-3.5 min-h-[48px] rounded-xl font-black text-xs sm:text-sm tracking-wide uppercase transition-all flex items-center justify-center gap-2 bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] disabled:opacity-70"
                   >
                     {completing ? (
                       <><span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> Saving...</>
@@ -349,7 +349,7 @@ const DayTracker = ({ plan, content, progress, onClose, onCompleteDay }) => {
                 ) : (
                   <button
                     onClick={handleStartWorkout}
-                    className="flex-1 py-3.5 min-h-[48px] rounded-xl font-black text-xs sm:text-sm tracking-wide uppercase transition-all flex items-center justify-center gap-2 active:scale-[0.98] bg-[var(--accent)] text-[var(--text-inverse)]"
+                    className="flex-1 py-3.5 min-h-[48px] rounded-xl font-black text-xs sm:text-sm tracking-wide uppercase transition-all flex items-center justify-center gap-2 active:scale-[0.98] bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]"
                   >
                     <Icon name="play_circle" className="text-[18px] shrink-0" fill={1} /> Start Workout
                   </button>

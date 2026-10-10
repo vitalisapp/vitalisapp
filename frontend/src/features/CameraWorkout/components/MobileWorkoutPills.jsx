@@ -143,8 +143,8 @@ export default function MobileWorkoutPills({ workoutType, onSelect, sheetOpen, o
                         </span>
                       </span>
                       {active ? (
-                        <span className="w-6 h-6 rounded-full bg-[var(--accent)] flex items-center justify-center shrink-0" aria-hidden="true">
-                          <Icon name="check" className="text-[15px] text-[var(--text-inverse)]" />
+                        <span className="w-6 h-6 rounded-full bg-[var(--accent-solid)] flex items-center justify-center shrink-0" aria-hidden="true">
+                          <Icon name="check" className="text-[15px] text-[var(--accent-solid-fg)]" />
                         </span>
                       ) : (
                         <Icon name="chevron_right" className="text-[20px] text-[var(--text-disabled)] shrink-0" />

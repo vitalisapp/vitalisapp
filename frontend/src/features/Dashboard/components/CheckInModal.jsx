@@ -6,7 +6,7 @@ const QUALITY = ['LOW', 'MODERATE', 'GOOD'];
 
 const Chip = ({ active, onClick, children }) => (
   <button type="button" onClick={onClick}
-    className={`h-10 px-4 rounded-full text-[12px] font-bold uppercase tracking-wider border transition-colors ${active ? 'bg-[var(--accent)] text-[var(--text-inverse)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-medium)]'}`}>
+    className={`h-10 px-4 rounded-full text-[12px] font-bold uppercase tracking-wider border transition-colors ${active ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-medium)]'}`}>
     {children}
   </button>
 );
@@ -87,7 +87,7 @@ const CheckInModal = ({ userId, initial, onClose, onSaved }) => {
             </div>
           ))}
           <button type="submit" disabled={saving}
-            className="w-full h-12 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[13px] disabled:opacity-50">
+            className="w-full h-12 rounded-[12px] bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[13px] disabled:opacity-50">
             {saving ? 'Saving...' : 'Complete Check-In'}
           </button>
         </form>

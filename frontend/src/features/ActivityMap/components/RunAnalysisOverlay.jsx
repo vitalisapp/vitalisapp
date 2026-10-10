@@ -62,7 +62,7 @@ const RunAnalysisOverlay = ({ analysis, onClose }) => {
         <div className="px-5 pb-5 shrink-0">
           <button
             onClick={onClose}
-            className="w-full min-h-[48px] bg-[var(--accent)] text-[var(--text-inverse)] rounded-full py-3 text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all"
+            className="w-full min-h-[48px] bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] rounded-full py-3 text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all"
           >
             Let's Go! 🚀
           </button>

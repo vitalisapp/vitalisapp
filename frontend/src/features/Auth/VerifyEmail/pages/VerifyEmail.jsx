@@ -47,7 +47,7 @@ const VerifyEmail = () => {
               <h1 className="font-display font-extrabold text-[32px] tracking-wider leading-none mb-2">EMAIL VERIFIED</h1>
               <p className="text-xs text-[#c4c9b0]/60 mb-8">Your Vitalis account is now active.</p>
               <button onClick={() => navigate('/login')}
-                className="w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">
+                className="w-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">
                 Continue
               </button>
             </>
@@ -61,7 +61,7 @@ const VerifyEmail = () => {
               <h1 className="font-display font-extrabold text-[32px] tracking-wider leading-none mb-2">LINK EXPIRED</h1>
               <p className="text-xs text-[#c4c9b0]/60 mb-8">{error}</p>
               <button onClick={() => navigate('/check-email')}
-                className="w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">
+                className="w-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">
                 Request New Link
               </button>
             </>
@@ -72,7 +72,7 @@ const VerifyEmail = () => {
               <h1 className="font-display font-extrabold text-[32px] tracking-wider leading-none mb-2">VERIFY EMAIL</h1>
               <p className="text-xs text-[#c4c9b0]/60 mb-8">Open the verification link from your inbox, or request a new one.</p>
               <button onClick={() => navigate('/check-email')}
-                className="w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">
+                className="w-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">
                 Go to Check Email
               </button>
             </>

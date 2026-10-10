@@ -211,7 +211,7 @@ export default function ScanResult({
           </div>
           <div className="flex gap-2">
             <button onClick={() => setAdding(false)} className="flex-1 py-2 rounded-full text-xs font-bold text-[var(--text-muted)] border border-[var(--border-light)]">Cancel</button>
-            <button onClick={submitCustom} className="flex-1 py-2 rounded-full text-xs font-black bg-[var(--accent)] text-[var(--text-inverse)]">Add item</button>
+            <button onClick={submitCustom} className="flex-1 py-2 rounded-full text-xs font-black bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]">Add item</button>
           </div>
         </div>
       )}

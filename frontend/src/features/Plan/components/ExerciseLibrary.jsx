@@ -127,7 +127,7 @@ const ExerciseLibrary = () => {
                 Close
               </button>
               <button onClick={() => navigate('/dashboard/workouts', { state: { exerciseId: open.slug } })}
-                className="flex-1 py-3 rounded-xl font-black text-sm uppercase bg-[var(--accent)] text-[var(--text-inverse)]">
+                className="flex-1 py-3 rounded-xl font-black text-sm uppercase bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]">
                 Start {isHoldExercise(open) ? 'Hold' : 'Workout'}
               </button>
             </div>

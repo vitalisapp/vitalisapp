@@ -7,7 +7,7 @@ export default function CameraOffPlaceholder({ cameraOn, onTurnOn }) {
       <p className="text-[var(--text-muted)] text-[10px] uppercase tracking-widest font-bold">Camera Off</p>
       <button
         onClick={onTurnOn}
-        className="mt-2 px-6 py-2.5 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[10px] font-black uppercase tracking-widest active:scale-95"
+        className="mt-2 px-6 py-2.5 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[10px] font-black uppercase tracking-widest active:scale-95"
       >
         Turn On
       </button>

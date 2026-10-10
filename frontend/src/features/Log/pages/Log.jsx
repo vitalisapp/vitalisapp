@@ -87,7 +87,7 @@ function MiniCalendar({ activeDays, selectedKey, onSelect }) {
               aria-label={`Select ${key}`}
               className={`relative mx-auto w-10 h-10 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[11px] font-black transition-all
                 ${selected
-                  ? 'bg-[var(--accent)] text-[var(--text-inverse)] shadow-[var(--shadow-md)]'
+                  ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] shadow-[var(--shadow-md)]'
                   : isToday
                     ? 'border border-[var(--accent-border)] text-[var(--accent)]'
                     : hasLogs
@@ -228,7 +228,7 @@ function ProgressChart({ history }) {
               onClick={() => setMode(m)}
               className={`px-3 py-1.5 text-[10px] font-bold rounded-md border-none cursor-pointer transition-all capitalize ${
                 mode === m
-                  ? 'text-[var(--text-inverse)] shadow-lg bg-[var(--accent)]'
+                  ? 'text-[var(--accent-solid-fg)] shadow-lg bg-[var(--accent-solid)]'
                   : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
               }`}
             >
@@ -413,7 +413,7 @@ const Log = () => {
                 <div className="p-16 text-center text-red-400 font-bold uppercase tracking-widest text-sm" role="alert">
                   ⚠ {error}
                   <span className="block text-[var(--text-muted)] text-xs mt-2">Is your backend running?</span>
-                  <button onClick={fetchLogs} className="mt-4 h-10 px-5 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-bold normal-case tracking-normal hover:brightness-110 active:scale-95 transition-all">
+                  <button onClick={fetchLogs} className="mt-4 h-10 px-5 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-bold normal-case tracking-normal hover:brightness-110 active:scale-95 transition-all">
                     Try again
                   </button>
                 </div>
@@ -456,7 +456,7 @@ const Log = () => {
                         <td colSpan="6" className="p-20 text-center text-red-400 font-bold uppercase tracking-widest" role="alert">
                           ⚠ {error}
                           <span className="block text-[var(--text-muted)] text-xs mt-2">Is your backend running?</span>
-                          <button onClick={fetchLogs} className="mt-4 h-10 px-5 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-bold normal-case tracking-normal hover:brightness-110 active:scale-95 transition-all">
+                          <button onClick={fetchLogs} className="mt-4 h-10 px-5 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-bold normal-case tracking-normal hover:brightness-110 active:scale-95 transition-all">
                             Try again
                           </button>
                         </td>

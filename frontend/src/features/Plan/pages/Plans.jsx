@@ -139,7 +139,7 @@ const Plans = () => {
               )}
               <button
                 onClick={openCreate}
-                className="h-11 min-h-[44px] px-5 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-bold w-full min-[480px]:w-auto hover:brightness-110 active:scale-95 transition-all focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+                className="h-11 min-h-[44px] px-5 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-bold w-full min-[480px]:w-auto hover:brightness-110 active:scale-95 transition-all focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
               >
                 + New plan
               </button>
@@ -164,7 +164,7 @@ const Plans = () => {
               <Icon name="error" className="text-[36px] sm:text-[40px]" style={{ color: 'var(--error)' }} />
               <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Couldn't load your blueprints</p>
               <p className="text-xs max-w-sm" style={{ color: 'var(--text-muted)' }}>{authError}</p>
-              <button onClick={reload} className="mt-1 h-10 px-5 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-bold hover:brightness-110 active:scale-95 transition-all">
+              <button onClick={reload} className="mt-1 h-10 px-5 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-bold hover:brightness-110 active:scale-95 transition-all">
                 Try again
               </button>
             </div>

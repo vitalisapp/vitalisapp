@@ -12,7 +12,7 @@ export default function NotFound() {
       <div className="flex gap-2">
         <Link
           to="/dashboard"
-          className="px-5 py-2.5 rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] text-xs font-black uppercase tracking-widest"
+          className="px-5 py-2.5 rounded-xl bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-xs font-black uppercase tracking-widest"
         >
           Dashboard
         </Link>

@@ -19,7 +19,7 @@ const Login = () => {
       <style>{`
         .vitalis-spinner {
           width: 14px; height: 14px;
-          border: 2px solid var(--text-inverse);
+          border: 2px solid #ffffff;
           border-top-color: transparent;
           border-radius: 50%;
           animation: vitalis-spin 0.7s linear infinite;
@@ -187,7 +187,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="v-card-btn group relative w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl shadow-[var(--shadow-md)] hover:bg-[var(--accent-dark)] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-2"
+                className="v-card-btn group relative w-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl shadow-[var(--shadow-md)] hover:bg-[var(--accent-solid-hover)] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <><div className="vitalis-spinner" /> Signing In...</>

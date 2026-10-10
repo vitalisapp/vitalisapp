@@ -36,7 +36,7 @@ const cardCls = (active) => `text-left p-4 rounded-[14px] border transition-colo
 const Chip = ({ active, onClick, children, label }) => (
   <button type="button" onClick={onClick} aria-pressed={Boolean(active)}
     aria-label={label}
-    className={`h-10 px-4 rounded-full text-[12px] font-bold uppercase tracking-wider border transition-colors ${active ? 'bg-[var(--accent)] text-[var(--text-inverse)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-medium)]'}`}>
+    className={`h-10 px-4 rounded-full text-[12px] font-bold uppercase tracking-wider border transition-colors ${active ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-medium)]'}`}>
     {children}
   </button>
 );
@@ -451,7 +451,7 @@ const Onboarding = () => {
                 {GEN_STEPS.map((t, i) => (
                   <li key={t} className={`flex items-center gap-3 text-[13px] ${i > genIdx ? 'opacity-40' : ''}`}>
                     {i < genIdx || (!saving && i <= genIdx) ? (
-                      <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] flex items-center justify-center text-[12px] font-black" aria-hidden="true">✓</span>
+                      <span className="w-5 h-5 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] flex items-center justify-center text-[12px] font-black" aria-hidden="true">✓</span>
                     ) : (
                       <span className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" aria-hidden="true" />
                     )}
@@ -513,12 +513,12 @@ const Onboarding = () => {
           </div>
           <div>
             {step < 6 && (
-              <button type="button" onClick={next} disabled={!canGo} aria-disabled={!canGo} className="h-11 px-5 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] text-[13px] font-bold disabled:opacity-40">
+              <button type="button" onClick={next} disabled={!canGo} aria-disabled={!canGo} className="h-11 px-5 rounded-[12px] bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[13px] font-bold disabled:opacity-40">
                 {step === 5 ? 'Generate My Plan' : 'Continue'}
               </button>
             )}
             {step === 7 && (
-              <button type="button" onClick={finish} disabled={saving} className="h-11 px-5 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] text-[13px] font-bold disabled:opacity-50">
+              <button type="button" onClick={finish} disabled={saving} className="h-11 px-5 rounded-[12px] bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[13px] font-bold disabled:opacity-50">
                 {saving ? 'Saving...' : 'Start Training'}
               </button>
             )}

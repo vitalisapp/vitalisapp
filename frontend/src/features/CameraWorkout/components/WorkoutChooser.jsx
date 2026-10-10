@@ -115,7 +115,7 @@ export default function WorkoutChooser({ query, onQuery, onPick, onBack }) {
                     ? <img src={img} alt={label} loading="lazy" className="w-full h-full object-contain p-2"
                         onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                     : <span className="w-full h-full flex items-center justify-center material-symbols-outlined text-[28px] text-white">fitness_center</span>}
-                  <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${isHold ? 'bg-sky-500/90 text-white' : 'bg-[var(--accent)] text-[var(--text-inverse)]'}`}>
+                  <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${isHold ? 'bg-sky-500/90 text-white' : 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]'}`}>
                     {isHold ? 'Hold' : 'Reps'}
                   </span>
                 </span>
@@ -131,7 +131,7 @@ export default function WorkoutChooser({ query, onQuery, onPick, onBack }) {
           <div className="text-center py-10">
             <p className="text-[13px] font-bold text-[var(--text-primary)]">No matches</p>
             <p className="text-[12px] text-[var(--text-muted)] mt-1">Try another search or clear the filters.</p>
-            <button onClick={clearFilters} className="mt-3 h-11 px-5 rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-bold active:scale-95 transition-all">
+            <button onClick={clearFilters} className="mt-3 h-11 px-5 rounded-xl bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-bold active:scale-95 transition-all">
               Clear filters
             </button>
           </div>

@@ -264,7 +264,7 @@ const Register = () => {
               </div>
 
               <button
-                className="group relative w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 mt-1.5 overflow-hidden shadow-[var(--shadow-md)] hover:bg-[var(--accent-dark)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative w-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 mt-1.5 overflow-hidden shadow-[var(--shadow-md)] hover:bg-[var(--accent-solid-hover)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 type="submit"
                 disabled={loading || mismatch}
               >

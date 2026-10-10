@@ -224,7 +224,7 @@ const Profile = () => {
               {isDirty && (
                 <div className="flex gap-2 mt-3">
                   <button onClick={handleDiscard} className="flex-1 py-2 rounded-full border border-[var(--border-light)] text-[11px] font-bold text-[var(--text-muted)]">Discard</button>
-                  <button onClick={handleSave} disabled={isSaving} className="flex-1 py-2 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[11px] font-black disabled:opacity-50">{isSaving ? 'Saving…' : 'Save'}</button>
+                  <button onClick={handleSave} disabled={isSaving} className="flex-1 py-2 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[11px] font-black disabled:opacity-50">{isSaving ? 'Saving…' : 'Save'}</button>
                 </div>
               )}
             </div>
@@ -234,7 +234,7 @@ const Profile = () => {
           <button
             onClick={() => (isMasterEditing ? handleMasterDone() : handleMasterEdit())}
             aria-expanded={isMasterEditing}
-            className={`w-full mt-3 h-12 min-h-[48px] rounded-2xl text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-sm ${isMasterEditing ? 'border border-[var(--border-light)] bg-[var(--bg-card)]' : 'bg-[var(--accent)] text-[var(--text-inverse)]'}`}
+            className={`w-full mt-3 h-12 min-h-[48px] rounded-2xl text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-sm ${isMasterEditing ? 'border border-[var(--border-light)] bg-[var(--bg-card)]' : 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]'}`}
             style={isMasterEditing ? { color: 'var(--text-primary)' } : undefined}
           >
             <span className="material-symbols-outlined text-[18px]" style={isMasterEditing ? { color: 'var(--accent)' } : undefined}>{isMasterEditing ? 'close' : 'edit'}</span> {isMasterEditing ? 'Done Editing' : 'Edit Profile'}
@@ -311,7 +311,7 @@ const Profile = () => {
                     {isMasterEditing && isDirty && (
                       <div className="flex flex-col sm:flex-row gap-2 pt-1">
                         <button onClick={() => { handleDiscard(); }} className="flex-1 h-12 min-h-[44px] rounded-xl border border-[var(--border-light)] text-[12px] font-bold text-[var(--text-muted)] active:scale-[0.98] transition-all">Discard</button>
-                        <button onClick={async () => { await handleSave(); setIsMasterEditing(false); }} disabled={isSaving} className="flex-1 h-12 min-h-[44px] rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-black disabled:opacity-50 active:scale-[0.98] transition-all">{isSaving ? 'Saving…' : 'Save changes'}</button>
+                        <button onClick={async () => { await handleSave(); setIsMasterEditing(false); }} disabled={isSaving} className="flex-1 h-12 min-h-[44px] rounded-xl bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-black disabled:opacity-50 active:scale-[0.98] transition-all">{isSaving ? 'Saving…' : 'Save changes'}</button>
                       </div>
                     )}
                   </div>
@@ -342,7 +342,7 @@ const Profile = () => {
                           <p className="text-[12px] font-bold truncate text-[var(--text-primary)]">{s.browser} on {s.os}</p>
                           <p className="text-[10px] font-mono text-[var(--text-muted)] truncate">{[s.city, s.country].filter(Boolean).join(', ') || 'UNKNOWN'} {s.is_current && '• ACTIVE NOW'}</p>
                         </div>
-                        {s.is_current ? <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[var(--accent)] text-[var(--text-inverse)]">Active</span> :
+                        {s.is_current ? <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]">Active</span> :
                           <button onClick={() => handleRevoke(s.id)} className="text-[10px] font-bold text-red-400 hover:text-red-300 px-2 py-1 rounded-lg hover:bg-red-500/10">Revoke</button>}
                       </div>
                     ))}

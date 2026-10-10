@@ -11,7 +11,7 @@ export default function CorrectionBanner({ text, warn = false, onOpen }) {
       className="absolute left-3 right-3 bottom-3 z-30 flex items-center gap-3 rounded-2xl px-4 py-3 text-left bg-[#101410]/90 backdrop-blur-sm border border-white/10 active:scale-[0.99] transition-transform"
     >
       <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-        warn ? 'bg-amber-400 text-black' : 'bg-[var(--accent)] text-[var(--text-inverse)]'
+        warn ? 'bg-amber-400 text-black' : 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]'
       }`}>
         <Icon name={warn ? 'priority_high' : 'record_voice_over'} className="text-[18px]" />
       </span>

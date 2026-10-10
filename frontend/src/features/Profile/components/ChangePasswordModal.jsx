@@ -157,9 +157,9 @@ const ChangePasswordModal = ({ onClose, onSuccess }) => {
           <button
             type="submit"
             disabled={loading}
-              className="w-full py-3 bg-[var(--accent)] text-[var(--text-inverse)] text-[10px] font-black uppercase tracking-widest rounded-xl hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[10px] font-black uppercase tracking-widest rounded-xl hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {loading && <span className="w-3 h-3 border-2 border-[var(--text-inverse)]/30 border-t-[var(--text-inverse)] rounded-full animate-spin" />}
+            {loading && <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
             {loading ? 'Updating…' : 'Update password'}
           </button>
         </form>

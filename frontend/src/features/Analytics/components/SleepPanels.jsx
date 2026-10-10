@@ -164,7 +164,7 @@ export default function SleepSyncCard({ sleepHours, setSleepHours, sleepQuality,
           <button
             onClick={onSave}
             disabled={saveStatus === 'saving'}
-            className="w-full py-3 bg-(--accent) hover:bg-(--accent-dark) active:bg-(--accent-dark) disabled:opacity-50 text-[var(--text-inverse)] text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all touch-manipulation"
+            className="w-full py-3 bg-(--accent-solid) hover:bg-(--accent-solid-hover) active:bg-(--accent-solid-hover) disabled:opacity-50 text-[var(--accent-solid-fg)] text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all touch-manipulation"
           >
             {saveStatus === 'saving' ? 'Saving...' : 'Save Sleep Log'}
           </button>

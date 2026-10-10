@@ -115,7 +115,7 @@ const RunSummaryOverlay = ({ metrics, splits, formatTime, route, onSave, onDisca
             <button
               onClick={onSave}
               disabled={isSaving}
-              className="flex-1 bg-[var(--accent)] text-[var(--text-inverse)] rounded-full py-3 text-[14px] font-bold hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+              className="flex-1 bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] rounded-full py-3 text-[14px] font-bold hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {isSaving && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
               {isSaving ? 'Saving…' : 'Save Activity'}

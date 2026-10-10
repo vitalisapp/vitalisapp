@@ -23,7 +23,7 @@ export const GoalLinkBanner = ({ goalStatus, plans, onContinue, onGenerate, gene
         </p>
         <button
           onClick={() => onContinue(linked)}
-          className="h-11 min-h-[44px] px-4 rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] text-[11px] font-bold uppercase tracking-widest w-full sm:w-auto active:scale-95 transition-all"
+          className="h-11 min-h-[44px] px-4 rounded-xl bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[11px] font-bold uppercase tracking-widest w-full sm:w-auto active:scale-95 transition-all"
         >
           Open plan
         </button>
@@ -65,7 +65,7 @@ export const MyPlans = ({ plans, goalStatus, onOpen, onContinue, onCreateClick, 
         <div className="flex flex-wrap justify-center gap-2 mt-2">
           <button
             onClick={onCreateClick}
-            className="h-10 px-5 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-bold hover:brightness-110 active:scale-95 transition-all"
+            className="h-10 px-5 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-bold hover:brightness-110 active:scale-95 transition-all"
           >
             Create personal plan
           </button>
@@ -122,7 +122,7 @@ export const MyPlans = ({ plans, goalStatus, onOpen, onContinue, onCreateClick, 
                 <div className="grid grid-cols-2 gap-2 shrink-0 w-full min-[560px]:w-auto min-[560px]:flex min-[560px]:items-center">
                   <button
                     onClick={e => { e.stopPropagation(); onContinue(active); }}
-                    className="col-span-2 min-[560px]:col-span-1 px-5 py-3 min-h-[48px] rounded-xl font-black text-xs sm:text-sm tracking-wide uppercase active:scale-95 transition-all bg-[var(--accent)] text-[var(--text-inverse)]"
+                    className="col-span-2 min-[560px]:col-span-1 px-5 py-3 min-h-[48px] rounded-xl font-black text-xs sm:text-sm tracking-wide uppercase active:scale-95 transition-all bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]"
                   >
                     Continue →
                   </button>
@@ -308,7 +308,7 @@ export const Explore = ({ plans, onOpen, onEnroll, onContinue }) => {
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 min-w-0">
                   <div className="flex gap-2 mb-1.5 sm:mb-2">
-                    <span className="px-2 py-0.5 rounded text-[9px] font-black tracking-widest uppercase bg-[var(--accent)] text-[var(--text-inverse)]">
+                    <span className="px-2 py-0.5 rounded text-[9px] font-black tracking-widest uppercase bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]">
                       {plan.tag}
                     </span>
                     <span className="px-2 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase bg-[var(--bg-hover)] text-[var(--text-muted)]" style={{ backdropFilter: 'blur(4px)' }}>
@@ -320,7 +320,7 @@ export const Explore = ({ plans, onOpen, onEnroll, onContinue }) => {
                 </div>
                 {plan.is_enrolled === 1 && (
                   <div
-                    className="absolute top-3 sm:top-4 right-3 sm:right-4 px-2 py-1 rounded text-[9px] font-black tracking-widest uppercase bg-[var(--accent)] text-[var(--text-inverse)]"
+                    className="absolute top-3 sm:top-4 right-3 sm:right-4 px-2 py-1 rounded text-[9px] font-black tracking-widest uppercase bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]"
                   >
                     Owned
                   </div>

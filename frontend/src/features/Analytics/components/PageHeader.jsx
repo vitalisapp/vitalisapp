@@ -38,7 +38,7 @@ export function PageHeader({ timeframe, setTimeframe, activeTab, setActiveTab })
       <div className="flex gap-2">
         {['training', 'recovery', 'progress'].map((t) => (
           <button key={t} onClick={() => setActiveTab(t)}
-            className={`min-h-[44px] px-4 rounded-full text-[11px] font-black uppercase tracking-widest capitalize ${activeTab === t ? 'bg-(--accent) text-[var(--text-inverse)]' : 'bg-(--bg-card) border border-(--border-light) text-(--text-muted)'}`}>
+            className={`min-h-[44px] px-4 rounded-full text-[11px] font-black uppercase tracking-widest capitalize ${activeTab === t ? 'bg-(--accent-solid) text-[var(--accent-solid-fg)]' : 'bg-(--bg-card) border border-(--border-light) text-(--text-muted)'}`}>
             {t}
           </button>
         ))}
@@ -51,6 +51,6 @@ export const EmptyPanel = ({ title, hint, action, onAction }) => (
   <div className="col-span-1 lg:col-span-12 p-8 text-center rounded-2xl border border-dashed border-[var(--border-light)]">
     <p className="text-[13px] font-bold">{title}</p>
     <p className="text-[12px] text-[var(--text-muted)] mt-1">{hint}</p>
-    {action && <button onClick={onAction} className="mt-3 h-10 px-4 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-bold">{action}</button>}
+    {action && <button onClick={onAction} className="mt-3 h-10 px-4 rounded-[12px] bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-bold">{action}</button>}
   </div>
 );

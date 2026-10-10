@@ -10,7 +10,7 @@ const GoalSnapshotCard = ({ onboarding, onChangeGoal }) => {
     return (
       <div className="text-center py-3 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] space-y-2">
         <p className="text-[12px] text-[var(--text-muted)]">No onboarding info yet</p>
-        <Link to="/onboarding" className="inline-flex py-1.5 px-4 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[11px] font-black">Complete Onboarding</Link>
+        <Link to="/onboarding" className="inline-flex py-1.5 px-4 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[11px] font-black">Complete Onboarding</Link>
       </div>
     );
   }
@@ -31,10 +31,10 @@ const GoalSnapshotCard = ({ onboarding, onChangeGoal }) => {
         </div>
       </div>
       {onboarding.dailyKcal != null && (
-        <div className="rounded-[16px] p-4 text-center bg-[var(--accent)]">
-          <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-[var(--text-inverse)]/80">Plan Daily Target</p>
-          <p className="text-[24px] font-black text-[var(--text-inverse)] mt-1 tabular-nums">{Number(onboarding.dailyKcal).toLocaleString()} <span className="text-[12px] font-bold text-[var(--text-inverse)]/70">kcal</span></p>
-          <p className="text-[11px] font-bold text-[var(--text-inverse)]/70 mt-1 tabular-nums">P {onboarding.proteinG ?? '—'}g · C {onboarding.carbsG ?? '—'}g · F {onboarding.fatG ?? '—'}g</p>
+        <div className="rounded-[16px] p-4 text-center bg-[var(--accent-solid)]">
+          <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-[var(--accent-solid-fg)]/80">Plan Daily Target</p>
+          <p className="text-[24px] font-black text-[var(--accent-solid-fg)] mt-1 tabular-nums">{Number(onboarding.dailyKcal).toLocaleString()} <span className="text-[12px] font-bold text-[var(--accent-solid-fg)]/70">kcal</span></p>
+          <p className="text-[11px] font-bold text-[var(--accent-solid-fg)]/70 mt-1 tabular-nums">P {onboarding.proteinG ?? '—'}g · C {onboarding.carbsG ?? '—'}g · F {onboarding.fatG ?? '—'}g</p>
         </div>
       )}
       <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-2 text-center [&>div]:min-w-0">
@@ -42,7 +42,7 @@ const GoalSnapshotCard = ({ onboarding, onChangeGoal }) => {
         <div className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] px-3 py-2.5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Stress · Recovery</p><p className="text-[12px] font-bold mt-1 break-words">{humanize(onboarding.stressLevel)} · {humanize(onboarding.recoveryLevel)}</p></div>
         <div className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] px-3 py-2.5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Exercise</p><p className="text-[12px] font-bold mt-1 break-words">{humanize(onboarding.exerciseFreq)}</p></div>
       </div>
-      <button onClick={onChangeGoal} className="w-full py-2.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-bg)] text-[11px] font-bold text-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--text-inverse)] transition-colors">Change Goal</button>
+      <button onClick={onChangeGoal} className="w-full py-2.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-bg)] text-[11px] font-bold text-[var(--accent)] hover:bg-[var(--accent-solid)] hover:text-[var(--accent-solid-fg)] transition-colors">Change Goal</button>
     </div>
   );
 };

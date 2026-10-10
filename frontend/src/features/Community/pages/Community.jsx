@@ -280,7 +280,7 @@ const Community = () => {
             <div className="flex gap-1.5 mt-3 -mx-4 px-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Post topic">
               {TAGS.map((t) => (
                 <button key={t} type="button" onClick={() => setTag(t)} aria-pressed={tag === t}
-                  className={`h-8 px-3.5 rounded-full text-[11px] font-bold border whitespace-nowrap shrink-0 transition-colors ${tag === t ? 'bg-[var(--accent)] border-[var(--accent)] text-[var(--text-inverse)]' : `${TAG_PILLS[t] || ''} hover:border-[var(--border-medium)]`}`}>
+                  className={`h-8 px-3.5 rounded-full text-[11px] font-bold border whitespace-nowrap shrink-0 transition-colors ${tag === t ? 'bg-[var(--accent-solid)] border-[var(--accent-solid)] text-[var(--accent-solid-fg)]' : `${TAG_PILLS[t] || ''} hover:border-[var(--border-medium)]`}`}>
                   {t}
                 </button>
               ))}

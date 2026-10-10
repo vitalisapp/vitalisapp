@@ -59,7 +59,7 @@ const QuickLog = ({ userId, onWeightLogged, onCheckIn }) => {
   return (
     <>
       <button onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[13px] shadow-lg hover:brightness-110 hover:scale-[1.02] active:scale-95 transition-transform">
+        className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] font-bold text-[13px] shadow-lg hover:brightness-110 hover:scale-[1.02] active:scale-95 transition-transform">
         <span className="material-symbols-outlined text-[20px] font-bold">add</span> Quick Log
       </button>
 

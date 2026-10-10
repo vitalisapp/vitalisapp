@@ -47,11 +47,11 @@ export default function Button({
   }, [onClick, busy]);
   const base = 'inline-flex items-center justify-center font-bold rounded-xl transition-all border disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]';
   const variants = {
-    primary: 'bg-[var(--accent)] text-[var(--text-inverse)] border-transparent hover:bg-[var(--accent-dark)] shadow-[0_2px_12px_var(--accent-bg)]',
+    primary: 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] border-transparent hover:bg-[var(--accent-solid-hover)] shadow-[0_2px_12px_var(--accent-bg)]',
     ghost: 'bg-transparent text-[var(--text-primary)] border-[var(--border-light)] hover:bg-[var(--bg-hover)]',
     outline: 'bg-transparent text-[var(--text-primary)] border-[var(--border-medium)] hover:border-[var(--border-heavy)] hover:bg-[var(--bg-hover)]',
     danger: 'bg-[var(--error)] text-white border-transparent hover:brightness-110',
-    subtle: 'bg-[var(--accent-bg)] text-[var(--accent)] border-[var(--accent-border)] hover:bg-[var(--accent)] hover:text-[var(--text-inverse)]',
+    subtle: 'bg-[var(--accent-bg)] text-[var(--accent)] border-[var(--accent-border)] hover:bg-[var(--accent-solid)] hover:text-[var(--accent-solid-fg)]',
   };
   const sizes = {
     sm: 'px-3 py-1.5 text-xs gap-1.5',

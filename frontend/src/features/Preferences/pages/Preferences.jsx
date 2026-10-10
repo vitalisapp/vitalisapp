@@ -126,7 +126,7 @@ const Preferences = () => {
               ].map((o) => (
                 <button key={o.key} onClick={() => setPreference(o.key)}
                   role="radio" aria-checked={preference === o.key}
-                  className={`flex flex-col items-center gap-1 py-2.5 rounded-xl text-[11px] font-bold transition-colors ${preference === o.key ? 'bg-[var(--accent)] text-[var(--text-inverse)]' : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
+                  className={`flex flex-col items-center gap-1 py-2.5 rounded-xl text-[11px] font-bold transition-colors ${preference === o.key ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]' : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
                   <span className="material-symbols-outlined text-[18px]">{o.icon}</span>
                   {o.label}
                 </button>
@@ -141,7 +141,7 @@ const Preferences = () => {
               {['metric', 'imperial'].map((u) => (
                 <button key={u} onClick={() => { setUnits(u); persist({ units: u, step_goal: stepGoal }); }}
                   aria-pressed={units === u}
-                  className={`h-11 rounded-[12px] text-[13px] font-bold capitalize transition-colors ${units === u ? 'bg-[var(--accent)] text-[var(--text-inverse)]' : 'border border-[var(--border-light)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
+                  className={`h-11 rounded-[12px] text-[13px] font-bold capitalize transition-colors ${units === u ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]' : 'border border-[var(--border-light)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
                   {u === 'metric' ? 'Metric (kg, cm)' : 'Imperial (lb, ft)'}
                 </button>
               ))}
@@ -157,7 +157,7 @@ const Preferences = () => {
               {[5000, 8000, 10000, 12000].map((v) => (
                 <button key={v} onClick={() => { setStepGoal(v); persist({ units, step_goal: v }); }}
                   aria-pressed={stepGoal === v}
-                  className={`py-2 rounded-xl text-[11px] font-bold tabular-nums transition-colors ${stepGoal === v ? 'bg-[var(--accent)] text-[var(--text-inverse)]' : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
+                  className={`py-2 rounded-xl text-[11px] font-bold tabular-nums transition-colors ${stepGoal === v ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)]' : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
                   {(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k
                 </button>
               ))}

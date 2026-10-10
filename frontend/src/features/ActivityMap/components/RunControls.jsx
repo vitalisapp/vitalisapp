@@ -10,7 +10,7 @@ const ControlsContent = ({ isRecording, hasPaused, metricsTime, onStart, onPause
       <>
         <button
           onClick={onStart}
-          className="flex items-center gap-2.5 bg-[var(--accent)] text-[var(--text-inverse)] pl-6 pr-9 sm:pl-7 sm:pr-11 py-3.5 sm:py-4 rounded-full font-bold
+          className="flex items-center gap-2.5 bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] pl-6 pr-9 sm:pl-7 sm:pr-11 py-3.5 sm:py-4 rounded-full font-bold
             hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-[var(--accent)]/30 text-base sm:text-lg"
         >
           <span className="material-symbols-outlined text-[22px] sm:text-2xl">directions_run</span>
@@ -35,7 +35,7 @@ const ControlsContent = ({ isRecording, hasPaused, metricsTime, onStart, onPause
         </button>
         <button
           onClick={onFinish}
-          className="bg-[var(--accent)] text-[var(--text-inverse)] pl-5 pr-6 sm:pl-6 sm:pr-8 py-3 sm:py-3.5 rounded-full font-bold text-sm sm:text-[15px] hover:brightness-110 active:scale-95 transition-all"
+          className="bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] pl-5 pr-6 sm:pl-6 sm:pr-8 py-3 sm:py-3.5 rounded-full font-bold text-sm sm:text-[15px] hover:brightness-110 active:scale-95 transition-all"
         >
           Finish
         </button>

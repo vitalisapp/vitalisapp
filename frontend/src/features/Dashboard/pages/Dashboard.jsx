@@ -90,7 +90,7 @@ const WeekStrip = () => {
           aria-current={isToday(d) ? 'date' : undefined}
           className={`flex flex-col items-center gap-1 py-2 px-2.5 rounded-full min-w-[40px] flex-1 outline-none shadow-none ${
             isToday(d)
-              ? 'bg-[var(--accent)] text-[var(--text-inverse)] border border-transparent'
+              ? 'bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] border border-transparent'
               : 'bg-[var(--bg-card)] text-[var(--accent)] border border-[var(--accent-border)]'
           }`}
         >
@@ -237,8 +237,8 @@ const Dashboard = () => {
           {/* Complete-profile prompt — only while setup isn't finished */}
           {showOnboardingBanner && (
             <div className="mt-4 p-4 rounded-[16px] glass-panel border border-[var(--accent-border)] flex flex-col min-[420px]:flex-row min-[420px]:items-center gap-3">
-              <span className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[20px] text-[var(--text-inverse)]">person_add</span>
+              <span className="w-10 h-10 rounded-full bg-[var(--accent-solid)] flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[20px] text-[var(--accent-solid-fg)]">person_add</span>
               </span>
               <div className="flex-1 min-w-0">
                 <p className="text-[14px] font-black text-[var(--text-primary)]">Complete your profile</p>
@@ -246,7 +246,7 @@ const Dashboard = () => {
               </div>
               <button
                 onClick={() => navigate('/onboarding')}
-                className="shrink-0 w-full min-[420px]:w-auto px-4 py-2.5 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[12px] font-black whitespace-nowrap hover:brightness-105 active:scale-95 transition-all"
+                className="shrink-0 w-full min-[420px]:w-auto px-4 py-2.5 rounded-full bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] text-[12px] font-black whitespace-nowrap hover:brightness-105 active:scale-95 transition-all"
               >
                 Complete Profile
               </button>

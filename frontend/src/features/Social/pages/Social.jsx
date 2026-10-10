@@ -171,7 +171,7 @@ const ClinicalMessenger = () => {
                     </div>
                     <button
                       onClick={() => handleAddFriend(u, setActiveContact)}
-                      className="flex items-center gap-1 px-3 py-2 bg-[var(--accent)] text-[var(--text-inverse)] rounded-md text-[10px] font-bold hover:scale-105 transition-transform shrink-0 min-h-[36px]"
+                      className="flex items-center gap-1 px-3 py-2 bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] rounded-md text-[10px] font-bold hover:scale-105 transition-transform shrink-0 min-h-[36px]"
                     >
                       <Icon name="person_add" weight={600} className="text-xs" /> ADD
                     </button>
@@ -384,7 +384,7 @@ const ClinicalMessenger = () => {
                   <button
                     onClick={handleSendMessage}
                     aria-label="Send message"
-                    className="bg-[var(--accent)] text-[var(--text-inverse)] p-2.5 rounded-xl disabled:opacity-50 active:scale-95 transition-all shrink-0 hover:bg-[var(--accent-dark)] flex items-center justify-center min-w-[44px]"
+                    className="bg-[var(--accent-solid)] text-[var(--accent-solid-fg)] p-2.5 rounded-xl disabled:opacity-50 active:scale-95 transition-all shrink-0 hover:bg-[var(--accent-solid-hover)] flex items-center justify-center min-w-[44px]"
                     disabled={!inputValue.trim() || isSending}
                   >
                     {isSending ? <span className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin inline-block" aria-hidden="true" /> : <Icon name="send" weight={600} />}
