@@ -66,10 +66,27 @@ export default defineConfig(({ mode }) => {
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
           globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg,woff2}'],
           // Hero/auth JPGs (~830KB) stay lazy-loaded online, not precached — offline shell uses offline.html.
-          globIgnores: ['hero-gym.jpg', 'auth-gym.jpg'],
+          // The giant material-symbols font (~3.9MB) is runtime-cached on first
+          // use instead (see runtimeCaching below) — UI text fonts stay precached.
+          globIgnores: ['hero-gym.jpg', 'auth-gym.jpg', '**/material-symbols-*.woff2'],
           navigateFallback: '/offline.html',
           navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
+            {
+              // Icon font on first use (CacheFirst): keeps PWA precache small;
+              // offline.html needs no icons, and the app needs network for API
+              // anyway, so first-visit-offline loses nothing it could use.
+              urlPattern: /material-symbols-.*\.woff2$/,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'icon-font',
+                expiration: {
+                  maxEntries: 4,
+                  maxAgeSeconds: 60 * 60 * 24 * 30,
+                },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
             {
               urlPattern:
                 /https:\/\/(tile\.openstreetmap\.org|server\.arcgisonline\.com|.*basemaps\.cartocdn\.com)\/.*/,
