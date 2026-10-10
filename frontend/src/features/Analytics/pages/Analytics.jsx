@@ -122,7 +122,7 @@ function PageHeader({ timeframe, setTimeframe, activeTab, setActiveTab }) {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6">
         <div className="space-y-1 min-w-0">
           <p className="text-(--accent) font-bold tracking-[0.25em] text-[10px] uppercase">Recovery & Progress</p>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter font-['Manrope'] text-(--text-primary) leading-none">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter font-display text-(--text-primary) leading-none">
             Train. Recover. Progress.
           </h2>
         </div>
@@ -478,7 +478,7 @@ function SleepScatterChart({ scatterData, sleepHours, sleepQuality }) {
           <h3 className="text-(--text-muted) text-[10px] font-bold uppercase tracking-[0.2em] mb-1 sm:mb-2">
             Sleep Duration vs Quality
           </h3>
-          <p className="text-2xl sm:text-3xl md:text-4xl font-black font-['Manrope'] text-(--text-primary) leading-none">
+          <p className="text-2xl sm:text-3xl md:text-4xl font-black font-display text-(--text-primary) leading-none">
             {sleepHours}h{' '}
             <span className="text-(--accent) text-xs sm:text-sm font-bold ml-1 sm:ml-2">Q{sleepQuality}/10</span>
           </p>
@@ -532,7 +532,7 @@ function SleepSyncCard({ sleepHours, setSleepHours, sleepQuality, setSleepQualit
           </div>
         </div>
 
-        <h4 className="text-lg sm:text-xl font-black font-['Manrope'] mb-1 text-(--text-primary)">
+        <h4 className="text-lg sm:text-xl font-black font-display mb-1 text-(--text-primary)">
           Rest: <span className={sleepStatus.color}>{sleepHours}h</span>
         </h4>
         <p className="text-white/30 text-[11px] leading-relaxed mb-5 sm:mb-8 font-medium">{sleepStatus.label}</p>
@@ -653,7 +653,7 @@ function AnalyticsInner({ USER_ID }) {
   });
 
   return (
-    <div className="flex flex-col md:flex-row min-h-dvh bg-(--bg-primary) text-(--text-primary) font-['Inter'] selection:bg-(--accent) selection:text-[var(--text-inverse)] relative">
+    <div className="flex flex-col md:flex-row min-h-dvh bg-(--bg-primary) text-(--text-primary) font-sans selection:bg-(--accent) selection:text-[var(--text-inverse)] relative">
       <GlassAmbient />
       <div className="glass-content flex-1 min-w-0">
       <SidebarAnalytics onExpandChange={setSidebarExpanded} />

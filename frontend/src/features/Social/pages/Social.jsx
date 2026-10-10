@@ -113,7 +113,7 @@ const ClinicalMessenger = () => {
   if (loading) return null;
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-[Inter,sans-serif] overflow-hidden relative">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans overflow-hidden relative">
       <GlassAmbient />
       <div className="glass-content">
       <Sidebar expanded={sidebarExpanded} setExpanded={setSidebarExpanded} />

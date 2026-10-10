@@ -39,7 +39,7 @@ const Sidebar = ({ onClick, expanded, setExpanded }) => {
         <div className="flex items-center gap-3.5 px-5 mb-9 overflow-hidden">
           <img src="/pwa-192x192.png" alt="Vitalis logo" className="w-8 h-8 min-w-8 rounded-md shrink-0" />
           <span
-            className={`font-['Manrope'] font-black tracking-[0.2em] text-[13px] text-[var(--accent)] whitespace-nowrap transition-opacity duration-200 ${
+            className={`font-display font-black tracking-[0.2em] text-[13px] text-[var(--accent)] whitespace-nowrap transition-opacity duration-200 ${
               expanded ? 'opacity-100' : 'opacity-0'
             }`}
           >

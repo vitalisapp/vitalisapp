@@ -221,7 +221,7 @@ const ForgotPassword = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="font-['Bebas_Neue',sans-serif] text-[28px] tracking-widest text-[#e5e2e1] mb-2 uppercase">Password Reset</h2>
+            <h2 className="font-display font-extrabold text-[28px] tracking-widest text-[#e5e2e1] mb-2 uppercase">Password Reset</h2>
             <p className="text-[12px] text-[#c4c9b0]/50 leading-relaxed mb-2">
               Your credentials have been updated. Redirecting to login...
             </p>
@@ -242,14 +242,14 @@ const ForgotPassword = () => {
                 <path d="M3 12h3l3-8 4 16 3-10 2 2h3" stroke="var(--text-inverse)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span className="font-['Bebas_Neue',sans-serif] text-[21px] tracking-[0.12em] text-[#e5e2e1]">VITALIS</span>
+            <span className="font-display font-extrabold text-[21px] tracking-[0.12em] text-[#e5e2e1]">VITALIS</span>
           </div>
 
           <StepBar current={step} />
 
           {step === 0 && (
             <>
-              <h2 className="font-['Bebas_Neue',sans-serif] text-[28px] tracking-[0.04em] text-[#e5e2e1] mb-1">RESET ACCESS</h2>
+              <h2 className="font-display font-extrabold text-[28px] tracking-[0.04em] text-[#e5e2e1] mb-1">RESET ACCESS</h2>
               <p className="text-[12px] text-[#c4c9b0]/50 tracking-[0.02em] mb-6 leading-relaxed">
                 Enter the email linked to your account. We'll send you a 6-digit verification code.
               </p>
@@ -276,7 +276,7 @@ const ForgotPassword = () => {
 
           {step === 1 && (
             <>
-              <h2 className="font-['Bebas_Neue',sans-serif] text-[28px] tracking-[0.04em] text-[#e5e2e1] mb-1">CHECK YOUR EMAIL</h2>
+              <h2 className="font-display font-extrabold text-[28px] tracking-[0.04em] text-[#e5e2e1] mb-1">CHECK YOUR EMAIL</h2>
               <p className="text-[12px] text-[#c4c9b0]/50 tracking-[0.02em] mb-1 leading-relaxed">
                 A 6-digit code was sent to
               </p>
@@ -314,7 +314,7 @@ const ForgotPassword = () => {
 
           {step === 2 && (
             <>
-              <h2 className="font-['Bebas_Neue',sans-serif] text-[28px] tracking-[0.04em] text-[#e5e2e1] mb-1">NEW PASSWORD</h2>
+              <h2 className="font-display font-extrabold text-[28px] tracking-[0.04em] text-[#e5e2e1] mb-1">NEW PASSWORD</h2>
               <p className="text-[12px] text-[#c4c9b0]/50 tracking-[0.02em] mb-6 leading-relaxed">
                 Choose a strong password for your Vitalis account.
               </p>

@@ -69,7 +69,7 @@ const CheckEmail = () => {
           <div className="w-16 h-16 bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <span className="material-symbols-outlined text-[28px] text-[var(--accent)]">mark_email_unread</span>
           </div>
-          <h1 className="font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-2">CHECK YOUR EMAIL</h1>
+          <h1 className="font-display font-extrabold text-[32px] tracking-wider leading-none mb-2">CHECK YOUR EMAIL</h1>
           <p className="text-xs text-[#c4c9b0]/60 mb-1">We sent a verification link to:</p>
           <p className="text-sm font-bold text-[var(--accent)] mb-6 break-all">{email || 'your inbox'}</p>
 

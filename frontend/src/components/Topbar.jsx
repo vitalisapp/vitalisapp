@@ -341,7 +341,7 @@ const Topbar = ({ sidebarExpanded, userId }) => {
             className="flex items-center gap-2 bg-transparent border-none cursor-pointer p-0"
           >
             <img src="/pwa-192x192.png" alt="Vitalis logo" className="w-7 h-7 rounded-lg shrink-0" />
-            <span className="font-[Manrope] text-[15px] sm:text-[18px] md:pl-0 font-extrabold tracking-tight text-(--text-primary) hover:text-(--accent) transition-colors">
+            <span className="font-display text-[15px] sm:text-[18px] md:pl-0 font-extrabold tracking-tight text-(--text-primary) hover:text-(--accent) transition-colors">
               Vitalis
             </span>
           </button>

@@ -208,7 +208,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-['Inter',sans-serif] overflow-x-hidden">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans overflow-x-hidden">
       <div className="hidden md:block"><Sidebar onClick={handleLogout} expanded={sidebarExpanded} setExpanded={setSidebarExpanded} onFeedback={() => setFeedbackOpen(true)} /></div>
       <Topbar sidebarExpanded={sidebarExpanded} userId={USER_ID} />
       <main className={`pt-[56px] pb-20 md:pb-6 transition-all duration-300 ${sidebarExpanded ? 'md:ml-[240px]' : 'md:ml-[72px] ml-0'}`}>

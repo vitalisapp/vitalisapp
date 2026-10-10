@@ -78,7 +78,7 @@ const ChangePasswordModal = ({ onClose, onSuccess }) => {
         style={{ animation: 'fadeScale 0.2s ease forwards' }}
       >
         <div className="flex items-center justify-between mb-5">
-          <h3 id="change-pw-title" className="text-sm font-['Manrope'] font-black text-[var(--text-primary)] uppercase tracking-tighter">
+          <h3 id="change-pw-title" className="text-sm font-display font-black text-[var(--text-primary)] uppercase tracking-tighter">
             Change Password
           </h3>
           <button onClick={onClose} aria-label="Close">

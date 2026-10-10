@@ -322,7 +322,7 @@ const Log = () => {
     : 'All Time';
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-['Inter'] flex flex-col md:flex-row relative">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans flex flex-col md:flex-row relative">
       <GlassAmbient />
       <div className="glass-content flex flex-col md:flex-row flex-1 min-w-0 w-full">
       <SidebarAnalytics />

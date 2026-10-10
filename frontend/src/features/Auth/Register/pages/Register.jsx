@@ -110,7 +110,7 @@ const Register = () => {
         {/* ── Left hero ── */}
         <div className="hidden min-[960px]:flex flex-col justify-center p-[64px_56px] gap-4">
           <span className="text-[11px] font-semibold tracking-[0.35em] uppercase text-[var(--accent)] opacity-80">Vitalis Performance OS</span>
-          <h1 className="font-['Bebas_Neue',sans-serif] text-[clamp(52px,5.5vw,82px)] leading-[0.95] tracking-[0.02em]">
+          <h1 className="font-display font-extrabold text-[clamp(52px,5.5vw,82px)] leading-[0.95] tracking-[0.02em]">
             BUILD<br />YOUR<br /><span className="text-[var(--accent)]">ATHLETE</span><br />PROFILE.
           </h1>
           <p className="text-[13px] text-[#e5e2e1]/45 max-w-[320px] leading-[1.7] font-light mt-1">
@@ -126,13 +126,13 @@ const Register = () => {
             {/* Logo */}
             <div className="flex items-center gap-2.5 mb-7">
               <img src="/pwa-192x192.png" alt="Vitalis logo" className="w-[34px] h-[34px] rounded-lg" />
-              <span className="font-['Bebas_Neue',sans-serif] text-[21px] tracking-[0.12em]">VITALIS</span>
+              <span className="font-display font-extrabold text-[21px] tracking-[0.12em]">VITALIS</span>
             </div>
 
             {/* Progress */}
             <div className="flex justify-between items-center mb-2">
               <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-white/50">Profile Setup</span>
-              <span className="font-['Bebas_Neue',sans-serif] text-[16px] text-[var(--accent)] leading-none">{progressPct}%</span>
+              <span className="font-display font-extrabold text-[16px] text-[var(--accent)] leading-none">{progressPct}%</span>
             </div>
             <div className="h-[2px] bg-white/5 rounded-full mb-8 overflow-hidden">
               <div
@@ -141,7 +141,7 @@ const Register = () => {
               />
             </div>
 
-            <h2 className="font-['Bebas_Neue',sans-serif] text-[32px] tracking-wider leading-none mb-1.5">CREATE ACCOUNT</h2>
+            <h2 className="font-display font-extrabold text-[32px] tracking-wider leading-none mb-1.5">CREATE ACCOUNT</h2>
             <p className="text-xs text-[#c4c9b0]/55 tracking-wide mb-8">Step 1 of onboarding — you can set your goal and body profile next (optional).</p>
 
             <form onSubmit={(e) => handleRegister(e, formData)} noValidate={false}>

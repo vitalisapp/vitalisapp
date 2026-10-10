@@ -695,7 +695,7 @@ const CameraWorkout = () => {
   };
 
   return (
-    <div className="flex flex-row h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-['Inter'] overflow-hidden relative">
+    <div className="flex flex-row h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans overflow-hidden relative">
       <GlassAmbient />
       <div className="glass-content flex flex-1 min-w-0 min-h-0">
       {showEarlyExit && (

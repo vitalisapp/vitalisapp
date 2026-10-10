@@ -45,7 +45,7 @@ const VerifyEmail = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h1 className="font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-2">EMAIL VERIFIED</h1>
+              <h1 className="font-display font-extrabold text-[32px] tracking-wider leading-none mb-2">EMAIL VERIFIED</h1>
               <p className="text-xs text-[#c4c9b0]/60 mb-8">Your Vitalis account is now active.</p>
               <button onClick={() => navigate('/login')}
                 className="w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">
@@ -59,7 +59,7 @@ const VerifyEmail = () => {
               <div className="w-20 h-20 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="material-symbols-outlined text-[36px] text-red-400">error</span>
               </div>
-              <h1 className="font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-2">LINK EXPIRED</h1>
+              <h1 className="font-display font-extrabold text-[32px] tracking-wider leading-none mb-2">LINK EXPIRED</h1>
               <p className="text-xs text-[#c4c9b0]/60 mb-8">{error}</p>
               <button onClick={() => navigate('/check-email')}
                 className="w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">
@@ -70,7 +70,7 @@ const VerifyEmail = () => {
 
           {state === 'no-token' && (
             <>
-              <h1 className="font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-2">VERIFY EMAIL</h1>
+              <h1 className="font-display font-extrabold text-[32px] tracking-wider leading-none mb-2">VERIFY EMAIL</h1>
               <p className="text-xs text-[#c4c9b0]/60 mb-8">Open the verification link from your inbox, or request a new one.</p>
               <button onClick={() => navigate('/check-email')}
                 className="w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">

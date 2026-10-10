@@ -115,7 +115,7 @@ const Login = () => {
           <span className="v-hero-eyebrow text-[11px] font-semibold tracking-[0.35em] uppercase text-[var(--accent)] opacity-80">
             Vitalis Performance OS
           </span>
-          <h1 className="v-hero-h1 font-['Bebas_Neue'] text-[clamp(56px,6vw,88px)] leading-[0.95] tracking-wider">
+          <h1 className="v-hero-h1 font-display font-extrabold text-[clamp(56px,6vw,88px)] leading-[0.95] tracking-wider">
             TRAIN<br />
             HARDER.<br />
             <span className="text-[var(--accent)]">RECOVER</span><br />
@@ -127,11 +127,11 @@ const Login = () => {
 
           <div className="v-hero-stats flex gap-8 mt-6 pt-6 border-t border-white/10">
             <div className="flex flex-col">
-              <span className="font-['Bebas_Neue'] text-3xl text-[var(--accent)] leading-none">6</span>
+              <span className="font-display font-extrabold text-3xl text-[var(--accent)] leading-none">6</span>
               <span className="text-[10px] tracking-widest uppercase text-white/30">Modules</span>
             </div>
             <div className="flex flex-col">
-              <span className="font-['Bebas_Neue'] text-3xl text-[var(--accent)] leading-none">100%</span>
+              <span className="font-display font-extrabold text-3xl text-[var(--accent)] leading-none">100%</span>
               <span className="text-[10px] tracking-widest uppercase text-white/30">Manual-first</span>
             </div>
           </div>
@@ -146,10 +146,10 @@ const Login = () => {
             {/* Logo */}
             <div className="v-card-logo flex items-center gap-3 mb-9">
               <img src="/pwa-192x192.png" alt="Vitalis logo" className="w-9 h-9 rounded-lg" />
-              <span className="font-['Bebas_Neue'] text-[22px] tracking-[0.12em]">VITALIS</span>
+              <span className="font-display font-extrabold text-[22px] tracking-[0.12em]">VITALIS</span>
             </div>
 
-            <h2 className="v-card-title font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-1.5">ACCESS PORTAL</h2>
+            <h2 className="v-card-title font-display font-extrabold text-[32px] tracking-wider leading-none mb-1.5">ACCESS PORTAL</h2>
             <p className="v-card-sub text-xs text-[#c4c9b0]/55 tracking-wide mb-8">Enter credentials to synchronize biometrics.</p>
 
             <form onSubmit={(e) => handleSubmit(e, { email, password })} className="space-y-5">

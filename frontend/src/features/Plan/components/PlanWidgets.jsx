@@ -9,8 +9,7 @@ export const PlanCover = ({ seed, title, className = '', opacity = 1 }) => (
     style={{ background: avatarGradient(seed || title), opacity }}
   >
     <span
-      className="font-black text-white/25 select-none"
-      style={{ fontSize: 'clamp(3rem, 10vw, 5rem)', fontFamily: "'Bebas Neue', sans-serif", lineHeight: 1 }}
+      className="font-display font-black text-white/25 select-none text-[clamp(3rem,10vw,5rem)] leading-none"
     >
       {String(title || '?').slice(0, 1).toUpperCase()}
     </span>
