@@ -13,8 +13,6 @@
   },
   "dependencies": {
     "@bryllim/workout-guide": "^1.0.0",
-    "@fontsource/bebas-neue": "^5.3.0",
-    "@fontsource/dm-sans": "^5.3.0",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/manrope": "^5.2.8",
     "@mediapipe/camera_utils": "^0.3.1675466862",

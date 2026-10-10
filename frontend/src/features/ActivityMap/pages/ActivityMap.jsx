@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { MapContainer, TileLayer, Polyline, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import { Topbar } from '../../../components/index.js';
-import GlassAmbient from '../../../components/GlassAmbient.jsx';
 import SidebarAnalytics from '../../../components/SidebarAnalytics.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import 'leaflet/dist/leaflet.css';
@@ -255,7 +254,6 @@ const ActivityMap = () => {
     <div
       className="flex flex-row bg-(--bg-primary) text-(--text-primary) overflow-hidden relative font-sans h-[100dvh]"
     >
-      <GlassAmbient />
       <div className="glass-content flex flex-1 min-w-0 min-h-0">
       <SidebarAnalytics onExpandChange={setSidebarExpanded} />
 

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { BottomNav, Sidebar, Topbar } from '../../../components/index.js';
-import GlassAmbient from '../../../components/GlassAmbient.jsx';
 import Icon from '../../../components/Icon.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import { useContacts } from '../hooks/useContact.js';
@@ -114,7 +113,6 @@ const ClinicalMessenger = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans overflow-hidden relative">
-      <GlassAmbient />
       <div className="glass-content">
       <Sidebar expanded={sidebarExpanded} setExpanded={setSidebarExpanded} />
       <Topbar sidebarExpanded={sidebarExpanded} userId={userId} />

@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Webcam from 'react-webcam';
 import { BottomNav, SidebarAnalytics, Topbar } from '../../../components/index.js';
-import GlassAmbient from '../../../components/GlassAmbient.jsx';
 import Icon from '../../../components/Icon.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import { WORKOUT_OPTIONS } from '../constants/workout.js';
@@ -505,7 +504,6 @@ const CameraWorkout = () => {
 
   return (
     <div className="flex flex-row h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans overflow-hidden relative">
-      <GlassAmbient />
       <div className="glass-content flex flex-1 min-w-0 min-h-0">
       {showEarlyExit && (
         <EarlyExitDialog

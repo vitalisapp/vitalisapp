@@ -11,7 +11,6 @@ import { useTheme } from '../../../hooks/useTheme.js';
 import { apiGet, apiFetch } from '../../../lib/apiClient.js';
 import { safeGet, safeSet } from '../../../lib/storage.js';
 import { useToastStore } from '../../../stores/toastStore.js';
-import GlassAmbient from '../../../components/GlassAmbient.jsx';
 
 const Preferences = () => {
   const navigate = useNavigate();
@@ -100,7 +99,6 @@ const Preferences = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] relative">
-      <GlassAmbient />
       <div className="glass-content">
       <div className="hidden md:block"><Sidebar onClick={handleLogout} expanded={false} setExpanded={() => {}} /></div>
       <Topbar sidebarExpanded={false} userId={user?.id} />

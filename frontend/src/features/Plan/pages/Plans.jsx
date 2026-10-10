@@ -5,7 +5,6 @@ import Icon from '../../../components/Icon.jsx';
 import usePlans from '../hooks/usePlan.js';
 import { BRYL_CREDIT } from '../../CameraWorkout/constants/workoutGuide.js';
 import Dropdown from '../../../components/ui/Dropdown.jsx';
-import GlassAmbient from '../../../components/GlassAmbient.jsx';
 import {
   REST_ACTIVITY_TYPES,
   INTENSITY_OPTIONS,
@@ -107,7 +106,6 @@ const Plans = () => {
 
   return (
     <div className="min-h-screen relative bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans">
-      <GlassAmbient />
       <div className="glass-content">
       <div className="hidden md:block">
         <Sidebar expanded={sidebarExpanded} setExpanded={setSidebarExpanded} />

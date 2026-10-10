@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import Icon from '../../../components/Icon.jsx';
-import GlassAmbient from '../../../components/GlassAmbient.jsx';
 import { apiPost } from '../../../lib/apiClient.js';
 import { safeSet, safeSetJSON, safeGetJSON } from '../../../lib/storage.js';
 import {
@@ -257,7 +256,6 @@ const Onboarding = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center p-4 overflow-y-auto relative">
-      <GlassAmbient />
       <div className="glass-content w-full flex items-center justify-center">
       <div className="w-full max-w-[600px] m-auto glass-panel border border-[var(--border-light)] rounded-[20px] p-6 sm:p-8">
         <div className="flex items-center justify-between">

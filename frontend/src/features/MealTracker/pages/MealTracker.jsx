@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Sidebar, Topbar, BottomNav } from "../../../components/index.js";
-import GlassAmbient from "../../../components/GlassAmbient.jsx";
 import Icon from "../../../components/Icon.jsx";
 import MacroCoachCard from "../components/MacroCoachCard.jsx";
 import ScanResult from "../components/ScanResult.jsx";
@@ -281,7 +280,6 @@ export default function MealTracker() {  const { user } = useAuth();
 
   return (
     <div className="min-h-dvh bg-[var(--bg-primary)] overflow-x-hidden relative">
-      <GlassAmbient />
       <div className="glass-content">
       <div className="hidden md:block"><Sidebar expanded={sidebarExpanded} setExpanded={setSidebarExpanded} /></div>
       <Topbar sidebarExpanded={sidebarExpanded} />

@@ -3,7 +3,6 @@ import SidebarAnalytics from "../../../components/SidebarAnalytics.jsx";
 import Icon from "../../../components/Icon.jsx";
 import { apiFetch } from '../../../lib/apiClient.js';
 import { BottomNav } from "../../../components/index.js";
-import GlassAmbient from "../../../components/GlassAmbient.jsx";
 import { useAuth } from "../../../hooks/useAuth.jsx";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -323,7 +322,6 @@ const Log = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans flex flex-col md:flex-row relative">
-      <GlassAmbient />
       <div className="glass-content flex flex-col md:flex-row flex-1 min-w-0 w-full">
       <SidebarAnalytics />
 

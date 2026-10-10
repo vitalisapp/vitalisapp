@@ -4,7 +4,6 @@ import Sidebar from '../../../components/Sidebar.jsx';
 import Topbar from '../../../components/Topbar.jsx';
 import BottomNav from '../../../components/BottomNav.jsx';
 import FeedbackModal from '../../../components/FeedbackModal.jsx';
-import GlassAmbient from '../../../components/GlassAmbient.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 
 // Real answers only — each one maps to an actual screen/flow in the app.
@@ -60,7 +59,6 @@ const HelpSupport = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] relative">
-      <GlassAmbient />
       <div className="glass-content">
       <div className="hidden md:block"><Sidebar onClick={handleLogout} expanded={false} setExpanded={() => {}} /></div>
       <Topbar sidebarExpanded={false} userId={user?.id} />

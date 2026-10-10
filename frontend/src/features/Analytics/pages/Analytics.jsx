@@ -19,7 +19,6 @@ import { useAnalyticsData } from '../hooks/useAnalyticsData.js';
 import { useSleepActions } from '../hooks/useSleepActions.js';
 import { getSleepStatusReal } from '../utils/sleepScore.js';
 import { SidebarAnalytics, BottomNav, Topbar } from '../../../components/index.js';
-import GlassAmbient from '../../../components/GlassAmbient.jsx';
 import Icon from '../../../components/Icon.jsx';
 import CheckInModal from '../../Dashboard/components/CheckInModal.jsx';
 
@@ -92,7 +91,6 @@ function AnalyticsInner({ USER_ID }) {
 
   return (
     <div className="flex flex-col md:flex-row min-h-dvh bg-(--bg-primary) text-(--text-primary) font-sans selection:bg-(--accent) selection:text-[var(--text-inverse)] relative">
-      <GlassAmbient />
       <div className="glass-content flex-1 min-w-0">
       <SidebarAnalytics onExpandChange={setSidebarExpanded} />
       <div className="md:hidden">

@@ -12,7 +12,6 @@ import Spinner from '../../../components/ui/Spinner.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import { apiGet, apiPost, apiDelete } from '../../../lib/apiClient.js';
 import { useToastStore } from '../../../stores/toastStore.js';
-import GlassAmbient from '../../../components/GlassAmbient.jsx';
 
 const TAGS = ['General', 'Training', 'Nutrition', 'Recovery'];
 
@@ -251,7 +250,6 @@ const Community = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-x-hidden relative">
-      <GlassAmbient />
       <div className="glass-content">
       <div className="hidden md:block"><Sidebar onClick={handleLogout} expanded={false} setExpanded={() => {}} /></div>
       <Topbar sidebarExpanded={false} userId={user?.id} />

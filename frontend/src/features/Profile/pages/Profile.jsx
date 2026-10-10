@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Sidebar, BottomNav, Topbar } from '../../../components/index.js';
-import GlassAmbient from '../../../components/GlassAmbient.jsx';
 import { useProfile } from '../hooks/useProfile.js';
 import { useAvatar } from '../hooks/useAvatar.js';
 import Toast from '../components/Toast.jsx';
@@ -148,7 +147,6 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex overflow-x-hidden relative">
-      <GlassAmbient />
       <div className="glass-content flex-1 min-w-0">
       <Toast message={toastMessage} visible={toastVisible} onDismiss={() => setToastVisible(false)} variant={toastVariant} />
       <Sidebar expanded={expanded} setExpanded={setExpanded} onClick={handleLogout} />
