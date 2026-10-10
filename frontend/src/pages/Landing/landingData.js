@@ -32,7 +32,7 @@ export const STEPS = [
   {
     num: "1",
     title: "Create your account",
-    desc: "Sign up in under a minute. Free for students — no credit card required.",
+    desc: "Create an account in under a minute. Free to use — no credit card.",
   },
   {
     num: "2",

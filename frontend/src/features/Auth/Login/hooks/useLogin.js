@@ -147,7 +147,7 @@ export const useLogin = () => {
       return googleLogin();
     } catch {
       // Popup blocked / COOP / SDK init failure — surface actionable message
-      setError('Google popup was blocked or failed to start. Allow popups for localhost and try again.');
+      setError('Google popup was blocked or failed to start. Allow popups for this site and try again.');
     }
   };
 

@@ -39,7 +39,7 @@ export default function CameraScanner({ onCapture, onClose }) {
         } else if (err?.message === 'UNSUPPORTED' || err?.name === 'NotFoundError') {
           setError('No camera found on this device. Use Gallery upload instead.');
         } else if (window.isSecureContext === false) {
-          setError('Camera needs HTTPS or localhost. Open the app via https:// or use Gallery upload.');
+          setError('Camera needs a secure connection (HTTPS). Open the app over https:// or use Gallery upload.');
         } else {
           setError('Could not start the camera. Use Gallery upload instead.');
         }

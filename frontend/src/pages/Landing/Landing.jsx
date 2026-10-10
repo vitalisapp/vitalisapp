@@ -217,7 +217,7 @@ const Landing = () => {
                 <h1
                   className="font-display font-extrabold tracking-tight text-balance text-[clamp(2.25rem,5vw,3.5rem)] leading-[1.1]"
                 >
-                  Training, nutrition, and recovery in one place.
+                  Training, meals, sleep, and runs — logged in one place.
                 </h1>
               </Reveal>
               <Reveal delay={0.1}>
@@ -308,7 +308,7 @@ const Landing = () => {
           <div className="max-w-6xl mx-auto">
             <SectionHeader
               eyebrow="Features"
-              title="Everything you need to stay consistent"
+              title="Your whole training loop, connected"
               lede="Four modules cover the full training loop. Each one reads from and writes to the same log, so nothing you enter is ever wasted."
             />
             <div className="grid sm:grid-cols-2 gap-4 sm:gap-5 mt-10 sm:mt-12">
@@ -363,7 +363,7 @@ const Landing = () => {
               <h2
                 className="font-display font-extrabold tracking-tight text-balance text-[clamp(1.75rem,4vw,2.5rem)] leading-[1.15]"
               >
-                A training companion that keeps things simple
+                A student-built tracker for people who log by hand
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
@@ -395,7 +395,7 @@ const Landing = () => {
               </span>
             </div>
             <p className="text-[14px] leading-relaxed text-[var(--text-muted)] max-w-sm">
-              A student-built fitness companion for training, nutrition, and recovery.
+              A student-built tracker for training, nutrition, and recovery.
             </p>
             <nav className="mt-5 flex items-center gap-2 text-[13px] font-medium text-[var(--text-muted)]" aria-label="Legal">
               <button

@@ -43,14 +43,14 @@ const Chip = ({ active, onClick, children, label }) => (
 );
 
 const TITLES = [
-  "Let's Personalize Vitalis",
+  'Set Up Your Profile',
   'Your Current BMI',
   'What Do You Want to Achieve?',
   'Goal Details',
   'How Active Are You?',
   'Your Lifestyle',
   'Generating Your Plan',
-  'Your Vitalis Plan Is Ready',
+  'Your Plan Is Ready',
 ];
 
 // Gated 8-step fitness onboarding: AboutYou → BMI → Goal → Details →
@@ -520,7 +520,7 @@ const Onboarding = () => {
             )}
             {step === 7 && (
               <button type="button" onClick={finish} disabled={saving} className="h-11 px-5 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] text-[13px] font-bold disabled:opacity-50">
-                {saving ? 'Saving...' : 'Start My Vitalis Journey'}
+                {saving ? 'Saving...' : 'Start Training'}
               </button>
             )}
           </div>
