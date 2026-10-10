@@ -253,8 +253,7 @@ const ActivityMap = () => {
 
   return (
     <div
-      className="flex flex-row bg-(--bg-primary) text-(--text-primary) overflow-hidden relative"
-      style={{ height: '100dvh', fontFamily: "'Inter', sans-serif" }}
+      className="flex flex-row bg-(--bg-primary) text-(--text-primary) overflow-hidden relative font-sans h-[100dvh]"
     >
       <GlassAmbient />
       <div className="glass-content flex flex-1 min-w-0 min-h-0">
@@ -314,8 +313,7 @@ const ActivityMap = () => {
                 center={finishedRun.path[0] ?? FALLBACK_COORDS}
                 zoom={15}
                 zoomControl={false}
-                className="h-full w-full z-0"
-                style={{ background: 'var(--bg-secondary)' }}
+                className="h-full w-full z-0 bg-[var(--bg-secondary)]"
               >
                 <TileLayer key={isDark ? 'dark' : 'light'} url={tileUrl} attribution={tileAttribution} />
                 <FitRoute path={finishedRun.path} />
@@ -343,8 +341,7 @@ const ActivityMap = () => {
                   center={mapCenter}
                   zoom={16}
                   zoomControl={false}
-                  className="absolute inset-0 z-0"
-                  style={{ height: '100%', width: '100%', background: 'var(--bg-secondary)' }}
+                  className="absolute inset-0 z-0 bg-[var(--bg-secondary)]"
                 >
                   <TileLayer key={isDark ? 'dark' : 'light'} url={tileUrl} attribution={tileAttribution} />
                   {path.length > 1 && (

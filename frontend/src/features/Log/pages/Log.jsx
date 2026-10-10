@@ -256,8 +256,8 @@ function ProgressChart({ history }) {
                 </span>
                 <div className="w-full max-w-[36px] h-28 flex items-end rounded-lg bg-[var(--bg-hover)] overflow-hidden">
                   <div
-                    className={`w-full rounded-lg transition-all duration-500 ${d.isToday ? 'bg-[var(--accent)]' : 'bg-[var(--accent)]/60'}`}
-                    style={{ height: `${pct}%`, boxShadow: d.isToday ? '0 0 12px var(--accent)' : undefined }}
+                    className={`w-full rounded-lg transition-all duration-500 ${d.isToday ? 'bg-[var(--accent)] ring-2 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--bg-hover)]' : 'bg-[var(--accent)]/60'}`}
+                    style={{ height: `${pct}%` }}
                   />
                 </div>
                 <span className={`text-[8px] font-black uppercase tracking-widest ${d.isToday ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`}>

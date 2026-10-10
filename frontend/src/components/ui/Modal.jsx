@@ -83,7 +83,7 @@ export default function Modal({
     <>
       <style>{`@keyframes modalBackdropIn{from{opacity:0}to{opacity:1}}@keyframes modalCardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
       <div
-        className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 bg-black/60"
+        className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 bg-[var(--bg-overlay)]"
         style={{ animation: 'modalBackdropIn 0.2s ease forwards', paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))', paddingTop: 'max(16px, env(safe-area-inset-top, 0px))' }}
         onMouseDown={(e) => {
           if (closeOnBackdrop && e.target === e.currentTarget) onClose?.();

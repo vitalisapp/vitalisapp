@@ -38,8 +38,7 @@ export const SectionHeader = ({ eyebrow, title, lede }) => (
     </Reveal>
     <Reveal delay={0.05}>
       <h2
-        className="text-[var(--text-primary)] font-extrabold tracking-tight text-balance"
-        style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: 1.15 }}
+        className="text-[var(--text-primary)] font-display font-extrabold tracking-tight text-balance text-[clamp(1.75rem,4vw,2.5rem)] leading-[1.15]"
       >
         {title}
       </h2>
@@ -117,8 +116,7 @@ export const FeatureCard = ({ icon, title, desc, index }) => (
         <Icon name={icon} className="text-[20px] text-[var(--accent)]" />
       </div>
       <h3
-        className="text-[16px] font-bold text-[var(--text-primary)] mb-2"
-        style={{ fontFamily: "var(--font-display)" }}
+        className="text-[16px] font-bold text-[var(--text-primary)] mb-2 font-display"
       >
         {title}
       </h3>
@@ -165,8 +163,7 @@ export const FeatureCarousel = ({ features, shots }) => {
     <div>
       <div
         ref={trackRef}
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 -mx-5 px-5 sm:mx-0 sm:px-0"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 -mx-5 px-5 sm:mx-0 sm:px-0 no-scrollbar"
       >
         {features.map((f, i) => {
           const shot = shots[i % shots.length];
@@ -192,8 +189,7 @@ export const FeatureCarousel = ({ features, shots }) => {
                     <Icon name={f.icon} className="text-[18px] text-[var(--accent)]" />
                   </div>
                   <h3
-                    className="text-[16px] font-bold text-[var(--text-primary)]"
-                    style={{ fontFamily: "var(--font-display)" }}
+                    className="text-[16px] font-bold text-[var(--text-primary)] font-display"
                   >
                     {f.title}
                   </h3>

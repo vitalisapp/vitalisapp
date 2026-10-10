@@ -144,8 +144,7 @@ const Landing = () => {
         .dark-theme .landing-scope img { filter: saturate(0.92); }
       `}</style>
     <div
-      className="landing-scope w-full min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]"
-      style={{ fontFamily: "var(--font-sans)" }}
+      className="landing-scope w-full min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans"
     >
       {/* ── Navigation ─────────────────────────────────────────────── */}
       <header
@@ -163,8 +162,7 @@ const Landing = () => {
           >
             <img src="/pwa-192x192.png" alt="Vitalis logo" className="w-7 h-7 rounded-md" />
             <span
-              className="text-[17px] font-extrabold tracking-tight"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="text-[17px] font-extrabold tracking-tight font-display"
             >
               Vitalis
             </span>
@@ -217,8 +215,7 @@ const Landing = () => {
             <div>
               <Reveal delay={0.05}>
                 <h1
-                  className="font-extrabold tracking-tight text-balance"
-                  style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2.25rem, 5vw, 3.5rem)", lineHeight: 1.1 }}
+                  className="font-display font-extrabold tracking-tight text-balance text-[clamp(2.25rem,5vw,3.5rem)] leading-[1.1]"
                 >
                   Training, nutrition, and recovery in one place.
                 </h1>
@@ -295,8 +292,7 @@ const Landing = () => {
                   <div>
                     <p className="text-[12px] font-medium text-[var(--text-muted)]">Readiness today</p>
                     <p
-                      className="text-[20px] font-extrabold text-[var(--text-primary)] leading-tight"
-                      style={{ fontFamily: "var(--font-display)" }}
+                      className="text-[20px] font-extrabold text-[var(--text-primary)] leading-tight font-display"
                     >
                       82 <span className="text-[13px] font-semibold text-[var(--text-muted)]">/ 100 · Ready to train</span>
                     </p>
@@ -335,14 +331,12 @@ const Landing = () => {
                 <Reveal key={s.num} delay={i * 0.06} className="h-full">
                   <li className="h-full border border-[var(--border-light)] rounded-xl p-6 bg-[var(--bg-primary)]">
                     <p
-                      className="text-[13px] font-extrabold text-[var(--accent)] mb-3"
-                      style={{ fontFamily: "var(--font-display)" }}
+                      className="text-[13px] font-extrabold text-[var(--accent)] mb-3 font-display"
                     >
                       {s.num}
                     </p>
                     <h3
-                      className="text-[16px] font-bold text-[var(--text-primary)] mb-2"
-                      style={{ fontFamily: "var(--font-display)" }}
+                      className="text-[16px] font-bold text-[var(--text-primary)] mb-2 font-display"
                     >
                       {s.title}
                     </h3>
@@ -367,8 +361,7 @@ const Landing = () => {
             </Reveal>
             <Reveal delay={0.05}>
               <h2
-                className="font-extrabold tracking-tight text-balance"
-                style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.75rem, 4vw, 2.5rem)", lineHeight: 1.15 }}
+                className="font-display font-extrabold tracking-tight text-balance text-[clamp(1.75rem,4vw,2.5rem)] leading-[1.15]"
               >
                 A training companion that keeps things simple
               </h2>
@@ -396,8 +389,7 @@ const Landing = () => {
             <div className="flex items-center gap-2.5 mb-3">
               <img src="/pwa-192x192.png" alt="Vitalis logo" className="w-7 h-7 rounded-md" />
               <span
-                className="text-[17px] font-extrabold tracking-tight"
-                style={{ fontFamily: "var(--font-display)" }}
+                className="text-[17px] font-extrabold tracking-tight font-display"
               >
                 Vitalis
               </span>

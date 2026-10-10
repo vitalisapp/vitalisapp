@@ -8,7 +8,7 @@ export default function App() {
     <ErrorBoundary>
     <div className="w-auto min-h-screen">
       {ENV_ERROR ? (
-        <p role="alert" style={{ background: '#7C1D1D', color: '#fff', padding: '8px 12px', fontSize: 12, textAlign: 'center' }}>
+        <p role="alert" className="bg-[var(--error)] text-[var(--text-inverse)] px-3 py-2 text-xs text-center font-semibold">
           {ENV_ERROR}
         </p>
       ) : null}

@@ -1052,7 +1052,7 @@ const Explore = ({ plans, onOpen, onEnroll, onContinue }) => {
           </div>
         </div>
       )}
-      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 mb-6 sm:mb-8" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 mb-6 sm:mb-8 no-scrollbar">
         {CATEGORIES.map(cat => (
           <button
             key={cat.label}
@@ -1174,7 +1174,7 @@ const Plans = () => {
   };
 
   return (
-    <div className="min-h-screen relative" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'Inter, sans-serif' }}>
+    <div className="min-h-screen relative bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans">
       <GlassAmbient />
       <div className="glass-content">
       <div className="hidden md:block">

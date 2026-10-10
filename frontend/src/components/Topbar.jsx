@@ -80,11 +80,9 @@ function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose
       </div>
 
       <div
-        className="overflow-y-auto [&::-webkit-scrollbar]:hidden"
+        className="overflow-y-auto [&::-webkit-scrollbar]:hidden no-scrollbar"
         style={{
           maxHeight: isMobile ? '55dvh' : '340px',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
         }}
       >
         {displayed.length === 0 ? (
@@ -135,18 +133,18 @@ function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose
 
   if (isMobile) {
     return createPortal(
-      <div
-        id="notif-portal"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Notifications"
-        style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}
-        onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      >
         <div
-          style={{ width: '100%', maxWidth: '400px', maxHeight: '80dvh', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-light)', overflow: 'hidden', boxShadow: 'var(--shadow-lg)' }}
-          onMouseDown={(e) => e.stopPropagation()}
+          id="notif-portal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Notifications"
+          className="fixed inset-0 z-[9999] bg-[var(--bg-overlay)] flex items-center justify-center px-4"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
+          <div
+            className="w-full max-w-[400px] max-h-[80dvh] bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-light)] overflow-hidden shadow-[var(--shadow-lg)]"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
           {innerContent}
         </div>
       </div>,

@@ -37,8 +37,8 @@ const REST_ACTIVITY_TYPES = new Set(['Recovery', 'Mobility', 'Flexibility']);
 // Receives plain values (not refs) so it never reads .current in JSX.
 function EarlyExitDialog({ mode, reps, holdSecs, minReps, minHoldSecs, elapsedMins, requiredMins, onConfirm, onCancel }) {
   const progressText = mode === 'hold'
-    ? <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{Math.floor(holdSecs)}s held</span>
-    : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{reps} rep{reps !== 1 ? 's' : ''}</span>;
+    ? <span className="text-[var(--accent)] font-bold">{Math.floor(holdSecs)}s held</span>
+    : <span className="text-[var(--accent)] font-bold">{reps} rep{reps !== 1 ? 's' : ''}</span>;
   const needText = requiredMins > 0
     ? ` This day requires at least ${requiredMins} mins to be marked complete.`
     : mode === 'hold'
@@ -46,44 +46,36 @@ function EarlyExitDialog({ mode, reps, holdSecs, minReps, minHoldSecs, elapsedMi
       : ` You need at least ${minReps} reps to complete this day.`;
   return (
     <div
-      className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 overflow-y-auto"
-      style={{ background: 'var(--bg-overlay)' }}
+      className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 overflow-y-auto bg-[var(--bg-overlay)]"
       role="dialog"
       aria-modal="true"
       aria-label="Workout incomplete"
       onKeyDown={(e) => { if (e.key === 'Escape') onCancel?.(); }}
       tabIndex={-1}
     >
-      <div className="w-full max-w-sm my-auto rounded-2xl border shadow-2xl p-6 max-h-[90dvh] overflow-y-auto"
-           style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-medium)' }}>
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto"
-             style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>
+      <div className="w-full max-w-sm my-auto rounded-2xl border shadow-2xl p-6 max-h-[90dvh] overflow-y-auto bg-[var(--bg-secondary)] border-[var(--border-medium)]">
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto bg-[var(--error-bg)] border border-[var(--error)]">
           <span className="material-symbols-outlined text-red-400 text-[22px]"
                 style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
         </div>
 
-        <h3 className="text-base font-black text-center mb-1"
-            style={{ color: 'var(--text-primary)' }}>Workout Incomplete</h3>
-        <p className="text-xs text-center mb-5 leading-relaxed"
-           style={{ color: 'var(--text-muted)' }}>
+        <h3 className="text-base font-black text-center mb-1 text-[var(--text-primary)]">Workout Incomplete</h3>
+        <p className="text-xs text-center mb-5 leading-relaxed text-[var(--text-muted)]">
           You've only done {progressText} in{' '}
-          <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{elapsedMins} min{elapsedMins !== 1 ? 's' : ''}</span>.
+          <span className="text-[var(--accent)] font-bold">{elapsedMins} min{elapsedMins !== 1 ? 's' : ''}</span>.
           {needText}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-2.5 min-h-[48px] rounded-xl font-bold text-sm border transition-all"
-            style={{ borderColor: 'var(--border-medium)', color: 'var(--text-muted)' }}
+            className="flex-1 py-2.5 min-h-[48px] rounded-xl font-bold text-sm border transition-all border-[var(--border-medium)] text-[var(--text-muted)]"
           >
             Keep Going
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-2.5 min-h-[48px] rounded-xl font-bold text-sm transition-all"
-            style={{ background: 'var(--error-bg)', color: 'var(--error)',
-                     border: '1px solid var(--error)' }}
+            className="flex-1 py-2.5 min-h-[48px] rounded-xl font-bold text-sm transition-all bg-[var(--error-bg)] text-[var(--error)] border border-[var(--error)]"
           >
             End Anyway
           </button>
@@ -194,7 +186,7 @@ function WorkoutChooser({ query, onQuery, onPick, onBack }) {
             return (
               <button key={slug} type="button" onClick={() => onPick(slug)}
                 className="text-left rounded-2xl border border-[var(--border-light)] bg-[var(--bg-hover)]/50 hover:border-[var(--accent-border)] hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-[var(--accent)] transition-all duration-300 overflow-hidden h-full">
-                <span className="relative block aspect-square" style={{ background: '#1E1E1E' }}>
+                <span className="relative block aspect-square bg-[#1E1E1E]">
                   {img
                     ? <img src={img} alt={label} loading="lazy" className="w-full h-full object-contain p-2"
                         onError={(e) => { e.currentTarget.style.display = 'none'; }} />

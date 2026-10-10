@@ -41,7 +41,7 @@ const CaloriesRing = ({ remaining, goal, food, size = 112, stroke = 10 }) => {
         <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--accent)" strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${blueDash} ${c - blueDash}`} />
         <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--accent)" strokeWidth={stroke} strokeLinecap="round"
-          strokeDasharray={`${orangeDash} ${c - orangeDash}`} style={{ opacity: 0.45 }} />
+          strokeDasharray={`${orangeDash} ${c - orangeDash}`} className="opacity-45" />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
         <span className="font-black text-[26px] tracking-tighter text-[var(--text-primary)]">{remaining.toLocaleString()}</span>
@@ -58,14 +58,14 @@ const MiniCard = ({ title, icon, value, sub, progress, onClick, actionIcon }) =>
       {actionIcon && <span className="w-6 h-6 rounded-full bg-[var(--bg-hover)] flex items-center justify-center -mt-1 shrink-0"><span className="material-symbols-outlined text-[16px] text-[var(--accent)]">{actionIcon}</span></span>}
     </div>
     <div className="flex items-center gap-2 mt-1.5 min-w-0">
-      <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 border border-[var(--accent-border)]" style={{ background: 'var(--bg-card)' }}>
-        <span className="material-symbols-outlined text-[16px]" style={{ color: 'var(--accent)' }}>{icon}</span>
+      <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 border border-[var(--accent-border)] bg-[var(--bg-card)]">
+        <span className="material-symbols-outlined text-[16px] text-[var(--accent)]">{icon}</span>
       </span>
       <span className="text-[20px] font-black tracking-tight text-[var(--text-primary)] truncate">{value}</span>
     </div>
     <p className="text-[11px] text-[var(--text-muted)] mt-1 truncate">{sub}</p>
     <div className="h-1.5 bg-[var(--bg-hover)] rounded-full mt-2.5 overflow-hidden">
-      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.round(progress))}%`, background: 'var(--accent)' }} />
+      <div className="h-full rounded-full transition-all duration-500 bg-[var(--accent)]" style={{ width: `${Math.min(100, Math.round(progress))}%` }} />
     </div>
   </button>
 );
@@ -248,8 +248,7 @@ const Dashboard = () => {
             <div
               ref={heroRef}
               onScroll={onHeroScroll}
-              className="flex overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
-              style={{ scrollbarWidth: 'none' }}
+              className="flex overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden no-scrollbar"
             >
               <div className="min-w-full snap-center p-4 sm:p-5">
                 <div className="flex items-start justify-between">

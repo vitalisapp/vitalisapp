@@ -216,9 +216,9 @@ const BodyMetricsPanel = ({ USER_ID, initialWeight, initialHeight, onboarding, s
                 </div>
               </div>
               <div className="h-1.5 rounded-full overflow-hidden flex bg-[var(--bg-hover)]">
-                <div style={{width:`${macros.protein.pct}%`, background:'var(--accent)'}} />
-                <div style={{width:`${macros.fat.pct}%`, background:'var(--accent)', opacity: 0.55}} />
-                <div style={{width:`${macros.carbs.pct}%`, background:'var(--accent)', opacity: 0.3}} />
+                <div className="bg-[var(--accent)]" style={{width:`${macros.protein.pct}%`}} />
+                <div className="bg-[var(--accent)] opacity-55" style={{width:`${macros.fat.pct}%`}} />
+                <div className="bg-[var(--accent)] opacity-30" style={{width:`${macros.carbs.pct}%`}} />
               </div>
               <div className="grid grid-cols-3 gap-2 [&>div]:min-w-0">
                 <div className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] p-3 text-center"><p className="text-[10px] font-bold tracking-[0.12em] text-[var(--accent)]">PROTEIN</p><p className="text-[14px] font-black text-[var(--text-primary)] break-words tabular-nums">{macros.protein.g}g</p><p className="text-[9px] text-[var(--text-muted)] tabular-nums">{macros.protein.kcal} kcal · {macros.protein.pct}%</p></div>
@@ -275,7 +275,7 @@ const GoalPicker = ({ value, disabled, onPick }) => {
         {current ? (
           <>
             <span className="w-8 h-8 rounded-lg bg-[var(--accent-bg)] border border-[var(--accent-border)] flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-[16px]" style={{ color: 'var(--accent)' }}>{current.icon}</span>
+              <span className="material-symbols-outlined text-[16px] text-[var(--accent)]">{current.icon}</span>
             </span>
             <span className="flex-1 min-w-0">
               <span className="block text-[13px] font-bold text-[var(--text-primary)] truncate">{current.label}</span>
@@ -307,13 +307,13 @@ const GoalPicker = ({ value, disabled, onPick }) => {
                     className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors ${selected ? 'bg-[var(--accent-bg)] border border-[var(--accent-border)]' : 'border border-transparent hover:bg-[var(--bg-hover)]'}`}
                   >
                     <span className="w-9 h-9 rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--accent)' }}>{g.icon}</span>
+                      <span className="material-symbols-outlined text-[18px] text-[var(--accent)]">{g.icon}</span>
                     </span>
                     <span className="flex-1 min-w-0">
                       <span className="block text-[13px] font-bold text-[var(--text-primary)]">{g.label}</span>
                       <span className="block text-[11px] text-[var(--text-muted)] leading-snug">{g.desc}</span>
                     </span>
-                    {selected && <span className="material-symbols-outlined text-[18px] shrink-0" style={{ color: 'var(--accent)' }}>check_circle</span>}
+                    {selected && <span className="material-symbols-outlined text-[18px] shrink-0 text-[var(--accent)]">check_circle</span>}
                   </button>
                 );
               })}
@@ -463,7 +463,7 @@ const Profile = () => {
 
         <main className="w-full max-w-[720px] lg:max-w-4xl mx-auto px-4 pb-20 md:pb-8 pt-[56px]">
           {/* Header band: Streak | avatar+name+tier | Progress */}
-          <div className="relative rounded-[20px] overflow-hidden text-[#08130A] shadow-md mt-4" style={{ background: 'linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 60%, var(--accent-dark) 130%)' }}>
+          <div className="relative rounded-[20px] overflow-hidden text-[#08130A] shadow-md mt-4 bg-[linear-gradient(135deg,var(--accent-light)_0%,var(--accent)_60%,var(--accent-dark)_130%)]">
             <div className="flex items-center justify-between gap-2 px-4 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-5">
               <div className="text-center w-[64px] sm:w-[76px] shrink-0">
                 <p className="text-[20px] sm:text-[22px] font-black leading-none tabular-nums">{streakDays}</p>
@@ -477,7 +477,7 @@ const Profile = () => {
                       const a = resolveAvatar(avatarSrc, formData.fullName);
                       return a.kind === 'image'
                         ? <img src={a.src} alt="avatar" className="w-full h-full object-cover" />
-                        : <span className="w-full h-full flex items-center justify-center text-[var(--text-inverse)]" style={{ background: 'var(--accent)' }}>{a.initials}</span>;
+                        : <span className="w-full h-full flex items-center justify-center text-[var(--text-inverse)] bg-[var(--accent)]">{a.initials}</span>;
                     })()}
                   </div>
                   <button onClick={() => setPickerOpen(v => !v)} aria-label={pickerOpen ? 'Close avatar picker' : 'Change avatar'} aria-expanded={pickerOpen} className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white text-[var(--accent-dark)] border border-black/20 flex items-center justify-center shadow hover:scale-105 active:scale-95 transition-transform">
