@@ -157,7 +157,7 @@ const Profile = () => {
           {/* Header band: Streak | avatar+name+tier | Progress.
               Solid deep-green block (no gradient wash) with light text in
               both themes — dark media block, tokens can't express it. */}
-          <div className="relative rounded-[20px] overflow-hidden text-[#EAF2EA] shadow-md mt-4 bg-[#0C1410] border border-[var(--border-light)]">
+          <div className="relative rounded-[20px] overflow-hidden text-[#EAF2EA] shadow-md mt-4 bg-[#1B4332] border border-white/10">
             <div className="flex items-center justify-between gap-2 px-4 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-5">
               <div className="text-center w-[64px] sm:w-[76px] shrink-0">
                 <p className="text-[20px] sm:text-[22px] font-black leading-none tabular-nums">{streakDays}</p>
@@ -171,7 +171,7 @@ const Profile = () => {
                       const a = resolveAvatar(avatarSrc, formData.fullName);
                       return a.kind === 'image'
                         ? <img src={a.src} alt="avatar" className="w-full h-full object-cover" />
-                        : <span className="w-full h-full flex items-center justify-center text-[var(--text-inverse)] bg-[var(--accent)]">{a.initials}</span>;
+                        : <span className="w-full h-full flex items-center justify-center text-black bg-[#4E9B5F]">{a.initials}</span>;
                     })()}
                   </div>
                   <button onClick={() => setPickerOpen(v => !v)} aria-label={pickerOpen ? 'Close avatar picker' : 'Change avatar'} aria-expanded={pickerOpen} className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#6BAE7E] text-[#0C1410] border border-transparent flex items-center justify-center shadow hover:scale-105 active:scale-95 transition-transform">
