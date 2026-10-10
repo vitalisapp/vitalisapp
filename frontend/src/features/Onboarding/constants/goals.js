@@ -9,6 +9,9 @@ export const GOAL_TYPES = [
 
 export const goalLabel = (key) => GOAL_TYPES.find((g) => g.key === key)?.label || key || '—';
 
+const GOAL_LABEL_SET = new Set(GOAL_TYPES.map((g) => g.label));
+export const isGoalLikeBio = (v) => GOAL_LABEL_SET.has(String(v || '').trim());
+
 export const ACTIVITY_LEVELS = [
   { key: 'SEDENTARY', label: 'Sedentary', desc: 'Mostly sitting / minimal exercise', icon: 'chair' },
   { key: 'LIGHTLY_ACTIVE', label: 'Lightly Active', desc: 'Activity 1–3 days per week', icon: 'directions_walk' },
