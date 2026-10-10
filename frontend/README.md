@@ -45,7 +45,7 @@ npm test               # eslint + node --test tests/unit (avatar smoke)
 npm run test:unit      # unit tests only
 ```
 
-Fonts are fully self-hosted via `@fontsource/*` (Inter, Manrope, Bebas Neue, DM Sans) — no Google Fonts request, works offline.
+Fonts are fully self-hosted via `@fontsource/*` (Inter for UI, Manrope for display) — no Google Fonts request, works offline. The icon font (`material-symbols`) is runtime-cached on first use, not precached.
 
 ## Env
 
@@ -64,3 +64,8 @@ Validated in `src/app/config/env.js`.
 - Feature code stays in `features/<domain>`; shared code only in `components/ui|feedback`, `lib/`, `constants/`.
 - Imports use relative paths with explicit `.jsx`/`.js` extensions; API base from `app/config/env.js`, nav from `constants/nav.js`.
 - Global `*` transition limited to `color/border/bg` (see `src/index.css`).
+- Type: Inter (UI, `font-sans`) + Manrope (display, `font-display` via `@theme`). Accent is muted leaf-green in both themes (WCAG AA verified).
+- Motion only for loading, feedback, and transitions; status dots are static. Global `prefers-reduced-motion` kill-switch in `index.css`.
+- Inline `style={{}}` only for truly dynamic values (widths, per-user gradients, safe-area, delays); everything else is Tailwind/tokens.
+- Modal backdrops are solid `bg-[var(--bg-overlay)]`; blur lives only over photos, video, maps, and sticky nav.
+- Tests: `tests/unit/*.test.js` (node:test, no DOM) cover pure utils — add cases alongside any new pure helper.

@@ -7,15 +7,15 @@ backend/
 ├── migrations/              # 001..032 *.sql (001_users … 029_workout_logs + 030_seeds + 031_landing_visits + 032_personal_plans) — idempotent, tracked in _migrations
 ├── src/
 │   ├── app.js               # Express factory (helmet/cors/rateLimit/routes/errorHandler)
-│   ├── config/              # env, db, cors, gemini, mailer, jwt
+│   ├── config/              # env, db, cors, jwt, mailer; gemini.js barrel → config/ai/ (providers, models, retry, textFallback, nutrition, parsers, vision)
 │   ├── constants/           # foodAnalysisPrompt (AI vision prompt)
-│   ├── controllers/         # thin handlers (community, settings, activity, …)
+│   ├── controllers/         # thin handlers + barrels (ai.controller → services/ai*.js)
 │   ├── middleware/          # verifyUser, errorHandler, validate (Zod), requestLogger, rateLimits, aiQuota
 │   ├── routes/              # mounted routes + index.js (central registry)
-│   ├── services/            # activity.service (only shared service; controllers own DB logic)
-│   ├── sockets/             # socketHandler (verified JWT room)
-│   ├── utils/               # errors/AppError, cookies (COOKIE_NAME), owner (IDOR guard), ids, asyncHandler
-│   └── db/                  # migrate.js, create-migration.js, seeds/
+│   ├── services/            # activity.service; auth helpers (loginThrottle, verification, googleAuth, session); ai services (aiPose, aiChat, aiClinical, aiCoach, aiRunAnalysis)
+│   ├── sockets/             # socketHandler (verified JWT room + friends-only send-chat relay)
+│   ├── utils/               # errors/AppError, cookies (COOKIE_NAME), owner (IDOR guard), ids, logger (levels), frontendUrl, asyncHandler
+│   └── db/                  # migrate.js, create-migration.js, seeds/ (idempotent dumps + README)
 ├── .env / .env.example      # .env is gitignored via root /.gitignore — never commit secrets
 ├── package.json
 ├── tests/                   # unit/ (schemas, migrations) + integration/ (health, auth guards)
@@ -33,7 +33,9 @@ DEBUG=1 npm run dev          # force logs in prod
 * `src/middleware/requestLogger.js:1` — one line per request (method path → status ms + uid)
 * `src/routes/index.js:1` — if 404, check mount here first (single file, not scattered in server.js)
 * `src/middleware/errorHandler.js:1` + `src/utils/errors.js:1` AppError — no internal leak
-* Startup warns if `TZ!=UTC` (quotas use `UTC_DATE()`) — set `TZ=UTC` in prod. `IP_HASH_SALT` optionally separates landing-visit hashing from `JWT_SECRET` (falls back for old hashes).
+ * Startup warns if `TZ!=UTC` (quotas use `UTC_DATE()`) — set `TZ=UTC` in prod. `IP_HASH_SALT` optionally separates landing-visit hashing from `JWT_SECRET` (falls back for old hashes).
+ * Production boot refuses to start when: `JWT_SECRET` is missing/weak, `DB_PASS` is empty, `ALLOW_DEV_LINKS=1`, or neither `FRONTEND_URL` nor `ALLOWED_ORIGINS` is set (see `tests/integration/env-guards.test.js`).
+ * App logs go through `src/utils/logger.js` — `debug`/`info` hidden in production unless `DEBUG` is set; `warn`/`error` always print. CLI scripts (`db/migrate`, `create-migration`) and the server boot banner keep direct console output.
 
 ## Adding a Route
 1. `src/routes/myFeature.js` → `router.get('/my-path', verifyUser, ...)`

@@ -76,25 +76,73 @@ Frontend:
 
 ## Environment
 
-Backend `.env` is required. Copy from `backend/.env.example` and set database
-credentials, a long random JWT secret, allowed origins, frontend URL, mail
-credentials for OTP emails, Google OAuth credentials, and AI keys for
-Gemini and Groq. AI keys are optional — the app uses a static fallback without
-them. Email and Google credentials are needed for verification, reset, and
-Google login flows.
+Backend `.env` is required. Copy from `backend/.env.example`:
 
-Frontend `.env` is optional for local development. Copy from
-`frontend/.env.example` when customizing the backend target, socket target,
-or Google client ID. Empty values use the dev proxy. Production static builds
-need absolute backend values set before building.
+| Variable | Required | Notes |
+|---|---|---|
+| `DB_HOST`, `DB_USER`, `DB_NAME` | yes | MySQL 8 connection target |
+| `DB_PASS` | prod-only | Must be non-empty when `NODE_ENV=production` |
+| `DB_PORT`, `DB_POOL_MAX`, `DB_QUEUE_LIMIT` | no | Defaults 3306 / 25 / 200 |
+| `JWT_SECRET` | yes | Min 32 chars, not the example value — enforced even in dev |
+| `ALLOWED_ORIGINS` | prod-only | Comma-separated; `*` with credentials is refused at boot |
+| `ALLOWED_ORIGIN_REGEX` | no | Must be anchored `^…$`; overly broad patterns refuse to start |
+| `FRONTEND_URL` | prod-only | One of `FRONTEND_URL`/`ALLOWED_ORIGINS` required in prod; must be https |
+| `EMAIL_USER`, `EMAIL_PASS` | for mail flows | Verification + OTP emails fail gracefully without them |
+| `RECEIVER_EMAIL` | for `/api/feedback` | Public rate-limited inbox |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | for Google login | Must match frontend `VITE_GOOGLE_CLIENT_ID` |
+| `GEMINI_API_KEY`, `GROQ_API_KEY` | no | Static fallback when unset; overrides via `GEMINI_TEXT/VISION_MODELS` |
+| `AI_DAILY_LIMIT` | no | Default 50/user/day (UTC), 429 + `Retry-After` past it |
+| `ALLOW_DEV_LINKS` | never in prod | `=1` exposes verify links in API responses; boot-refused in prod |
+| `TZ` | recommended `UTC` | Quota + daily boundaries use `UTC_DATE()`; warned when unset |
+| `SOCKET_REVERIFY_MS` | no | Socket session re-check interval, clamped 10s–10min (default 90s) |
+| `DEBUG` | no | Enables debug logs + verbose request logging |
+
+Frontend `.env` is optional for local development (empty values use the
+dev proxy). Production static builds need absolute backend values set
+before building:
+
+| Variable | Notes |
+|---|---|
+| `VITE_API_URL` | Absolute backend URL for prod builds; empty = same-origin/proxy |
+| `VITE_SOCKET_URL` | Socket.io target; empty = same-origin |
+| `VITE_GOOGLE_CLIENT_ID` | Disables Google button when unset |
 
 Only `.env.example` files are tracked. Never commit real `.env` files.
 
 ## Testing
 
-Backend covers activity accuracy, AI stability, plan engine, validation schemas,
-migrations count and idempotency, and auth guards. Frontend covers avatar
-helpers. Run the backend and frontend suites separately before pushing.
+Backend (85 tests, 22 suites): activity accuracy, AI stability, plan
+engine, validation schemas, migrations count and idempotency, auth and
+community/settings guards, per-device session revocation, env fail-fast
+guards, and friends-only socket relay. Frontend (30 tests, 13 suites):
+avatar helpers plus pure utils (`sleepScore`, `metrics`, `dateKey`).
+Run the backend and frontend suites separately before pushing.
+
+## Architecture
+
+* Request flow: Vite dev proxy (or prod static host) → Express 5 API
+  (`/api/*`, Zod-validated, `verifyUser` cookie sessions) → MySQL 8.
+* Auth: httpOnly JWT cookies (`tv` = `token_version`); logout, password
+  change, and reset bump the version to revoke all sessions; per-device
+  revoke deletes the session row and bumps the version (fail closed).
+* Realtime: Socket.io rooms named by user id; cookie + DB verified at
+  connect and every 90s. Chat persists via REST, then relays `send-chat`
+  → `receive-chat` to friends only (30/min per socket).
+* AI: all AI POSTs behind per-user daily quota (UTC); Gemini model
+  rotation → Groq → static fallback; insight cache keyed by data
+  signature. Application logs go through `backend/src/utils/logger.js`
+  (debug/info hidden in production unless `DEBUG` is set).
+* PWA: precached shell + map tiles; API is `NetworkOnly` (shared-device
+  safety); the 3.9 MB icon font is runtime-cached on first use.
+
+## Screenshots
+
+Capture from a running build before release (light + dark):
+
+* Landing hero, login, onboarding profile step
+* Dashboard (calories ring + week strip), meal tracker scan result
+* Camera workout session, activity map with a recorded run
+* Community feed, messenger thread, analytics sleep scatter
 
 ## Docs
 
