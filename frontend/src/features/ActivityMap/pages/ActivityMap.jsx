@@ -275,6 +275,17 @@ const ActivityMap = () => {
           </div>
         )}
 
+        {/* Location banner — the map centers a default view until GPS is
+            granted; say so explicitly instead of silently showing it. */}
+        {locationStatus === 'denied' && (
+          <div className="z-50 flex items-center justify-center gap-2 bg-(--warning-bg) border-b border-(--warning) px-4 py-2 shrink-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-(--warning)" />
+            <span className="text-[11px] font-black uppercase tracking-widest text-(--warning)">
+              Location blocked — enable GPS to map runs · showing default view
+            </span>
+          </div>
+        )}
+
         {/* Syncing banner */}
         {isOnline && pendingCount > 0 && (
           <div className="z-50 flex items-center justify-center gap-2 bg-(--accent-bg) border-b border-(--accent-border) px-4 py-2 shrink-0">

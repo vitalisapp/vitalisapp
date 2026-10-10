@@ -33,6 +33,12 @@ if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEV_LINKS === '1'
   console.error('[env] ALLOW_DEV_LINKS=1 exposes verify/reset links — forbidden in production');
   process.exit(1);
 }
+// Production must name its frontend explicitly — silently falling back to a
+// localhost URL (cors.js / frontendUrl) would mint wrong links and CORS.
+if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL && !process.env.ALLOWED_ORIGINS) {
+  console.error('[env] FRONTEND_URL or ALLOWED_ORIGINS must be set in production (no localhost fallback)');
+  process.exit(1);
+}
 if (!process.env.TZ || process.env.TZ !== 'UTC') {
   // aiQuota uses UTC_DATE() + daily_stats/readiness assume UTC day boundaries.
   // Warn only — never crash — so local XAMPP keeps working.

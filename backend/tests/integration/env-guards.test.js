@@ -23,6 +23,9 @@ function loadEnv(extra) {
         DB_NAME: 'fitnessapp',
         JWT_SECRET: 'test-secret-min-32-chars-0123456789ab',
         TZ: 'UTC',
+        // Deterministic: never inherit a developer shell's URLs.
+        FRONTEND_URL: '',
+        ALLOWED_ORIGINS: '',
         ...extra,
       },
       encoding: 'utf8',
@@ -38,7 +41,19 @@ describe('env fail-fast guards', () => {
   });
 
   it('loads fine with ALLOW_DEV_LINKS unset in production', () => {
+    const r = loadEnv({ ALLOW_DEV_LINKS: '0', FRONTEND_URL: 'https://app.example.com' });
+    assert.equal(r.status, 0);
+    assert.match(r.stdout, /ENV_OK/);
+  });
+
+  it('refuses missing FRONTEND_URL and ALLOWED_ORIGINS in production', () => {
     const r = loadEnv({ ALLOW_DEV_LINKS: '0' });
+    assert.notEqual(r.status, 0);
+    assert.match(r.stderr + r.stdout, /FRONTEND_URL/);
+  });
+
+  it('accepts ALLOWED_ORIGINS alone in production', () => {
+    const r = loadEnv({ ALLOW_DEV_LINKS: '0', ALLOWED_ORIGINS: 'https://app.example.com' });
     assert.equal(r.status, 0);
     assert.match(r.stdout, /ENV_OK/);
   });

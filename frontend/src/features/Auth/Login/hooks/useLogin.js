@@ -139,7 +139,7 @@ export const useLogin = () => {
   const loginWithGoogle = () => {
     if (!GOOGLE_CLIENT_ID) {
       setError(
-        'Google login is not configured on this device. Add VITE_GOOGLE_CLIENT_ID to frontend/.env (same value as backend GOOGLE_CLIENT_ID), then restart the dev server.'
+        'Google login is not configured on this device (missing Google client ID).'
       );
       return;
     }

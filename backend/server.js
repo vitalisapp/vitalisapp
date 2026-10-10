@@ -51,9 +51,13 @@ server.on("error", (err) => {
 server.listen(PORT, () => {
   console.log(`✅ Vitalis Backend Engine Running on Port ${PORT}`);
   console.log(`   NODE_ENV: ${process.env.NODE_ENV || "development"}`);
-  console.log(
-    `   Routes: http://localhost:${PORT}/api/_routes  | Health: /api/health`,
-  );
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      `   Routes: http://localhost:${PORT}/api/_routes  | Health: /api/health`,
+    );
+  } else {
+    console.log(`   Health: /api/health`);
+  }
 });
 
 process.on("unhandledRejection", (reason) => {
