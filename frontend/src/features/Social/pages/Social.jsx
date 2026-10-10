@@ -291,7 +291,7 @@ const ClinicalMessenger = () => {
                     <span
                       className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                         activeContact.is_online
-                          ? 'bg-[var(--accent)] animate-pulse'
+                          ? 'bg-[var(--accent)]'
                           : 'bg-[var(--text-muted)]'
                       }`}
                     />

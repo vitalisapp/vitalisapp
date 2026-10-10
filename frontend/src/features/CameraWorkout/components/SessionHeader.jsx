@@ -51,7 +51,7 @@ export default function SessionHeader({
       <div className="flex items-center gap-2 shrink-0">
         {(isRecording || paused) && (
           <span className="hidden min-[400px]:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent-bg)] border border-[var(--accent-border)] text-[var(--accent)] text-[10px] font-bold uppercase tracking-widest">
-            <span className={`w-1.5 h-1.5 rounded-full bg-[var(--accent)] ${paused ? '' : 'animate-pulse'}`} />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
             {paused ? 'Paused' : 'Tracking Active'}
           </span>
         )}

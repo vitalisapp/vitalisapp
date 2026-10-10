@@ -55,7 +55,7 @@ export default function FeedbackModal({ onClose }) {
     >
       {submitted ? (
         <div className="flex flex-col items-center gap-4 py-6 text-center">
-          <div className="w-[72px] h-[72px] rounded-full bg-[var(--accent-bg)] border border-[var(--accent-border)] flex items-center justify-center animate-[pulse_1.8s_ease_infinite]">
+          <div className="w-[72px] h-[72px] rounded-full bg-[var(--accent-bg)] border border-[var(--accent-border)] flex items-center justify-center">
             <svg width="48" height="48" viewBox="0 0 52 52">
               <circle cx="26" cy="26" r="25" fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="166" strokeDashoffset="0" />
               <polyline points="14,27 22,35 38,18" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />

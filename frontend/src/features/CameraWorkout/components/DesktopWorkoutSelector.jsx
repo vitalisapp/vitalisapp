@@ -39,7 +39,7 @@ export default function DesktopWorkoutSelector({ workoutType, onSelect }) {
       </div>
 
       <div className="ml-auto flex items-center gap-2 bg-[var(--accent-bg)] px-3 py-1.5 rounded-full border border-[var(--accent-border)]">
-        <div className="w-1 h-1 rounded-full bg-[var(--accent)] animate-pulse" />
+        <div className="w-1 h-1 rounded-full bg-[var(--accent)]" />
         <span className="text-[8px] font-black text-[var(--accent)] uppercase tracking-widest">Live</span>
       </div>
     </div>

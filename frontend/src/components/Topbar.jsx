@@ -101,7 +101,7 @@ function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose
               <div className="mt-1.5 shrink-0">
                 {notif.is_read
                   ? <div className="w-1.5 h-1.5 rounded-full bg-(--text-muted) border border-(--border-medium)" />
-                  : <div className="w-2 h-2 rounded-full bg-(--accent) shadow-[var(--shadow-sm)] animate-pulse" />
+                  : <div className="w-2 h-2 rounded-full bg-(--accent) shadow-[var(--shadow-sm)]" />
                 }
               </div>
               <div className="flex-1 min-w-0">
@@ -358,7 +358,7 @@ const Topbar = ({ sidebarExpanded, userId }) => {
             >
               <Icon name="notifications" className={`text-[20px] sm:text-[21px] transition-colors ${notifOpen ? 'text-(--accent)' : 'text-(--text-muted) group-hover:text-(--accent)'}`} />
               {notifCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-(--accent) rounded-full border-[1.5px] border-(--bg-secondary) animate-pulse" />
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-(--accent) rounded-full border-[1.5px] border-(--bg-secondary)" />
               )}
             </button>
             {notifOpen && (
