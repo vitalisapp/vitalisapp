@@ -282,7 +282,7 @@ const BottomNav = ({
 
       {logOpen && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm md:hidden overflow-y-auto"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--bg-overlay)] md:hidden overflow-y-auto"
           onClick={() => setLogOpen(false)}
         >
           <div

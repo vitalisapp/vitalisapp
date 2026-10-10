@@ -64,7 +64,7 @@ const QuickLog = ({ userId, onWeightLogged, onCheckIn }) => {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={close}>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-[var(--bg-overlay)]" onClick={close}>
           <div className="glass-panel border border-[var(--border-light)] w-full max-w-[400px] rounded-[20px] p-4" onClick={(e) => e.stopPropagation()}>
             {mode === 'menu' ? (
               <>

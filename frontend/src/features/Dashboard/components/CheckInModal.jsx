@@ -53,7 +53,7 @@ const CheckInModal = ({ userId, initial, onClose, onSaved }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-[var(--bg-overlay)]" onClick={onClose}>
       <div className="glass-panel border border-[var(--border-light)] w-full max-w-[440px] rounded-[20px] p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-1">
           <h3 className="text-[17px] font-bold">Daily Check-In</h3>

@@ -4,7 +4,7 @@ const RunAnalysisOverlay = ({ analysis, onClose }) => {
   if (!analysis) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] bg-[var(--bg-overlay)] flex items-end sm:items-center justify-center p-4 overflow-y-auto">
       <div className="w-full max-w-md my-auto bg-[var(--bg-tertiary)] border border-[var(--border-medium)] rounded-3xl overflow-hidden shadow-2xl max-h-[90dvh] flex flex-col">
         {/* Header */}
         <div className="bg-[var(--accent-bg)] px-5 py-4 border-b border-[var(--border-light)] flex items-center justify-between shrink-0">

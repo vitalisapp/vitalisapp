@@ -17,7 +17,7 @@ export default function WorkoutSummary({ summary, onDone }) {
   const c = 2 * Math.PI * r;
 
   return (
-    <div className="fixed inset-0 z-[90] bg-[var(--bg-overlay)] backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
+    <div className="fixed inset-0 z-[90] bg-[var(--bg-overlay)] flex items-end sm:items-center justify-center sm:p-4"
       role="dialog" aria-modal="true" aria-label="Workout complete">
       <div className="w-full sm:max-w-md bg-[var(--bg-primary)] border border-[var(--border-light)] rounded-t-3xl sm:rounded-3xl p-6 sm:p-8 max-h-[90dvh] overflow-y-auto">
         <div className="flex flex-col items-center text-center">

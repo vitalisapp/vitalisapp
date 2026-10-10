@@ -91,7 +91,7 @@ const ExerciseLibrary = () => {
 
       {open && (
         <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center sm:p-4 overflow-y-auto"
-          style={{ background: 'var(--bg-overlay)', backdropFilter: 'blur(8px)' }}
+          style={{ background: 'var(--bg-overlay)' }}
           onClick={() => setOpenSlug(null)}>
           <div className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl"
             style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-medium)' }}
@@ -209,7 +209,7 @@ const PlanDetailOverlay = ({ plan, onClose, onStart }) => {
   return (
     <div
       className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center sm:p-4 md:p-6 overflow-y-auto"
-      style={{ background: 'var(--bg-overlay)', backdropFilter: 'blur(8px)' }}
+      style={{ background: 'var(--bg-overlay)' }}
       onClick={onClose}
     >
       <div
@@ -463,7 +463,7 @@ const DayTracker = ({ plan, content, progress, onClose, onCompleteDay }) => {
         {sidebarOpen && (
           <div
             className="md:hidden fixed inset-0 z-20"
-            style={{ background: 'var(--bg-overlay)', backdropFilter: 'blur(4px)' }}
+            style={{ background: 'var(--bg-overlay)' }}
             onClick={() => setSidebarOpen(false)}
           >
             <div

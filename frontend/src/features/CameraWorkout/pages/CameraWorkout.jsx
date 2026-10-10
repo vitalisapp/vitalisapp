@@ -47,7 +47,7 @@ function EarlyExitDialog({ mode, reps, holdSecs, minReps, minHoldSecs, elapsedMi
   return (
     <div
       className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 overflow-y-auto"
-      style={{ background: 'var(--bg-overlay)', backdropFilter: 'blur(6px)' }}
+      style={{ background: 'var(--bg-overlay)' }}
       role="dialog"
       aria-modal="true"
       aria-label="Workout incomplete"

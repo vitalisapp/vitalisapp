@@ -71,7 +71,7 @@ const ChangePasswordModal = ({ onClose, onSuccess }) => {
       aria-modal="true"
       aria-labelledby="change-pw-title"
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-[var(--bg-overlay)]" onClick={onClose} />
 
       <div
         className="relative z-10 w-full max-w-sm glass-panel border border-[var(--border-light)] rounded-2xl p-7"
