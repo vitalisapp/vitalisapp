@@ -14,35 +14,7 @@ import { DEFAULT_AVATARS } from '../utils/avatar.js';
 import { resolveAvatar, avatarGradient, getInitials } from '../../../lib/avatar.js';
 import { apiFetch } from '../../../lib/apiClient.js';
 import { goalLabel, activityLabel, GOAL_TYPES } from '../../Onboarding/constants/goals.js';
-
-const computeBMI = (heightCm, weightKg) => {
-  const h = parseFloat(heightCm);
-  const w = parseFloat(weightKg);
-  if (!h || !w) return null;
-  const m = h / 100;
-  return +(w / (m * m)).toFixed(1);
-};
-const bmiCategory = (bmi) => {
-  if (bmi == null) return { label: '—', color: 'var(--text-disabled)' };
-  if (bmi < 18.5) return { label: 'Underweight', color: 'var(--info)' };
-  if (bmi < 25) return { label: 'Normal', color: 'var(--accent)' };
-  if (bmi < 30) return { label: 'Overweight', color: 'var(--warning)' };
-  return { label: 'Obese', color: 'var(--error)' };
-};
-const calcBMR = (weight, height, age, gender) => {
-  if (!weight || !height || !age) return null;
-  const w = parseFloat(weight), h = parseFloat(height), a = parseFloat(age);
-  if (gender === 'female') return Math.round(10 * w + 6.25 * h - 5 * a - 161);
-  return Math.round(10 * w + 6.25 * h - 5 * a + 5);
-};
-const activityFactors = { Sedentary: 1.2, 'Lightly Active': 1.375, 'Moderately Active': 1.55, 'Very Active': 1.725, 'Extra Active': 1.9 };
-
-// Humanize raw DB enums for display: "12_DAYS" → "12 days", "GRADUAL" → "Gradual".
-const humanize = (v) => {
-  if (v == null || v === '') return '—';
-  const s = String(v).replace(/_/g, ' ').toLowerCase();
-  return s.charAt(0).toUpperCase() + s.slice(1);
-};
+import { computeBMI, bmiCategory, calcBMR, activityFactors, humanize } from '../utils/metrics.js';
 
 // Goal snapshot card — the single home for onboarding goal details.
 // Rendered inside the "My Goals" section (not duplicated in Body Metrics).

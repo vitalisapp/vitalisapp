@@ -14,6 +14,7 @@ import { apiGet } from "../../../lib/apiClient.js";
 import EmptyState from "../../../components/feedback/EmptyState.jsx";
 import ErrorState from "../../../components/feedback/ErrorState.jsx";
 import LoadingState from "../../../components/feedback/LoadingState.jsx";
+import { toLocalKey, buildMonthGrid } from "../utils/dateKey.js";
 
 const FALLBACK_CALORIE_GOAL = 2000;
 const FALLBACK_MACRO_TARGETS = { protein: 120, carbs: 200, fat: 60 };
@@ -25,19 +26,7 @@ function InputField({ label, type = "text", placeholder, value, onChange, error,
   const base = `w-full h-10 bg-[var(--bg-hover)] rounded-xl px-3 text-sm text-[var(--text-primary)] border outline-none focus:border-[var(--accent)]/50 transition-colors ${error ? "border-red-500/60" : "border-[var(--border-light)]"} ${className}`;
   return <div>{label && <label className="block text-[11px] text-[var(--text-muted)] mb-1.5">{label}</label>}<input type={type} placeholder={placeholder} value={value} onChange={onChange} className={base} />{error && <p className="text-red-400 text-[10px] mt-1">{error}</p>}</div>;
 }
-// Local YYYY-MM-DD key — never toISOString() (UTC shifts the day in +UTC timezones).
-function toLocalKey(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-// Month grid cells (null = leading blank). Week starts Sunday.
-function buildMonthGrid(year, month) {
-  const startDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const cells = [];
-  for (let i = 0; i < startDay; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-  return cells;
-}
+// Local YYYY-MM-DD key + month grid live in ../utils/dateKey.js (tested).
 
 // App-styled calendar dropdown (replaces the unstyled native picker popup).
 function CalendarPopup({ currentDate, today, onPick }) {

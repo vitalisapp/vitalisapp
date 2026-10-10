@@ -18,6 +18,7 @@ import ErrorState from '../../../components/feedback/ErrorState.jsx';
 import { useAnalyticsState } from '../hooks/useAnalyticsState.js';
 import { useAnalyticsData } from '../hooks/useAnalyticsData.js';
 import { useSleepActions } from '../hooks/useSleepActions.js';
+import { getSleepStatusReal, getPointColor } from '../utils/sleepScore.js';
 import { SidebarAnalytics, BottomNav, Topbar } from '../../../components/index.js';
 import GlassAmbient from '../../../components/GlassAmbient.jsx';
 import Icon from '../../../components/Icon.jsx';
@@ -43,35 +44,8 @@ const resolveCssVar = (name, fallback = '#000000') => {
   return value || fallback;
 };
 
-const calculateSleepScore = (hours, quality) => {
-  // Display-only sleep quality (0-100). Training readiness source of truth is
-  // backend utils/readiness.js — this must stay visual, never drive training advice.
-  const h = Number(hours);
-  const q = Number(quality);
-  if (!Number.isFinite(h) || !Number.isFinite(q) || h < 0 || h > 24 || q < 0 || q > 10) return 0;
-  let durationScore;
-  if (h >= 7 && h <= 9) durationScore = 100;
-  else if (h > 9 && h <= 10) durationScore = 80;
-  else if (h > 10) durationScore = 55; // oversleep penalized — matches 'Low' label below
-  else durationScore = Math.max(0, (h / 7) * 100);
-  return Math.round(durationScore * 0.6 + Math.min(10, Math.max(0, q)) * 10 * 0.4);
-};
-
-const getSleepStatusReal = (hours, quality) => {
-  const score = calculateSleepScore(hours, quality);
-  if (score >= 85) return { label: 'Ready to train 💪', color: 'text-(--accent)',  border: 'border-(--accent-border)',  bg: 'bg-(--accent-bg)',  level: 'Optimal', score };
-  if (score >= 60) return { label: 'Light workout 😐',  color: 'text-orange-400', border: 'border-orange-400/40', bg: 'bg-orange-400/10', level: 'Fair',    score };
-  if (hours > 10)  return { label: 'Oversleep recovery 😪', color: 'text-blue-400', border: 'border-blue-400/40', bg: 'bg-blue-400/10', level: 'High', score };
-  return                   { label: 'Rest recommended 😴', color: 'text-red-400',   border: 'border-red-400/40',  bg: 'bg-red-400/10',   level: 'Low',     score };
-};
-
-
-const getPointColor = (hours, quality) => {
-  const score = calculateSleepScore(hours, quality);
-  if (score >= 85) return resolveCssVar('--accent', '#6B8E23');
-  if (score >= 60) return '#fb923c';
-  return '#f87171';
-};
+const resolveSleepPointColor = (hours, quality) =>
+  getPointColor(hours, quality, resolveCssVar('--accent', '#57B26A'));
 
 const ZONE_CONFIG = {
   5: { color: 'bg-red-500',       label: 'Zone 5 (Anaerobic)'    },
@@ -424,7 +398,7 @@ function SleepScatterChart({ scatterData, sleepHours, sleepQuality }) {
       {
         label:                'Sleep Sessions',
         data:                 scatterData.map((d) => ({ x: parseFloat(d.sleep_duration), y: parseInt(d.sleep_quality) })),
-        pointBackgroundColor: scatterData.map((d) => getPointColor(parseFloat(d.sleep_duration), parseInt(d.sleep_quality))),
+        pointBackgroundColor: scatterData.map((d) => resolveSleepPointColor(parseFloat(d.sleep_duration), parseInt(d.sleep_quality))),
         pointRadius:          6,
         pointHoverRadius:     8,
       },
