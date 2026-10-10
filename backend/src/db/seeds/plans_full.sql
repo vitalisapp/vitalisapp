@@ -1,12 +1,10 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Generation Time: Jul 01, 2026 at 11:05 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
---
+-- Vitalis seed — plans_full.sql (canonical reference seed)
+-- Fresh local builds: import into an EMPTY `fitnessapp` database, e.g.
+--   mysql -u root fitnessapp < backend/src/db/seeds/plans_full.sql
+-- Re-running is safe (IF NOT EXISTS / inline keys / INSERT IGNORE).
+-- Day-to-day schema lives in backend/migrations/ (001–032); runtime demo
+-- rows are inserted by migrations/030_seeds.sql, not by this file.
+-- Dead tables (biometric_logs, coaching_*) were stripped; see git history.
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -28,7 +26,7 @@ SET time_zone = "+00:00";
 -- Table structure for table `activity_logs`
 --
 
-CREATE TABLE `activity_logs` (
+CREATE TABLE IF NOT EXISTS `activity_logs` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `duration` int(11) DEFAULT NULL COMMENT 'in seconds',
@@ -36,7 +34,11 @@ CREATE TABLE `activity_logs` (
   `pace` varchar(20) DEFAULT NULL,
   `calories` int(11) DEFAULT NULL,
   `route` longtext DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_created_at` (`created_at`),
+  CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -45,14 +47,18 @@ CREATE TABLE `activity_logs` (
 -- Table structure for table `ai_insight_cache`
 --
 
-CREATE TABLE `ai_insight_cache` (
+CREATE TABLE IF NOT EXISTS `ai_insight_cache` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `data_signature` varchar(255) DEFAULT NULL,
   `sleep_suggestion` text DEFAULT NULL,
   `activity_suggestion` text DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_updated_at` (`updated_at`),
+  CONSTRAINT `ai_insight_cache_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -66,14 +72,18 @@ CREATE TABLE `ai_insight_cache` (
 -- Table structure for table `bmi_records`
 --
 
-CREATE TABLE `bmi_records` (
+CREATE TABLE IF NOT EXISTS `bmi_records` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `weight_kg` decimal(5,2) DEFAULT NULL,
   `height_cm` decimal(5,2) DEFAULT NULL,
   `bmi` decimal(5,2) DEFAULT NULL,
   `bmi_category` varchar(50) DEFAULT NULL,
-  `recorded_at` datetime DEFAULT current_timestamp()
+  `recorded_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_recorded_at` (`recorded_at`),
+  CONSTRAINT `bmi_records_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -96,7 +106,7 @@ CREATE TABLE `bmi_records` (
 -- Table structure for table `daily_stats`
 --
 
-CREATE TABLE `daily_stats` (
+CREATE TABLE IF NOT EXISTS `daily_stats` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `stat_date` date NOT NULL,
@@ -104,7 +114,12 @@ CREATE TABLE `daily_stats` (
   `steps` int(11) DEFAULT 0,
   `workout_duration_mins` int(11) DEFAULT 0,
   `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_user_date` (`user_id`,`stat_date`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_stat_date` (`stat_date`),
+  CONSTRAINT `daily_stats_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -117,7 +132,7 @@ CREATE TABLE `daily_stats` (
 -- Table structure for table `food_logs`
 --
 
-CREATE TABLE `food_logs` (
+CREATE TABLE IF NOT EXISTS `food_logs` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `food_name` varchar(200) NOT NULL,
@@ -126,7 +141,11 @@ CREATE TABLE `food_logs` (
   `carbs` decimal(5,2) DEFAULT NULL,
   `fat` decimal(5,2) DEFAULT NULL,
   `image_url` varchar(500) DEFAULT NULL,
-  `logged_at` datetime DEFAULT current_timestamp()
+  `logged_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_logged_at` (`logged_at`),
+  CONSTRAINT `food_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -135,12 +154,19 @@ CREATE TABLE `food_logs` (
 -- Table structure for table `friendships`
 --
 
-CREATE TABLE `friendships` (
+CREATE TABLE IF NOT EXISTS `friendships` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `friend_id` int(11) NOT NULL,
   `status` varchar(50) DEFAULT 'pending',
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_friendship` (`user_id`,`friend_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_friend_id` (`friend_id`),
+  KEY `idx_status` (`status`),
+  CONSTRAINT `friendships_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `friendships_ibfk_2` FOREIGN KEY (`friend_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -149,7 +175,7 @@ CREATE TABLE `friendships` (
 -- Table structure for table `messages`
 --
 
-CREATE TABLE `messages` (
+CREATE TABLE IF NOT EXISTS `messages` (
   `id` int(11) NOT NULL,
   `sender_id` int(11) NOT NULL,
   `receiver_id` int(11) NOT NULL,
@@ -157,7 +183,14 @@ CREATE TABLE `messages` (
   `latitude` decimal(10,8) DEFAULT NULL,
   `longitude` decimal(10,8) DEFAULT NULL,
   `is_read` tinyint(1) DEFAULT 0,
-  `sent_at` datetime DEFAULT current_timestamp()
+  `sent_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_sender_id` (`sender_id`),
+  KEY `idx_receiver_id` (`receiver_id`),
+  KEY `idx_sent_at` (`sent_at`),
+  KEY `idx_is_read` (`is_read`),
+  CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -166,13 +199,18 @@ CREATE TABLE `messages` (
 -- Table structure for table `notifications`
 --
 
-CREATE TABLE `notifications` (
+CREATE TABLE IF NOT EXISTS `notifications` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `message` varchar(500) NOT NULL,
   `type` varchar(50) DEFAULT 'info',
   `is_read` tinyint(1) DEFAULT 0,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_is_read` (`is_read`),
+  KEY `idx_created_at` (`created_at`),
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -181,13 +219,18 @@ CREATE TABLE `notifications` (
 -- Table structure for table `password_reset_otps`
 --
 
-CREATE TABLE `password_reset_otps` (
+CREATE TABLE IF NOT EXISTS `password_reset_otps` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `otp_hash` varchar(255) NOT NULL,
   `expires_at` datetime NOT NULL,
   `used` tinyint(1) DEFAULT 0,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_used` (`used`),
+  KEY `idx_expires_at` (`expires_at`),
+  CONSTRAINT `password_reset_otps_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -196,7 +239,7 @@ CREATE TABLE `password_reset_otps` (
 -- Table structure for table `plans`
 --
 
-CREATE TABLE `plans` (
+CREATE TABLE IF NOT EXISTS `plans` (
   `id` int(11) NOT NULL,
   `name` varchar(200) NOT NULL,
   `title` varchar(200) DEFAULT NULL,
@@ -210,14 +253,18 @@ CREATE TABLE `plans` (
   `duration_days` int(11) DEFAULT NULL,
   `difficulty` varchar(50) DEFAULT NULL,
   `image_url` varchar(500) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_plan_title` (`title`),
+  KEY `idx_difficulty` (`difficulty`),
+  KEY `idx_duration_days` (`duration_days`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `plans`
 --
 
-INSERT INTO `plans` (`id`, `name`, `title`, `tag`, `intensity`, `duration`, `target_focus`, `price`, `image_seed`, `description`, `duration_days`, `difficulty`, `image_url`, `created_at`) VALUES
+INSERT IGNORE INTO `plans` (`id`, `name`, `title`, `tag`, `intensity`, `duration`, `target_focus`, `price`, `image_seed`, `description`, `duration_days`, `difficulty`, `image_url`, `created_at`) VALUES
 (40, '', 'Foundations of Strength', 'Strength', 'Beginner', '4 Weeks', 'Full-Body Strength & Power', 0.00, 'foundations', 'A beginner-friendly progressive program built around the big compound lifts, designed to teach solid technique before adding load.', 28, NULL, NULL, '2026-06-17 18:37:01'),
 (41, '', 'Iron Forge Protocol', 'Strength', 'Advanced', '8 Weeks', 'Hypertrophy & Max Strength', 19.99, 'ironforge', 'An advanced 8-week hypertrophy block for lifters chasing serious size and max-effort numbers.', 56, NULL, NULL, '2026-06-17 18:37:01'),
 (42, '', 'Fat Loss Sprint', 'Fat Loss', 'Moderate', '2 Weeks', 'Fat Loss', 9.99, 'fatloss', 'A high-intensity 2-week metabolic conditioning block combining circuits with short rest intervals.', 14, NULL, NULL, '2026-06-17 18:37:01'),
@@ -231,7 +278,7 @@ INSERT INTO `plans` (`id`, `name`, `title`, `tag`, `intensity`, `duration`, `tar
 -- Table structure for table `plan_contents`
 --
 
-CREATE TABLE `plan_contents` (
+CREATE TABLE IF NOT EXISTS `plan_contents` (
   `id` int(11) NOT NULL,
   `plan_id` int(11) NOT NULL,
   `day_number` int(11) NOT NULL,
@@ -239,14 +286,19 @@ CREATE TABLE `plan_contents` (
   `activity_type` varchar(100) DEFAULT NULL,
   `description` text DEFAULT NULL,
   `duration_mins` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_plan_day` (`plan_id`,`day_number`),
+  KEY `idx_plan_id` (`plan_id`),
+  KEY `idx_day_number` (`day_number`),
+  CONSTRAINT `plan_contents_ibfk_1` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `plan_contents`
 --
 
-INSERT INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
+INSERT IGNORE INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
 (249, 44, 1, 'Morning Mobility Wake-Up', 'Mobility', 'A gentle full-body flow to open up the joints and get blood flowing before the day starts.', 15, '2026-06-17 18:37:01'),
 (250, 44, 2, 'Hip Opener Flow', 'Mobility', 'Targeted hip flexor, glute, and adductor stretches to counter the effects of prolonged sitting.', 20, '2026-06-17 18:37:01'),
 (251, 44, 3, 'Active Recovery Walk', 'Recovery', 'A relaxed-pace walk paired with deep breathing to promote circulation without adding fatigue.', 30, '2026-06-17 18:37:01'),
@@ -401,7 +453,7 @@ INSERT INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_t
 -- Table structure for table `plan_exercises`
 --
 
-CREATE TABLE `plan_exercises` (
+CREATE TABLE IF NOT EXISTS `plan_exercises` (
   `id` int(11) NOT NULL,
   `plan_content_id` int(11) NOT NULL,
   `exercise_order` int(11) NOT NULL DEFAULT 1,
@@ -410,14 +462,17 @@ CREATE TABLE `plan_exercises` (
   `reps` varchar(50) DEFAULT NULL,
   `duration_seconds` int(11) DEFAULT NULL,
   `rest_seconds` int(11) DEFAULT NULL,
-  `notes` varchar(255) DEFAULT NULL
+  `notes` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_plan_content_id` (`plan_content_id`),
+  CONSTRAINT `plan_exercises_ibfk_1` FOREIGN KEY (`plan_content_id`) REFERENCES `plan_contents` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `plan_exercises`
 --
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (1, 411, 1, 'Barbell Back Squat', 3, '10', NULL, 90, 'Controlled tempo, focus on depth'),
 (2, 411, 2, 'Flat Barbell Bench Press', 3, '10', NULL, 90, NULL),
 (3, 411, 3, 'Bent-Over Barbell Row', 3, '10', NULL, 90, NULL),
@@ -825,14 +880,18 @@ INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exerci
 -- Table structure for table `sleep_logs`
 --
 
-CREATE TABLE `sleep_logs` (
+CREATE TABLE IF NOT EXISTS `sleep_logs` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `sleep_duration` int(11) DEFAULT NULL,
   `sleep_quality` int(11) DEFAULT NULL,
   `recovery_score` int(11) DEFAULT NULL,
   `water_intake_ml` int(11) DEFAULT NULL,
-  `recorded_at` datetime DEFAULT current_timestamp()
+  `recorded_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_recorded_at` (`recorded_at`),
+  CONSTRAINT `sleep_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -841,7 +900,7 @@ CREATE TABLE `sleep_logs` (
 -- Table structure for table `users`
 --
 
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
@@ -850,7 +909,11 @@ CREATE TABLE `users` (
   `avatar_url` longtext DEFAULT NULL,
   `is_online` tinyint(1) DEFAULT 0,
   `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `idx_email` (`email`),
+  KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -859,11 +922,17 @@ CREATE TABLE `users` (
 -- Table structure for table `user_plans`
 --
 
-CREATE TABLE `user_plans` (
+CREATE TABLE IF NOT EXISTS `user_plans` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `plan_id` int(11) NOT NULL,
-  `enrolled_at` datetime DEFAULT current_timestamp()
+  `enrolled_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_user_plan` (`user_id`,`plan_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_plan_id` (`plan_id`),
+  CONSTRAINT `user_plans_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_plans_ibfk_2` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -872,14 +941,21 @@ CREATE TABLE `user_plans` (
 -- Table structure for table `user_plan_progress`
 --
 
-CREATE TABLE `user_plan_progress` (
+CREATE TABLE IF NOT EXISTS `user_plan_progress` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `plan_id` int(11) NOT NULL,
   `day_number` int(11) NOT NULL,
   `is_completed` tinyint(1) DEFAULT 0,
   `completed_at` datetime DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_user_plan_day` (`user_id`,`plan_id`,`day_number`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_plan_id` (`plan_id`),
+  KEY `idx_is_completed` (`is_completed`),
+  CONSTRAINT `user_plan_progress_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_plan_progress_ibfk_2` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -888,7 +964,7 @@ CREATE TABLE `user_plan_progress` (
 -- Table structure for table `user_profiles`
 --
 
-CREATE TABLE `user_profiles` (
+CREATE TABLE IF NOT EXISTS `user_profiles` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `contact` varchar(20) DEFAULT NULL,
@@ -897,7 +973,11 @@ CREATE TABLE `user_profiles` (
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `height_cm` decimal(5,1) DEFAULT NULL,
-  `weight_kg` decimal(5,1) DEFAULT NULL
+  `weight_kg` decimal(5,1) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id` (`user_id`),
+  KEY `idx_user_id` (`user_id`),
+  CONSTRAINT `user_profiles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -906,7 +986,7 @@ CREATE TABLE `user_profiles` (
 -- Table structure for table `user_sessions`
 --
 
-CREATE TABLE `user_sessions` (
+CREATE TABLE IF NOT EXISTS `user_sessions` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `device` varchar(100) DEFAULT NULL,
@@ -917,7 +997,12 @@ CREATE TABLE `user_sessions` (
   `city` varchar(100) DEFAULT NULL,
   `country` varchar(100) DEFAULT NULL,
   `is_current` tinyint(1) DEFAULT 1,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_is_current` (`is_current`),
+  KEY `idx_created_at` (`created_at`),
+  CONSTRAINT `user_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -926,7 +1011,7 @@ CREATE TABLE `user_sessions` (
 -- Table structure for table `workout_logs`
 --
 
-CREATE TABLE `workout_logs` (
+CREATE TABLE IF NOT EXISTS `workout_logs` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `workout_type` varchar(100) DEFAULT NULL,
@@ -935,7 +1020,12 @@ CREATE TABLE `workout_logs` (
   `start_time` datetime DEFAULT current_timestamp(),
   `end_time` datetime DEFAULT NULL,
   `duration_seconds` int(11) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_start_time` (`start_time`),
+  CONSTRAINT `workout_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -950,18 +1040,10 @@ CREATE TABLE `workout_logs` (
 --
 -- Indexes for table `activity_logs`
 --
-ALTER TABLE `activity_logs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_created_at` (`created_at`);
 
 --
 -- Indexes for table `ai_insight_cache`
 --
-ALTER TABLE `ai_insight_cache`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_updated_at` (`updated_at`);
 
 --
 -- Removed: indexes for biometric_logs
@@ -969,10 +1051,6 @@ ALTER TABLE `ai_insight_cache`
 --
 -- Indexes for table `bmi_records`
 --
-ALTER TABLE `bmi_records`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_recorded_at` (`recorded_at`);
 
 -- (Removed: indexes for chat_sessions, clinic_messages)
 
@@ -985,146 +1063,68 @@ ALTER TABLE `bmi_records`
 --
 -- Indexes for table `daily_stats`
 --
-ALTER TABLE `daily_stats`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_user_date` (`user_id`,`stat_date`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_stat_date` (`stat_date`);
 
 -- (Removed: indexes for doctors)
 
 --
 -- Indexes for table `food_logs`
 --
-ALTER TABLE `food_logs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_logged_at` (`logged_at`);
 
 --
 -- Indexes for table `friendships`
 --
-ALTER TABLE `friendships`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_friendship` (`user_id`,`friend_id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_friend_id` (`friend_id`),
-  ADD KEY `idx_status` (`status`);
 
 --
 -- Indexes for table `messages`
 --
-ALTER TABLE `messages`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_sender_id` (`sender_id`),
-  ADD KEY `idx_receiver_id` (`receiver_id`),
-  ADD KEY `idx_sent_at` (`sent_at`),
-  ADD KEY `idx_is_read` (`is_read`);
 
 --
 -- Indexes for table `notifications`
 --
-ALTER TABLE `notifications`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_is_read` (`is_read`),
-  ADD KEY `idx_created_at` (`created_at`);
 
 --
 -- Indexes for table `password_reset_otps`
 --
-ALTER TABLE `password_reset_otps`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_used` (`used`),
-  ADD KEY `idx_expires_at` (`expires_at`);
 
 --
 -- Indexes for table `plans`
 --
-ALTER TABLE `plans`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uniq_plan_title` (`title`),
-  ADD KEY `idx_difficulty` (`difficulty`),
-  ADD KEY `idx_duration_days` (`duration_days`);
 
 --
 -- Indexes for table `plan_contents`
 --
-ALTER TABLE `plan_contents`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uniq_plan_day` (`plan_id`,`day_number`),
-  ADD KEY `idx_plan_id` (`plan_id`),
-  ADD KEY `idx_day_number` (`day_number`);
 
 --
 -- Indexes for table `plan_exercises`
 --
-ALTER TABLE `plan_exercises`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_plan_content_id` (`plan_content_id`);
 
 --
 -- Indexes for table `sleep_logs`
 --
-ALTER TABLE `sleep_logs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_recorded_at` (`recorded_at`);
 
 --
 -- Indexes for table `users`
 --
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `idx_email` (`email`),
-  ADD KEY `idx_created_at` (`created_at`);
 
 --
 -- Indexes for table `user_plans`
 --
-ALTER TABLE `user_plans`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_user_plan` (`user_id`,`plan_id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_plan_id` (`plan_id`);
 
 --
 -- Indexes for table `user_plan_progress`
 --
-ALTER TABLE `user_plan_progress`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_user_plan_day` (`user_id`,`plan_id`,`day_number`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_plan_id` (`plan_id`),
-  ADD KEY `idx_is_completed` (`is_completed`);
 
 --
 -- Indexes for table `user_profiles`
 --
-ALTER TABLE `user_profiles`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `user_id` (`user_id`),
-  ADD KEY `idx_user_id` (`user_id`);
 
 --
 -- Indexes for table `user_sessions`
 --
-ALTER TABLE `user_sessions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_is_current` (`is_current`),
-  ADD KEY `idx_created_at` (`created_at`);
 
 --
 -- Indexes for table `workout_logs`
 --
-ALTER TABLE `workout_logs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_start_time` (`start_time`);
 
 --
 -- Removed: indexes for workout_sessions
@@ -1270,14 +1270,10 @@ ALTER TABLE `workout_logs`
 --
 -- Constraints for table `activity_logs`
 --
-ALTER TABLE `activity_logs`
-  ADD CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `ai_insight_cache`
 --
-ALTER TABLE `ai_insight_cache`
-  ADD CONSTRAINT `ai_insight_cache_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Removed: fk biometric_logs
@@ -1285,8 +1281,6 @@ ALTER TABLE `ai_insight_cache`
 --
 -- Constraints for table `bmi_records`
 --
-ALTER TABLE `bmi_records`
-  ADD CONSTRAINT `bmi_records_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 -- (Removed: constraints for chat_sessions, clinic_messages)
 
@@ -1299,90 +1293,58 @@ ALTER TABLE `bmi_records`
 --
 -- Constraints for table `daily_stats`
 --
-ALTER TABLE `daily_stats`
-  ADD CONSTRAINT `daily_stats_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `food_logs`
 --
-ALTER TABLE `food_logs`
-  ADD CONSTRAINT `food_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `friendships`
 --
-ALTER TABLE `friendships`
-  ADD CONSTRAINT `friendships_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `friendships_ibfk_2` FOREIGN KEY (`friend_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `messages`
 --
-ALTER TABLE `messages`
-  ADD CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `notifications`
 --
-ALTER TABLE `notifications`
-  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `password_reset_otps`
 --
-ALTER TABLE `password_reset_otps`
-  ADD CONSTRAINT `password_reset_otps_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `plan_contents`
 --
-ALTER TABLE `plan_contents`
-  ADD CONSTRAINT `plan_contents_ibfk_1` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `plan_exercises`
 --
-ALTER TABLE `plan_exercises`
-  ADD CONSTRAINT `plan_exercises_ibfk_1` FOREIGN KEY (`plan_content_id`) REFERENCES `plan_contents` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `sleep_logs`
 --
-ALTER TABLE `sleep_logs`
-  ADD CONSTRAINT `sleep_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `user_plans`
 --
-ALTER TABLE `user_plans`
-  ADD CONSTRAINT `user_plans_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `user_plans_ibfk_2` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `user_plan_progress`
 --
-ALTER TABLE `user_plan_progress`
-  ADD CONSTRAINT `user_plan_progress_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `user_plan_progress_ibfk_2` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `user_profiles`
 --
-ALTER TABLE `user_profiles`
-  ADD CONSTRAINT `user_profiles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `user_sessions`
 --
-ALTER TABLE `user_sessions`
-  ADD CONSTRAINT `user_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `workout_logs`
 --
-ALTER TABLE `workout_logs`
-  ADD CONSTRAINT `workout_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Removed: fk workout_sessions
