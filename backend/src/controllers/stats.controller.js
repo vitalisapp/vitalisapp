@@ -1,5 +1,6 @@
 
 const db = require('../config/db');
+const log = require('../utils/logger');
 const express = require('express');
 const verifyUser = require('../middleware/verifyUser');
 const { requireOwner } = require('../utils/owner');
@@ -34,7 +35,7 @@ async function getdailyUserId(req,res,next){
     
         res.json(stats[0]);
       } catch (err) {
-        console.error('daily stats fetch error:', err.message);
+        log.error('daily stats fetch error:', err.message);
         next(err);
       }
   }catch(e){ next(e); }
@@ -65,7 +66,7 @@ async function getreadinessUserId(req,res,next){
           );
         } catch (tableErr) {
           if (tableErr.code !== 'ER_NO_SUCH_TABLE' && tableErr.code !== 'ER_BAD_FIELD_ERROR') throw tableErr;
-          console.warn('[readiness] daily_checkins schema mismatch — run db:migrate (014/016)');
+          log.warn('[readiness] daily_checkins schema mismatch — run db:migrate (014/016)');
         }
         const s = stats[0] || { calories_burned: 0, steps: 0, workout_duration_mins: 0 };
         const result = calcReadiness({
@@ -76,7 +77,7 @@ async function getreadinessUserId(req,res,next){
         });
         res.json({ ...result, stats: s, checkin: checkins[0] || null });
       } catch (err) {
-        console.error('readiness fetch error:', err.message);
+        log.error('readiness fetch error:', err.message);
         next(err);
       }
   }catch(e){ next(e); }

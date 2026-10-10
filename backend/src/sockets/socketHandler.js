@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { COOKIE_NAME } = require("../utils/cookies");
+const log = require("../utils/logger");
 
 function parseCookies(header) {
   const out = {};
@@ -88,10 +89,10 @@ module.exports = (io) => {
         socket.data.tv = session.tv;
         socket.data.joinedRoom = authedUserId;
         if (process.env.NODE_ENV !== "production") {
-          console.log(`[socket] ${socket.id} auto-joined room ${authedUserId}`);
+          log.debug(`[socket] ${socket.id} auto-joined room ${authedUserId}`);
         }
       } catch (e) {
-        console.warn("[socket] join failed:", e.message);
+        log.warn("[socket] join failed:", e.message);
       }
     })();
 
@@ -137,10 +138,10 @@ module.exports = (io) => {
         socket.data.userId = String(verified);
         socket.data.joinedRoom = String(verified);
         if (process.env.NODE_ENV !== "production") {
-          console.log(`[socket] ${socket.id} joined room ${verified}`);
+          log.debug(`[socket] ${socket.id} joined room ${verified}`);
         }
       } catch (e) {
-        console.warn("[socket] join-room failed:", e.message);
+        log.warn("[socket] join-room failed:", e.message);
       }
     });
 

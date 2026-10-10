@@ -1,14 +1,15 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Groq = require("groq-sdk");
+const log = require("../utils/logger");
 
 function devLog(...args) {
-  if (process.env.NODE_ENV !== "production") console.log(...args);
+  log.info(...args);
 }
 function devWarn(...args) {
-  if (process.env.NODE_ENV !== "production") console.warn(...args);
+  if (process.env.NODE_ENV !== "production") log.warn(...args);
 }
 function devError(...args) {
-  console.error(...args);
+  log.error(...args);
 }
 
 let _genAI = null;

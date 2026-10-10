@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const log = require('../utils/logger');
 const { validId } = require('../utils/ids');
 const { AppError } = require('../utils/errors');
 
@@ -20,7 +21,7 @@ async function getcontactsUserId(req, res, next) {
       const [rows] = await db.execute(query, [userId, userId, userId]);
       res.json(rows);
     } catch (err) {
-      console.error('Contacts Error:', err);
+      log.error('Contacts Error:', err);
       next(err);
     }
   } catch (e) {
@@ -65,7 +66,7 @@ async function getmessagesUserIdContactId(req, res, next) {
       const rows = rowsDesc.reverse();
       res.json(rows);
     } catch (err) {
-      console.error('History Error:', err);
+      log.error('History Error:', err);
       next(err);
     }
   } catch (e) {
@@ -108,7 +109,7 @@ async function postmessages(req, res, next) {
       if (!rows[0]) throw new AppError('Could not send message', 500, 'MESSAGE_SEND_FAILED');
       res.status(201).json(rows[0]);
     } catch (err) {
-      console.error('Send Message Error:', err);
+      log.error('Send Message Error:', err);
       next(err);
     }
   } catch (e) {
@@ -132,7 +133,7 @@ async function getusersSearch(req, res, next) {
       );
       res.json(rows);
     } catch (err) {
-      console.error('Search Error:', err);
+      log.error('Search Error:', err);
       next(err);
     }
   } catch (e) {
@@ -162,7 +163,7 @@ async function postfriendsAdd(req, res, next) {
       );
       res.json({ success: true, message: 'Added to Close Friends' });
     } catch (err) {
-      console.error('Add Friend Error:', err);
+      log.error('Add Friend Error:', err);
       next(err);
     }
   } catch (e) {

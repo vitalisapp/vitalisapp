@@ -1,5 +1,6 @@
 
 const db = require('../config/db');
+const log = require('../utils/logger');
 
 const MAX_AVATAR_CHARS = 200 * 1024; // 200KB — base64 data-URLs bigger than this risk max_allowed_packet
 
@@ -68,7 +69,7 @@ async function putupdate(req,res,next){
             res.json({ success: true, message: 'Profile Synchronized' });
     
         } catch (err) {
-            console.error('profile update error:', err.code, err.message);
+            log.error('profile update error:', err.code, err.message);
             next(err);
         }
   }catch(e){ next(e); }
@@ -145,7 +146,7 @@ async function getUserId(req,res,next){
             res.json({ ...rows[0], onboarding });
     
         } catch (err) {
-            console.error('profile fetch error:', err.message);
+            log.error('profile fetch error:', err.message);
             next(err);
         }
   }catch(e){ next(e); }

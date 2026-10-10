@@ -1,5 +1,6 @@
 
 const db = require('../config/db');
+const log = require('../utils/logger');
 const bcrypt     = require('bcryptjs');
 const crypto     = require('crypto');
 // Reuse canonical mailer (timeouts + TLS guard + graceful no-key handling)
@@ -109,7 +110,7 @@ async function postsendOtp(req,res,next){
         res.json({ success: true, message: 'If that email exists, a code was sent.' });
     
       } catch (err) {
-        console.error('SEND OTP ERROR:', err);
+        log.error('SEND OTP ERROR:', err);
         next(err);
       }
   }catch(e){ next(e); }
@@ -171,7 +172,7 @@ async function postverifyOtp(req,res,next){
         res.json({ success: true, resetToken });
     
       } catch (err) {
-        console.error('VERIFY OTP ERROR:', err);
+        log.error('VERIFY OTP ERROR:', err);
         next(err);
       }
   }catch(e){ next(e); }
@@ -237,7 +238,7 @@ async function postresetPassword(req,res,next){
         res.json({ success: true, message: 'Password updated successfully.' });
     
       } catch (err) {
-        console.error('RESET PASSWORD ERROR:', err);
+        log.error('RESET PASSWORD ERROR:', err);
         next(err);
       }
   }catch(e){ next(e); }

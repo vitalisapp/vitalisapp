@@ -1,5 +1,6 @@
 
 // Reuse canonical mailer transport — single source of truth
+const log = require('../utils/logger');
 const { getTransporter, escapeHtml } = require('../config/mailer');
 
 async function post(req,res,next){
@@ -78,7 +79,7 @@ async function post(req,res,next){
     
         } catch (err) {
 
-            console.error('Feedback Error:', err.code || err.message);
+            log.error('Feedback Error:', err.code || err.message);
 
             // SMTP/auth failures (e.g. bad Gmail app password) are config issues,
             // not client errors — report 503 so the UI can show "try again later".

@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const log = require('../utils/logger');
 const { calcBmi, generatePlan } = require('../utils/planEngine');
 const { validUserId } = require('../utils/ids');
 const { AppError } = require('../utils/errors');
@@ -247,7 +248,7 @@ async function getactiveUserId(req, res, next) {
       const w = bmiRows.length > 0 ? Number(bmiRows[0].weight_kg) : NaN;
       if (Number.isFinite(w) && w > 0) currentWeight = w;
     } catch (err) {
-      console.error('[goals] BMI lookup failed:', err.message);
+      log.error('[goals] BMI lookup failed:', err.message);
     }
 
     let progressPct = null;

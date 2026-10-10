@@ -8,6 +8,7 @@ const { OAuth2Client } = require('google-auth-library');
 const { COOKIE_NAME, getCookieOptions, getClearCookieOptions } = require('../utils/cookies');
 const crypto = require('crypto');
 const { sendVerificationEmail } = require('../config/mailer');
+const log = require('../utils/logger');
 
 function resolveFrontendUrl() {
   const raw = (process.env.FRONTEND_URL
@@ -17,11 +18,11 @@ function resolveFrontendUrl() {
     const u = new URL(raw);
     if (!['http:', 'https:'].includes(u.protocol)) throw new Error('bad proto');
     if (process.env.NODE_ENV === 'production' && u.protocol !== 'https:') {
-      console.warn('[auth] FRONTEND_URL should be https in production:', raw);
+      log.warn('[auth] FRONTEND_URL should be https in production:', raw);
     }
     return raw.replace(/\/$/, '');
   } catch {
-    console.warn('[auth] Invalid FRONTEND_URL, falling back to http://localhost:5173:', raw);
+    log.warn('[auth] Invalid FRONTEND_URL, falling back to http://localhost:5173:', raw);
     return 'http://localhost:5173';
   }
 }
@@ -141,7 +142,7 @@ function setSessionCookie(res, userId, email, req, tv = 0) {
   const opts = getCookieOptions(req);
   res.cookie(COOKIE_NAME, token, opts);
   if (process.env.NODE_ENV !== 'production') {
-    console.log(
+    log.debug(
       `[cookie] set uid=${userId} secure=${opts.secure} sameSite=${opts.sameSite} ` +
       `partitioned=${Boolean(opts.partitioned)} proto=${req.headers?.['x-forwarded-proto'] || '-'}`
     );
@@ -185,7 +186,7 @@ const logUserSession = async (req, userId) => {
     await conn.commit();
   } catch (err) {
     try { await conn?.rollback(); } catch (_) {}
-    console.error('SESSION LOG ERROR:', err);
+    log.error('SESSION LOG ERROR:', err);
   } finally {
     try { conn?.release(); } catch (_) {}
   }
@@ -234,7 +235,7 @@ async function getme(req,res,next){
       if (!token) {
         if (process.env.NODE_ENV !== 'production') {
           const h = req.headers || {};
-          console.log(
+          log.debug(
             `[me] NO_COOKIE origin=${h.origin || '-'} referer=${String(h.referer || '-').slice(0, 80)} ` +
             `cookieHeader=${req.headers.cookie ? `present(${req.headers.cookie.length}c)` : 'absent'}`
           );
@@ -329,14 +330,14 @@ async function postregister(req,res,next){
           await sendVerificationEmail(email, link);
           emailed = true;
         } catch (mailErr) {
-          console.error('Verification email failed (SMTP?):', mailErr.message);
+          log.error('Verification email failed (SMTP?):', mailErr.message);
         }
 
         const payload = { success: true, message: 'Account created. Check your email to verify.', needsVerification: true, email };
         if (!emailed && DEV_VERIFY_FALLBACK) payload.devVerificationLink = link;
         res.status(201).json(payload);
       } catch (err) {
-        console.error('Register error:', err.code || err.message);
+        log.error('Register error:', err.code || err.message);
         if (err.code === 'ER_DUP_ENTRY') {
           return res.status(400).json({ error: 'Email already registered in Vitalis labs.' });
         }
@@ -411,7 +412,7 @@ async function postlogin(req,res,next){
           onboardingCompleted: Boolean(user.onboarding_completed),
         });
       } catch (err) {
-        console.error('Login error:', err.code || err.message);
+        log.error('Login error:', err.code || err.message);
         next(err);
       }
   }catch(e){ next(e); }
@@ -501,7 +502,7 @@ if (users.length === 0) {
           onboardingCompleted: Boolean(user.onboarding_completed),
         });
       } catch (err) {
-        console.error('Google Login Error:', err.code || err.message);
+        log.error('Google Login Error:', err.code || err.message);
         // Don't leak provider internals (tokens, audience mismatches) to the client
         return res.status(401).json({ error: 'Google authentication failed', code: 'GOOGLE_AUTH_FAILED' });
       }
@@ -547,7 +548,7 @@ async function postchangePassword(req,res,next){
 
         res.json({ success: true, message: 'Password updated' });
       } catch (err) {
-        console.error('Change Password Error:', err.code || err.message);
+        log.error('Change Password Error:', err.code || err.message);
         next(err);
       }
   }catch(e){ next(e); }
@@ -596,7 +597,7 @@ async function postsendVerification(req,res,next){
         await sendVerificationEmail(normalized, link);
         emailed = true;
       } catch (mailErr) {
-        console.error('Verification email failed (SMTP?):', mailErr.message);
+        log.error('Verification email failed (SMTP?):', mailErr.message);
       }
       const payload = { ...generic };
       if (!emailed && DEV_VERIFY_FALLBACK) payload.devVerificationLink = link;
@@ -665,7 +666,7 @@ async function patchchangeEmail(req,res,next){
           html: `<p>Your Vitalis account email was changed to ${normalized}. If this wasn't you, reset your password immediately.</p>`,
         });
       } catch (noticeErr) {
-        console.warn('Change-email notice to old address failed:', noticeErr.message);
+        log.warn('Change-email notice to old address failed:', noticeErr.message);
       }
       const { link } = await createVerificationToken(user.id);
       let emailed = false;
@@ -673,7 +674,7 @@ async function patchchangeEmail(req,res,next){
         await sendVerificationEmail(normalized, link);
         emailed = true;
       } catch (mailErr) {
-        console.error('Verification email failed (SMTP?):', mailErr.message);
+        log.error('Verification email failed (SMTP?):', mailErr.message);
       }
       const payload = { success: true, message: 'Email updated. Check your new inbox to verify.', email: normalized };
       if (!emailed && DEV_VERIFY_FALLBACK) payload.devVerificationLink = link;

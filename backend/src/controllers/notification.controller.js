@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const log = require('../utils/logger');
 const { requireOwner } = require('../utils/owner');
 // One entry per tab/device: a user may stream from phone + desktop at once.
 const clients = new Map(); // userId -> Set<res>
@@ -60,7 +61,7 @@ async function stream(req, res, next) {
     res.write('retry: 3000\n\n');
     res.write(': connected\n\n');
     addClient(userKey, res);
-    if (process.env.NODE_ENV !== 'production') console.log(`SSE connected: user ${userId} (total: ${clientCount()})`);
+    log.info(`SSE connected: user ${userId} (total: ${clientCount()})`);
     // Real data-frame heartbeat (not a comment): H2/tunnel idle timers only count
     // body bytes, so `: comment` keepalives alone still get reaped mid-stream.
     const heartbeat = setInterval(() => { try { res.write(`event: ping\ndata: {"t":${Date.now()}}\n\n`); } catch (_) { clearInterval(heartbeat); } }, 25000);
@@ -70,7 +71,7 @@ async function stream(req, res, next) {
       clearInterval(heartbeat);
       clearTimeout(idleTimer);
       removeClient(userKey, res);
-      if (process.env.NODE_ENV !== 'production') console.log(`SSE disconnected: user ${userId} (total: ${clientCount()})`);
+      log.info(`SSE disconnected: user ${userId} (total: ${clientCount()})`);
     });
   } catch (e) { next(e); }
 }

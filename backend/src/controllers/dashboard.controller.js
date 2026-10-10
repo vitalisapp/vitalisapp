@@ -1,5 +1,6 @@
 
 const db = require('../config/db');
+const log = require('../utils/logger');
 const { calcReadiness } = require('../utils/readiness');
 async function getdashboardUserId(req,res,next){
   try{
@@ -49,7 +50,7 @@ async function getdashboardUserId(req,res,next){
               );
             } catch (err) {
               if (err.code !== 'ER_NO_SUCH_TABLE' && err.code !== 'ER_BAD_FIELD_ERROR') throw err;
-              console.warn('[dashboard] daily_checkins schema mismatch — run db:migrate (014/016)');
+              log.warn('[dashboard] daily_checkins schema mismatch — run db:migrate (014/016)');
             }
             const s = stats[0] || { calories_burned: 0, steps: 0, workout_duration_mins: 0 };
             const r = calcReadiness({
@@ -71,7 +72,7 @@ async function getdashboardUserId(req,res,next){
             });
     
         } catch (e) {
-            console.error('DASHBOARD ERROR:', e.message);
+            log.error('DASHBOARD ERROR:', e.message);
             next(e);
         }
   }catch(e){ next(e); }
@@ -91,7 +92,7 @@ async function getsearch(req,res,next){
             );
             res.json(results);
         } catch (e) {
-            console.error('SEARCH ERROR:', e.message);
+            log.error('SEARCH ERROR:', e.message);
             next(e);
         }
   }catch(e){ next(e); }

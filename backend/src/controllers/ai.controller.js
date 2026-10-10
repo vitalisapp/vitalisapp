@@ -1,5 +1,6 @@
 
 const db = require('../config/db');
+const log = require('../utils/logger');
 const { genAI, callGeminiWithFallback, safeParseAI, withTimeout, AI_VISION_TIMEOUT_MS, getVisionModels, aiConfigured } = require('../config/gemini');
 // AI POSE ANALYSIS
 
@@ -39,7 +40,7 @@ async function postanalyzePose(req,res,next){
                 if (suggestion) return res.json({ suggestion });
               } catch (e) {
                 lastErr = e;
-                if (process.env.NODE_ENV !== 'production') console.warn(`[analyze-pose] ${visionModel} failed:`, e.message);
+                if (process.env.NODE_ENV !== 'production') log.warn(`[analyze-pose] ${visionModel} failed:`, e.message);
               }
             }
             // All vision models failed — degrade to text fallback coach tip instead of 500 when possible
@@ -57,7 +58,7 @@ async function postanalyzePose(req,res,next){
             throw lastErr || new Error('All vision providers failed');
         } catch (error) {
             // Message only: full error can serialize the image payload.
-            console.error("Gemini Error:", error?.message);
+            log.error("Gemini Error:", error?.message);
             next(error);
         }
   }catch(e){ next(e); }
@@ -91,7 +92,7 @@ async function postaiChat(req,res,next){
             }
             res.json({ reply, degraded: false });
         } catch (err) {
-            console.error("[/api/ai-chat] Fatal:", err.message);
+            log.error("[/api/ai-chat] Fatal:", err.message);
             next(err);
         }
   }catch(e){ next(e); }
@@ -119,14 +120,12 @@ async function postaiClinicalAnalysis(req,res,next){
                 [userId]
             );
     
-            if (process.env.NODE_ENV !== 'production') {
-              console.log(`[VITALIS AI] ── SLEEP DB QUERY RESULT for user ${userId} ──`);
-              console.log(`  Rows returned: ${sleepRows.length}`);
-              console.log(`  Latest row   :`, sleepRows[0] || '⚠️ NO ROW FOUND IN DB');
-            }
+            log.debug(`[VITALIS AI] ── SLEEP DB QUERY RESULT for user ${userId} ──`);
+            log.debug(`  Rows returned: ${sleepRows.length}`);
+            log.debug(`  Latest row   :`, sleepRows[0] || '⚠️ NO ROW FOUND IN DB');
     
             const dbSleep = sleepRows[0] || {};
-            if (process.env.NODE_ENV !== 'production') console.log(`[VITALIS AI] Stats from frontend:`, stats);
+            log.debug(`[VITALIS AI] Stats from frontend:`, stats);
     
             const sleep = {
                 sleep_duration:  (stats?.sleep_duration  > 0) ? stats.sleep_duration  : (dbSleep.sleep_duration  || 0),
@@ -152,20 +151,18 @@ async function postaiClinicalAnalysis(req,res,next){
                 }
             }
     
-            if (process.env.NODE_ENV !== 'production') {
-              console.log(`[VITALIS AI] ── FINAL SLEEP OBJECT ──`);
-              console.log(`  sleep_duration : ${sleep.sleep_duration}  ${sleep.sleep_duration === 0 ? '⚠️ ZERO' : '✅'}`);
-              console.log(`  sleep_quality  : ${sleep.sleep_quality}   ${sleep.sleep_quality  === 0 ? '⚠️ ZERO' : '✅'}`);
-              console.log(`  water_intake_ml: ${sleep.water_intake_ml} ${sleep.water_intake_ml === 0 ? '⚠️ ZERO' : '✅'}`);
-              console.log(`[VITALIS AI] ── FINAL ACTIVITY OBJECT ──`);
-              console.log(`  calories_burned      : ${activity.calories_burned}       ${activity.calories_burned       === 0 ? '⚠️ ZERO' : '✅'}`);
-              console.log(`  steps                : ${activity.steps}                 ${activity.steps                 === 0 ? '⚠️ ZERO' : '✅'}`);
-              console.log(`  workout_duration_mins: ${activity.workout_duration_mins} ${activity.workout_duration_mins === 0 ? '⚠️ ZERO' : '✅'}`);
-            }
+            log.debug(`[VITALIS AI] ── FINAL SLEEP OBJECT ──`);
+            log.debug(`  sleep_duration : ${sleep.sleep_duration}  ${sleep.sleep_duration === 0 ? '⚠️ ZERO' : '✅'}`);
+            log.debug(`  sleep_quality  : ${sleep.sleep_quality}   ${sleep.sleep_quality  === 0 ? '⚠️ ZERO' : '✅'}`);
+            log.debug(`  water_intake_ml: ${sleep.water_intake_ml} ${sleep.water_intake_ml === 0 ? '⚠️ ZERO' : '✅'}`);
+            log.debug(`[VITALIS AI] ── FINAL ACTIVITY OBJECT ──`);
+            log.debug(`  calories_burned      : ${activity.calories_burned}       ${activity.calories_burned       === 0 ? '⚠️ ZERO' : '✅'}`);
+            log.debug(`  steps                : ${activity.steps}                 ${activity.steps                 === 0 ? '⚠️ ZERO' : '✅'}`);
+            log.debug(`  workout_duration_mins: ${activity.workout_duration_mins} ${activity.workout_duration_mins === 0 ? '⚠️ ZERO' : '✅'}`);
     
             // 5. Guard: If sleep data is still all zeros after DB fallback, return early
             if (sleep.sleep_duration === 0 && sleep.sleep_quality === 0 && sleep.water_intake_ml === 0) {
-                if (process.env.NODE_ENV !== 'production') console.log(`[VITALIS AI] ⚠️ All sleep values are zero — returning early for user ${userId}`);
+                log.debug(`[VITALIS AI] ⚠️ All sleep values are zero — returning early for user ${userId}`);
                 return res.status(200).json({
                     insights: [
                         {
@@ -183,7 +180,7 @@ async function postaiClinicalAnalysis(req,res,next){
             const today = new Date().toISOString().slice(0, 10); // e.g. "2025-05-02"
             const signature = `s${sleep.sleep_duration}-q${sleep.sleep_quality}-w${sleep.water_intake_ml}-c${activity.calories_burned}-st${activity.steps}-m${activity.workout_duration_mins}-u${userId}-d${today}`;
     
-            if (process.env.NODE_ENV !== 'production') console.log(`[VITALIS AI] Cache signature: ${signature}`);
+            log.debug(`[VITALIS AI] Cache signature: ${signature}`);
     
             const [cached] = await db.execute(
                 'SELECT sleep_suggestion, activity_suggestion FROM ai_insight_cache WHERE user_id = ? AND data_signature = ? LIMIT 1',
@@ -191,7 +188,7 @@ async function postaiClinicalAnalysis(req,res,next){
             );
     
             if (cached.length > 0) {
-                if (process.env.NODE_ENV !== 'production') console.log(`[VITALIS AI] ✅ Cache HIT for user ${userId}`);
+                log.debug(`[VITALIS AI] ✅ Cache HIT for user ${userId}`);
                 let sleepCached = null; let activityCached = null;
                 try { sleepCached = JSON.parse(cached[0].sleep_suggestion); } catch { sleepCached = { message: cached[0].sleep_suggestion }; }
                 try { activityCached = JSON.parse(cached[0].activity_suggestion); } catch { activityCached = { message: cached[0].activity_suggestion }; }
@@ -204,7 +201,7 @@ async function postaiClinicalAnalysis(req,res,next){
                 });
             }
     
-            if (process.env.NODE_ENV !== 'production') console.log(`[VITALIS AI] Cache MISS for user ${userId} — calling Gemini`);
+            log.debug(`[VITALIS AI] Cache MISS for user ${userId} — calling Gemini`);
     
             // 8. Contextual flags
             const waterGlass      = Math.round(sleep.water_intake_ml / 250);
@@ -304,7 +301,7 @@ async function postaiClinicalAnalysis(req,res,next){
     
             } catch (err) {
                     // Message only: full error can embed sleep/activity rows.
-                    console.error("AI Logic Error:", err?.message);
+                    log.error("AI Logic Error:", err?.message);
                     next(err);
             }
   }catch(e){ next(e); }
@@ -338,7 +335,7 @@ async function postaiCoach(req,res,next){
                 res.json({ tip });
             } catch (error) {
                 // Message only: full error can embed landmark arrays.
-                console.error("Coach Error:", error?.message);
+                log.error("Coach Error:", error?.message);
                 next(error);
         }
   }catch(e){ next(e); }
@@ -392,11 +389,9 @@ async function getlogsLatestUserId(req,res,next){
                             [userId]
                      );
     
-            if (process.env.NODE_ENV !== 'production') {
-              console.log(`[LATEST LOGS] ── DB RESULTS for user ${userId} ──`);
-              console.log(`  latestLog  :`, latestLog[0]  || '⚠️ NO ROW RETURNED');
-              console.log(`  latestSleep:`, latestSleep[0] || '⚠️ NO ROW RETURNED');
-            }
+            log.debug(`[LATEST LOGS] ── DB RESULTS for user ${userId} ──`);
+            log.debug(`  latestLog  :`, latestLog[0]  || '⚠️ NO ROW RETURNED');
+            log.debug(`  latestSleep:`, latestSleep[0] || '⚠️ NO ROW RETURNED');
     
             if (!latestLog.length && !latestSleep.length) {
                 return res.status(404).json({ message: "No historical data found for this user." });
@@ -414,7 +409,7 @@ async function getlogsLatestUserId(req,res,next){
                 last_updated: latestLog[0]?.stat_date || latestSleep[0]?.recorded_at
             });
         } catch (error) {
-            console.error("Error fetching latest logs:", error?.message);
+            log.error("Error fetching latest logs:", error?.message);
             next(error);
         }
   }catch(e){ next(e); }
@@ -561,7 +556,7 @@ async function postaiRunAnalysis(req,res,next){
                     ]
                 );
             } catch (notifErr) {
-                console.error('Notification insert failed:', notifErr.message);
+                log.error('Notification insert failed:', notifErr.message);
             }
     
             res.json({
@@ -579,7 +574,7 @@ async function postaiRunAnalysis(req,res,next){
             });
     
         } catch (err) {
-            console.error('Run Analysis Error:', err?.message);
+            log.error('Run Analysis Error:', err?.message);
             next(err);
         }
   }catch(e){ next(e); }

@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const log = require('../utils/logger');
 const crypto = require('crypto');
 const notificationController = require('./notification.controller');
 const {
@@ -122,8 +123,7 @@ async function postanalyzePic(req, res, next) {
     // Cache hit return immediately, no AI call
     const cached = getCached(base64Image);
     if (cached) {
-      if (process.env.NODE_ENV !== 'production')
-        console.log('[analyze-pic] ✅ Cache hit — returning stored result');
+      log.debug('[analyze-pic] ✅ Cache hit — returning stored result');
       return res.json(cached);
     }
 
@@ -135,8 +135,8 @@ async function postanalyzePic(req, res, next) {
         if (inflightAnalyses.get(key) === shared) inflightAnalyses.delete(key);
       });
       inflightAnalyses.set(key, shared);
-    } else if (process.env.NODE_ENV !== 'production') {
-      console.log('[analyze-pic] ↻ Joining in-flight analysis for same image');
+    } else {
+      log.debug('[analyze-pic] ↻ Joining in-flight analysis for same image');
     }
 
     try {
@@ -151,7 +151,7 @@ async function postanalyzePic(req, res, next) {
 
       res.json(parsed);
     } catch (err) {
-      console.error('[analyze-pic] ERROR:', err.message);
+      log.error('[analyze-pic] ERROR:', err.message);
       next(
         new AppError('AI failed to analyze the image. Please try again.', 500, 'AI_ANALYZE_FAILED')
       );
@@ -257,7 +257,7 @@ async function postUserIdSuggestPlan(req, res, next) {
         has_any_plans: plans.length > 0,
       });
     } catch (err) {
-      console.error('[suggest-plan] ERROR:', err.message);
+      log.error('[suggest-plan] ERROR:', err.message);
       next(new AppError('AI coach could not generate a suggestion', 500, 'AI_SUGGEST_FAILED'));
     }
   } catch (e) {
@@ -420,7 +420,7 @@ async function postUserId(req, res, next) {
         try {
           await sendMealSummaryEmail(user.email, summary);
         } catch (err) {
-          console.error('❌ MAILER FAILED:', err.message);
+          log.error('❌ MAILER FAILED:', err.message);
         }
       });
     }
@@ -430,7 +430,7 @@ async function postUserId(req, res, next) {
       await db.execute('INSERT INTO notifications (user_id, message) VALUES (?, ?)', [userId, msg]);
       notificationController.broadcast(String(userId), { message: msg, type: 'success' });
     } catch (err) {
-      console.error('❌ NOTIFICATION FAILED:', err.message);
+      log.error('❌ NOTIFICATION FAILED:', err.message);
     }
 
     res.status(200).json({ message: 'Food log saved', id: insertId });
@@ -481,7 +481,7 @@ async function getUserId(req, res, next) {
       );
       res.json({ records: rows, total: countRow?.total ?? 0 });
     } catch (err) {
-      console.error('[food-log GET] ERROR:', err.message);
+      log.error('[food-log GET] ERROR:', err.message);
       next(err);
     }
   } catch (e) {
@@ -503,7 +503,7 @@ async function deleteUserIdMealId(req, res, next) {
 
       res.json({ success: true, message: 'Meal deleted' });
     } catch (err) {
-      console.error('[food-log DELETE] ERROR:', err.message);
+      log.error('[food-log DELETE] ERROR:', err.message);
       next(err);
     }
   } catch (e) {

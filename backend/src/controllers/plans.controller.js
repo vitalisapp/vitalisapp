@@ -1,5 +1,6 @@
 
 const db = require('../config/db');
+const log = require('../utils/logger');
 const { z } = require('zod');
 
 const enrollSchema = z.object({
@@ -52,7 +53,7 @@ async function postenroll(req,res,next){
             res.json({ success: true, message: "Blueprint added to your library" });
         } catch (err) {
             if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: "You already own this blueprint" });
-            console.error("Enrollment Error:", err);
+            log.error("Enrollment Error:", err);
             next(err);
         }
 }
@@ -81,7 +82,7 @@ async function postprogressComplete(req,res,next){
             );
             res.json({ success: true });
         } catch (err) {
-            console.error("Complete Day Error:", err);
+            log.error("Complete Day Error:", err);
             next(err);
         }
 }
@@ -96,7 +97,7 @@ async function getprogressUserIdPlanId(req,res,next){
             );
             res.json(rows);
         } catch (err) {
-            console.error("Progress Fetch Error:", err);
+            log.error("Progress Fetch Error:", err);
             next(err);
         }
   }catch(e){ next(e); }
@@ -149,7 +150,7 @@ async function getcontentPlanId(req,res,next){
     
             res.json(result);
         } catch (err) {
-            console.error("Plan Content Error:", err);
+            log.error("Plan Content Error:", err);
             next(err);
         }
   }catch(e){ next(e); }
@@ -193,7 +194,7 @@ async function getUserId(req,res,next){
             });
             res.json(out);
         } catch (err) {
-            console.error("Marketplace Fetch Error:", err);
+            log.error("Marketplace Fetch Error:", err);
             next(err);
         }
   }catch(e){ next(e); }

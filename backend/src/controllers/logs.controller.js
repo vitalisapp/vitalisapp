@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const log = require('../utils/logger');
 
 async function postUserId(req,res,next){
   try{
@@ -16,7 +17,7 @@ async function postUserId(req,res,next){
           return res.status(400).json({ error: 'At least one value (calories, steps, minutes, water) must be greater than 0' });
         }
     
-        if (process.env.NODE_ENV !== 'production') console.log(`[LOGS] Received — userId:${userId} calories:${c} steps:${s} minutes:${m}`);
+        log.debug(`[LOGS] Received — userId:${userId} calories:${c} steps:${s} minutes:${m}`);
     
         try {
             const [result] = await db.execute(
@@ -36,13 +37,13 @@ async function postUserId(req,res,next){
                   [userId, w]
                 );
               } catch (wErr) {
-                console.error('[LOGS] Water insert warning:', wErr.message);
+                log.error('[LOGS] Water insert warning:', wErr.message);
               }
             }
-            if (process.env.NODE_ENV !== 'production') console.log(`[LOGS] OK — affectedRows:${result.affectedRows}`);
+            log.debug(`[LOGS] OK — affectedRows:${result.affectedRows}`);
             res.status(200).json({ message: "Activity logged successfully" });
         } catch (err) {
-            console.error("[LOGS] DB Error:", err.message);
+            log.error("[LOGS] DB Error:", err.message);
             next(err);
         }
   }catch(e){ next(e); }
@@ -63,7 +64,7 @@ async function gethistoryUserId(req,res,next){
             );
             res.json(rows);
         } catch (err) {
-            console.error("History fetch error:", err.message);
+            log.error("History fetch error:", err.message);
             next(err);
         }
   }catch(e){ next(e); }

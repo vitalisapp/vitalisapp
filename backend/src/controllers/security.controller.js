@@ -1,5 +1,6 @@
 
 const db = require('../config/db');
+const log = require('../utils/logger');
 // GET /api/security - fetch all sessions for the logged in user
 
 async function get(req,res,next){
@@ -52,7 +53,7 @@ async function get(req,res,next){
             res.json(rows);
     
         } catch (err) {
-            console.error('fetch sessions error:', err.message);
+            log.error('fetch sessions error:', err.message);
             next(err);
         }
   }catch(e){ next(e); }
@@ -84,7 +85,7 @@ async function deleteSessionId(req,res,next){
             res.json({ success: true, message: 'Session removed from list. That device stays signed in until its token expires or you log out / change password.' });
     
         } catch (err) {
-            console.error('delete session error:', err.message);
+            log.error('delete session error:', err.message);
             next(err);
         }
   }catch(e){ next(e); }

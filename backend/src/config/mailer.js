@@ -1,4 +1,5 @@
 try { require('dotenv').config(); } catch {}
+const log = require('../utils/logger');
 const nodemailer = require("nodemailer");
 
 function mailConfigured() {
@@ -6,7 +7,7 @@ function mailConfigured() {
 }
 
 if (!mailConfigured()) {
-  console.warn(
+  log.warn(
     "[mailer] EMAIL_USER/EMAIL_PASS not set — outbound email will fail gracefully (logged, not thrown)",
   );
 }

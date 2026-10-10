@@ -1,5 +1,6 @@
 
 const db = require('../config/db');
+const log = require('../utils/logger');
 const { validUserId } = require('../utils/ids');
 
 function numField(v, { min = 0, max = 100, name }) {
@@ -160,7 +161,7 @@ async function getUserIdAnalysis(req,res,next){
             );
             res.json(rows);
         } catch (err) {
-            console.error('[Analysis Graph] Error:', err.message);
+            log.error('[Analysis Graph] Error:', err.message);
             next(err);
         }
   }catch(e){ next(e); }
@@ -200,7 +201,7 @@ async function getUserIdScatter(req,res,next){
             );
             res.json(rows);
         } catch (err) {
-            console.error('[Scatter] Error:', err.message);
+            log.error('[Scatter] Error:', err.message);
             next(err);
         }
   }catch(e){ next(e); }

@@ -1,4 +1,5 @@
 try { require('dotenv').config(); } catch {}
+const log = require('../utils/logger');
 const mysql = require('mysql2');
 
 if (!process.env.DB_NAME) {
@@ -18,7 +19,7 @@ if (useSsl) {
   } catch { /* fall through to default secure */
   }
   if (!ca) {
-    console.warn('[db] DB_SSL=1 without DB_SSL_CA — set it to your provider ca.pem if connects fail');
+    log.warn('[db] DB_SSL=1 without DB_SSL_CA — set it to your provider ca.pem if connects fail');
   }
   sslOpt = ca ? { ca, rejectUnauthorized: true } : { rejectUnauthorized: true };
 }
@@ -43,7 +44,7 @@ const pool = mysql.createPool({
 
 // Idle-connection errors must never crash the server.
 pool.on('error', (err) => {
-  console.error('[db] pool error:', err.code || err.message);
+  log.error('[db] pool error:', err.code || err.message);
 });
 
 module.exports = pool.promise();

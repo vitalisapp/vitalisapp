@@ -1,5 +1,6 @@
 // Per-user daily AI budget. Must run AFTER verifyUser (needs req.user.id).
 const db = require('../config/db');
+const log = require('../utils/logger');
 
 const DAILY_AI_LIMIT = parseInt(process.env.AI_DAILY_LIMIT, 10) || 50;
 let tzWarned = false;
@@ -22,7 +23,7 @@ async function aiQuota(req, res, next) {
     // Count 2xx only — failures must not burn quota.
     if (!tzWarned && !process.env.TZ && process.env.NODE_ENV !== 'production') {
       tzWarned = true;
-      console.warn('[aiQuota] TZ not set — set TZ=UTC for consistent logs (quota uses UTC_DATE()).');
+      log.warn('[aiQuota] TZ not set — set TZ=UTC for consistent logs (quota uses UTC_DATE()).');
     }
     let counted = false;
     const countOnce = async () => {
@@ -35,7 +36,7 @@ async function aiQuota(req, res, next) {
           [userId]
         );
       } catch (ledgerErr) {
-        console.warn('[aiQuota] ledger write failed (quota not counted):', ledgerErr.code || ledgerErr.message);
+        log.warn('[aiQuota] ledger write failed (quota not counted):', ledgerErr.code || ledgerErr.message);
       }
     };
     res.on('finish', () => {

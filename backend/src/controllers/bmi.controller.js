@@ -3,6 +3,7 @@ const db = require('../config/db');
 const { callGeminiWithFallback } = require('../config/gemini');
 // Single BMI category source — matches planEngine (Onboarding) and the master plan.
 const { bmiCategory: getBmiCategory } = require('../utils/planEngine');
+const log = require('../utils/logger');
 
 const VALID_GENDERS = ['male', 'female', 'other'];
 
@@ -81,16 +82,16 @@ async function postUserId(req,res,next){
                   aiSuggestion = 'Focus on balanced nutrition and consistent activity to optimize your body composition.';
                 }
             } catch (aiErr) {
-                console.error('[BMI] AI Error:', aiErr.message);
+                log.error('[BMI] AI Error:', aiErr.message);
                 aiDegraded = true;
                 aiSuggestion = 'Focus on balanced nutrition and consistent activity to optimize your body composition.';
             }
     
-            if (process.env.NODE_ENV !== 'production') console.log(`[BMI] Saved — userId:${userId} bmi:${bmi} category:${category}`);
+            log.debug(`[BMI] Saved — userId:${userId} bmi:${bmi} category:${category}`);
             res.status(200).json({ message: 'BMI saved', id: result.insertId, bmi, category, aiSuggestion, degraded: aiDegraded });
     
         } catch (err) {
-            console.error('[BMI] Insert Error:', err.message);
+            log.error('[BMI] Insert Error:', err.message);
             next(err);
         }
   }catch(e){ next(e); }
@@ -125,7 +126,7 @@ async function getUserId(req,res,next){
     
             res.json({ records: rows, total: countRow?.total ?? 0 });
         } catch (err) {
-            console.error('[BMI] Fetch Error:', err.message);
+            log.error('[BMI] Fetch Error:', err.message);
             next(err);
         }
   }catch(e){ next(e); }
