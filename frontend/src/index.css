@@ -316,37 +316,6 @@ body {
     box-shadow: var(--shadow-md);
   }
 }
-/* Ambient orbs behind glass — absolute layer, content stacks above via .glass-content */
-.glass-ambient {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-.glass-orb {
-  display: none;
-}
-.glass-orb-a {
-  width: 420px;
-  height: 420px;
-  top: -160px;
-  right: -120px;
-  background: radial-gradient(circle, var(--glass-orb-1), transparent 70%);
-}
-.glass-orb-b {
-  width: 340px;
-  height: 340px;
-  top: 60px;
-  left: -140px;
-  background: radial-gradient(circle, var(--glass-orb-2), transparent 70%);
-}
-.glass-orb-c {
-  width: 300px;
-  height: 300px;
-  top: 300px;
-  right: -100px;
-  background: radial-gradient(circle, var(--glass-orb-3), transparent 70%);
-}
 .glass-content {
   position: relative;
 }

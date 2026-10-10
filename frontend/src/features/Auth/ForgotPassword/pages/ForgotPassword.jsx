@@ -209,7 +209,7 @@ const ForgotPassword = () => {
   })();
 
   return (
-    <div data-theme="dark" className="min-h-screen flex items-center justify-center font-['DM_Sans',sans-serif] text-[#e5e2e1] overflow-hidden relative bg-[#0e0e0e]">
+    <div data-theme="dark" className="min-h-screen flex items-center justify-center font-sans text-[#e5e2e1] overflow-hidden relative bg-[#0e0e0e]">
       <div className="bg-image fixed inset-0 z-0" />
 
       <div className="relative z-30 w-full flex items-center justify-center p-5 sm:p-[40px_20px]">

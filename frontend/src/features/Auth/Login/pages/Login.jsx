@@ -14,33 +14,9 @@ const Login = () => {
   const googleEnabled = !!GOOGLE_CLIENT_ID;
 
   return (
-    <div data-theme="dark" className="relative min-h-screen w-full bg-[#0e0e0e] font-['DM_Sans'] text-[#e5e2e1] overflow-x-hidden overflow-y-auto flex">
+    <div data-theme="dark" className="relative min-h-screen w-full bg-[#0e0e0e] font-sans text-[#e5e2e1] overflow-x-hidden overflow-y-auto flex">
 
       <style>{`
-        .vitalis-vignette {
-          background: radial-gradient(ellipse at center, transparent 30%, #0e0e0e 100%);
-        }
-        .vitalis-grid {
-          background-image:
-            linear-gradient(rgba(107,142,35,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(107,142,35,0.03) 1px, transparent 1px);
-          background-size: 48px 48px;
-        }
-        .vitalis-scan-bar {
-          position: absolute;
-          top: 0; left: 0; right: 0;
-          height: 2px;
-          background: linear-gradient(90deg, transparent, var(--accent), transparent);
-          border-radius: 999px;
-          animation: vitalis-scan 3s ease-in-out infinite;
-          opacity: 0.6;
-        }
-        @keyframes vitalis-scan {
-          0%   { transform: translateX(-100%); opacity: 0; }
-          20%  { opacity: 0.6; }
-          80%  { opacity: 0.6; }
-          100% { transform: translateX(100%); opacity: 0; }
-        }
         .vitalis-spinner {
           width: 14px; height: 14px;
           border: 2px solid var(--text-inverse);
@@ -96,8 +72,6 @@ const Login = () => {
 
       {/* Layered Backgrounds */}
       <div className="fixed inset-0 z-0 bg-[url('/auth-gym.jpg')] bg-cover bg-[center_30%] brightness-[0.28] saturate-[0.7]" />
-      <div className="vitalis-vignette fixed inset-0 z-[1]" />
-      <div className="vitalis-grid fixed inset-0 z-[2]" />
 
       {/* Back to Landing */}
       <button
@@ -140,8 +114,6 @@ const Login = () => {
         {/* Right Glass Panel */}
         <div className="flex items-center justify-center p-4 sm:p-8">
           <div className="v-card relative w-full max-w-[400px] bg-[#121210]/65 backdrop-blur-[32px] saturate-[140%] border border-[var(--accent)]/10 rounded-[20px] p-6 sm:p-10 shadow-[0_32px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)]">
-
-            <div className="vitalis-scan-bar" />
 
             {/* Logo */}
             <div className="v-card-logo flex items-center gap-3 mb-9">

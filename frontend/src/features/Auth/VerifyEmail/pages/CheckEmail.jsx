@@ -60,9 +60,8 @@ const CheckEmail = () => {
   };
 
   return (
-    <div data-theme="dark" className="relative min-h-screen w-full bg-[#0e0e0e] font-['DM_Sans'] text-[#e5e2e1] overflow-x-hidden overflow-y-auto flex">
+    <div data-theme="dark" className="relative min-h-screen w-full bg-[#0e0e0e] font-sans text-[#e5e2e1] overflow-x-hidden overflow-y-auto flex">
       <div className="fixed inset-0 z-0 bg-[url('/auth-gym.jpg')] bg-cover bg-[center_30%] brightness-[0.28] saturate-[0.7]" />
-      <div className="fixed inset-0 z-[1] bg-[radial-gradient(ellipse_at_center,transparent_30%,#0e0e0e_100%)]" />
 
       <div className="relative z-10 m-auto w-full max-w-[440px] p-6 flex flex-col items-center">
         <div className="w-full bg-[#121210]/65 backdrop-blur-[32px] border border-[var(--accent)]/10 rounded-[20px] p-6 sm:p-10 text-center">

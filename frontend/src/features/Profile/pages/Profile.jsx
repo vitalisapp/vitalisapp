@@ -154,17 +154,19 @@ const Profile = () => {
         <Topbar sidebarExpanded={expanded} userId={USER_ID} />
 
         <main className="w-full max-w-[720px] lg:max-w-4xl mx-auto px-4 pb-20 md:pb-8 pt-[56px]">
-          {/* Header band: Streak | avatar+name+tier | Progress */}
-          <div className="relative rounded-[20px] overflow-hidden text-[#08130A] shadow-md mt-4 bg-[linear-gradient(135deg,var(--accent-light)_0%,var(--accent)_60%,var(--accent-dark)_130%)]">
+          {/* Header band: Streak | avatar+name+tier | Progress.
+              Solid deep-green block (no gradient wash) with light text in
+              both themes — dark media block, tokens can't express it. */}
+          <div className="relative rounded-[20px] overflow-hidden text-[#EAF2EA] shadow-md mt-4 bg-[#0C1410] border border-[var(--border-light)]">
             <div className="flex items-center justify-between gap-2 px-4 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-5">
               <div className="text-center w-[64px] sm:w-[76px] shrink-0">
                 <p className="text-[20px] sm:text-[22px] font-black leading-none tabular-nums">{streakDays}</p>
                 <p className="text-[10px] font-bold mt-1 leading-tight opacity-80">Streak<br />days</p>
               </div>
-              <div className="w-px self-stretch bg-black/15 rounded-full" aria-hidden="true" />
+              <div className="w-px self-stretch bg-white/15 rounded-full" aria-hidden="true" />
               <div className="flex flex-col items-center min-w-0 flex-1">
                 <div className="relative shrink-0">
-                  <div className="w-16 h-16 sm:w-[76px] sm:h-[76px] rounded-full overflow-hidden border-2 border-black/25 bg-black/10 flex items-center justify-center font-bold text-[20px]">
+                  <div className="w-16 h-16 sm:w-[76px] sm:h-[76px] rounded-full overflow-hidden border-2 border-white/25 bg-white/10 flex items-center justify-center font-bold text-[20px]">
                     {(() => {
                       const a = resolveAvatar(avatarSrc, formData.fullName);
                       return a.kind === 'image'
@@ -172,7 +174,7 @@ const Profile = () => {
                         : <span className="w-full h-full flex items-center justify-center text-[var(--text-inverse)] bg-[var(--accent)]">{a.initials}</span>;
                     })()}
                   </div>
-                  <button onClick={() => setPickerOpen(v => !v)} aria-label={pickerOpen ? 'Close avatar picker' : 'Change avatar'} aria-expanded={pickerOpen} className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white text-[var(--accent-dark)] border border-black/20 flex items-center justify-center shadow hover:scale-105 active:scale-95 transition-transform">
+                  <button onClick={() => setPickerOpen(v => !v)} aria-label={pickerOpen ? 'Close avatar picker' : 'Change avatar'} aria-expanded={pickerOpen} className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#7CCB8D] text-[#0C1410] border border-transparent flex items-center justify-center shadow hover:scale-105 active:scale-95 transition-transform">
                     <span className="material-symbols-outlined text-[15px]">{pickerOpen ? 'close' : 'photo_camera'}</span>
                   </button>
                 </div>
@@ -182,7 +184,7 @@ const Profile = () => {
                   {onboarding?.goalType ? goalLabel(onboarding.goalType) : 'No goal yet'}
                 </span>
               </div>
-              <div className="w-px self-stretch bg-black/15 rounded-full" aria-hidden="true" />
+              <div className="w-px self-stretch bg-white/15 rounded-full" aria-hidden="true" />
               <div className="text-center w-[64px] sm:w-[76px] shrink-0">
                 <p className="text-[22px] font-black leading-none tabular-nums">
                   {weightProgress == null ? '—' : weightProgress.diff != null ? Math.abs(weightProgress.diff).toFixed(1) : `${weightProgress.pct}%`}

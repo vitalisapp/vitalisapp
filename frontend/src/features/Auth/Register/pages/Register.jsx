@@ -90,11 +90,9 @@ const Register = () => {
   };
 
   return (
-    <div data-theme="dark" className="min-h-screen flex font-['DM_Sans',sans-serif] text-[#e5e2e1] overflow-x-hidden overflow-y-auto relative bg-[#0e0e0e]">
+    <div data-theme="dark" className="min-h-screen flex font-sans text-[#e5e2e1] overflow-x-hidden overflow-y-auto relative bg-[#0e0e0e]">
       {/* Same hardcoded dark backdrop as Login (theme-var vignette washed white in light theme) */}
       <div className="fixed inset-0 z-0 bg-[url('/auth-gym.jpg')] bg-cover bg-[center_30%] brightness-[0.28] saturate-[0.7]" />
-      <div className="fixed inset-0 z-[1]" style={{ background: 'radial-gradient(ellipse at center, transparent 30%, #0e0e0e 100%)' }} />
-      <div className="fixed inset-0 z-[2]" style={{ backgroundImage: 'linear-gradient(rgba(107,142,35,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(107,142,35,0.03) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
 
       {/* Back to Landing */}
       <button
@@ -121,7 +119,6 @@ const Register = () => {
         {/* ── Right glass card ── */}
         <div className="flex items-center justify-center p-5 sm:p-[40px_32px] max-[960px]:p-[20px]">
           <div className="relative w-full max-w-[420px] bg-[#121210]/65 backdrop-blur-[32px] saturate-[140%] border border-[var(--accent)]/10 rounded-[20px] p-6 sm:p-10 shadow-[0_32px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)] overflow-hidden">
-            <div className="scan-bar absolute left-0 right-0 top-0 h-[1px] rounded-t-[20px]" />
 
             {/* Logo */}
             <div className="flex items-center gap-2.5 mb-7">

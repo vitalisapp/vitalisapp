@@ -23,7 +23,7 @@ const TAG_PILLS = {
   Recovery: 'bg-sky-500/10 text-sky-500 border-sky-500/20',
 };
 
-// Layout-only: topic banner gradients + watermark icons (decorative — the API
+// Layout-only: flat topic banner + watermark icon (decorative — the API
 // has no post images, so the banner carries the topic, never fake numbers).
 const TAG_ICONS = {
   General: 'groups',
