@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../../../lib/apiClient.js';
 import Icon from '../../../components/Icon.jsx';
-import { GOAL_TYPES, PACES, goalLabel, validateTargetWeight } from '../../Onboarding/constants/goals.js';
+import {
+  GOAL_TYPES, PACES, goalLabel, validateTargetWeight,
+  ACTIVITY_LEVELS, SLEEP_QUALITY, STRESS_LEVELS, EXERCISE_FREQ, RECOVERY_LEVELS,
+  humanizeOption,
+} from '../../Onboarding/constants/goals.js';
 
 // Change Goal modal (master plan §12) — switch the active goal without replaying
 // onboarding. Body profile is carried forward server-side (PATCH /:userId/change).
@@ -11,6 +15,14 @@ const ChangeGoalModal = ({ userId, currentGoal, onClose, onUpdated, showToast })
     currentGoal?.targetWeightKg != null ? String(currentGoal.targetWeightKg) : ''
   );
   const [pace, setPace] = useState(currentGoal?.pace || 'GRADUAL');
+  const [activityLevel, setActivityLevel] = useState(currentGoal?.activityLevel || '');
+  const [sleepHours, setSleepHours] = useState(
+    currentGoal?.sleepHours != null ? String(currentGoal.sleepHours) : ''
+  );
+  const [sleepQuality, setSleepQuality] = useState(currentGoal?.sleepQuality || '');
+  const [stressLevel, setStressLevel] = useState(currentGoal?.stressLevel || '');
+  const [exerciseFreq, setExerciseFreq] = useState(currentGoal?.exerciseFreq || '');
+  const [recoveryLevel, setRecoveryLevel] = useState(currentGoal?.recoveryLevel || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -18,6 +30,12 @@ const ChangeGoalModal = ({ userId, currentGoal, onClose, onUpdated, showToast })
     if (currentGoal?.goalType) setGoalType(currentGoal.goalType);
     if (currentGoal?.targetWeightKg != null) setTargetWeight(String(currentGoal.targetWeightKg));
     if (currentGoal?.pace) setPace(currentGoal.pace);
+    if (currentGoal?.activityLevel) setActivityLevel(currentGoal.activityLevel);
+    if (currentGoal?.sleepHours != null) setSleepHours(String(currentGoal.sleepHours));
+    if (currentGoal?.sleepQuality) setSleepQuality(currentGoal.sleepQuality);
+    if (currentGoal?.stressLevel) setStressLevel(currentGoal.stressLevel);
+    if (currentGoal?.exerciseFreq) setExerciseFreq(currentGoal.exerciseFreq);
+    if (currentGoal?.recoveryLevel) setRecoveryLevel(currentGoal.recoveryLevel);
   }, [currentGoal]);
 
   const needsTarget = goalType === 'LOSE_WEIGHT' || goalType === 'GAIN_WEIGHT';
@@ -39,6 +57,12 @@ const ChangeGoalModal = ({ userId, currentGoal, onClose, onUpdated, showToast })
         body.targetWeightKg = Number(targetWeight);
         if (pace) body.pace = pace;
       }
+      body.activityLevel = activityLevel || null;
+      body.sleepHours = sleepHours === '' ? null : Number(sleepHours);
+      body.sleepQuality = sleepQuality || null;
+      body.stressLevel = stressLevel || null;
+      body.exerciseFreq = exerciseFreq || null;
+      body.recoveryLevel = recoveryLevel || null;
       const data = await apiFetch(`/api/goals/${userId}/change`, {
         method: 'PATCH',
         body: JSON.stringify(body),
@@ -107,6 +131,44 @@ const ChangeGoalModal = ({ userId, currentGoal, onClose, onUpdated, showToast })
               )}
             </>
           )}
+
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Activity Level</label>
+            <div className="flex gap-2 mt-1 flex-wrap">
+              {ACTIVITY_LEVELS.map((a) => (
+                <button type="button" key={a.key} onClick={() => setActivityLevel(a.key)} aria-pressed={activityLevel === a.key}
+                  className={`h-10 px-4 rounded-full text-[12px] font-bold uppercase tracking-wider border transition-colors ${activityLevel === a.key ? 'bg-[var(--accent)] text-[var(--text-inverse)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Average Sleep (hours)</label>
+            <input type="number" min="0" max="14" step="0.5" placeholder="7.5"
+              value={sleepHours} onChange={(e) => setSleepHours(e.target.value)}
+              className="mt-1 w-full h-11 rounded-[12px] bg-[var(--input-bg)] border border-[var(--input-border)] px-3 outline-none focus:border-[var(--accent)]" />
+          </div>
+
+          {[
+            ['Sleep Quality', SLEEP_QUALITY, sleepQuality, setSleepQuality],
+            ['Stress Level', STRESS_LEVELS, stressLevel, setStressLevel],
+            ['Exercise Frequency', EXERCISE_FREQ, exerciseFreq, setExerciseFreq],
+            ['Recovery Level', RECOVERY_LEVELS, recoveryLevel, setRecoveryLevel],
+          ].map(([label, opts, val, set]) => (
+            <div key={label}>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">{label}</label>
+              <div className="flex gap-2 mt-1 flex-wrap">
+                {opts.map((o) => (
+                  <button type="button" key={o} onClick={() => set(o)} aria-pressed={val === o}
+                    className={`h-10 px-4 rounded-full text-[12px] font-bold uppercase tracking-wider border transition-colors ${val === o ? 'bg-[var(--accent)] text-[var(--text-inverse)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
+                    {humanizeOption(o)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
 
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose}
