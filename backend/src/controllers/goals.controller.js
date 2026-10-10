@@ -135,6 +135,19 @@ async function postUserId(req, res, next) {
     for (const [k, f] of Object.entries(checks)) {
       if (f.error) return res.status(400).json({ error: `${k}: ${f.error}` });
     }
+    // Direction guard: a loss goal with target >= current (or gain with
+    // target <= current) is a data-entry mistake, e.g. 55 kg → 85 kg for
+    // LOSE_WEIGHT. PATCH /change funnels through here too, so both UIs
+    // are covered even if client validation is bypassed.
+    const targetVal = checks.target.value;
+    if (targetVal != null && (goal === 'LOSE_WEIGHT' || goal === 'GAIN_WEIGHT')) {
+      if (goal === 'LOSE_WEIGHT' && targetVal >= weight) {
+        return res.status(400).json({ error: 'target: target weight must be below current weight for LOSE_WEIGHT' });
+      }
+      if (goal === 'GAIN_WEIGHT' && targetVal <= weight) {
+        return res.status(400).json({ error: 'target: target weight must be above current weight for GAIN_WEIGHT' });
+      }
+    }
     const focusNorm =
       focus === undefined || focus === null || focus === ''
         ? null

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../../../lib/apiClient.js';
 import Icon from '../../../components/Icon.jsx';
-import { GOAL_TYPES, PACES, goalLabel } from '../../Onboarding/constants/goals.js';
+import { GOAL_TYPES, PACES, goalLabel, validateTargetWeight } from '../../Onboarding/constants/goals.js';
 
 // Change Goal modal (master plan §12) — switch the active goal without replaying
 // onboarding. Body profile is carried forward server-side (PATCH /:userId/change).
@@ -26,12 +26,10 @@ const ChangeGoalModal = ({ userId, currentGoal, onClose, onUpdated, showToast })
   const submit = async (e) => {
     e.preventDefault();
     if (saving) return;
-    if (needsTarget && !(Number(targetWeight) > 0)) {
-      setError('Enter a target weight for this goal.');
-      return;
-    }
-    if (needsTarget && (Number(targetWeight) < 10 || Number(targetWeight) > 1000)) {
-      setError('Target weight must be between 10 and 1000 kg.');
+    const currentKg = currentGoal?.weightKg ?? currentGoal?.weight_kg;
+    const directionError = validateTargetWeight(goalType, targetWeight, currentKg);
+    if (directionError) {
+      setError(directionError);
       return;
     }
     setSaving(true); setError('');

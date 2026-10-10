@@ -12,6 +12,22 @@ export const goalLabel = (key) => GOAL_TYPES.find((g) => g.key === key)?.label |
 const GOAL_LABEL_SET = new Set(GOAL_TYPES.map((g) => g.label));
 export const isGoalLikeBio = (v) => GOAL_LABEL_SET.has(String(v || '').trim());
 
+// Target-vs-current direction check shared by onboarding and ChangeGoalModal.
+// Returns '' when valid, otherwise a ready-to-display inline error.
+export const validateTargetWeight = (goalType, targetKg, currentKg) => {
+  if (goalType !== 'LOSE_WEIGHT' && goalType !== 'GAIN_WEIGHT') return '';
+  const t = Number(targetKg);
+  if (!(t > 0)) return 'Enter a target weight for this goal.';
+  if (t < 10 || t > 1000) return 'Target weight must be between 10 and 1000 kg.';
+  const c = Number(currentKg);
+  if (!Number.isFinite(c) || !(c > 0)) return '';
+  if (goalType === 'LOSE_WEIGHT' && t >= c)
+    return 'For weight loss, your target must be below your current weight.';
+  if (goalType === 'GAIN_WEIGHT' && t <= c)
+    return 'For weight gain, your target must be above your current weight.';
+  return '';
+};
+
 export const ACTIVITY_LEVELS = [
   { key: 'SEDENTARY', label: 'Sedentary', desc: 'Mostly sitting / minimal exercise', icon: 'chair' },
   { key: 'LIGHTLY_ACTIVE', label: 'Lightly Active', desc: 'Activity 1–3 days per week', icon: 'directions_walk' },

@@ -9,7 +9,7 @@ import { safeSet, safeSetJSON, safeGetJSON } from '../../../lib/storage.js';
 import {
   GOAL_TYPES, ACTIVITY_LEVELS, PACES, FOCUSES,
   SLEEP_QUALITY, STRESS_LEVELS, EXERCISE_FREQ, RECOVERY_LEVELS,
-  goalLabel, humanizeOption,
+  goalLabel, humanizeOption, validateTargetWeight,
 } from '../constants/goals.js';
 
 const TOTAL_STEPS = 8;
@@ -154,7 +154,7 @@ const Onboarding = () => {
       case 2: return Boolean(goalType);
       case 3:
         if (goalType === 'LOSE_WEIGHT' || goalType === 'GAIN_WEIGHT') {
-          return Boolean(Number(targetWeight) > 0 && pace);
+          return validateTargetWeight(goalType, targetWeight, weightKg) === '' && Boolean(pace);
         }
         if (goalType === 'BUILD_MUSCLE') return Boolean(focus);
         if (goalType === 'MAINTAIN_WEIGHT' || goalType === 'PERFORMANCE') return Boolean(focus);
@@ -184,7 +184,8 @@ const Onboarding = () => {
       case 2: return goalType ? '' : 'Select a goal to continue.';
       case 3: {
         if (goalType === 'LOSE_WEIGHT' || goalType === 'GAIN_WEIGHT') {
-          if (!(Number(targetWeight) > 0)) return 'Enter your target weight.';
+          const targetError = validateTargetWeight(goalType, targetWeight, weightKg);
+          if (targetError) return targetError;
           if (!pace) return 'Choose your preferred progress pace.';
           return '';
         }

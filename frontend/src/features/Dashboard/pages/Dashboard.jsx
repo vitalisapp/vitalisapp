@@ -22,7 +22,7 @@ const LiveDateTime = () => {
   useEffect(() => { const id = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(id); }, []);
   const s = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const t = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  return <span className="text-[11px] font-medium text-[var(--text-muted)]">{s} • {t}</span>;
+  return <span className="text-[12px] font-medium text-[var(--text-muted)]">{s} • {t}</span>;
 };
 
 // Calorie ring: gray track + remaining arc + food tip.
@@ -54,7 +54,7 @@ const CaloriesRing = ({ remaining, goal, food, size = 112, stroke = 10 }) => {
 const MiniCard = ({ title, icon, value, sub, progress, onClick, actionIcon }) => (
   <button onClick={onClick} className="text-left glass-card border border-[var(--border-light)] rounded-[16px] p-4 hover:shadow-[0_4px_16px_rgba(46,82,51,0.12)] transition-all w-full min-w-0">
     <div className="flex items-start justify-between gap-2">
-      <p className="text-[12px] font-bold text-[var(--text-muted)] truncate">{title}</p>
+      <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] truncate">{title}</p>
       {actionIcon && <span className="w-6 h-6 rounded-full bg-[var(--bg-hover)] flex items-center justify-center -mt-1 shrink-0"><span className="material-symbols-outlined text-[16px] text-[var(--accent)]">{actionIcon}</span></span>}
     </div>
     <div className="flex items-center gap-2 mt-1.5 min-w-0">
@@ -63,7 +63,7 @@ const MiniCard = ({ title, icon, value, sub, progress, onClick, actionIcon }) =>
       </span>
       <span className="text-[20px] font-black tracking-tight text-[var(--text-primary)] truncate">{value}</span>
     </div>
-    <p className="text-[11px] text-[var(--text-muted)] mt-1 truncate">{sub}</p>
+    <p className="text-[12px] text-[var(--text-muted)] mt-1 truncate">{sub}</p>
     <div className="h-1.5 bg-[var(--bg-hover)] rounded-full mt-2.5 overflow-hidden">
       <div className="h-full rounded-full transition-all duration-500 bg-[var(--accent)]" style={{ width: `${Math.min(100, Math.round(progress))}%` }} />
     </div>
@@ -94,7 +94,7 @@ const WeekStrip = () => {
               : 'bg-[var(--bg-card)] text-[var(--accent)] border border-[var(--accent-border)]'
           }`}
         >
-          <span className="text-[9px] font-bold uppercase opacity-80">{d.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+          <span className="text-[10px] font-bold uppercase opacity-80">{d.toLocaleDateString('en-US', { weekday: 'short' })}</span>
           <span className="text-[13px] font-black">{d.getDate()}</span>
           <span className={`w-1 h-1 rounded-full ${isToday(d) ? 'bg-[var(--text-inverse)]' : 'bg-[var(--accent-bg)]'}`} />
         </div>
@@ -116,6 +116,12 @@ const Dashboard = () => {
   const [nutrientGoals, setNutrientGoals] = useState([]);
   const [heroPage, setHeroPage] = useState(0);
   const heroRef = useRef(null);
+  // Dots only make sense with something to page through — count the actual
+  // rendered slides so a single-slide hero never shows a lone dot.
+  const [heroSlideCount, setHeroSlideCount] = useState(0);
+  // Mount-time DOM measurement (runs once): refs don't re-render on their own.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setHeroSlideCount(heroRef.current?.childElementCount ?? 0); }, []);
   const onHeroScroll = () => {
     const el = heroRef.current;
     if (!el || el.clientWidth === 0) return;
@@ -197,6 +203,10 @@ const Dashboard = () => {
   const workoutMinToday = Math.floor(workoutSecsToday / 60);
   const workoutGoalMin = goal?.goalType === 'BUILD_MUSCLE' || goal?.goalType === 'PERFORMANCE' ? 60
     : goal?.goalType === 'LOSE_WEIGHT' || goal?.goalType === 'GAIN_WEIGHT' ? 45 : 30;
+  // Empty-state gates: bare zeros read as broken data, so cards with no
+  // intake/activity yet show an em dash plus a next-step hint instead.
+  const hasMeals = (meals.kcal || 0) > 0 || (meals.protein || 0) > 0 || (meals.carbs || 0) > 0;
+  const hasActivity = steps > 0 || caloriesBurned > 0 || workoutMinToday > 0;
   const workoutLabel = (t) => {
     const s = String(t || 'general').replace(/_/g, ' ');
     return s.charAt(0).toUpperCase() + s.slice(1);
@@ -250,7 +260,7 @@ const Dashboard = () => {
               onScroll={onHeroScroll}
               className="flex overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden no-scrollbar"
             >
-              <div className="min-w-full snap-center p-4 sm:p-5">
+              <div className="min-w-full snap-center px-4 py-3 sm:p-5">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-[18px] font-black text-[var(--text-primary)] leading-none">Calories</p>
@@ -309,7 +319,7 @@ const Dashboard = () => {
                 <p className="text-[18px] font-black text-[var(--text-primary)] leading-none">Activity</p>
                 <p className="text-[12px] text-[var(--text-muted)] mt-1">Workouts and rest today</p>
                 {goal && (
-                  <p className="text-[11px] font-bold text-[var(--accent)] mt-1.5 truncate">
+                  <p className="text-[12px] font-bold text-[var(--accent)] mt-1.5 truncate">
                     {goalLabel(goal.goalType)}{goal.targetWeightKg != null ? ` · ${currentWeightKg ?? goal.weightKg ?? '—'} → ${goal.targetWeightKg} kg` : ''}
                   </p>
                 )}
@@ -328,7 +338,7 @@ const Dashboard = () => {
                       <span className="w-8 h-8 rounded-full bg-[var(--bg-card)] border border-[var(--accent-border)] flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[18px] text-[var(--accent)]">fitness_center</span></span>
                       <span className="flex-1 min-w-0">
                         <span className="block text-[13px] font-bold">No workouts yet today</span>
-                        <span className="block text-[11px] text-[var(--text-muted)]">Start a camera workout</span>
+                        <span className="block text-[12px] text-[var(--text-muted)]">Start a camera workout</span>
                       </span>
                       <span className="material-symbols-outlined text-[18px] text-[var(--text-muted)]">arrow_forward</span>
                     </button>
@@ -339,7 +349,7 @@ const Dashboard = () => {
                           <span className="w-8 h-8 rounded-full bg-[var(--bg-card)] border border-[var(--accent-border)] flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[16px] text-[var(--accent)]">fitness_center</span></span>
                           <span className="flex-1 min-w-0">
                             <span className="block text-[13px] font-bold truncate">{workoutLabel(w.workout_type)}</span>
-                            <span className="block text-[11px] text-[var(--text-muted)]">
+                            <span className="block text-[12px] text-[var(--text-muted)]">
                               {w.status === 'active' ? 'In progress' : fmtDur(w.duration_seconds)}{Number(w.rep_count) > 0 ? ` · ${w.rep_count} reps` : ''}
                             </span>
                           </span>
@@ -349,7 +359,7 @@ const Dashboard = () => {
                         </div>
                       ))}
                       {todayWorkouts.length > 3 && (
-                        <p className="text-[11px] font-bold text-[var(--text-muted)] text-center">+{todayWorkouts.length - 3} more today</p>
+                        <p className="text-[12px] font-bold text-[var(--text-muted)] text-center">+{todayWorkouts.length - 3} more today</p>
                       )}
                     </div>
                   )}
@@ -381,8 +391,9 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+          {heroSlideCount > 1 && (
           <div className="flex items-center justify-center gap-1.5 mt-3">
-            {[0, 1, 2, 3].map(i => (
+            {[0, 1, 2, 3].slice(0, heroSlideCount).map(i => (
               <button
                 key={i}
                 onClick={() => goHero(i)}
@@ -391,6 +402,7 @@ const Dashboard = () => {
               />
             ))}
           </div>
+          )}
 
           <div className="mt-3"><QuickLog userId={USER_ID} onWeightLogged={() => refreshDashboard()} onCheckIn={() => setCheckInOpen(true)} /></div>
 
@@ -406,33 +418,33 @@ const Dashboard = () => {
 
           {/* 2x2 grid like MFP → 4 across on wide desktop */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
-            <MiniCard title="Steps" icon="footprint" value={steps.toLocaleString()} sub={`Goal: ${stepGoalTarget.toLocaleString()} steps`} progress={(steps/stepGoalTarget)*100} onClick={() => navigate('/dashboard/activity-map')} />
+            <MiniCard title="Steps" icon="footprint" value={steps > 0 ? steps.toLocaleString() : '—'} sub={steps > 0 ? `Goal: ${stepGoalTarget.toLocaleString()} steps` : 'No steps yet today'} progress={(steps/stepGoalTarget)*100} onClick={() => navigate('/dashboard/activity-map')} />
             <div className="glass-card border border-black/[0.06] dark:border-white/[0.06] rounded-[14px] p-4">
               <div className="flex items-center justify-between">
-                <p className="text-[14px] font-bold text-[var(--text-primary)]">Exercise</p>
+                <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">Exercise</p>
                 <button onClick={() => navigate('/dashboard/workouts')} className="w-6 h-6 rounded-full bg-[var(--bg-hover)] flex items-center justify-center"><span className="material-symbols-outlined text-[16px]">add</span></button>
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <span className="w-7 h-7 rounded-full bg-[var(--bg-card)] border border-[var(--accent-border)] flex items-center justify-center"><span className="material-symbols-outlined text-[16px] text-[var(--accent)]">local_fire_department</span></span>
-                <span className="text-[18px] font-black text-[var(--text-primary)]">{caloriesBurned} cal</span>
+                <span className="text-[18px] font-black text-[var(--text-primary)]">{hasActivity ? `${caloriesBurned} cal` : '—'}</span>
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <span className="w-7 h-7 rounded-full bg-[var(--bg-card)] border border-[var(--accent-border)] flex items-center justify-center"><span className="material-symbols-outlined text-[16px] text-[var(--accent)]">timer</span></span>
-                <span className="text-[16px] font-black text-[var(--text-primary)]">{hrs > 0 ? `${hrs}:${String(mins).padStart(2,'0')}` : `${mins}`}</span>
-                <span className="text-[13px] font-bold text-[var(--text-primary)]">{hrs ? 'hr' : 'min'}</span>
+                <span className="text-[16px] font-black text-[var(--text-primary)]">{hasActivity ? (hrs > 0 ? `${hrs}:${String(mins).padStart(2,'0')}` : `${mins}`) : '—'}</span>
+                <span className="text-[13px] font-bold text-[var(--text-primary)]">{hasActivity ? (hrs ? 'hr' : 'min') : 'No activity yet'}</span>
               </div>
             </div>
-            {nutrientActive('PROTEIN') && <MiniCard title="Protein" icon="egg_alt" value={`${meals.protein}g`} sub={`Goal: ${nutrientTarget('PROTEIN', goal?.proteinG ?? 50)} g • Real DB`} progress={nutrientTarget('PROTEIN', goal?.proteinG ?? 50) ? (meals.protein/nutrientTarget('PROTEIN', goal?.proteinG ?? 50))*100 : 0} onClick={() => navigate('/dashboard/meal-tracker')} />}
-            {nutrientActive('CARBOHYDRATES') && <MiniCard title="Carbohydrates" icon="bakery_dining" value={`${meals.carbs}g`} sub={`Goal: ${nutrientTarget('CARBOHYDRATES', goal?.carbsG ?? 275)} g • Real DB`} progress={nutrientTarget('CARBOHYDRATES', goal?.carbsG ?? 275) ? (meals.carbs/nutrientTarget('CARBOHYDRATES', goal?.carbsG ?? 275))*100 : 0} onClick={() => navigate('/dashboard/meal-tracker')} />}
-            {nutrientActive('FAT') && <MiniCard title="Fat" icon="water_drop" value={`${meals.fat}g`} sub={`Goal: ${nutrientTarget('FAT', goal?.fatG ?? 78)} g • Real DB`} progress={nutrientTarget('FAT', goal?.fatG ?? 78) ? (meals.fat/nutrientTarget('FAT', goal?.fatG ?? 78))*100 : 0} onClick={() => navigate('/dashboard/meal-tracker')} />}
-            {nutrientActive('TRANS_FAT') && <MiniCard title="Trans Fat" icon="warning" value={`${meals.trans_fat}g`} sub={`Goal: ${nutrientTarget('TRANS_FAT', 2)} g • Real DB`} progress={Math.min(100, (meals.trans_fat/nutrientTarget('TRANS_FAT', 2))*100)} onClick={() => navigate('/dashboard/meal-tracker')} />}
-            {nutrientActive('SATURATED_FAT') && <MiniCard title="Saturated Fat" icon="water_drop" value={`${meals.saturated_fat}g`} sub={`Goal: ${nutrientTarget('SATURATED_FAT', 20)} g • Real DB`} progress={Math.min(100, (meals.saturated_fat/nutrientTarget('SATURATED_FAT', 20))*100)} onClick={() => navigate('/dashboard/meal-tracker')} />}
-            {nutrientActive('POLYUNSATURATED_FAT') && <MiniCard title="Polyunsaturated Fat" icon="humidity_mid" value={`${meals.polyunsaturated_fat}g`} sub={`Goal: ${nutrientTarget('POLYUNSATURATED_FAT', 22)} g • Real DB`} progress={Math.min(100, (meals.polyunsaturated_fat/nutrientTarget('POLYUNSATURATED_FAT', 22))*100)} onClick={() => navigate('/dashboard/meal-tracker')} />}
-            {nutrientActive('MONOUNSATURATED_FAT') && <MiniCard title="Monounsaturated Fat" icon="eco" value={`${meals.monounsaturated_fat}g`} sub={`Goal: ${nutrientTarget('MONOUNSATURATED_FAT', 22)} g • Real DB`} progress={Math.min(100, (meals.monounsaturated_fat/nutrientTarget('MONOUNSATURATED_FAT', 22))*100)} onClick={() => navigate('/dashboard/meal-tracker')} />}
+            {nutrientActive('PROTEIN') && <MiniCard title="Protein" icon="egg_alt" value={hasMeals ? `${meals.protein}g` : '—'} sub={hasMeals ? `Goal: ${nutrientTarget('PROTEIN', goal?.proteinG ?? 50)} g` : 'Log your first meal'} progress={nutrientTarget('PROTEIN', goal?.proteinG ?? 50) ? (meals.protein/nutrientTarget('PROTEIN', goal?.proteinG ?? 50))*100 : 0} onClick={() => navigate('/dashboard/meal-tracker')} />}
+            {nutrientActive('CARBOHYDRATES') && <MiniCard title="Carbohydrates" icon="bakery_dining" value={hasMeals ? `${meals.carbs}g` : '—'} sub={hasMeals ? `Goal: ${nutrientTarget('CARBOHYDRATES', goal?.carbsG ?? 275)} g` : 'Log your first meal'} progress={nutrientTarget('CARBOHYDRATES', goal?.carbsG ?? 275) ? (meals.carbs/nutrientTarget('CARBOHYDRATES', goal?.carbsG ?? 275))*100 : 0} onClick={() => navigate('/dashboard/meal-tracker')} />}
+            {nutrientActive('FAT') && <MiniCard title="Fat" icon="water_drop" value={hasMeals ? `${meals.fat}g` : '—'} sub={hasMeals ? `Goal: ${nutrientTarget('FAT', goal?.fatG ?? 78)} g` : 'Log your first meal'} progress={nutrientTarget('FAT', goal?.fatG ?? 78) ? (meals.fat/nutrientTarget('FAT', goal?.fatG ?? 78))*100 : 0} onClick={() => navigate('/dashboard/meal-tracker')} />}
+            {nutrientActive('TRANS_FAT') && <MiniCard title="Trans Fat" icon="warning" value={hasMeals ? `${meals.trans_fat}g` : '—'} sub={hasMeals ? `Goal: ${nutrientTarget('TRANS_FAT', 2)} g` : 'Log your first meal'} progress={Math.min(100, (meals.trans_fat/nutrientTarget('TRANS_FAT', 2))*100)} onClick={() => navigate('/dashboard/meal-tracker')} />}
+            {nutrientActive('SATURATED_FAT') && <MiniCard title="Saturated Fat" icon="water_drop" value={hasMeals ? `${meals.saturated_fat}g` : '—'} sub={hasMeals ? `Goal: ${nutrientTarget('SATURATED_FAT', 20)} g` : 'Log your first meal'} progress={Math.min(100, (meals.saturated_fat/nutrientTarget('SATURATED_FAT', 20))*100)} onClick={() => navigate('/dashboard/meal-tracker')} />}
+            {nutrientActive('POLYUNSATURATED_FAT') && <MiniCard title="Polyunsaturated Fat" icon="humidity_mid" value={hasMeals ? `${meals.polyunsaturated_fat}g` : '—'} sub={hasMeals ? `Goal: ${nutrientTarget('POLYUNSATURATED_FAT', 22)} g` : 'Log your first meal'} progress={Math.min(100, (meals.polyunsaturated_fat/nutrientTarget('POLYUNSATURATED_FAT', 22))*100)} onClick={() => navigate('/dashboard/meal-tracker')} />}
+            {nutrientActive('MONOUNSATURATED_FAT') && <MiniCard title="Monounsaturated Fat" icon="eco" value={hasMeals ? `${meals.monounsaturated_fat}g` : '—'} sub={hasMeals ? `Goal: ${nutrientTarget('MONOUNSATURATED_FAT', 22)} g` : 'Log your first meal'} progress={Math.min(100, (meals.monounsaturated_fat/nutrientTarget('MONOUNSATURATED_FAT', 22))*100)} onClick={() => navigate('/dashboard/meal-tracker')} />}
             {nutrientGoals.length===0 && (
               <>
-                <MiniCard title="Protein" icon="egg_alt" value={`${meals.protein}g`} sub={`Goal: ${goal?.proteinG ?? 50} g • Real DB`} progress={goal?.proteinG ? (meals.protein/goal.proteinG)*100 : 0} onClick={() => navigate('/dashboard/meal-tracker')} />
-                <MiniCard title="Carbohydrates" icon="bakery_dining" value={`${meals.carbs}g`} sub={`Goal: ${goal?.carbsG ?? 275} g • Real DB`} progress={goal?.carbsG ? (meals.carbs/goal.carbsG)*100 : 0} onClick={() => navigate('/dashboard/meal-tracker')} />
+                <MiniCard title="Protein" icon="egg_alt" value={hasMeals ? `${meals.protein}g` : '—'} sub={hasMeals ? `Goal: ${goal?.proteinG ?? 50} g` : 'Log your first meal'} progress={goal?.proteinG ? (meals.protein/goal.proteinG)*100 : 0} onClick={() => navigate('/dashboard/meal-tracker')} />
+                <MiniCard title="Carbohydrates" icon="bakery_dining" value={hasMeals ? `${meals.carbs}g` : '—'} sub={hasMeals ? `Goal: ${goal?.carbsG ?? 275} g` : 'Log your first meal'} progress={goal?.carbsG ? (meals.carbs/goal.carbsG)*100 : 0} onClick={() => navigate('/dashboard/meal-tracker')} />
               </>
             )}
           </div>
@@ -440,7 +452,7 @@ const Dashboard = () => {
           {/* Today’s Plan — real enrolled plans */}
           <div className="flex items-center justify-between mt-5 mb-2">
             <h2 className="text-[16px] font-black tracking-tight">Today&apos;s Plan</h2>
-            <button onClick={() => navigate('/dashboard/plans')} className="text-[11px] font-bold text-[var(--text-muted)]">View All</button>
+            <button onClick={() => navigate('/dashboard/plans')} className="text-[12px] font-bold text-[var(--text-muted)]">View All</button>
           </div>
           <div className="space-y-2.5">
             {todayPlansLoading && (
@@ -452,9 +464,9 @@ const Dashboard = () => {
                 <span className="w-10 h-10 rounded-full bg-[var(--bg-hover)] flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[20px] text-[var(--text-muted)]">fitness_center</span></span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-[13px] font-bold">No enrolled plans yet</span>
-                  <span className="block text-[11px] text-[var(--text-muted)]">Explore training plans to build today&apos;s schedule</span>
+                  <span className="block text-[12px] text-[var(--text-muted)]">Explore training plans to build today&apos;s schedule</span>
                 </span>
-                <span className="text-[11px] font-bold text-[var(--accent)] shrink-0">Explore →</span>
+                <span className="text-[12px] font-bold text-[var(--accent)] shrink-0 flex items-center gap-0.5">Explore <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_forward</span></span>
               </button>
             )}
             {todayPlans.map((p) => (
@@ -462,7 +474,7 @@ const Dashboard = () => {
                 <span className="w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--accent-border)] flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[20px] text-[var(--accent)]">self_improvement</span></span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-[13px] font-bold truncate">{p.title || p.name || 'Training plan'}</span>
-                  <span className="block text-[11px] text-[var(--text-muted)]">{p.level || p.goal || 'Enrolled'} • Tap to open tracker</span>
+                  <span className="block text-[12px] text-[var(--text-muted)]">{p.level || p.goal || 'Enrolled'} • Tap to open tracker</span>
                 </span>
                 <span className="w-6 h-6 rounded-full bg-[var(--bg-hover)] flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[16px] text-[var(--text-muted)]">arrow_forward</span></span>
               </button>
@@ -474,7 +486,7 @@ const Dashboard = () => {
             <button onClick={() => setCheckInOpen(true)} className="text-left glass-card border border-black/[0.06] dark:border-white/[0.06] rounded-[14px] p-4">
               <p className="text-[14px] font-bold">Recovery</p>
               <p className="text-[13px] text-[var(--text-muted)] mt-1">{checkin ? `${checkin.sleep_hours}h • ${checkin.sleep_quality}` : 'No check-in'}</p>
-              <p className="text-[12px] font-bold text-[var(--accent)] dark:text-[var(--accent)] mt-2">Check-In →</p>
+              <p className="text-[12px] font-bold text-[var(--accent)] dark:text-[var(--accent)] mt-2 flex items-center gap-0.5">Check-In <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_forward</span></p>
             </button>
             <button onClick={() => { if (goal) setGoalDetailOpen(true); else navigate('/onboarding'); }} className="text-left glass-card border border-black/[0.06] dark:border-white/[0.06] rounded-[14px] p-4">
               <p className="text-[14px] font-bold">Goal</p>
@@ -483,7 +495,7 @@ const Dashboard = () => {
                 <div className="mt-2">
                   <div className="flex items-baseline justify-between gap-2">
                     <p className="text-[13px] font-black text-[var(--text-primary)] truncate">
-                      {currentWeightKg ?? goal.weightKg ?? '—'}<span className="font-bold text-[var(--text-muted)]"> → {goal.targetWeightKg} kg</span>
+                      {currentWeightKg ?? goal.weightKg ?? '—'}<span className="font-bold text-[var(--text-muted)]"> – {goal.targetWeightKg} kg</span>
                     </p>
                     {progressPct != null && (
                       <span className="text-[12px] font-black text-[var(--accent)] shrink-0">{progressPct}%</span>
@@ -501,7 +513,7 @@ const Dashboard = () => {
                   <span className="font-semibold text-[var(--text-muted)]"> · P{goal.proteinG ?? '—'} C{goal.carbsG ?? '—'} F{goal.fatG ?? '—'}</span>
                 </p>
               ) : null}
-              <p className="text-[12px] font-bold text-[var(--accent)] dark:text-[var(--accent)] mt-2">{goal ? 'View →' : 'Set up →'}</p>
+              <p className="text-[12px] font-bold text-[var(--accent)] dark:text-[var(--accent)] mt-2 flex items-center gap-0.5">{goal ? 'View' : 'Set up'} <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_forward</span></p>
             </button>
            </div>
           </div>
