@@ -1,5 +1,4 @@
-export const formatSeconds = (totalSeconds) => {
-  if (!totalSeconds) return '';
+export const formatSeconds = (totalSeconds) => {  if (!totalSeconds) return '';
   if (totalSeconds >= 60) {
     const mins = Math.round(totalSeconds / 60);
     return `${mins} min`;
@@ -49,3 +48,5 @@ export const TABS = [
   { id: 'library',  label: 'Library',   icon: 'fitness_center' },
   { id: 'history',  label: 'History',   icon: 'history'   },
 ];
+
+export const humanizeGoalType = (t) => String(t || 'Fitness').toLowerCase().split('_').map((w) => w.slice(0, 1).toUpperCase() + w.slice(1)).join(' ');
