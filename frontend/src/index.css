@@ -7,7 +7,7 @@
   --font-display: 'Manrope', 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Dark — deep green-black, muted leaf-green accent (WCAG AA verified, see batch 5b) */
+/* Dark — deep green-black, matte forest accent (WCAG AA verified) */
 :root,
 .dark-theme {
   --bg-primary: #0a0e0b;
@@ -15,7 +15,7 @@
   --bg-tertiary: #141a15;
   --bg-card: #141a15;
   --bg-hover: rgba(255, 255, 255, 0.08);
-  --bg-active: rgba(87, 178, 106, 0.14);
+  --bg-active: rgba(78, 155, 95, 0.1);
   --bg-overlay: rgba(4, 8, 5, 0.75);
   --surface: #0e1310;
   --surface-hover: #131914;
@@ -29,12 +29,12 @@
   --border-light: rgba(255, 255, 255, 0.1);
   --border-medium: rgba(255, 255, 255, 0.16);
   --border-heavy: rgba(255, 255, 255, 0.24);
-  --accent: #57B26A;
+  --accent: #4E9B5F;
   --accent-dark: #3E8A51;
-  --accent-light: #7CCB8D;
-  --accent-bg: rgba(87, 178, 106, 0.12);
-  --accent-border: rgba(87, 178, 106, 0.3);
-  --accent-hover: #6CC07D;
+  --accent-light: #6BAE7E;
+  --accent-bg: rgba(78, 155, 95, 0.08);
+  --accent-border: rgba(78, 155, 95, 0.22);
+  --accent-hover: #5FA46E;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
@@ -47,16 +47,16 @@
   --glass-orb-3: rgba(168, 255, 155, 0.12);
   --input-bg: #141a15;
   --input-border: rgba(255, 255, 255, 0.14);
-  --input-focus: rgba(87, 178, 106, 0.25);
+  --input-focus: rgba(78, 155, 95, 0.18);
   --input-placeholder: #6e8a7a;
   --nav-bg: #131914;
-  --nav-fg: #57B26A;
+  --nav-fg: #4E9B5F;
   --nav-fg-muted: #6e8a7a;
   --scrollbar-track: transparent;
   --scrollbar-thumb: rgba(255, 255, 255, 0.1);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.15);
-  --success: #57B26A;
-  --success-bg: rgba(87, 178, 106, 0.12);
+  --success: #4E9B5F;
+  --success-bg: rgba(78, 155, 95, 0.08);
   --error: #f87171;
   --error-bg: rgba(248, 113, 113, 0.15);
   --warning: #fde68a;

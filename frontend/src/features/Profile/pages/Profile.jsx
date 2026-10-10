@@ -174,7 +174,7 @@ const Profile = () => {
                         : <span className="w-full h-full flex items-center justify-center text-[var(--text-inverse)] bg-[var(--accent)]">{a.initials}</span>;
                     })()}
                   </div>
-                  <button onClick={() => setPickerOpen(v => !v)} aria-label={pickerOpen ? 'Close avatar picker' : 'Change avatar'} aria-expanded={pickerOpen} className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#7CCB8D] text-[#0C1410] border border-transparent flex items-center justify-center shadow hover:scale-105 active:scale-95 transition-transform">
+                  <button onClick={() => setPickerOpen(v => !v)} aria-label={pickerOpen ? 'Close avatar picker' : 'Change avatar'} aria-expanded={pickerOpen} className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#6BAE7E] text-[#0C1410] border border-transparent flex items-center justify-center shadow hover:scale-105 active:scale-95 transition-transform">
                     <span className="material-symbols-outlined text-[15px]">{pickerOpen ? 'close' : 'photo_camera'}</span>
                   </button>
                 </div>
