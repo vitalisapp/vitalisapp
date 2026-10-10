@@ -29,6 +29,10 @@ if (_jwt.startsWith('change-me') || _jwt.length < 32) {
     process.exit(1);
   }
 }
+if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEV_LINKS === '1') {
+  console.error('[env] ALLOW_DEV_LINKS=1 exposes verify/reset links — forbidden in production');
+  process.exit(1);
+}
 if (!process.env.TZ || process.env.TZ !== 'UTC') {
   // aiQuota uses UTC_DATE() + daily_stats/readiness assume UTC day boundaries.
   // Warn only — never crash — so local XAMPP keeps working.

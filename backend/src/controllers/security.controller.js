@@ -70,19 +70,32 @@ async function deleteSessionId(req,res,next){
     
         try {
             // user_id check makes sure you can only delete your own sessions.
-            // Honesty note: JWTs are stateless — deleting the row removes the
-            // device from the list, but its cookie token stays valid until
-            // expiry or a token_version bump (logout / password change / reset).
-            // The response message below says exactly that (no false "logged out").
-            const [result] = await db.execute(`
+            // JWTs are stateless and carry only {id, email, tv} — no session id —
+            // so deleting the row alone cannot kill that device's cookie.
+            // Fail closed: bump token_version FIRST (revokes every cookie, same
+            // as logout-everywhere), then remove the row. The caller is revoked
+            // too and must sign in again — the message says exactly that.
+            // True single-device revocation (kill one cookie, keep the rest)
+            // needs a session-id ↔ JWT binding = schema + payload change,
+            // deliberately not done here.
+            // Existence check first: a bogus id must be a side-effect-free
+            // 404, never a token_version bump (fail closed, no-op safe).
+            const [existing] = await db.execute(
+              'SELECT id FROM user_sessions WHERE id = ? AND user_id = ? LIMIT 1',
+              [sessionId, userId]
+            );
+            if (existing.length === 0) {
+              return res.status(404).json({ error: 'Session not found' });
+            }
+            await db.execute(`
+                UPDATE users SET token_version = token_version + 1 WHERE id = ?
+            `, [userId]);
+            await db.execute(`
                 DELETE FROM user_sessions
                 WHERE id = ? AND user_id = ?
             `, [sessionId, userId]);
-            if (result.affectedRows === 0) {
-              return res.status(404).json({ error: 'Session not found' });
-            }
 
-            res.json({ success: true, message: 'Session removed from list. That device stays signed in until its token expires or you log out / change password.' });
+            res.json({ success: true, message: 'Session removed. All sessions were revoked for safety — sign in again on your devices.' });
     
         } catch (err) {
             log.error('delete session error:', err.message);
