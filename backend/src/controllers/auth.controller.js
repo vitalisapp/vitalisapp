@@ -3,131 +3,15 @@ const bcrypt     = require('bcryptjs');
 const jwt        = require('jsonwebtoken');
 const rateLimit  = require('express-rate-limit');
 const { z }      = require('zod');
-const UAParser   = require('ua-parser-js');
-const { OAuth2Client } = require('google-auth-library');
-const { COOKIE_NAME, getCookieOptions, getClearCookieOptions } = require('../utils/cookies');
-const crypto = require('crypto');
+const { COOKIE_NAME, getClearCookieOptions } = require('../utils/cookies');
 const { sendVerificationEmail } = require('../config/mailer');
 const log = require('../utils/logger');
+const { normEmail, checkRateLimit, recordFailedAttempt, clearAttempts } = require('../services/loginThrottle');
+const { DEV_VERIFY_FALLBACK, createVerificationToken } = require('../services/verification');
+const { googleClient } = require('../services/googleAuth');
+const { setSessionCookie, logUserSession } = require('../services/session');
 
-function resolveFrontendUrl() {
-  const raw = (process.env.FRONTEND_URL
-    || (process.env.ALLOWED_ORIGINS || '').split(',')[0]
-    || 'http://localhost:5173').trim();
-  try {
-    const u = new URL(raw);
-    if (!['http:', 'https:'].includes(u.protocol)) throw new Error('bad proto');
-    if (process.env.NODE_ENV === 'production' && u.protocol !== 'https:') {
-      log.warn('[auth] FRONTEND_URL should be https in production:', raw);
-    }
-    return raw.replace(/\/$/, '');
-  } catch {
-    log.warn('[auth] Invalid FRONTEND_URL, falling back to http://localhost:5173:', raw);
-    return 'http://localhost:5173';
-  }
-}
-// Resolved per email so tunnel URLs take effect without a code change.
-function frontendUrl() {
-  return resolveFrontendUrl();
-}
-
-// ALLOW_DEV_LINKS=1 exposes links for local demo without SMTP (never in prod).
-const DEV_VERIFY_FALLBACK = process.env.ALLOW_DEV_LINKS === '1' && process.env.NODE_ENV !== 'production';
-
-async function createVerificationToken(userId) {
-  const token = crypto.randomBytes(32).toString('hex');
-  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  await db.execute(
-    `UPDATE email_verifications SET used = 1 WHERE user_id = ? AND used = 0`
-    , [userId]
-  );
-  await db.execute(
-    'INSERT INTO email_verifications (user_id, token_hash, expires_at) VALUES (?, ?, ?)',
-    [userId, tokenHash, expiresAt]
-  );
-  return { token, link: `${frontendUrl()}/verify-email?token=${token}` };
-}
-const googleClient = new OAuth2Client({
-  clientId:     process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-});
-
-// Per-email throttle (second layer; IP limiter in routes is primary).
-const loginAttempts = new Map();
-const ATTEMPT_TTL_MS = 30 * 60 * 1000;
-
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, rec] of loginAttempts) {
-    if (rec.lockedUntil && rec.lockedUntil <= now) loginAttempts.delete(key);
-    else if (!rec.lockedUntil && now - (rec.firstSeen || now) > ATTEMPT_TTL_MS) loginAttempts.delete(key);
-  }
-  if (loginAttempts.size > 5000) {
-    const oldest = [...loginAttempts.keys()].slice(0, loginAttempts.size - 5000);
-    for (const k of oldest) loginAttempts.delete(k);
-  }
-}, 10 * 60 * 1000).unref?.();
-
-function normEmail(email) {
-  return String(email || '').trim().toLowerCase();
-}
-
-function getRateLimit(email) {
-  const key = normEmail(email);
-  if (!loginAttempts.has(key)) return { count: 0, lockedUntil: null, firstSeen: Date.now() };
-  return loginAttempts.get(key);
-}
-
-function recordFailedAttempt(email) {
-  const key = normEmail(email);
-  const record = getRateLimit(key);
-  const count  = record.count + 1;
-
-  let lockedUntil = null;
-  if (count >= 20) {
-    lockedUntil = Date.now() + 30 * 60 * 1000;
-  } else if (count >= 10) {
-    lockedUntil = Date.now() + 30 * 1000;
-  }
-
-  loginAttempts.set(key, { count, lockedUntil, firstSeen: record.firstSeen || Date.now() });
-  return count;
-}
-
-function clearAttempts(email) {
-  loginAttempts.delete(normEmail(email));
-}
-
-function checkRateLimit(email) {
-  const record = getRateLimit(email);
-  if (!record.lockedUntil) return null;
-
-  const remaining = record.lockedUntil - Date.now();
-  if (remaining <= 0) {
-    loginAttempts.delete(normEmail(email));
-    return null;
-  }
-
-  if (record.count >= 20) {
-    const mins = Math.ceil(remaining / 60000);
-    return {
-      error:    `Too many failed attempts. Try again in ${mins} minute${mins !== 1 ? 's' : ''}.`,
-      retryAfter: Math.ceil(remaining / 1000),
-    };
-  } else {
-    const secs = Math.ceil(remaining / 1000);
-    return {
-      error:    `Too many failed attempts. Try again in ${secs} second${secs !== 1 ? 's' : ''}.`,
-      retryAfter: Math.ceil(remaining / 1000),
-    };
-  }
-}
-
-// ─── COOKIE HELPERS (single source: src/utils/cookies.js) ───
-// getCookieOptions + COOKIE_NAME imported above — no local duplicates.
-
-// IP-based brute-force guard (primary) — per-email Map above is the second layer
+// IP-based brute-force guard (primary) — per-email Map in services/loginThrottle is the second layer
 const loginIpLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 10,
@@ -135,62 +19,6 @@ const loginIpLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many login attempts. Try again in a minute.' },
 });
-
-function setSessionCookie(res, userId, email, req, tv = 0) {
-  const { signSession } = require('../config/jwt');
-  const token = signSession(jwt, { id: userId, email, tv });
-  const opts = getCookieOptions(req);
-  res.cookie(COOKIE_NAME, token, opts);
-  if (process.env.NODE_ENV !== 'production') {
-    log.debug(
-      `[cookie] set uid=${userId} secure=${opts.secure} sameSite=${opts.sameSite} ` +
-      `partitioned=${Boolean(opts.partitioned)} proto=${req.headers?.['x-forwarded-proto'] || '-'}`
-    );
-  }
-  return token;
-}
-
-// ─── SESSION LOGGING ───
-const logUserSession = async (req, userId) => {
-  let conn;
-  try {
-    const parser = new UAParser(req.headers['user-agent']);
-    const result = parser.getResult();
-
-    const device  = result.device.type || 'Desktop';
-    const browser = result.browser.name || 'Unknown';
-    const os      = result.os.name || 'Unknown';
-
-    const ip =
-      req.headers['x-forwarded-for']?.split(',')[0] ||
-      req.socket?.remoteAddress ||
-      req.ip ||
-      'Unknown';
-
-    const location = 'Unknown';
-
-    // Transaction so concurrent logins can't leave two is_current=true rows.
-    conn = await db.getConnection();
-    await conn.beginTransaction();
-    await conn.execute(
-      'UPDATE user_sessions SET is_current = false WHERE user_id = ?',
-      [userId]
-    );
-
-    await conn.execute(
-      `INSERT INTO user_sessions
-       (user_id, device, browser, os, ip_address, location, is_current)
-       VALUES (?, ?, ?, ?, ?, ?, true)`,
-      [userId, device, browser, os, ip, location]
-    );
-    await conn.commit();
-  } catch (err) {
-    try { await conn?.rollback(); } catch (_) {}
-    log.error('SESSION LOG ERROR:', err);
-  } finally {
-    try { conn?.release(); } catch (_) {}
-  }
-};
 
 // ─── VALIDATION SCHEMAS ───
 const registerSchema = z.object({
