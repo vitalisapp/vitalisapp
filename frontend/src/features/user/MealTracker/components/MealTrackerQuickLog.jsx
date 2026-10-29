@@ -161,6 +161,7 @@ export function ManualMealForm({
   onRecalculate = undefined,
   isLogging = false,
   isAnalyzing = false,
+  isEstimating = false,
   panelRef = undefined,
 }) {
   const busy = isLogging || isAnalyzing;
@@ -279,9 +280,11 @@ export function ManualMealForm({
           </div>
 
           <p className="mt-density-hint" id="meal-density-hint">
-            {hasDensity
-              ? `${basisLabel}${toInputValue(form.per100.calories)} kcal · P ${toInputValue(form.per100.protein)} · C ${toInputValue(form.per100.carbs)} · F ${toInputValue(form.per100.fat)} per 100 g${sourceLabel}${grams ? '' : ' — reference serving shown; add a weight to scale.'}`
-              : 'Enter the nutrition values below. Weight is optional and saved with the meal.'}
+            {isEstimating
+              ? 'Estimating nutrition for this portion… Type a value below to enter it yourself.'
+              : hasDensity
+                ? `${basisLabel}${toInputValue(form.per100.calories)} kcal · P ${toInputValue(form.per100.protein)} · C ${toInputValue(form.per100.carbs)} · F ${toInputValue(form.per100.fat)} per 100 g${sourceLabel}${grams ? '' : ' — reference serving shown; add a weight to scale.'}`
+                : 'Add a food name and weight to auto-estimate nutrition, or enter the values below.'}
           </p>
 
           {hasDensity && form.macroOverride && (
@@ -340,8 +343,8 @@ export function ManualMealForm({
         <button
           type="submit"
           className="mt-save-button"
-          disabled={busy}
-          aria-busy={isLogging || undefined}
+          disabled={busy || isEstimating}
+          aria-busy={isLogging || isEstimating || undefined}
         >
           {isLogging ? (
             <Spinner className="mt-save-spinner" />

@@ -350,6 +350,7 @@ export default function MealTracker() {
     addCustomItem,
     clearResult,
     handleDeleteMeal,
+    estimateFoodDensity,
   } = useNutritionTracker(userId);
 
   const [preview, setPreview] = useState(null);
@@ -357,12 +358,17 @@ export default function MealTracker() {
   const [manualForm, setManualForm] = useState(EMPTY_FORM);
   const [manualError, setManualError] = useState("");
   const [densityError, setDensityError] = useState("");
+  const [isEstimating, setIsEstimating] = useState(false);
   const [showManual, setShowManual] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => toLocalKey(new Date()));
   const [showScanner, setShowScanner] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const fileRef = useRef(null);
   const manualRef = useRef(null);
+  // Auto-estimate bookkeeping: a token invalidates stale responses, and the
+  // attempt key stops us re-asking the AI for the same food on every render.
+  const estimateTokenRef = useRef(0);
+  const estimateAttemptRef = useRef("");
   const today = toLocalKey(new Date());
 
   const openManualFor = useCallback((mealType) => {
@@ -382,6 +388,49 @@ export default function MealTracker() {
   // Weight drives macros whenever a density is known (catalog serving weight
   // or an AI per-100 g estimate). Explicit macro edits win until the weight or
   // the chosen food changes again, matching the scan editor's correction rules.
+  const cancelEstimate = useCallback(() => {
+    estimateTokenRef.current += 1;
+    // Allow a retry if the same food name is typed again later.
+    estimateAttemptRef.current = "";
+    setIsEstimating(false);
+  }, []);
+
+  // Catalog first (exact name match), then the cached AI density estimate.
+  const lookupFoodDensity = useCallback(
+    async (name) => {
+      try {
+        const catalog = await apiGet(
+          `/api/food-catalog?q=${encodeURIComponent(name)}&limit=8`,
+        );
+        const items = Array.isArray(catalog?.items) ? catalog.items : [];
+        const wanted = name.toLowerCase();
+        const exact = items.find(
+          (item) =>
+            item?.per100 && String(item.name || "").trim().toLowerCase() === wanted,
+        );
+        if (exact) {
+          return {
+            per100: exact.per100,
+            source: "catalog",
+            servingLabel: exact.serving_label || "",
+            servingGrams:
+              Number(exact.serving_grams) > 0 ? Number(exact.serving_grams) : null,
+          };
+        }
+      } catch {
+        // Catalog is an optimization — fall through to the AI estimate.
+      }
+      const data = await estimateFoodDensity(name);
+      return {
+        per100: data?.per100 || null,
+        source: data?.cached ? "cache" : "ai",
+        servingLabel: "",
+        servingGrams: null,
+      };
+    },
+    [estimateFoodDensity],
+  );
+
   const applyWeight = useCallback((value) => {
     setDensityError("");
     setManualForm((current) => {
@@ -413,72 +462,87 @@ export default function MealTracker() {
   }, []);
 
   // A hand-typed name invalidates a picked food's density — never attach
-  // banana macros to a renamed dish. Macros stay until the user picks a
-  // suggestion.
-  const updateManualName = useCallback((value) => {
-    setDensityError("");
-    setManualForm((current) => ({
-      ...current,
-      name: value,
-      per100: null,
-      servingLabel: "",
-      servingGrams: null,
-      densitySource: "",
-      macroOverride: false,
-    }));
-  }, []);
-
-  const applyCatalogPick = useCallback((item) => {
-    setDensityError("");
-    setManualForm((current) => {
-      const per100 = item?.per100 || null;
-      const scaled = per100 ? scaleFromPer100(per100, current.grams) : null;
-      const base = {
+  // banana macros to a renamed dish. Manually edited macros are kept; otherwise
+  // the new name is auto-estimated again once a weight is present.
+  const updateManualName = useCallback(
+    (value) => {
+      cancelEstimate();
+      setDensityError("");
+      setManualForm((current) => ({
         ...current,
-        name: item?.name || current.name,
-        per100,
-        servingLabel: item?.serving_label || "",
-        servingGrams: Number(item?.serving_grams) > 0 ? Number(item.serving_grams) : null,
-        densitySource: per100 ? "catalog" : "",
-        macroOverride: false,
-      };
-      if (scaled) {
+        name: value,
+        per100: null,
+        servingLabel: "",
+        servingGrams: null,
+        densitySource: "",
+      }));
+    },
+    [cancelEstimate],
+  );
+
+  const applyCatalogPick = useCallback(
+    (item) => {
+      cancelEstimate();
+      setDensityError("");
+      setManualForm((current) => {
+        const per100 = item?.per100 || null;
+        const scaled = per100 ? scaleFromPer100(per100, current.grams) : null;
+        const base = {
+          ...current,
+          name: item?.name || current.name,
+          per100,
+          servingLabel: item?.serving_label || "",
+          servingGrams: Number(item?.serving_grams) > 0 ? Number(item.serving_grams) : null,
+          densitySource: per100 ? "catalog" : "",
+          // A row without per-100 g data can only provide its reference serving
+          // values — treat those as manual so auto-estimate cannot overwrite.
+          macroOverride: !per100,
+        };
+        if (scaled) {
+          return {
+            ...base,
+            calories: toInputValue(scaled.calories),
+            protein: toInputValue(scaled.protein),
+            carbs: toInputValue(scaled.carbs),
+            fat: toInputValue(scaled.fat),
+          };
+        }
+        // No weight yet (or the row has no gram reference): show the reference
+        // serving values as before. The weight field stays editable either way.
         return {
           ...base,
-          calories: toInputValue(scaled.calories),
-          protein: toInputValue(scaled.protein),
-          carbs: toInputValue(scaled.carbs),
-          fat: toInputValue(scaled.fat),
+          calories: toInputValue(item?.calories),
+          protein: toInputValue(item?.protein),
+          carbs: toInputValue(item?.carbs),
+          fat: toInputValue(item?.fat),
         };
-      }
-      // No weight yet (or the row has no gram reference): show the reference
-      // serving values as before. The weight field stays editable either way.
-      return {
-        ...base,
-        calories: toInputValue(item?.calories),
-        protein: toInputValue(item?.protein),
-        carbs: toInputValue(item?.carbs),
-        fat: toInputValue(item?.fat),
-      };
-    });
-  }, []);
+      });
+    },
+    [cancelEstimate],
+  );
 
-  const updateManualMacro = useCallback((key, value) => {
-    setManualForm((current) => {
-      const next = { ...current, [key]: value, macroOverride: true };
-      if (key !== "calories") {
-        // Keep kcal honest with the edited macros (same rule as the scan editor).
-        next.calories = toInputValue(
-          kcalFromMacros({
-            protein: key === "protein" ? value : current.protein,
-            carbs: key === "carbs" ? value : current.carbs,
-            fat: key === "fat" ? value : current.fat,
-          }),
-        );
-      }
-      return next;
-    });
-  }, []);
+  const updateManualMacro = useCallback(
+    (key, value) => {
+      // Typing a macro means "I'll enter this myself" — stop any auto estimate.
+      cancelEstimate();
+      setDensityError("");
+      setManualForm((current) => {
+        const next = { ...current, [key]: value, macroOverride: true };
+        if (key !== "calories") {
+          // Keep kcal honest with the edited macros (same rule as the scan editor).
+          next.calories = toInputValue(
+            kcalFromMacros({
+              protein: key === "protein" ? value : current.protein,
+              carbs: key === "carbs" ? value : current.carbs,
+              fat: key === "fat" ? value : current.fat,
+            }),
+          );
+        }
+        return next;
+      });
+    },
+    [cancelEstimate],
+  );
 
   const recalculateFromWeight = useCallback(() => {
     setDensityError("");
@@ -495,6 +559,86 @@ export default function MealTracker() {
       };
     });
   }, []);
+
+  // Weight alone cannot produce macros: as soon as the form has a food name and
+  // a valid weight, fetch the per-100 g density (catalog first, then the cached
+  // AI estimate) and scale it to the portion. Debounced so typing "150" does
+  // not fire three estimates; manual macro edits cancel it.
+  useEffect(() => {
+    if (!showManual || isEstimating) return undefined;
+    const name = manualForm.name.trim();
+    const grams = normalizeGrams(manualForm.grams);
+    if (name.length < 2 || !grams) return undefined;
+    if (manualForm.per100 || manualForm.macroOverride) return undefined;
+
+    const attemptKey = name.toLowerCase();
+    if (estimateAttemptRef.current === attemptKey) return undefined;
+
+    const timer = window.setTimeout(async () => {
+      estimateAttemptRef.current = attemptKey;
+      const token = ++estimateTokenRef.current;
+      setIsEstimating(true);
+      setDensityError("");
+      try {
+        const density = await lookupFoodDensity(name);
+        if (!density?.per100) throw new Error("No nutrition estimate was returned.");
+        if (token !== estimateTokenRef.current) return;
+        setManualForm((current) => {
+          // The name changed while the request was in flight — ignore it.
+          if (current.name.trim().toLowerCase() !== attemptKey) return current;
+          // The user typed a macro themselves — keep their values.
+          if (current.macroOverride) return current;
+          const base = {
+            ...current,
+            per100: density.per100,
+            servingLabel: density.servingLabel || "",
+            servingGrams: density.servingGrams || null,
+            densitySource: density.source || "",
+            macroOverride: false,
+          };
+          const scaled = scaleFromPer100(density.per100, current.grams);
+          if (!scaled) {
+            // No usable weight right now — keep the density so the next weight
+            // entry scales instantly instead of re-asking the AI.
+            return { ...base, calories: "", protein: "", carbs: "", fat: "" };
+          }
+          return {
+            ...base,
+            calories: toInputValue(scaled.calories),
+            protein: toInputValue(scaled.protein),
+            carbs: toInputValue(scaled.carbs),
+            fat: toInputValue(scaled.fat),
+          };
+        });
+      } catch (err) {
+        if (token !== estimateTokenRef.current) return;
+        setDensityError(
+          err?.message || "Could not estimate nutrition for that food. Enter the values manually.",
+        );
+      } finally {
+        if (token === estimateTokenRef.current) setIsEstimating(false);
+      }
+    }, 800);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    showManual,
+    isEstimating,
+    manualForm.name,
+    manualForm.grams,
+    manualForm.per100,
+    manualForm.macroOverride,
+    lookupFoodDensity,
+  ]);
+
+  // Closing / resetting the form invalidates any in-flight estimate so a late
+  // response can never repopulate the next meal.
+  useEffect(() => {
+    if (showManual) return;
+    estimateAttemptRef.current = "";
+    estimateTokenRef.current += 1;
+    setIsEstimating(false);
+  }, [showManual]);
 
   // Deep links from Quick Log: ?scan=1 opens the camera, ?manual=1 opens the
   // manual form. Consumed once so back-nav doesn't retrigger.
@@ -759,6 +903,7 @@ export default function MealTracker() {
                 onRecalculate={recalculateFromWeight}
                 isLogging={isLogging}
                 isAnalyzing={isAnalyzing}
+                isEstimating={isEstimating}
                 panelRef={manualRef}
               />
             )}
