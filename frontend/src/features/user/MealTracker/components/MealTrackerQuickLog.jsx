@@ -158,14 +158,12 @@ export function ManualMealForm({
   onNameChange = undefined,
   onWeightChange = undefined,
   onMacroChange = undefined,
-  onEstimate = undefined,
   onRecalculate = undefined,
   isLogging = false,
   isAnalyzing = false,
-  isEstimating = false,
   panelRef = undefined,
 }) {
-  const busy = isLogging || isAnalyzing || isEstimating;
+  const busy = isLogging || isAnalyzing;
   const hasDensity = Boolean(form.per100);
   const grams = normalizeGrams(form.grams);
   const basisLabel = form.servingLabel
@@ -256,53 +254,35 @@ export function ManualMealForm({
               max="10000"
               step="any"
               inputMode="decimal"
-              placeholder={hasDensity ? 'e.g. 150' : 'Pick or estimate a food first'}
+              placeholder="e.g. 150"
               value={form.grams}
-              disabled={!hasDensity || busy}
+              disabled={busy}
               aria-describedby="meal-density-hint"
               onChange={(event) => onWeightChange?.(event.target.value)}
             />
           </label>
 
-          {hasDensity && (
-            <div className="mt-weight-chips" role="group" aria-label="Quick weights">
-              {WEIGHT_CHIPS.map((chip) => (
-                <button
-                  key={chip}
-                  type="button"
-                  className={`mt-weight-chip ${grams === chip ? 'is-active' : ''}`}
-                  aria-pressed={grams === chip}
-                  aria-label={`Set weight to ${chip} grams`}
-                  disabled={busy}
-                  onClick={() => onWeightChange?.(String(chip))}
-                >
-                  {chip} g
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="mt-weight-chips" role="group" aria-label="Quick weights">
+            {WEIGHT_CHIPS.map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                className={`mt-weight-chip ${grams === chip ? 'is-active' : ''}`}
+                aria-pressed={grams === chip}
+                aria-label={`Set weight to ${chip} grams`}
+                disabled={busy}
+                onClick={() => onWeightChange?.(String(chip))}
+              >
+                {chip} g
+              </button>
+            ))}
+          </div>
 
           <p className="mt-density-hint" id="meal-density-hint">
             {hasDensity
               ? `${basisLabel}${toInputValue(form.per100.calories)} kcal · P ${toInputValue(form.per100.protein)} · C ${toInputValue(form.per100.carbs)} · F ${toInputValue(form.per100.fat)} per 100 g${sourceLabel}${grams ? '' : ' — reference serving shown; add a weight to scale.'}`
-              : 'Pick a suggestion or estimate nutrition to scale macros by weight.'}
+              : 'Enter the nutrition values below. Weight is optional and saved with the meal.'}
           </p>
-
-          {!hasDensity && (
-            <button
-              type="button"
-              className="mt-density-action"
-              onClick={onEstimate}
-              disabled={busy}
-            >
-              {isEstimating ? (
-                <Spinner className="mt-density-spinner" />
-              ) : (
-                <Icon name="auto_awesome" className="mt-density-icon" />
-              )}
-              <span>{isEstimating ? 'Estimating nutrition…' : 'Estimate nutrition'}</span>
-            </button>
-          )}
 
           {hasDensity && form.macroOverride && (
             <button
