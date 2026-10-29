@@ -259,7 +259,7 @@ async function postEstimateDensity(req, res, next) {
   }
 }
 
-// GET /api/food-catalog?q= — Module 4 catalog autocomplete for the manual
+// GET /api/food-logs/food-catalog?q= — Module 4 catalog autocomplete for the manual
 // meal form. Thin: q + limit straight to the service.
 async function getFoodCatalog(req, res, next) {
   try {

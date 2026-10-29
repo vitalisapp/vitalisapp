@@ -490,7 +490,7 @@ async function listFoodLogs(userId, limit, offset) {
   return { records: rows, total: countRow?.total ?? 0 };
 }
 
-// Module 4 — food catalog autocomplete (GET /api/food-catalog?q=).
+// Module 4 — food catalog autocomplete (GET /api/food-logs/food-catalog?q=).
 // Seeded reference table; case-insensitive prefix-then-contains ranking.
 // Returns both the reference serving values and a derived per-100 g density so
 // the manual form can scale macros from a user-entered weight.

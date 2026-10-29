@@ -400,7 +400,7 @@ export default function MealTracker() {
     async (name) => {
       try {
         const catalog = await apiGet(
-          `/api/food-catalog?q=${encodeURIComponent(name)}&limit=8`,
+          `/api/food-logs/food-catalog?q=${encodeURIComponent(name)}&limit=8`,
         );
         const items = Array.isArray(catalog?.items) ? catalog.items : [];
         const wanted = name.toLowerCase();

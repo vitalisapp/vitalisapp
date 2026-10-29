@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { apiGet } from '../../../../lib/apiClient.js';
 
 // Module 4 — food catalog autocomplete for the manual meal form.
-// Debounced GET /api/food-catalog?q=; picking a suggestion pre-fills name +
+// Debounced GET /api/food-logs/food-catalog?q=; picking a suggestion pre-fills name +
 // macros, and when the row has a gram reference it also supplies a per-100 g
 // density so the weight field can rescale the portion.
 // Keyboard: ↑/↓ navigate, Enter picks, Esc closes. Clicking outside closes.
@@ -33,7 +33,9 @@ export default function CatalogNameField({
         return;
       }
       try {
-        const data = await apiGet(`/api/food-catalog?q=${encodeURIComponent(q)}&limit=8`);
+        const data = await apiGet(
+          `/api/food-logs/food-catalog?q=${encodeURIComponent(q)}&limit=8`,
+        );
         if (dead) return;
         const items = Array.isArray(data?.items) ? data.items : [];
         setResults(items);
