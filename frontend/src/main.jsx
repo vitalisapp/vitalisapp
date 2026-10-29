@@ -24,8 +24,10 @@ import { installGlobalButtonLoading } from './lib/buttonLoading.js';
 // Side-effect import ONLY: attaches the global beforeinstallprompt listener at
 // boot so an install prompt firing before hydration is never missed.
 import './lib/pwaInstall.js';
+import { installServiceWorkerUpdate } from './lib/pwaUpdate.js';
 
 installGlobalButtonLoading();
+installServiceWorkerUpdate();
 
 if (!GOOGLE_CLIENT_ID && import.meta.env.DEV) {
   console.warn('[env] VITE_GOOGLE_CLIENT_ID not set — Google login disabled');
