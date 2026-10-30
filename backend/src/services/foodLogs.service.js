@@ -310,25 +310,41 @@ async function estimateFoodDensity(foodName) {
   if (cached) return { ...cached, cached: true };
 
   const raw = await callGeminiWithFallback(buildFoodDensityPrompt(displayName));
-  const { parsed } = safeParseAI(raw, null);
-  if (!parsed) {
+  const parsed = safeParseAI(raw, null).parsed;
+  let per100 = sanitizeDensity(parsed);
+  let lastRaw = raw;
+
+  // An unusable reply is usually a formatting slip (prose, units, an all-zero
+  // skeleton), so ask once more with a stricter instruction. An explicit `{}`
+  // means "not a recognizable food" — retrying cannot help — and the
+  // "high demand" static fallback is an outage, not a formatting problem.
+  const isExplicitMiss = (parsed) =>
+    Boolean(parsed) &&
+    typeof parsed === "object" &&
+    !Array.isArray(parsed) &&
+    Object.keys(parsed).length === 0;
+  const isUnavailable = /high demand|try again|unavailable/i.test(String(raw));
+
+  if (!per100 && !isExplicitMiss(parsed) && !isUnavailable) {
+    const retryRaw = await callGeminiWithFallback(
+      `${buildFoodDensityPrompt(displayName)}\n\nIMPORTANT: reply with ONLY the JSON object above — no units, no prose, no extra keys.`,
+    );
+    per100 = sanitizeDensity(safeParseAI(retryRaw, null).parsed);
+    lastRaw = retryRaw;
+  }
+
+  if (!per100) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[food-density] unusable AI reply:", String(lastRaw).slice(0, 160));
+    }
     // callGeminiWithFallback returns a plain "high demand" string, never throws.
-    const unavailable = /high demand|try again|unavailable/i.test(String(raw));
+    const unavailable = /high demand|try again|unavailable/i.test(String(lastRaw));
     throw new AppError(
       unavailable
         ? "AI nutrition estimate is unavailable right now. Try again in a moment."
         : "Could not estimate nutrition for that food. Enter the values manually.",
       unavailable ? 503 : 422,
       unavailable ? "AI_ESTIMATE_UNAVAILABLE" : "AI_ESTIMATE_UNUSABLE",
-    );
-  }
-
-  const per100 = sanitizeDensity(parsed);
-  if (!per100) {
-    throw new AppError(
-      "Could not estimate nutrition for that food. Enter the values manually.",
-      422,
-      "AI_ESTIMATE_UNUSABLE",
     );
   }
 

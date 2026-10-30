@@ -120,4 +120,29 @@ describe('sanitizeDensity', () => {
     assert.equal(sanitizeDensity({ calories: 100 }), null);
     assert.equal(sanitizeDensity({ calories: 0, protein: 0, carbs: 0, fat: 0 }), null);
   });
+
+  // Real AI replies drift on formatting; a "14 g" string used to become NaN and
+  // fail the whole 422-producing estimate, so coercion is covered here.
+  it('coerces unit suffixes, separators and aliases', () => {
+    assert.deepEqual(
+      sanitizeDensity({ calories: '160 kcal', protein: '14 g', carbs: '3g', fat: '10.0 g' }),
+      { calories: 160, protein: 14, carbs: 3, fat: 10 },
+    );
+    assert.deepEqual(
+      sanitizeDensity({ energy: '1,200 kcal', proteins: '10g', carbohydrate: '20 g', fats: 5 }),
+      { calories: 900, protein: 10, carbs: 20, fat: 5 },
+    );
+  });
+
+  it('unwraps the common nested response shapes', () => {
+    const expected = { calories: 165, protein: 31, carbs: 0, fat: 3.6 };
+    assert.deepEqual(
+      sanitizeDensity({ per_100g: { calories: 165, protein: 31, carbs: 0, fat: 3.6 } }),
+      expected,
+    );
+    assert.deepEqual(
+      sanitizeDensity({ nutrition: { calories: '165', protein: '31', carbs: '0', fat: '3.6' } }),
+      expected,
+    );
+  });
 });

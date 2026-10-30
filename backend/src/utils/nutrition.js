@@ -80,17 +80,48 @@ function kcalFromMacros({ protein = 0, carbs = 0, fat = 0 } = {}) {
 
 // Guard AI output before it can be cached or sent to a client: all four values
 // required, non-negative, physically plausible, and not an all-zero row.
+// AI models drift on formatting ("14 g", "160 kcal", "1,200", nested
+// `per_100g`), so numbers are coerced and common wrappers unwrapped before
+// validation — a unit suffix should not fail the whole estimate.
+function toNutrientNumber(value) {
+  if (typeof value === "number") return value;
+  if (typeof value !== "string") return NaN;
+  const cleaned = value.replace(/,/g, "").trim();
+  if (!cleaned) return NaN;
+  const direct = Number(cleaned);
+  if (Number.isFinite(direct)) return direct;
+  const match = cleaned.match(/-?\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : NaN;
+}
+
+const DENSITY_WRAPPERS = [
+  "per100",
+  "per_100g",
+  "per100g",
+  "per_100",
+  "nutrition",
+  "macros",
+  "values",
+  "data",
+];
+
+function unwrapDensity(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return input;
+  for (const key of DENSITY_WRAPPERS) {
+    const nested = input[key];
+    if (nested && typeof nested === "object" && !Array.isArray(nested)) return nested;
+  }
+  return input;
+}
+
 function sanitizeDensity(input) {
-  const src =
-    input && typeof input === "object" && input.per100 && typeof input.per100 === "object"
-      ? input.per100
-      : input;
+  const src = unwrapDensity(input);
   if (!src || typeof src !== "object") return null;
 
-  const calories = Number(src.calories ?? src.kcal);
-  const protein = Number(src.protein);
-  const carbs = Number(src.carbs);
-  const fat = Number(src.fat);
+  const calories = toNutrientNumber(src.calories ?? src.kcal ?? src.energy ?? src.energy_kcal);
+  const protein = toNutrientNumber(src.protein ?? src.proteins);
+  const carbs = toNutrientNumber(src.carbs ?? src.carbohydrates ?? src.carbohydrate);
+  const fat = toNutrientNumber(src.fat ?? src.fats);
   if (![calories, protein, carbs, fat].every(Number.isFinite)) return null;
 
   const density = {

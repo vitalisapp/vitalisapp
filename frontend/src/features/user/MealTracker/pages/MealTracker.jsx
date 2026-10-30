@@ -369,6 +369,9 @@ export default function MealTracker() {
   // attempt key stops us re-asking the AI for the same food on every render.
   const estimateTokenRef = useRef(0);
   const estimateAttemptRef = useRef("");
+  // Aborts the in-flight density request so a half-typed name never reaches
+  // (or reports an error from) the AI endpoint.
+  const estimateAbortRef = useRef(null);
   const today = toLocalKey(new Date());
 
   const openManualFor = useCallback((mealType) => {
@@ -392,15 +395,24 @@ export default function MealTracker() {
     estimateTokenRef.current += 1;
     // Allow a retry if the same food name is typed again later.
     estimateAttemptRef.current = "";
+    // Drop the request in flight: its answer is for a name the user has
+    // already changed (or macros they now enter by hand).
+    try {
+      estimateAbortRef.current?.abort();
+    } catch {
+      /* noop */
+    }
+    estimateAbortRef.current = null;
     setIsEstimating(false);
   }, []);
 
   // Catalog first (exact name match), then the cached AI density estimate.
   const lookupFoodDensity = useCallback(
-    async (name) => {
+    async (name, signal) => {
       try {
         const catalog = await apiGet(
           `/api/food-logs/food-catalog?q=${encodeURIComponent(name)}&limit=8`,
+          signal ? { signal } : undefined,
         );
         const items = Array.isArray(catalog?.items) ? catalog.items : [];
         const wanted = name.toLowerCase();
@@ -417,10 +429,13 @@ export default function MealTracker() {
               Number(exact.serving_grams) > 0 ? Number(exact.serving_grams) : null,
           };
         }
-      } catch {
+      } catch (err) {
+        // A cancelled lookup must cancel the estimate below too, not fall
+        // through to the AI with a dead signal.
+        if (signal?.aborted) throw err;
         // Catalog is an optimization — fall through to the AI estimate.
       }
-      const data = await estimateFoodDensity(name);
+      const data = await estimateFoodDensity(name, signal);
       return {
         per100: data?.per100 || null,
         source: data?.cached ? "cache" : "ai",
@@ -577,10 +592,13 @@ export default function MealTracker() {
     const timer = window.setTimeout(async () => {
       estimateAttemptRef.current = attemptKey;
       const token = ++estimateTokenRef.current;
+      const controller = new AbortController();
+      estimateAbortRef.current = controller;
       setIsEstimating(true);
       setDensityError("");
       try {
-        const density = await lookupFoodDensity(name);
+        const density = await lookupFoodDensity(name, controller.signal);
+        if (controller.signal.aborted) return;
         if (!density?.per100) throw new Error("No nutrition estimate was returned.");
         if (token !== estimateTokenRef.current) return;
         setManualForm((current) => {
@@ -611,12 +629,16 @@ export default function MealTracker() {
           };
         });
       } catch (err) {
+        // Cancelled on purpose (name edited, macros typed, form closed) — the
+        // API's 4xx for that stale name is not something to report.
+        if (controller.signal.aborted || err?.code === "ABORTED") return;
         if (token !== estimateTokenRef.current) return;
         setDensityError(
           err?.message || "Could not estimate nutrition for that food. Enter the values manually.",
         );
       } finally {
-        if (token === estimateTokenRef.current) setIsEstimating(false);
+        if (estimateAbortRef.current === controller) estimateAbortRef.current = null;
+        if (!controller.signal.aborted && token === estimateTokenRef.current) setIsEstimating(false);
       }
     }, 800);
 
@@ -637,8 +659,26 @@ export default function MealTracker() {
     if (showManual) return;
     estimateAttemptRef.current = "";
     estimateTokenRef.current += 1;
+    try {
+      estimateAbortRef.current?.abort();
+    } catch {
+      /* noop */
+    }
+    estimateAbortRef.current = null;
     setIsEstimating(false);
   }, [showManual]);
+
+  // Leaving the page also drops any estimate still in flight.
+  useEffect(
+    () => () => {
+      try {
+        estimateAbortRef.current?.abort();
+      } catch {
+        /* noop */
+      }
+    },
+    [],
+  );
 
   // Deep links from Quick Log: ?scan=1 opens the camera, ?manual=1 opens the
   // manual form. Consumed once so back-nav doesn't retrigger.

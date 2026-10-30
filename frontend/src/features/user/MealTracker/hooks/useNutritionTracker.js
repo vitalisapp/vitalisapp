@@ -96,12 +96,14 @@ async function apiSaveFoodLog(userId, meal, imageBlob) {
 }
 
 // Per-100 g density for a typed dish name (manual form). AI-backed and cached
-// server-side; slow first call, instant afterwards.
-async function apiEstimateFoodDensity(foodName) {
+// server-side; slow first call, instant afterwards. `signal` lets the form drop
+// a stale request when the user keeps typing.
+async function apiEstimateFoodDensity(foodName, signal) {
   return apiFetch(`/api/food-logs/estimate-density`, {
     method: 'POST',
     body: JSON.stringify({ food_name: foodName }),
     timeoutMs: 60000,
+    ...(signal ? { signal } : {}),
   });
 }
 
@@ -228,7 +230,7 @@ export function useNutritionTracker(USER_ID) {
   // Errors bubble to the form so it can render an inline retry next to the
   // weight field instead of a toast that hides the field in use.
   const estimateFoodDensity = useCallback(
-    (foodName) => apiEstimateFoodDensity(foodName),
+    (foodName, signal) => apiEstimateFoodDensity(foodName, signal),
     [],
   );
 
