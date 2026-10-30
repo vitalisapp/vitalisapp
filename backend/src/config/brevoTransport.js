@@ -28,12 +28,35 @@ function createBrevoTransport({ apiKey, senderEmail, senderName }) {
       if (!response.ok) {
         const hints = {
           400: 'Check MAIL_FROM is a verified Brevo sender and the recipient is valid.',
-          401: 'Check BREVO_API_KEY is a valid API key, not an SMTP key.',
+          401: 'Brevo rejected authentication. Check the active API key and account access settings.',
           403: 'Check Brevo account permissions and authorized IP settings.',
           429: 'Brevo rate limit reached. Retry later.',
         };
-        // Do not log request headers, email contents, or raw provider responses.
-        throw new Error(`Brevo HTTPS API returned ${response.status}. ${hints[response.status] || 'Check Brevo transactional email logs and account quota.'}`);
+        // Only include the provider's diagnostic fields, never the full response.
+        // Redact secrets/content before truncation so partial secrets cannot leak.
+        const sanitize = (value) => {
+          if (typeof value !== 'string') return '';
+          let safe = value;
+          for (const secret of [apiKey, senderEmail, to, replyTo, html, text, subject]) {
+            if (typeof secret === 'string' && secret) safe = safe.split(secret).join('[redacted]');
+          }
+          return safe
+            .replace(/(?:xkeysib|xsmtpsib)-[\w-]+/gi, '[redacted key]')
+            .replace(/https?:\/\/[^\s<>"']+/gi, '[redacted URL]')
+            .replace(/[\w.+%-]+@[\w.-]+\.[a-z]{2,}/gi, '[redacted email]')
+            .replace(/[\x00-\x1f\x7f]/g, ' ')
+            .slice(0, 500);
+        };
+        let detail = '';
+        try {
+          const body = await response.json();
+          const code = sanitize(body?.code);
+          const message = sanitize(body?.message);
+          if (code || message) detail = ` Provider: ${[code, message].filter(Boolean).join(': ')}.`;
+        } catch {
+          // Non-JSON/empty error bodies still get the HTTP status and guidance.
+        }
+        throw new Error(`Brevo HTTPS API returned ${response.status}.${detail} ${hints[response.status] || 'Check Brevo transactional email logs and account quota.'}`);
       }
       return response.json();
     },

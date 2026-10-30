@@ -31,6 +31,31 @@ it('reports authentication failures without exposing API keys', async (t) => {
   });
 });
 
+it('includes provider diagnostics while redacting secrets and email content', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => ({
+    ok: false, status: 401,
+    json: async () => ({
+      code: 'unauthorized',
+      message: `Unrecognized IP 192.0.2.1\n${options.apiKey} ${message.to} ${message.html} https://example.com/verify?token=secret`,
+      headers: { 'api-key': options.apiKey },
+    }),
+  }));
+  await assert.rejects(createBrevoTransport(options).sendMail(message), (err) => {
+    assert.match(err.message, /Provider: unauthorized: Unrecognized IP 192\.0\.2\.1/);
+    for (const secret of [options.apiKey, message.to, message.html, 'token=secret', '\n']) {
+      assert.ok(!err.message.includes(secret));
+    }
+    return true;
+  });
+});
+
+it('retains HTTP diagnostics when the provider returns a non-JSON body', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => ({
+    ok: false, status: 503, json: async () => { throw new SyntaxError('Invalid JSON'); },
+  }));
+  await assert.rejects(createBrevoTransport(options).sendMail(message), /Brevo HTTPS API returned 503/);
+});
+
 it('reports request timeouts and requires an explicit sender', async (t) => {
   t.mock.method(globalThis, 'fetch', async () => { throw new DOMException('Timed out', 'TimeoutError'); });
   await assert.rejects(createBrevoTransport(options).sendMail(message), /timed out/);
