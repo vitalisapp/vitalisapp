@@ -8,11 +8,12 @@ import { useToastStore } from "../../../../stores/toastStore.js";
 // workout_logs row (total reps) plus set rows for the single session exercise.
 const TYPE_SUGGESTIONS = ['strength', 'push', 'pull', 'leg day', 'upper body', 'lower body', 'cardio', 'general'];
 
-// One exercise per entry: the session name is the exercise, sets/reps describe
-// the whole session. Set rows are created for that single exercise so history
-// can show "3 sets × 12 reps" without extra exercise rows.
+// One exercise per entry: the session name is the exercise, sets/reps/weight
+// describe the whole session. Set rows are created for that single exercise so
+// history can show "3 sets × 12 reps · 1,440 kg volume" without extra rows.
 const MAX_SETS_PER_LOG = 99;
 const MAX_REPS_PER_SET = 1000;
+const MAX_WEIGHT_KG = 1000;
 
 function clampSets(value) {
   const n = Number(value);
@@ -24,6 +25,12 @@ function clampReps(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.min(MAX_REPS_PER_SET, Math.round(n)));
+}
+
+function clampWeight(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(MAX_WEIGHT_KG, Math.round(n * 100) / 100));
 }
 
 // The API rejects performed_at in the future. Local noon can still be ahead of
@@ -43,6 +50,7 @@ export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' })
   const [performedAt,setPerformedAt] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [sets,       setSets]        = useState('');
   const [reps,       setReps]        = useState('');
+  const [weight,     setWeight]      = useState('');
   const [saving,     setSaving]      = useState(false);
   const [error,      setError]       = useState(null);
 
@@ -56,18 +64,21 @@ export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' })
     try {
       const setCount = clampSets(sets);
       const repsPerSet = reps === '' ? 0 : clampReps(reps);
+      const weightKg = weight === '' ? 0 : clampWeight(weight);
       const workoutType = type.trim();
+      const hasSetData = repsPerSet > 0 || weightKg > 0;
       const payload = {
         workout_type: workoutType,
         duration_minutes: Math.round(Number(duration)),
         performed_at: performedAtToIso(performedAt),
         rep_count: repsPerSet > 0 ? repsPerSet * setCount : 0,
-        ...(repsPerSet > 0
+        ...(hasSetData
           ? {
               sets: Array.from({ length: setCount }, (_, i) => ({
                 exercise_name: workoutType,
                 set_number: i + 1,
-                reps: repsPerSet,
+                ...(repsPerSet > 0 ? { reps: repsPerSet } : {}),
+                ...(weightKg > 0 ? { weight_kg: weightKg } : {}),
               })),
             }
           : {}),
@@ -107,8 +118,8 @@ export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' })
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <label className="col-span-2 sm:col-span-3 flex flex-col gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <label className="col-span-2 sm:col-span-4 flex flex-col gap-1.5">
             <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Session name</span>
             <input
               list="wt-types"
@@ -139,7 +150,7 @@ export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' })
               className="h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-sm font-bold tabular-nums text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[var(--accent-border)]"
             />
           </label>
-          <label className="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
+          <label className="flex flex-col gap-1.5">
             <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Reps</span>
             <input
               type="number" min="0" max={MAX_REPS_PER_SET} step="1" placeholder="e.g. 12"
@@ -148,7 +159,16 @@ export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' })
               className="h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-sm font-bold tabular-nums text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[var(--accent-border)]"
             />
           </label>
-          <label className="col-span-2 sm:col-span-3 flex flex-col gap-1.5">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Weight (kg)</span>
+            <input
+              type="number" min="0" max={MAX_WEIGHT_KG} step="0.5" placeholder="e.g. 40"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              className="h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-sm font-bold tabular-nums text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[var(--accent-border)]"
+            />
+          </label>
+          <label className="col-span-2 sm:col-span-4 flex flex-col gap-1.5">
             <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Date performed</span>
             <input
               type="date" max={new Date().toLocaleDateString('en-CA')}
