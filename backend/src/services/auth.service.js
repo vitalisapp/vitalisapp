@@ -289,7 +289,7 @@ async function register({ name, email, password }) {
     await sendVerificationEmail(email, link);
     emailed = true;
   } catch (mailErr) {
-    console.error("Verification email failed (SMTP?):", mailErr.message);
+    console.error("Verification email failed:", mailErr.message);
   }
 
   return { newUserId, link, emailed, autoVerified: false, user };
@@ -510,7 +510,7 @@ async function resendVerification(email) {
     await sendVerificationEmail(email, link);
     emailed = true;
   } catch (mailErr) {
-    console.error("Verification email failed (SMTP?):", mailErr.message);
+    console.error("Verification email failed:", mailErr.message);
   }
   return { link, emailed };
 }
@@ -577,7 +577,7 @@ async function changeEmail({ email, password, newEmail }) {
     await sendVerificationEmail(normalized, link);
     emailed = true;
   } catch (mailErr) {
-    console.error("Verification email failed (SMTP?):", mailErr.message);
+    console.error("Verification email failed:", mailErr.message);
   }
 
   return { normalized, link, emailed };

@@ -17,7 +17,7 @@ const { escapeHtml } = templates;
 function requireMailEnv() {
   if (!mailConfigured()) {
     throw new Error(
-      "Email service not configured (BREVO_SMTP_LOGIN/BREVO_SMTP_KEY)",
+      "Email service not configured. Set BREVO_API_KEY and MAIL_FROM, or SMTP credentials.",
     );
   }
 }

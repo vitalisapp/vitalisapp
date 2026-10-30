@@ -1,7 +1,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Mail transport — single source of truth for SMTP configuration.
+// Mail transport — Brevo HTTPS API preferred, SMTP retained as a fallback.
 //
-// Default provider: BREVO (transactional SMTP relay).
+//   BREVO_API_KEY     → Brevo API key (not SMTP key); uses HTTPS port 443
+//   MAIL_FROM         → required verified sender when using the API
+// SMTP fallback when no API key is configured:
 //   BREVO_SMTP_LOGIN  → your Brevo SMTP login (usually the account email)
 //   BREVO_SMTP_KEY    → your Brevo SMTP key ("master password")
 //   BREVO_SMTP_HOST   → optional, defaults to smtp-relay.brevo.com
@@ -28,6 +30,9 @@ const nodemailer = require("nodemailer");
 const DEFAULT_BREVO_HOST = "smtp-relay.brevo.com";
 
 function smtpSettings() {
+  if (process.env.BREVO_API_KEY?.trim()) {
+    return { provider: "brevo-api" };
+  }
   const brevoLogin = process.env.BREVO_SMTP_LOGIN;
   const brevoKey = process.env.BREVO_SMTP_KEY;
   if (brevoLogin && brevoKey) {
@@ -52,7 +57,8 @@ function smtpSettings() {
 const settings = smtpSettings();
 
 function mailConfigured() {
-  return settings.provider !== "none";
+  return settings.provider !== "none" &&
+    (settings.provider !== "brevo-api" || Boolean(process.env.MAIL_FROM?.trim()));
 }
 
 // Address emails are sent from, resolved from the active provider.
@@ -73,9 +79,11 @@ function fromHeader() {
 
 if (!mailConfigured()) {
   console.warn(
-    "[mailer] No provider configured — set BREVO_SMTP_LOGIN/BREVO_SMTP_KEY " +
+    "[mailer] Email not configured — set BREVO_API_KEY and MAIL_FROM " +
       "(or legacy EMAIL_USER/EMAIL_PASS). Outbound email will fail gracefully (logged, not thrown).",
   );
+} else if (settings.provider === "brevo-api") {
+  console.log("[mailer] Brevo HTTPS API transport active");
 } else if (settings.provider === "gmail") {
   console.warn(
     "[mailer] Brevo not configured — falling back to legacy Gmail transport. " +
@@ -100,7 +108,13 @@ const transportOptions = {
     : {}),
 };
 
-const transporter = nodemailer.createTransport(transportOptions);
+const transporter = settings.provider === "brevo-api"
+  ? require('./brevoTransport').createBrevoTransport({
+      apiKey: process.env.BREVO_API_KEY.trim(),
+      senderEmail: process.env.MAIL_FROM?.trim(),
+      senderName: process.env.MAIL_FROM_NAME || 'Vitalis',
+    })
+  : nodemailer.createTransport(transportOptions);
 
 module.exports = {
   transporter,
