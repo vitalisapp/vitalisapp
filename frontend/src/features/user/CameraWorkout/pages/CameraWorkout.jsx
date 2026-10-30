@@ -27,7 +27,7 @@ import CorrectionBanner from '../components/CorrectionBanner.jsx';
 import SessionBottomBar from '../components/SessionBottomBar.jsx';
 import WorkoutSummary from '../components/WorkoutSummary.jsx';
 import WorkoutFeedbackSheet from '../components/WorkoutFeedbackSheet.jsx';
-// Reused from the Log page: structured manual entry (sets: reps × weight) —
+// Reused from the Log page: manual entry (session + duration + reps) —
 // same /api/workout-logs/manual backend, so manual saves count toward stats.
 import AddWorkoutModal from '../../Log/components/AddWorkoutModal.jsx';
 // Pick a card -> ask HOW to train it: camera tracker or manual entry.
