@@ -266,18 +266,58 @@ function welcomeEmail({ name } = {}) {
  */
 function verificationEmail({ link } = {}) {
   const safeLink = escapeHtml(link || "#");
-  const body = `
-    ${renderHeading("Verify your email")}
-    ${renderParagraph(`Confirm this address to activate your Vitalis account. This link expires in <strong style="color:${BRAND.textPrimary};">24 hours</strong>.`)}
-    ${renderButton({ href: safeLink, label: "VERIFY EMAIL" })}
-    ${renderMutedNote("If you didn't create this account, you can safely ignore this email.")}`;
   return {
-    subject: "Verify Your Vitalis Account",
-    html: renderLayout({
-      title: "Verify your email",
-      preheader: "Confirm your email to activate your Vitalis account.",
-      bodyHtml: body,
-    }),
+    subject: "Verify your Vitalis email",
+    html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify your email</title>
+</head>
+<body style="margin:0;padding:0;background-color:#101110;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;">
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">Confirm your email address to continue setting up your Vitalis account.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#101110">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;">
+          <tr>
+            <td style="padding:0 0 24px;color:#d5ed87;font-size:18px;font-weight:700;letter-spacing:3px;">VITALIS</td>
+          </tr>
+          <tr>
+            <td bgcolor="#191b18" style="padding:32px 24px;border:1px solid #30332b;border-radius:8px;">
+              <h1 style="margin:0 0 16px;color:#f3f4ed;font-size:30px;line-height:1.2;font-weight:700;letter-spacing:-0.8px;">Verify your email.</h1>
+              <p style="margin:0 0 28px;color:#c0c3b9;font-size:15px;line-height:1.7;">Confirm your email address to continue setting up your Vitalis account.</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" bgcolor="#d5ed87" style="border-radius:4px;mso-padding-alt:16px 24px;">
+                    <a href="${safeLink}" style="display:block;padding:16px 24px;color:#171a11;font-size:15px;line-height:20px;font-weight:700;text-decoration:none;text-align:center;">Verify email</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:14px 0 28px;color:#a4a89a;font-size:12px;line-height:1.6;">This link expires in 24 hours.</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-top:24px;border-top:1px solid #34372e;">
+                    <p style="margin:0 0 8px;color:#b4b8ac;font-size:12px;line-height:1.7;">Button not working? Copy this link into your browser:</p>
+                    <p style="margin:0;font-size:12px;line-height:1.7;word-break:break-all;overflow-wrap:anywhere;"><a href="${safeLink}" style="color:#d5ed87;text-decoration:underline;word-break:break-all;">${safeLink}</a></p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 0 0;">
+              <p style="margin:0;color:#a4a89a;font-size:12px;line-height:1.7;">Didn't create a Vitalis account? You can ignore this email.</p>
+              <p style="margin:12px 0 0;color:#858a7d;font-size:11px;line-height:1.6;">&copy; ${new Date().getFullYear()} Vitalis</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
   };
 }
 
