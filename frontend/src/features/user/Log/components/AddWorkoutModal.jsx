@@ -129,7 +129,7 @@ export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' })
             />
           </label>
           <label className="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
-            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Reps / set</span>
+            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Reps</span>
             <input
               type="number" min="0" max={MAX_REPS_PER_SET} step="1" placeholder="e.g. 12"
               value={reps}
