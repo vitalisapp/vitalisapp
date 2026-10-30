@@ -1683,6 +1683,45 @@
   min-width: 0;
   flex-direction: column;
 }
+/* Macro fields show a shimmer while the AI density estimate is in flight. */
+.meal-tracker .mt-input-shell {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+.meal-tracker .mt-field.is-loading .mt-input {
+  color: transparent;
+  caret-color: transparent;
+}
+.meal-tracker .mt-field.is-loading .mt-input::placeholder {
+  color: transparent;
+}
+.meal-tracker .mt-field-loading {
+  position: absolute;
+  inset: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 11px;
+  border-radius: 10px;
+  background: var(--mt-soft);
+  pointer-events: none;
+}
+.meal-tracker .mt-field-skeleton {
+  display: block;
+  width: 46%;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--mt-soft-strong);
+  animation: mt-shimmer 1.4s ease-in-out infinite;
+}
+.meal-tracker .mt-field-spinner {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border-width: 1.5px;
+}
 .meal-tracker .mt-weight-block {
   display: flex;
   min-width: 0;

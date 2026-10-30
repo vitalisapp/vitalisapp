@@ -21,24 +21,34 @@ function MealInput({
   inputMode = 'numeric',
   suffix = undefined,
   disabled = false,
+  loading = false,
 }) {
   return (
-    <label className="mt-field">
+    <label className={`mt-field ${loading ? 'is-loading' : ''}`}>
       <span className="mt-field-label">
         {label}
         {suffix && <span className="mt-field-suffix">{suffix}</span>}
       </span>
-      <input
-        className="mt-input"
-        type="number"
-        min="0"
-        step="any"
-        inputMode={inputMode}
-        placeholder={placeholder}
-        value={value}
-        disabled={disabled}
-        onChange={onChange}
-      />
+      <span className="mt-input-shell">
+        <input
+          className="mt-input"
+          type="number"
+          min="0"
+          step="any"
+          inputMode={inputMode}
+          placeholder={placeholder}
+          value={value}
+          disabled={disabled}
+          aria-busy={loading || undefined}
+          onChange={onChange}
+        />
+        {loading && (
+          <span className="mt-field-loading" aria-hidden="true">
+            <span className="mt-field-skeleton" />
+            <Spinner className="mt-field-spinner" />
+          </span>
+        )}
+      </span>
     </label>
   );
 }
@@ -306,12 +316,13 @@ export function ManualMealForm({
           )}
         </div>
 
-        <div className="mt-field-grid">
+        <div className="mt-field-grid" aria-busy={isEstimating || undefined}>
           <MealInput
             label="Calories"
             suffix="kcal"
             value={form.calories}
             disabled={busy}
+            loading={isEstimating}
             onChange={(event) => (onMacroChange ? onMacroChange('calories', event.target.value) : setForm((current) => ({ ...current, calories: event.target.value })))}
           />
           <MealInput
@@ -320,6 +331,7 @@ export function ManualMealForm({
             inputMode="decimal"
             value={form.protein}
             disabled={busy}
+            loading={isEstimating}
             onChange={(event) => (onMacroChange ? onMacroChange('protein', event.target.value) : setForm((current) => ({ ...current, protein: event.target.value })))}
           />
           <MealInput
@@ -328,6 +340,7 @@ export function ManualMealForm({
             inputMode="decimal"
             value={form.carbs}
             disabled={busy}
+            loading={isEstimating}
             onChange={(event) => (onMacroChange ? onMacroChange('carbs', event.target.value) : setForm((current) => ({ ...current, carbs: event.target.value })))}
           />
           <MealInput
@@ -336,8 +349,12 @@ export function ManualMealForm({
             inputMode="decimal"
             value={form.fat}
             disabled={busy}
+            loading={isEstimating}
             onChange={(event) => (onMacroChange ? onMacroChange('fat', event.target.value) : setForm((current) => ({ ...current, fat: event.target.value })))}
           />
+          <p className="sr-only" role="status">
+            {isEstimating ? 'Estimating calories, protein, carbs and fat…' : ''}
+          </p>
         </div>
 
         <button
