@@ -398,7 +398,7 @@ async function getverifyEmail(req, res, next) {
         message: "Email verified. Your Vitalis account is now active.",
       });
     } catch (err) {
-      if (err.isOperational) return res.status(err.status).json({ error: err.message });
+      if (err.isOperational) return res.status(err.status).json({ error: err.message, code: err.code });
       next(err);
     }
   } catch (e) {

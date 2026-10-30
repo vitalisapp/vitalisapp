@@ -58,9 +58,7 @@ async function createVerificationToken(userId) {
   const token = crypto.randomBytes(32).toString("hex");
   const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  await db.execute("UPDATE email_verifications SET used = 1 WHERE user_id = ? AND used = 0", [
-    userId,
-  ]);
+  // Resends must not invalidate links still in transit to the same inbox.
   await db.execute(
     "INSERT INTO email_verifications (user_id, token_hash, expires_at) VALUES (?, ?, ?)",
     [userId, tokenHash, expiresAt],
@@ -519,19 +517,39 @@ async function resendVerification(email) {
 async function verifyEmail(token) {
   const tokenHash = crypto.createHash("sha256").update(String(token)).digest("hex");
   const [rows] = await db.execute(
-    `SELECT id, user_id FROM email_verifications
-     WHERE token_hash = ? AND used = 0 AND expires_at > NOW() LIMIT 1`,
+    `SELECT v.id, v.user_id, v.used, v.expires_at <= NOW() AS expired, u.is_verified
+     FROM email_verifications v JOIN users u ON u.id = v.user_id
+     WHERE v.token_hash = ? LIMIT 1`,
     [tokenHash],
   );
   if (rows.length === 0) {
     throw new AppError(
-      "This verification link is invalid or expired. Request a new one.",
+      "This verification link is invalid. Request a new one.",
       400,
       "INVALID_TOKEN",
     );
   }
-  await db.execute("UPDATE email_verifications SET used = 1 WHERE id = ?", [rows[0].id]);
-  await db.execute("UPDATE users SET is_verified = 1 WHERE id = ?", [rows[0].user_id]);
+  const verification = rows[0];
+  // A known link for an already-confirmed account is safe to open again.
+  if (verification.is_verified) return;
+  if (verification.used) {
+    throw new AppError("This verification link was replaced. Request a new one.", 400, "INVALID_TOKEN");
+  }
+  if (verification.expired) {
+    throw new AppError("This verification link has expired. Request a new one.", 400, "EXPIRED_TOKEN");
+  }
+  // Recheck validity in the write so an email change cannot race this lookup.
+  const [result] = await db.execute(
+    `UPDATE users u JOIN email_verifications v ON v.user_id = u.id
+     SET u.is_verified = 1
+     WHERE v.id = ? AND v.used = 0 AND v.expires_at > NOW()`,
+    [verification.id],
+  );
+  if (!result.affectedRows) {
+    const current = await getMe(verification.user_id);
+    if (current?.is_verified) return;
+    throw new AppError("This verification link is no longer valid. Request a new one.", 400, "INVALID_TOKEN");
+  }
 }
 
 // ─── CHANGE EMAIL (typo fix, unverified accounts only) ───
@@ -556,6 +574,8 @@ async function changeEmail({ email, password, newEmail }) {
   if (normalized === oldEmail) throw genericFail();
 
   try {
+    // Retire old-inbox links before changing the address. Resends alone do not.
+    await db.execute("DELETE FROM email_verifications WHERE user_id = ?", [user.id]);
     await db.execute("UPDATE users SET email = ? WHERE id = ?", [normalized, user.id]);
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY") {

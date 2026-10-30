@@ -12,6 +12,7 @@ const VerifyEmail = () => {
   const token = params.get('token');
   const [state, setState] = useState(token ? 'verifying' : 'no-token');
   const [error, setError] = useState('');
+  const [errorCode, setErrorCode] = useState('');
 
   useEffect(() => {
     if (!token) return;
@@ -20,10 +21,11 @@ const VerifyEmail = () => {
         await apiGet(`/api/auth/verify-email?token=${encodeURIComponent(token)}`);
          // Refresh any existing session from the server; the link may belong
          // to a different account than the one open in this browser.
-         await refreshAuth();
+         await refreshAuth().catch(() => {});
         setState('done');
       } catch (err) {
         setError(err.message);
+        setErrorCode(err.code || '');
         setState('failed');
       }
     })();
@@ -67,7 +69,7 @@ const VerifyEmail = () => {
               <div className="w-20 h-20 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="material-symbols-outlined text-[36px] text-red-400">error</span>
               </div>
-              <h1 className="font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-2">LINK EXPIRED</h1>
+              <h1 className="font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-2">{errorCode === 'EXPIRED_TOKEN' ? 'LINK EXPIRED' : errorCode === 'INVALID_TOKEN' ? 'INVALID LINK' : 'COULD NOT VERIFY'}</h1>
               <p className="text-xs text-[#c4c9b0]/60 mb-8">{error}</p>
               <button onClick={() => navigate('/check-email')}
                 className="w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">
