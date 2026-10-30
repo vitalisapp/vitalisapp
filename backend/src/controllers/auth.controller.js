@@ -153,19 +153,15 @@ async function postregister(req, res, next) {
         password,
       });
 
-      // Soft verification (Option A) — register IS sign in: issue the session
-      // immediately and let the app route straight to onboarding/dashboard.
-      // The verify email still goes out and flips is_verified when clicked;
-      // until then the app shows an in-app reminder instead of a wall.
-      setSessionCookie(res, user.id, user.email, req, user.token_version);
-      await service.logUserSession(req, user.id);
+      // Registration does not grant a session. Confirm email, then sign in.
+      res.clearCookie(COOKIE_NAME, getClearCookieOptions(req));
 
       /** @type {{ success: boolean, message: string, id: number, name: string, email: string, avatar: string|null, goal: string, isVerified: boolean, onboardingCompleted: boolean, role: string, status: string, acceptedTermsAt: string|null, acceptedTermsVersion: number|null, needsVerification: boolean, devVerificationLink?: string }} */
       const payload = {
         success: true,
         message: autoVerified
           ? "Account created. You can sign in now."
-          : "Account created. You're signed in — check your inbox to confirm your email.",
+          : "Account created. Check your inbox to verify your email before signing in.",
         // Same shape /login and /me return so AuthContext stays consistent.
         id: user.id,
         name: user.name,

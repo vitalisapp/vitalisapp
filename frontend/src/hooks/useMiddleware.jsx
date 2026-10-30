@@ -10,8 +10,7 @@ const GuardFallback = () => (
 );
 
 // Users with incomplete onboarding go to /onboarding first.
-// Verification is soft (Option A): unverified sessions stay in the app and
-// the VerifyEmailBanner handles the reminder — no /check-email funnel here.
+// Email confirmation comes before onboarding or any protected screen.
 export const ProtectedRoute = ({ children, requireOnboarding = true }) => {
   const { user, loading, sessionValid } = useAuth();
 
@@ -23,6 +22,9 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }) => {
     return <Navigate to="/login" replace />;
   }
 
+  if (user.isVerified !== true) {
+    return <Navigate to="/check-email" replace state={{ email: user.email }} />;
+  }
   if (requireOnboarding && user.onboardingCompleted === false) {
     const skipped = safeGet('vitalis:onboarding') === 'skipped';
     let sessionSkipped = false;

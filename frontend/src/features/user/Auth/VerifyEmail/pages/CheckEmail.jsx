@@ -72,6 +72,11 @@ const CheckEmail = () => {
           <h1 className="font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-2">CHECK YOUR EMAIL</h1>
           <p className="text-xs text-[#c4c9b0]/60 mb-1">We sent a verification link to:</p>
           <p className="text-sm font-bold text-[var(--accent)] mb-6 break-all">{email || 'your inbox'}</p>
+          {!location.state?.email && (
+            <input type="email" aria-label="Account email" placeholder="Enter your account email"
+              value={email} onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-xl p-3 mb-4 text-sm" />
+          )}
 
           {error && <p className="bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-[10px] font-semibold tracking-widest uppercase p-2.5 mb-4">{error}</p>}
           {status && <p className="bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-lg text-[var(--accent)] text-[10px] font-semibold tracking-widest uppercase p-2.5 mb-4">{status}</p>}

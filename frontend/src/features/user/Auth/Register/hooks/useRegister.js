@@ -46,7 +46,7 @@ export const useRegister = () => {
     acceptedTermsVersion: data.acceptedTermsVersion ?? null,
   });
 
-  // Register = sign in (soft verification): land in the app directly.
+  // Used by verified Google signups.
   const routeAfterRegister = (user) => {
     const pending = getSafeRedirect();
     if (pending && pending.startsWith('/') && !pending.startsWith('//')) {
@@ -94,26 +94,7 @@ export const useRegister = () => {
         agreed: true,
       }, { skipAuthRedirect: true });
 
-      // Soft verification (Option A): the backend issues the session during
-      // register, so the new user goes straight into the app — onboarding for
-      // new accounts, dashboard otherwise. No check-your-email wall.
-      if (data.id) {
-        const user = normalizeUser(data);
-        setUser(user);
-        if (!(await refreshAuth())) {
-          setError(COOKIE_BLOCKED_MSG);
-          return;
-        }
-        routeAfterRegister(user);
-        return;
-      }
-
-      // Fallback for an older backend without instant sessions (never
-      // expected, but keeps the flow fail-open to the known screens).
-      if (data.needsVerification === false) {
-        navigate('/login', { state: { email, justRegistered: true } });
-        return;
-      }
+      setUser(null);
       navigate('/check-email', { state: { email, devLink: data.devVerificationLink } });
     } catch (err) {
       setError(err.message);

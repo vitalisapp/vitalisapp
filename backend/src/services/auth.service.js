@@ -37,11 +37,6 @@ function frontendUrl() {
 const DEV_VERIFY_FALLBACK =
   process.env.ALLOW_DEV_LINKS === "1" && process.env.NODE_ENV !== "production";
 
-// Email verification is enforced ONLY in production. In development/test we
-// auto-verify accounts so the app is usable with dummy emails and no SMTP.
-// verifyUser + socket auth both read is_verified from the DB, so we persist it.
-const VERIFICATION_REQUIRED = process.env.NODE_ENV === "production";
-
 // ─── MODULE 1: consent audit + account governance ───
 // Version stamp recorded with every acceptance — bump when the legal copy in
 // Register/LegalModals materially changes (their "Last updated: September 2026"
@@ -280,17 +275,7 @@ async function register({ name, email, password }) {
   }
   const newUserId = insertResult.insertId;
 
-  // Dev/test: auto-activate and skip the email loop entirely so dummy addresses
-  // work with no inbox/SMTP. Production sends the verify link in the background
-  // — sessions are NOT gated on it (soft verification, banner reminder in-app).
-  let autoVerified = false;
-  if (!VERIFICATION_REQUIRED) {
-    await db.execute("UPDATE users SET is_verified = 1 WHERE id = ?", [newUserId]);
-    autoVerified = true;
-  }
-
-  // Fresh row for the session the controller issues right away (register =
-  // sign in — no trip back to the login screen).
+  // Password accounts require email confirmation in every environment.
   const [userRows] = await db.execute(
     "SELECT id, name, email, fitness_goal, avatar_url, token_version, is_verified, onboarding_completed, role, status, accepted_terms_at, accepted_terms_version FROM users WHERE id = ?",
     [newUserId],
@@ -298,10 +283,6 @@ async function register({ name, email, password }) {
   const user = userRows[0];
 
   // Email verification (link-based). Never block registration on SMTP.
-  if (autoVerified) {
-    return { newUserId, link: null, emailed: false, autoVerified: true, user };
-  }
-
   const { link } = await createVerificationToken(newUserId);
   let emailed = false;
   try {
@@ -357,10 +338,11 @@ async function login({ email, password }) {
     );
   }
 
-  // Soft verification (Option A): unverified accounts sign in like anyone
-  // else — the app shows a "verify your email" reminder instead of a wall.
-  // The verify-link email does the actual confirmation whenever the user
-  // clicks it; nothing here blocks on it.
+  if (!user.is_verified) {
+    throw new AppError("Verify your email before signing in.", 403, "NEEDS_VERIFICATION", {
+      email: user.email,
+    });
+  }
 
   await db.execute("UPDATE users SET is_online = 1 WHERE id = ?", [user.id]);
 
@@ -628,7 +610,6 @@ module.exports = {
   resolveFrontendUrl,
   frontendUrl,
   DEV_VERIFY_FALLBACK,
-  VERIFICATION_REQUIRED,
   createVerificationToken,
   checkRateLimit,
   recordFailedAttempt,

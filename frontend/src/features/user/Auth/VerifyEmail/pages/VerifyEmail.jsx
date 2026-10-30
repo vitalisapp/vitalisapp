@@ -7,7 +7,7 @@ import { useAuth } from '../../../../../hooks/useAuth.jsx';
 // Handles /verify-email?token=... links + shows the EMAIL VERIFIED success screen.
 const VerifyEmail = () => {
   const navigate = useNavigate();
-  const { user, setUser } = useAuth();
+  const { user, refreshAuth } = useAuth();
   const [params] = useSearchParams();
   const token = params.get('token');
   const [state, setState] = useState(token ? 'verifying' : 'no-token');
@@ -18,17 +18,16 @@ const VerifyEmail = () => {
     (async () => {
       try {
         await apiGet(`/api/auth/verify-email?token=${encodeURIComponent(token)}`);
-        // Soft verification flow: if this browser still has the session from
-        // registration, flip it verified immediately so the reminder banner
-        // disappears the moment they come back.
-        if (user) setUser({ ...user, isVerified: true });
+         // Refresh any existing session from the server; the link may belong
+         // to a different account than the one open in this browser.
+         await refreshAuth();
         setState('done');
       } catch (err) {
         setError(err.message);
         setState('failed');
       }
     })();
-    // Fire once per link: the token is fixed and `user`/setUser are only read
+    // Fire once per link: the token is fixed and refreshAuth is only read
     // at completion time — re-running on identity changes could re-verify.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);

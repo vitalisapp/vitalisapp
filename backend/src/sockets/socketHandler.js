@@ -65,19 +65,18 @@ module.exports = (io) => {
       try {
         const db = require("../config/db");
         const [rows] = await db.execute(
-          "SELECT token_version FROM users WHERE id = ? LIMIT 1",
+          "SELECT token_version, is_verified FROM users WHERE id = ? LIMIT 1",
           [authedUserId]
         );
         const row = rows[0];
-        if (!row || Number(row.token_version || 0) !== Number(session.tv || 0)) {
+        if (!row || !row.is_verified || Number(row.token_version || 0) !== Number(session.tv || 0)) {
           socket.emit("session_revoked", { error: "Session revoked. Please sign in again." });
           try { socket.disconnect(true); } catch { /* noop */ }
           return;
         }
-        // Note: verification is soft (Option A) — unverified sessions keep
-        // their live room; the in-app banner handles the reminder.
       } catch {
-        // DB blip on connect — allow join, periodic reverify will enforce.
+        socket.disconnect(true);
+        return;
       }
       try {
         socket.join(authedUserId);
@@ -97,11 +96,11 @@ module.exports = (io) => {
         if (!socket.connected) return;
         const db = require("../config/db");
         const [rows] = await db.execute(
-          "SELECT token_version FROM users WHERE id = ? LIMIT 1",
+          "SELECT token_version, is_verified FROM users WHERE id = ? LIMIT 1",
           [socket.data.userId]
         );
         const current = rows[0] ? Number(rows[0].token_version || 0) : null;
-        if (current === null || current !== Number(socket.data.tv || 0)) {
+        if (current === null || !rows[0].is_verified || current !== Number(socket.data.tv || 0)) {
           socket.emit("session_revoked", { error: "Session revoked. Please sign in again." });
           socket.disconnect(true);
         }
@@ -114,9 +113,7 @@ module.exports = (io) => {
     socket.on("join-room", (requestedUserId) => {
       try {
         // Fresh cookie decode each time (also refreshes tv after re-login).
-        const fresh = getSessionFromSocket(socket);
-        const verified = fresh?.id || socket.data.userId;
-        if (fresh) socket.data.tv = fresh.tv;
+        const verified = socket.data.userId;
         if (!verified) {
           socket.emit("unauthorized", { message: "Not authenticated" });
           return;
