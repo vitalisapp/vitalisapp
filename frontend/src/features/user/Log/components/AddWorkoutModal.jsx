@@ -5,21 +5,32 @@ import { useToastStore } from "../../../../stores/toastStore.js";
 
 // ── Manual workout entry (Module 5) ─────────────────────────────────────────
 // For sessions that don't use the camera tracker. Creates one completed
-// workout_logs row with the session's total reps — no per-exercise set rows.
+// workout_logs row (total reps) plus set rows for the single session exercise.
 const TYPE_SUGGESTIONS = ['strength', 'push', 'pull', 'leg day', 'upper body', 'lower body', 'cardio', 'general'];
 
-// One exercise per entry: the session name is the exercise, reps describe the
-// whole session. Per-exercise set rows belong to the camera tracker / history.
+// One exercise per entry: the session name is the exercise, sets/reps describe
+// the whole session. Set rows are created for that single exercise so history
+// can show "3 sets × 12 reps" without extra exercise rows.
+const MAX_SETS_PER_LOG = 99;
+const MAX_REPS_PER_SET = 1000;
+
+function clampSets(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 1;
+  return Math.max(1, Math.min(MAX_SETS_PER_LOG, Math.round(n)));
+}
+
 function clampReps(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return 0;
-  return Math.max(0, Math.min(100000, Math.round(n)));
+  return Math.max(0, Math.min(MAX_REPS_PER_SET, Math.round(n)));
 }
 
 export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' }) {
   const [type,       setType]        = useState(initialTitle.trim() || 'Strength');
   const [duration,   setDuration]    = useState(45);
   const [performedAt,setPerformedAt] = useState(() => new Date().toLocaleDateString('en-CA'));
+  const [sets,       setSets]        = useState('');
   const [reps,       setReps]        = useState('');
   const [saving,     setSaving]      = useState(false);
   const [error,      setError]       = useState(null);
@@ -32,11 +43,23 @@ export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' })
     setSaving(true);
     setError(null);
     try {
+      const setCount = clampSets(sets);
+      const repsPerSet = reps === '' ? 0 : clampReps(reps);
+      const workoutType = type.trim();
       const payload = {
-        workout_type: type.trim(),
+        workout_type: workoutType,
         duration_minutes: Math.round(Number(duration)),
         performed_at: performedAt ? `${performedAt}T12:00:00` : undefined,
-        rep_count: reps === '' ? 0 : clampReps(reps),
+        rep_count: repsPerSet > 0 ? repsPerSet * setCount : 0,
+        ...(repsPerSet > 0
+          ? {
+              sets: Array.from({ length: setCount }, (_, i) => ({
+                exercise_name: workoutType,
+                set_number: i + 1,
+                reps: repsPerSet,
+              })),
+            }
+          : {}),
       };
       const log = await apiPost('/api/workout-logs/manual', payload);
       useToastStore.getState().addToast('Workout logged', 'success');
@@ -73,8 +96,8 @@ export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' })
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <label className="col-span-2 flex flex-col gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <label className="col-span-2 sm:col-span-3 flex flex-col gap-1.5">
             <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Session name</span>
             <input
               list="wt-types"
@@ -97,15 +120,24 @@ export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' })
             />
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Reps</span>
+            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Sets</span>
             <input
-              type="number" min="0" max="100000" step="1" placeholder="e.g. 100"
+              type="number" min="1" max={MAX_SETS_PER_LOG} step="1" placeholder="e.g. 3"
+              value={sets}
+              onChange={(e) => setSets(e.target.value)}
+              className="h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-sm font-bold tabular-nums text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[var(--accent-border)]"
+            />
+          </label>
+          <label className="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
+            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Reps / set</span>
+            <input
+              type="number" min="0" max={MAX_REPS_PER_SET} step="1" placeholder="e.g. 12"
               value={reps}
               onChange={(e) => setReps(e.target.value)}
               className="h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-sm font-bold tabular-nums text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[var(--accent-border)]"
             />
           </label>
-          <label className="col-span-2 flex flex-col gap-1.5">
+          <label className="col-span-2 sm:col-span-3 flex flex-col gap-1.5">
             <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Date performed</span>
             <input
               type="date" max={new Date().toLocaleDateString('en-CA')}
