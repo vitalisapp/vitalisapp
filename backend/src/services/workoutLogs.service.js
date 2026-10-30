@@ -283,9 +283,13 @@ async function createManualWorkout(userId, { workout_type, duration_minutes, rep
   if (performed_at !== undefined && performed_at !== null && performed_at !== '') {
     const t = new Date(performed_at);
     if (Number.isNaN(t.getTime())) throw new AppError('performed_at must be a valid date', 400, 'INVALID_PERFORMED_AT');
-    if (t.getTime() > Date.now() + 5 * 60 * 1000) throw new AppError('performed_at cannot be in the future', 400, 'INVALID_PERFORMED_AT');
-    if (t.getTime() < Date.now() - 366 * 24 * 60 * 60 * 1000) throw new AppError('performed_at is too far in the past', 400, 'INVALID_PERFORMED_AT');
-    startTime = t;
+    const now = Date.now();
+    // Clients that send a timezone-naive "today at 12:00" can land a few hours
+    // ahead of the server clock. Store those as "now" instead of rejecting a
+    // legitimate same-day save; anything further ahead is still a bad input.
+    if (t.getTime() > now + 24 * 60 * 60 * 1000) throw new AppError('performed_at cannot be in the future', 400, 'INVALID_PERFORMED_AT');
+    if (t.getTime() < now - 366 * 24 * 60 * 60 * 1000) throw new AppError('performed_at is too far in the past', 400, 'INVALID_PERFORMED_AT');
+    startTime = t.getTime() > now ? new Date(now) : t;
   }
 
   const validated = validateSets(sets);

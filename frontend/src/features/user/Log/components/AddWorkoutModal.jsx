@@ -26,6 +26,17 @@ function clampReps(value) {
   return Math.max(0, Math.min(MAX_REPS_PER_SET, Math.round(n)));
 }
 
+// The API rejects performed_at in the future. Local noon can still be ahead of
+// the server clock when the workout is logged in the morning, so the timestamp
+// is clamped to "now" — and always sent as an explicit UTC ISO string so the
+// server never has to guess the timezone (that mismatch caused 400s before).
+function performedAtToIso(dateKey) {
+  if (!dateKey) return undefined;
+  const when = new Date(`${dateKey}T12:00:00`);
+  if (Number.isNaN(when.getTime())) return undefined;
+  return new Date(Math.min(when.getTime(), Date.now())).toISOString();
+}
+
 export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' }) {
   const [type,       setType]        = useState(initialTitle.trim() || 'Strength');
   const [duration,   setDuration]    = useState(45);
@@ -49,7 +60,7 @@ export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' })
       const payload = {
         workout_type: workoutType,
         duration_minutes: Math.round(Number(duration)),
-        performed_at: performedAt ? `${performedAt}T12:00:00` : undefined,
+        performed_at: performedAtToIso(performedAt),
         rep_count: repsPerSet > 0 ? repsPerSet * setCount : 0,
         ...(repsPerSet > 0
           ? {
