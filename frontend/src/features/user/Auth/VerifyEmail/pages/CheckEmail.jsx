@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiPost, apiPatch } from '../../../../../lib/apiClient.js';
 
@@ -9,7 +9,9 @@ const CheckEmail = () => {
   const location = useLocation();
   const [email, setEmail] = useState(location.state?.email || '');
   const [devLink, setDevLink] = useState(location.state?.devLink || null);
-  const [status, setStatus] = useState('');
+  const [deliveryToken, setDeliveryToken] = useState(location.state?.deliveryToken || null);
+  const [deliveryStatus, setDeliveryStatus] = useState(location.state?.deliveryStatus || 'idle');
+  const [cooldown, setCooldown] = useState(location.state?.deliveryStatus ? 30 : 0);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [changing, setChanging] = useState(false);
@@ -19,16 +21,64 @@ const CheckEmail = () => {
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   const isProd = import.meta.env.PROD;
 
+  useEffect(() => {
+    if (!cooldown) return;
+    const timer = setTimeout(() => setCooldown((value) => Math.max(0, value - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
+  useEffect(() => {
+    if (!deliveryToken) return;
+    let cancelled = false;
+    let timer;
+    const deadline = Date.now() + 120000;
+    const poll = async () => {
+      try {
+        const data = await apiPost('/api/auth/verification-delivery', { token: deliveryToken }, { skipAuthRedirect: true });
+        if (cancelled) return;
+        if (data.status === 'delivered' || data.status === 'failed') {
+          setDeliveryStatus(data.status);
+          return;
+        }
+        if (Date.now() >= deadline) { setDeliveryStatus('unconfirmed'); return; }
+        setDeliveryStatus(data.status === 'delayed' ? 'delayed' : 'waiting');
+        timer = setTimeout(poll, 5000);
+      } catch {
+        if (!cancelled) setDeliveryStatus('unconfirmed');
+      }
+    };
+    poll();
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [deliveryToken]);
+
+  const applyDelivery = (data) => {
+    setDeliveryToken(data.deliveryToken || null);
+    setDeliveryStatus(data.deliveryStatus || 'requested');
+    setCooldown(30);
+    setDevLink(data.devVerificationLink || null);
+  };
+  const waiting = busy || deliveryStatus === 'waiting' || deliveryStatus === 'delayed' || (deliveryStatus === 'accepted' && Boolean(deliveryToken));
+  const deliveryMessage = busy ? 'Sending verification email…' : {
+    accepted: deliveryToken ? 'Waiting for delivery confirmation…' : 'Email accepted for sending. Delivery is not confirmed. Check your inbox and spam folder.',
+    waiting: 'Waiting for delivery confirmation…',
+    delayed: 'Your email provider has delayed delivery. We’re still checking…',
+    delivered: 'Delivered to your email provider. Check your inbox or spam folder.',
+    failed: 'Couldn’t send or deliver your verification email. Check the address and try again.',
+    unconfirmed: 'Delivery hasn’t been confirmed yet. Check your inbox and spam folder before requesting another email.',
+    requested: 'If this account needs verification, an email was requested. Check your inbox.',
+  }[deliveryStatus];
+
   const resend = async () => {
+    if (busy || cooldown > 0) return;
     const trimmed = email.trim();
     if (!trimmed) { setError('Enter your email address first.'); return; }
     if (!EMAIL_RE.test(trimmed)) { setError('Enter a valid email address.'); return; }
     if (trimmed !== email) setEmail(trimmed);
-    setBusy(true); setError(''); setStatus('');
+    setDeliveryToken(null); setDeliveryStatus('idle');
+    setBusy(true); setError('');
     try {
       const data = await apiPost('/api/auth/send-verification', { email: trimmed });
-      setStatus('Verification email sent. Check your inbox.');
-      if (data.devVerificationLink) setDevLink(data.devVerificationLink);
+      applyDelivery(data);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -45,13 +95,13 @@ const CheckEmail = () => {
     if (!EMAIL_RE.test(next)) { setError('Enter a valid new email address.'); return; }
     if (next.toLowerCase() === cur.toLowerCase()) { setError('New email must be different.'); return; }
     if (!password) { setError('Enter your current password.'); return; }
-    setBusy(true); setError(''); setStatus('');
+    setDeliveryToken(null); setDeliveryStatus('idle');
+    setBusy(true); setError('');
     try {
       const data = await apiPatch('/api/auth/change-email', { email: cur, password, newEmail: next });
       setEmail(data.email);
       setChanging(false); setPassword(''); setNewEmail('');
-      setStatus('Email updated. Check your new inbox to verify.');
-      if (data.devVerificationLink) setDevLink(data.devVerificationLink);
+      applyDelivery(data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -70,7 +120,7 @@ const CheckEmail = () => {
             <span className="material-symbols-outlined text-[28px] text-[var(--accent)]">mark_email_unread</span>
           </div>
           <h1 className="font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-2">CHECK YOUR EMAIL</h1>
-          <p className="text-xs text-[#c4c9b0]/60 mb-1">We sent a verification link to:</p>
+          <p className="text-xs text-[#c4c9b0]/60 mb-1">Verification email address:</p>
           <p className="text-sm font-bold text-[var(--accent)] mb-6 break-all">{email || 'your inbox'}</p>
           {!location.state?.email && (
             <input type="email" aria-label="Account email" placeholder="Enter your account email"
@@ -79,7 +129,13 @@ const CheckEmail = () => {
           )}
 
           {error && <p className="bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-[10px] font-semibold tracking-widest uppercase p-2.5 mb-4">{error}</p>}
-          {status && <p className="bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-lg text-[var(--accent)] text-[10px] font-semibold tracking-widest uppercase p-2.5 mb-4">{status}</p>}
+          {deliveryMessage && (
+            <div role="status" aria-live="polite" className={`border rounded-xl p-4 mb-4 text-xs leading-relaxed ${deliveryStatus === 'failed' ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-white/5 border-white/10 text-[#c4c9b0]'}`}>
+              {waiting && <span aria-hidden="true" className="block mx-auto mb-3 h-5 w-5 rounded-full border-2 border-white/15 border-t-[var(--accent)] animate-spin motion-reduce:animate-none" />}
+              {!busy && deliveryStatus === 'delivered' && <span aria-hidden="true" className="material-symbols-outlined block mb-2 text-[var(--accent)]">check_circle</span>}
+              {deliveryMessage}
+            </div>
+          )}
 
           {!isProd && devLink && (
             <a href={devLink} className="block bg-white/5 border border-dashed border-white/20 rounded-lg text-[11px] text-white/60 p-3 mb-4 break-all hover:text-[var(--accent)] hover:border-[var(--accent)]/40 transition-colors">
@@ -95,8 +151,8 @@ const CheckEmail = () => {
           {!changing ? (
             <div className="mt-2 text-[12px] text-[#c4c9b0]/50 space-y-2">
               <p>Didn't receive it?{' '}
-                <button onClick={resend} disabled={busy} className="text-[var(--accent-dark)] font-semibold hover:text-[var(--accent)] disabled:opacity-50 bg-transparent border-none cursor-pointer p-0">
-                  {busy ? 'Sending...' : 'Resend Verification Email'}
+                <button onClick={resend} disabled={busy || cooldown > 0} className="text-[var(--accent-dark)] font-semibold hover:text-[var(--accent)] disabled:opacity-50 bg-transparent border-none cursor-pointer p-0">
+                  {busy ? 'Sending...' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend Verification Email'}
                 </button>
               </p>
               <p>Wrong email?{' '}

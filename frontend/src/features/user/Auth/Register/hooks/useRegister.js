@@ -95,7 +95,7 @@ export const useRegister = () => {
       }, { skipAuthRedirect: true });
 
       setUser(null);
-      navigate('/check-email', { state: { email, devLink: data.devVerificationLink } });
+      navigate('/check-email', { state: { email, devLink: data.devVerificationLink, deliveryToken: data.deliveryToken, deliveryStatus: data.deliveryStatus } });
     } catch (err) {
       setError(err.message);
     } finally {

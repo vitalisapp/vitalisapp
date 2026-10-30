@@ -147,7 +147,7 @@ async function postregister(req, res, next) {
     }
 
     try {
-      const { link, emailed, autoVerified, user } = await service.register({
+      const { link, emailed, deliveryToken, autoVerified, user } = await service.register({
         name,
         email,
         password,
@@ -175,6 +175,8 @@ async function postregister(req, res, next) {
         acceptedTermsAt: user.accepted_terms_at,
         acceptedTermsVersion: user.accepted_terms_version,
         needsVerification: !autoVerified,
+        deliveryToken,
+        deliveryStatus: emailed ? 'accepted' : 'failed',
       };
       if (payload.needsVerification && !emailed && DEV_VERIFY_FALLBACK) {
         payload.devVerificationLink = link;
@@ -370,7 +372,7 @@ async function postsendVerification(req, res, next) {
     // Anti-enumeration: identical response whether or not the account exists.
     const generic = {
       success: true,
-      message: "If that account exists, a verification email was sent.",
+      message: "If this account needs verification, a delivery request has been made. Check your inbox.",
       email: normalized,
     };
 
@@ -378,7 +380,7 @@ async function postsendVerification(req, res, next) {
     if (!result) return res.json(generic);
 
     /** @type {{ success: boolean, message: string, email: string, devVerificationLink?: string }} */
-    const payload = { ...generic };
+    const payload = { ...generic, deliveryToken: result.deliveryToken, deliveryStatus: result.emailed ? 'accepted' : 'failed' };
     if (!result.emailed && DEV_VERIFY_FALLBACK) payload.devVerificationLink = result.link;
     res.json(payload);
   } catch (e) {
@@ -417,7 +419,7 @@ async function patchchangeEmail(req, res, next) {
     }
 
     try {
-      const { normalized, link, emailed } = await service.changeEmail({
+      const { normalized, link, emailed, deliveryToken } = await service.changeEmail({
         email,
         password,
         newEmail,
@@ -427,6 +429,8 @@ async function patchchangeEmail(req, res, next) {
         success: true,
         message: "Email updated. Check your new inbox to verify.",
         email: normalized,
+        deliveryToken,
+        deliveryStatus: emailed ? 'accepted' : 'failed',
       };
       if (!emailed && DEV_VERIFY_FALLBACK) payload.devVerificationLink = link;
       res.json(payload);

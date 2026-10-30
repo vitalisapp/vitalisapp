@@ -47,6 +47,9 @@ router.post('/google-login', googleLoginLimiter, validate(controller.googleLogin
 router.post('/change-password', verifyUser, validate(controller.changePasswordSchema), controller.postchangePassword);
 router.post('/logout', logoutLimiter(), controller.postlogout);
 router.post('/send-verification', sendVerificationLimiter, controller.postsendVerification);
+const deliveryController = require('../controllers/emailDelivery.controller');
+router.post('/verification-delivery', makeLimiter({ windowMs: 60000, limit: 60, message: 'Too many delivery checks. Please wait.' }), deliveryController.getStatus);
+router.post('/email-delivery-webhook', deliveryController.webhook);
 router.get('/verify-email', verifyEmailLimiter, controller.getverifyEmail);
 router.patch('/change-email', changeEmailLimiter, validate(controller.changeEmailSchema), controller.patchchangeEmail);
 router.post('/complete-onboarding', meLimiter(), verifyUser, controller.postcompleteOnboarding);

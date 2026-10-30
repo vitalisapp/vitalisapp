@@ -22,11 +22,11 @@ const EXPECTED = [
   '036_account_governance.sql', '037_meal_type_food_catalog.sql',
   '038_progress_module.sql', '039_admin_audit.sql', '040_admin_seed.sql',
   '041_goal_recalibration.sql', '042_progress_cadence.sql',
-  '043_food_grams.sql', '044_food_density_cache.sql',
+  '043_food_grams.sql', '044_food_density_cache.sql', '045_email_delivery.sql',
 ];
 
 describe('migrations per-table baseline', () => {
-  it('migrations/ holds exactly the 44 canonical files', () => {
+  it('migrations/ holds exactly the expected canonical files', () => {
     const files = fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).sort();
     assert.deepEqual(files, EXPECTED);
   });

@@ -8,6 +8,7 @@ const { OAuth2Client } = require("google-auth-library");
 const { AppError } = require("../utils/errors");
 const { sendVerificationEmail, sendEmailChangedNotice } = require("./email.service");
 const allergiesService = require("./allergies.service");
+const { trackingToken } = require('./emailDelivery.service');
 
 // ─── FRONTEND URL ───
 function resolveFrontendUrl() {
@@ -283,14 +284,16 @@ async function register({ name, email, password }) {
   // Email verification (link-based). Never block registration on SMTP.
   const { link } = await createVerificationToken(newUserId);
   let emailed = false;
+  let deliveryToken = null;
   try {
-    await sendVerificationEmail(email, link);
+    const receipt = await sendVerificationEmail(email, link);
     emailed = true;
+    deliveryToken = trackingToken(receipt?.messageId);
   } catch (mailErr) {
     console.error("Verification email failed:", mailErr.message);
   }
 
-  return { newUserId, link, emailed, autoVerified: false, user };
+  return { newUserId, link, emailed, deliveryToken, autoVerified: false, user };
 }
 
 // ─── LOGIN ───
@@ -504,13 +507,15 @@ async function resendVerification(email) {
 
   const { link } = await createVerificationToken(user.id);
   let emailed = false;
+  let deliveryToken = null;
   try {
-    await sendVerificationEmail(email, link);
+    const receipt = await sendVerificationEmail(email, link);
     emailed = true;
+    deliveryToken = trackingToken(receipt?.messageId);
   } catch (mailErr) {
     console.error("Verification email failed:", mailErr.message);
   }
-  return { link, emailed };
+  return { link, emailed, deliveryToken };
 }
 
 // ─── VERIFY EMAIL ───
@@ -593,14 +598,16 @@ async function changeEmail({ email, password, newEmail }) {
 
   const { link } = await createVerificationToken(user.id);
   let emailed = false;
+  let deliveryToken = null;
   try {
-    await sendVerificationEmail(normalized, link);
+    const receipt = await sendVerificationEmail(normalized, link);
     emailed = true;
+    deliveryToken = trackingToken(receipt?.messageId);
   } catch (mailErr) {
     console.error("Verification email failed:", mailErr.message);
   }
 
-  return { normalized, link, emailed };
+  return { normalized, link, emailed, deliveryToken };
 }
 
 // ─── COMPLETE ONBOARDING ───
