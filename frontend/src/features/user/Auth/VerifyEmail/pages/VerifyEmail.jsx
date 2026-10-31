@@ -1,96 +1,98 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiGet } from '../../../../../lib/apiClient.js';
-import BrandLoader from '../../../../../components/ui/BrandLoader.jsx';
 import { useAuth } from '../../../../../hooks/useAuth.jsx';
+import VerificationLayout from '../components/VerificationLayout.jsx';
 
-// Handles /verify-email?token=... links + shows the EMAIL VERIFIED success screen.
 const VerifyEmail = () => {
   const navigate = useNavigate();
   const { user, refreshAuth } = useAuth();
   const [params] = useSearchParams();
   const token = params.get('token');
-  const [state, setState] = useState(token ? 'verifying' : 'no-token');
-  const [error, setError] = useState('');
-  const [errorCode, setErrorCode] = useState('');
+  const [attempt, setAttempt] = useState(0);
+  const [result, setResult] = useState(null);
+  const current = result?.token === token && result?.attempt === attempt;
+  const state = !token ? 'no-token' : current ? result.state : 'verifying';
+  const errorCode = current ? result.code : '';
+  const invalidLink = errorCode === 'EXPIRED_TOKEN' || errorCode === 'INVALID_TOKEN';
 
   useEffect(() => {
     if (!token) return;
+    let active = true;
     (async () => {
       try {
-        await apiGet(`/api/auth/verify-email?token=${encodeURIComponent(token)}`);
-         // Refresh any existing session from the server; the link may belong
-         // to a different account than the one open in this browser.
-         await refreshAuth().catch(() => {});
-        setState('done');
+        const data = await apiGet(`/api/auth/verify-email?token=${encodeURIComponent(token)}`, {
+          timeoutMs: 15000,
+          skipAuthRedirect: true,
+        });
+        if (!active) return;
+        if (!data?.success) throw new Error('Could not confirm verification. Please try again.');
+        // A blocking refresh unmounts this page via AppRoutes' loading gate,
+        // causing another verification on every remount. Keep it mounted.
+        // Read the actual session: this link may belong to a different account.
+        await refreshAuth({ silent: true }).catch(() => {});
+        if (active) setResult({ token, attempt, state: 'done' });
       } catch (err) {
-        setError(err.message);
-        setErrorCode(err.code || '');
-        setState('failed');
+        if (!active) return;
+        setResult({
+          token, attempt, state: 'failed', code: err.code || '',
+          error: err.code === 'TIMEOUT'
+            ? 'The server is taking too long to respond. Please try again.'
+            : err.message || 'Could not reach the server. Please try again.',
+        });
       }
     })();
-    // Fire once per link: the token is fixed and refreshAuth is only read
-    // at completion time — re-running on identity changes could re-verify.
+    // Ignore stale completions after navigation/token changes. apiGet shares
+    // in-flight requests, including StrictMode's second effect invocation.
+    return () => { active = false; };
+    // Auth context changes after the silent refresh; only a new link or an
+    // explicit retry should submit another verification request.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, attempt]);
+
+  const title = {
+    verifying: 'VERIFYING YOUR EMAIL',
+    done: 'EMAIL VERIFIED',
+    failed: errorCode === 'EXPIRED_TOKEN' ? 'LINK EXPIRED' : errorCode === 'INVALID_TOKEN' ? 'INVALID LINK' : 'COULD NOT VERIFY',
+    'no-token': 'VERIFY EMAIL',
+  }[state];
+  const message = {
+    verifying: 'Please wait while we confirm your email address.',
+    done: 'Your Vitalis account is now active.',
+    failed: current ? result.error : '',
+    'no-token': 'Open the verification link from your inbox, or request a new one.',
+  }[state];
+  const continuePath = !user ? '/login' : user.role === 'admin' ? '/admin' : user.onboardingCompleted === false ? '/onboarding' : '/dashboard';
+  const buttonClass = 'w-full rounded-xl bg-[var(--accent)] p-4 text-sm font-bold text-[var(--text-inverse)] transition-colors hover:bg-[var(--accent-light)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]';
 
   return (
-    <div data-theme="dark" className="relative min-h-screen w-full bg-[#0e0e0e] font-['DM_Sans'] text-[#e5e2e1] overflow-x-hidden overflow-y-auto flex">
-      <div className="fixed inset-0 z-0 bg-[url('/auth-gym.jpg')] bg-cover bg-[center_30%] brightness-[0.28] saturate-[0.7]" />
-      <div className="fixed inset-0 z-[1] bg-[radial-gradient(ellipse_at_center,transparent_30%,#0e0e0e_100%)]" />
-
-      <div className="relative z-10 m-auto w-full max-w-[440px] p-6 flex flex-col items-center">
-        <div className="w-full bg-[#121210]/65 backdrop-blur-[32px] border border-[var(--accent)]/10 rounded-[20px] p-6 sm:p-10 text-center">
-          {state === 'verifying' && (
-            <>
-              <div className="mx-auto mb-6 w-fit"><BrandLoader size="md" /></div>
-              <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/50">Verifying your email...</p>
-            </>
+    <VerificationLayout>
+      <div className="flex min-h-[360px] flex-col items-center" aria-busy={state === 'verifying'}>
+        <div aria-hidden="true" className={`mx-auto mb-6 flex h-20 w-20 shrink-0 items-center justify-center rounded-full border ${state === 'failed' ? 'border-red-500/20 bg-red-500/10 text-red-400' : 'border-[var(--accent)]/20 bg-[var(--accent)]/10 text-[var(--accent)]'}`}>
+          {state === 'verifying' ? (
+            <span className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-[var(--accent)] motion-reduce:animate-none" />
+          ) : (
+            <span className="material-symbols-outlined text-[36px]">{state === 'done' ? 'check' : state === 'failed' ? 'error' : 'mail'}</span>
           )}
-
-          {state === 'done' && (
-            <>
-              <div className="w-20 h-20 bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-10 h-10 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h1 className="font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-2">EMAIL VERIFIED</h1>
-              <p className="text-xs text-[#c4c9b0]/60 mb-8">Your Vitalis account is now active.</p>
-              <button onClick={() => navigate(user ? '/dashboard' : '/login')}
-                className="w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">
-                Continue
-              </button>
-            </>
+        </div>
+        <div className="w-full" role="status" aria-live="polite" aria-atomic="true">
+          <h1 className="mb-3 font-['Bebas_Neue'] text-[30px] leading-tight tracking-wide">{title}</h1>
+          <p className="min-h-[72px] break-words text-sm leading-relaxed text-[#c4c9b0]">{message}</p>
+        </div>
+        <div className="mt-auto w-full pt-6">
+          {state === 'verifying' && <p className="text-xs text-white/50">This usually takes a few seconds.</p>}
+          {state === 'done' && <button type="button" onClick={() => navigate(continuePath, { replace: true })} className={buttonClass}>Continue</button>}
+          {state === 'failed' && !invalidLink && (
+            <button type="button" onClick={() => setAttempt((value) => value + 1)} className={buttonClass}>Try Again</button>
           )}
-
-          {state === 'failed' && (
-            <>
-              <div className="w-20 h-20 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="material-symbols-outlined text-[36px] text-red-400">error</span>
-              </div>
-              <h1 className="font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-2">{errorCode === 'EXPIRED_TOKEN' ? 'LINK EXPIRED' : errorCode === 'INVALID_TOKEN' ? 'INVALID LINK' : 'COULD NOT VERIFY'}</h1>
-              <p className="text-xs text-[#c4c9b0]/60 mb-8">{error}</p>
-              <button onClick={() => navigate('/check-email')}
-                className="w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">
-                Request New Link
-              </button>
-            </>
-          )}
-
-          {state === 'no-token' && (
-            <>
-              <h1 className="font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-2">VERIFY EMAIL</h1>
-              <p className="text-xs text-[#c4c9b0]/60 mb-8">Open the verification link from your inbox, or request a new one.</p>
-              <button onClick={() => navigate('/check-email')}
-                className="w-full bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] tracking-[0.25em] uppercase p-4 rounded-xl hover:bg-[var(--accent-light)] transition-all">
-                Go to Check Email
-              </button>
-            </>
+          {(state === 'failed' || state === 'no-token') && (
+            <button type="button" onClick={() => navigate('/check-email')} className={state === 'failed' && !invalidLink ? 'mt-4 p-2 text-sm text-[var(--accent)] underline underline-offset-4' : buttonClass}>
+              {state === 'no-token' ? 'Go to Check Email' : 'Request New Link'}
+            </button>
           )}
         </div>
       </div>
-    </div>
+    </VerificationLayout>
   );
 };
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiPost, apiPatch } from '../../../../../lib/apiClient.js';
+import VerificationLayout from '../components/VerificationLayout.jsx';
 
 // CHECK YOUR EMAIL — shown after register or when an unverified user signs in.
 // Resend link, change email, back to sign in. Unverified users cannot proceed.
@@ -110,12 +111,7 @@ const CheckEmail = () => {
   };
 
   return (
-    <div data-theme="dark" className="relative min-h-screen w-full bg-[#0e0e0e] font-['DM_Sans'] text-[#e5e2e1] overflow-x-hidden overflow-y-auto flex">
-      <div className="fixed inset-0 z-0 bg-[url('/auth-gym.jpg')] bg-cover bg-[center_30%] brightness-[0.28] saturate-[0.7]" />
-      <div className="fixed inset-0 z-[1] bg-[radial-gradient(ellipse_at_center,transparent_30%,#0e0e0e_100%)]" />
-
-      <div className="relative z-10 m-auto w-full max-w-[440px] p-6 flex flex-col items-center">
-        <div className="w-full bg-[#121210]/65 backdrop-blur-[32px] border border-[var(--accent)]/10 rounded-[20px] p-6 sm:p-10 text-center">
+    <VerificationLayout>
           <div className="w-16 h-16 bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <span className="material-symbols-outlined text-[28px] text-[var(--accent)]">mark_email_unread</span>
           </div>
@@ -125,7 +121,7 @@ const CheckEmail = () => {
           {!location.state?.email && (
             <input type="email" aria-label="Account email" placeholder="Enter your account email"
               value={email} onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl p-3 mb-4 text-sm" />
+              className="w-full bg-white/5 border border-white/10 rounded-xl p-3 mb-4 text-[16px]" />
           )}
 
           {error && <p className="bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-[10px] font-semibold tracking-widest uppercase p-2.5 mb-4">{error}</p>}
@@ -164,9 +160,9 @@ const CheckEmail = () => {
           ) : (
             <form onSubmit={changeEmail} className="mt-2 space-y-3 text-left">
               <input type="password" required placeholder="Current password" value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl text-sm p-3 outline-none focus:border-[var(--accent)]/50 placeholder:text-white/10" />
+                 className="w-full bg-white/5 border border-white/10 rounded-xl text-[16px] p-3 outline-none focus:border-[var(--accent)]/50 placeholder:text-white/10" />
               <input type="email" required placeholder="New email address" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl text-sm p-3 outline-none focus:border-[var(--accent)]/50 placeholder:text-white/10" />
+                 className="w-full bg-white/5 border border-white/10 rounded-xl text-[16px] p-3 outline-none focus:border-[var(--accent)]/50 placeholder:text-white/10" />
               <div className="flex gap-2">
                 <button type="button" onClick={() => setChanging(false)} className="flex-1 bg-white/5 border border-white/10 rounded-xl text-[11px] font-semibold uppercase p-3">Cancel</button>
                 <button type="submit" disabled={busy} className="flex-1 bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] uppercase p-3 rounded-xl disabled:opacity-50">
@@ -175,9 +171,7 @@ const CheckEmail = () => {
               </div>
             </form>
           )}
-        </div>
-      </div>
-    </div>
+    </VerificationLayout>
   );
 };
 
