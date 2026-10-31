@@ -213,9 +213,9 @@ export default function WebcamFeed({
             'col-span-1 lg:col-span-8 relative bg-black overflow-hidden',
             'border border-[var(--border-light)] shadow-[var(--shadow-lg)]',
             fsMode === 'api'
-              ? 'rounded-none w-screen h-screen'
+              ? 'fixed inset-0 z-[200] w-screen h-[100dvh] max-h-[100dvh] rounded-none'
               : fsMode === 'css'
-                ? 'fixed inset-0 z-[200] rounded-none'
+                ? 'fixed inset-0 z-[200] w-screen h-[100dvh] max-h-[100dvh] rounded-none'
                 : 'rounded-2xl aspect-[3/4] sm:aspect-[4/5] md:aspect-video w-full',
           ].join(' ')}
     >
