@@ -64,7 +64,7 @@ export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored 
 
       const visOf = (p) => (typeof p?.visibility === "number" ? p.visibility : 1);
 
-      // Match the fullscreen cover crop or windowed contain-fit camera frame.
+      // Match the fullscreen cover crop or windowed contain-fit preview.
       const vw = video.videoWidth;
       const vh = video.videoHeight;
       const scale = fullscreen ? Math.max(cw / vw, ch / vh) : Math.min(cw / vw, ch / vh);

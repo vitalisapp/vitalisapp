@@ -202,8 +202,9 @@ export default function WebcamFeed({
       ctx.clearRect(0, 0, width, height);
       if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
 
-      // Cover-fit the sharp image to remove the centered letterbox. The camera
-      // track is separately set to its widest supported zoom when available.
+      // Fill fullscreen with the sharp camera image itself (no blurred
+      // letterbox). Cover-fit preserves proportions but can crop if the
+      // camera and screen aspect ratios differ.
       ctx.save();
       if (mirrored) {
         ctx.translate(width, 0);
