@@ -66,6 +66,7 @@ export default function WebcamFeed({
   const isFullscreen = fsMode !== null;
   const [streamLive, setStreamLive] = useState(false);
   const [streamError, setStreamError] = useState('');
+  const [portraitConstraintFallback, setPortraitConstraintFallback] = useState(false);
   const [facing, setFacing] = useState(() => safeGet('vitalis_facing', 'user') || 'user');
   const containerRef = useRef(null);
   const fullscreenCanvasRef = useRef(null);
@@ -77,11 +78,18 @@ export default function WebcamFeed({
   // Stable constraints: memoized so the stream only renegotiates when the
   // profile or lens actually changes (never on fullscreen toggle).
   const videoConstraints = useMemo(() => ({
-    ...(isNarrow ? mobileConstraints : desktopConstraints),
+    ...(isNarrow && !portraitConstraintFallback
+      ? {
+          ...mobileConstraints,
+          aspectRatio: { exact: 9 / 19 },
+          resizeMode: { ideal: 'crop-and-scale' },
+        }
+      : isNarrow ? mobileConstraints : desktopConstraints),
     facingMode: facing,
-  }), [isNarrow, facing]);
+  }), [isNarrow, facing, portraitConstraintFallback]);
 
   const flipCamera = useCallback(() => {
+    setPortraitConstraintFallback(false);
     setFacing((f) => {
       const next = f === 'user' ? 'environment' : 'user';
       safeSet('vitalis_facing', next);
@@ -274,6 +282,13 @@ export default function WebcamFeed({
       onUserMedia={() => { setStreamLive(true); setStreamError(''); }}
       onUserMediaError={(err) => {
         setStreamLive(false);
+        if (isNarrow && !portraitConstraintFallback && err?.name === 'OverconstrainedError') {
+          // Some cameras cannot produce an exact portrait stream. Retry with
+          // non-exact ideals rather than leaving the camera unavailable.
+          setPortraitConstraintFallback(true);
+          setStreamError('');
+          return;
+        }
         setStreamError(describeStreamError(err));
       }}
     />
