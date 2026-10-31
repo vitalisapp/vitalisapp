@@ -202,9 +202,8 @@ export default function WebcamFeed({
       ctx.clearRect(0, 0, width, height);
       if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
 
-      // Fill the viewport with a softened cover-fit backdrop, then draw the
-      // complete sharp source frame at its natural aspect ratio. This avoids
-      // both the distortion of stretching and the body crop of cover-fit.
+      // Cover-fit the sharp image to remove the centered letterbox. The camera
+      // track is separately set to its widest supported zoom when available.
       ctx.save();
       if (mirrored) {
         ctx.translate(width, 0);
@@ -213,14 +212,8 @@ export default function WebcamFeed({
       const coverScale = Math.max(width / video.videoWidth, height / video.videoHeight);
       const coverWidth = video.videoWidth * coverScale;
       const coverHeight = video.videoHeight * coverScale;
-      ctx.filter = 'blur(24px) brightness(0.55)';
-      ctx.drawImage(video, (width - coverWidth) / 2, (height - coverHeight) / 2, coverWidth, coverHeight);
-
-      const fitScale = Math.min(width / video.videoWidth, height / video.videoHeight);
-      const fitWidth = video.videoWidth * fitScale;
-      const fitHeight = video.videoHeight * fitScale;
       ctx.filter = 'none';
-      ctx.drawImage(video, (width - fitWidth) / 2, (height - fitHeight) / 2, fitWidth, fitHeight);
+      ctx.drawImage(video, (width - coverWidth) / 2, (height - coverHeight) / 2, coverWidth, coverHeight);
       ctx.restore();
     };
 
@@ -363,11 +356,11 @@ export default function WebcamFeed({
       )}
 
       {/* Skeleton tracker over the live feed */}
-      {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} />}
+      {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} fullscreen={isFullscreen} />}
 
       {/* Framing guidance remains visible in both preview and fullscreen. */}
       {!collapsed && feedLive && !tracking && (
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-3 px-6 pointer-events-none text-center">
+        <div className={`absolute inset-x-0 z-20 flex flex-col items-center gap-3 px-6 pointer-events-none text-center ${isFullscreen ? 'bottom-28' : 'top-1/2 -translate-y-1/2'}`}>
           <span className="w-16 h-16 rounded-2xl bg-[rgba(8,11,8,0.72)] border border-[var(--accent-border)] backdrop-blur-xl flex items-center justify-center shadow-[var(--shadow-lg)]">
             <span className="material-symbols-outlined text-[length:var(--fs-32)] text-[var(--accent)]">accessibility_new</span>
           </span>
