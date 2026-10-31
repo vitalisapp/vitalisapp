@@ -12,8 +12,8 @@ import PoseSkeletonOverlay from "./PoseSkeletonOverlay.jsx";
 const mobileConstraints  = {
   facingMode: 'user',
   width: { ideal: 720 },
-  height: { ideal: 960 },
-  aspectRatio: { ideal: 3 / 4 },
+  height: { ideal: 1280 },
+  aspectRatio: { ideal: 9 / 16 },
 };
 const desktopConstraints = {
   facingMode: 'user',
