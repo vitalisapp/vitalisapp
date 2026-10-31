@@ -88,10 +88,7 @@ function buildRepCounter() {
           return false;
         }
         default: {
-          if (!visible(lm, [23, 24])) return false;
-          const hipY = (lm[23].y + lm[24].y) / 2;
-          if (hipY < 0.40 && phase === 'up')   { phase = 'down'; return false; }
-          if (hipY > 0.55 && phase === 'down') { phase = 'up';   return true;  }
+          // Never invent reps for a movement with no exercise-specific counter.
           return false;
         }
       }
@@ -150,11 +147,11 @@ export function useRepCounter({ voiceEnabled }) {
   const countRep = useCallback((landmarks, type) => {
     const didRep = repCounterRef.current(landmarks, type);
     if (didRep) {
-      setRepCount((prev) => {
-        const next = prev + 1;
-        repCountRef.current = next;
-        return next;
-      });
+      // Update synchronously so target auto-stop sees this final rep before
+      // React schedules its render.
+      const next = repCountRef.current + 1;
+      repCountRef.current = next;
+      setRepCount(next);
     }
   }, []);
 

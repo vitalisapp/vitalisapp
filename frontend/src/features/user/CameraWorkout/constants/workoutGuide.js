@@ -6,7 +6,7 @@
 import { exercises, getExercise, searchExercises, getAssetUrl } from '@bryllim/workout-guide';
 
 // Bryl slug -> internal rep-counter type (useRepCounter switch cases).
-// Unmapped slugs fall through to 'generic' (existing default branch).
+// Unmapped slugs stay selectable but route to manual logging; never estimate reps.
 const SLUG_TO_COUNTER = {
   'push-up': 'pushup',
   'weighted-push-up': 'pushup',
@@ -167,7 +167,7 @@ export function getPickerOptions() {
     if (!r) continue;
     opts.push({ id: r.id, label: r.name || r.label, icon: PICKER_ICONS[slug] || 'fitness_center', cue: r.cue, mode: r.mode });
   }
-  // Legacy extras with no Bryl match stay functional via generic counter.
+  // Legacy extras stay selectable; camera reps are not fabricated for them.
   opts.push(
     { id: 'tricep_ext', label: 'Tricep Ext.', icon: 'back_hand', cue: 'Stand or sit, arm extended overhead.', mode: 'rep' },
     { id: 'boxjump', label: 'Box Jumps', icon: 'upload_file', cue: 'Stand in front of the box, camera to your side.', mode: 'rep' },

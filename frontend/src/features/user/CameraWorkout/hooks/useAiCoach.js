@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { speak } from './useRepCounter.js';
 import { apiPost } from '../../../../lib/apiClient.js';
 
@@ -8,10 +8,35 @@ export function useAICoach({ workoutType, voiceEnabled }) {
 
   const lastAICallRef  = useRef(0);
   const analyzingGuard = useRef(false);
+  const requestIdRef = useRef(0);
+  const lastVoiceRef = useRef({ text: '', at: 0 });
+
+  const speakCue = useCallback((text) => {
+    if (!voiceEnabled || !text) return;
+    const now = Date.now();
+    const previous = lastVoiceRef.current;
+    if (now - previous.at < 7000 || (previous.text === text && now - previous.at < 20000)) return;
+    lastVoiceRef.current = { text, at: now };
+    speak(text, 0.95, 1.0, false);
+  }, [voiceEnabled]);
+
+  const cancelAnalysis = useCallback(() => {
+    requestIdRef.current += 1;
+    analyzingGuard.current = false;
+    setIsAnalyzing(false);
+  }, []);
+
+  useEffect(() => {
+    requestIdRef.current += 1;
+    analyzingGuard.current = false;
+    lastAICallRef.current = 0;
+    setIsAnalyzing(false);
+  }, [workoutType]);
 
   const analyzeWithAI = useCallback(async (landmarks) => {
     if (analyzingGuard.current) return;
     analyzingGuard.current = true;
+    const requestId = ++requestIdRef.current;
     setIsAnalyzing(true);
 
     // landmarks is null when camera is blocked / no body detected.
@@ -51,12 +76,13 @@ Give ONE short (≤12 word) coaching cue. No quotes. No punctuation at end.
         system: 'You are a terse, encouraging personal trainer. Reply with ONE coaching cue of 12 words or fewer. No quotes, no trailing punctuation.',
         prompt: userPrompt,
       }, { timeoutMs: 60000 });
+      if (requestId !== requestIdRef.current) return;
       const tip = data?.text?.trim();
 
       if (tip && !/high demand|currently experiencing|try again later/i.test(tip) && !data?.degraded) {
         setAiFeedback(tip);
         // Routine cue: never cut off start/warning/milestone audio (stutter fix).
-        if (voiceEnabled) speak(tip, 0.95, 1.0, false);
+        speakCue(tip);
       } else if (tip && data?.degraded) {
         // Backend signalled overload — fall back to canned cue, don't speak overload text
         const exerciseFallbacksDegraded = {
@@ -65,13 +91,14 @@ Give ONE short (≤12 word) coaching cue. No quotes. No punctuation at end.
         };
         const fb = exerciseFallbacksDegraded[workoutType] ?? 'Great form, keep it up';
         setAiFeedback(fb);
-        if (voiceEnabled) speak(fb, 0.95, 1.0, false);
+        speakCue(fb);
       } else if (tip) {
         setAiFeedback(tip);
         // Routine cue: never cut off start/warning/milestone audio (stutter fix).
-        if (voiceEnabled) speak(tip, 0.95, 1.0, false);
+        speakCue(tip);
       }
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       if (import.meta.env.DEV) console.warn('[useAICoach] API error:', err.message);
       const blockedFallbacks = [
         'Step back so your full body is visible',
@@ -93,12 +120,14 @@ Give ONE short (≤12 word) coaching cue. No quotes. No punctuation at end.
         ? blockedFallbacks[Math.floor(Math.random() * blockedFallbacks.length)]
         : (exerciseFallbacks[workoutType] ?? 'Great form, keep it up');
       setAiFeedback(fb);
-      if (voiceEnabled) speak(fb, 0.95, 1.0, false);
+      speakCue(fb);
     } finally {
-      setIsAnalyzing(false);
-      analyzingGuard.current = false;
+      if (requestId === requestIdRef.current) {
+        setIsAnalyzing(false);
+        analyzingGuard.current = false;
+      }
     }
-  }, [workoutType, voiceEnabled]);
+  }, [workoutType, speakCue]);
 
   const maybeAnalyze = useCallback((landmarks) => {
     const now = Date.now();
@@ -110,5 +139,5 @@ Give ONE short (≤12 word) coaching cue. No quotes. No punctuation at end.
     }
   }, [analyzeWithAI]);
 
-  return { aiFeedback, isAnalyzing, setAiFeedback, maybeAnalyze };
+  return { aiFeedback, isAnalyzing, setAiFeedback, maybeAnalyze, cancelAnalysis };
 }

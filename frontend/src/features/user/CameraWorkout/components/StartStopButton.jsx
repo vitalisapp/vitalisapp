@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Icon from "../../../../components/Icon.jsx";
-export default function StartStopButton({ isRecording, cameraOn, onPress }) {
+export default function StartStopButton({ isRecording, cameraOn, canStart = true, onPress }) {
   const [busy, setBusy] = useState(false);
   const handlePress = async (e) => {
     if (busy || !cameraOn) return;
@@ -11,7 +11,7 @@ export default function StartStopButton({ isRecording, cameraOn, onPress }) {
       setBusy(false);
     }
   };
-  const disabled = !cameraOn || busy;
+  const disabled = !cameraOn || busy || (!isRecording && !canStart);
   return (
     <button
       onClick={handlePress}

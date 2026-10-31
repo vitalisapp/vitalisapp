@@ -4,7 +4,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { speak } from './useRepCounter.js';
 
-const FRAME_DT = 0.15; // usePoseEngine sends a frame every ~150ms
 const STABLE_JITTER = 0.012; // normalized-coord drift threshold
 
 function keyPoints(lm) {
@@ -36,18 +35,20 @@ export function useHoldTimer({ voiceEnabled }) {
       return { holding: false, stable: false };
     }
     let stable = true;
+    const now = performance.now();
     const prev = prevRef.current;
-    if (prev && prev.length === pts.length) {
+    if (prev?.pts && prev.pts.length === pts.length) {
       let drift = 0;
       for (let i = 0; i < pts.length; i++) {
-        drift += Math.abs(pts[i].x - prev[i].x) + Math.abs(pts[i].y - prev[i].y);
+        drift += Math.abs(pts[i].x - prev.pts[i].x) + Math.abs(pts[i].y - prev.pts[i].y);
       }
       stable = drift / pts.length < STABLE_JITTER;
     }
-    prevRef.current = pts.map((p) => ({ x: p.x, y: p.y }));
+    const dt = prev ? Math.min(0.25, Math.max(0, (now - prev.at) / 1000)) : 0;
+    prevRef.current = { pts: pts.map((p) => ({ x: p.x, y: p.y })), at: now };
 
     if (stable) {
-      const next = holdRef.current + FRAME_DT;
+      const next = holdRef.current + dt;
       holdRef.current = next;
       // The UI only shows whole seconds (ring, timer, milestones). Publishing
       // every 150ms frame re-rendered the entire workout tree ~10x/sec; keep

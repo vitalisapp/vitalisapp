@@ -14,7 +14,7 @@ const desktopConstraints = { facingMode: 'user', width: { ideal: 1280 }, height:
 
 // Viewport tracking: narrow screens get the portrait camera profile.
 // Fullscreen stays in whatever orientation the user holds — no forced
-// rotation, portrait camera fills a portrait screen via object-cover.
+// rotation, portrait camera keeps its complete frame visible on portrait screens.
 function useViewport() {
   const [isNarrow, setIsNarrow] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth < 768 : true
@@ -39,9 +39,10 @@ export default function WebcamFeed({
   repCount,
   onCameraToggle,
   landmarksRef,
-  elapsedLabel,
   onStartStop,
   tracking = false,
+  trackingHint = 'Fit your head, hands and feet in the frame',
+  canStart = false,
   hideRepCount = false,
 }) {
   const isNarrow = useViewport();
@@ -188,10 +189,10 @@ export default function WebcamFeed({
       playsInline
       screenshotFormat="image/jpeg"
       videoConstraints={videoConstraints}
-      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', backgroundColor: '#000' }}
+       style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', backgroundColor: '#000' }}
       className={collapsed
         ? 'absolute bottom-0 right-0 w-px h-px opacity-0 pointer-events-none'
-        : 'absolute inset-0 w-full h-full object-cover grayscale-[0.2]'}
+        : 'absolute inset-0 w-full h-full grayscale-[0.2]'}
       onUserMedia={() => { setStreamLive(true); setStreamError(''); }}
       onUserMediaError={(err) => {
         setStreamLive(false);
@@ -268,17 +269,16 @@ export default function WebcamFeed({
       {/* Skeleton tracker over the live feed */}
       {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} />}
 
-      {/* Framing guide: shown until shoulders/hips lock so users stop
-          training face-only close-ups. Compact in fullscreen (record
-          cluster owns the bottom). */}
+      {/* Whole-body guide: the feed uses object-fit:contain, so no camera
+          pixels are cropped to fill the preview. */}
       {!collapsed && feedLive && !tracking && (
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-3 px-6 pointer-events-none text-center">
           <span className="w-16 h-16 rounded-2xl bg-[rgba(8,11,8,0.72)] border border-[var(--accent-border)] backdrop-blur-xl flex items-center justify-center shadow-[var(--shadow-lg)]">
             <span className="material-symbols-outlined text-[length:var(--fs-32)] text-[var(--accent)]">accessibility_new</span>
           </span>
           <div className="rounded-2xl bg-[rgba(8,11,8,0.72)] border border-white/12 backdrop-blur-xl px-4 py-2.5 shadow-[var(--shadow-lg)]">
-            <p className="text-[length:var(--fs-13)] font-bold text-white">Step back — show head to hips</p>
-            <p className="text-[length:var(--fs-11)] text-white/75 mt-0.5">Full body in frame to start tracking</p>
+            <p className="text-[length:var(--fs-13)] font-bold text-white">{trackingHint}</p>
+            <p className="text-[length:var(--fs-11)] text-white/75 mt-0.5">Keep head, both wrists and both feet visible</p>
           </div>
         </div>
       )}
@@ -288,16 +288,14 @@ export default function WebcamFeed({
         <>
           <div className="absolute top-0 left-0 right-0 h-24 z-20 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
           <div className="absolute bottom-0 left-0 right-0 h-44 z-20 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-40 px-3.5 py-1.5 rounded-full bg-black/50 backdrop-blur-sm text-[length:var(--fs-12)] font-bold tabular-nums text-white">
-            {elapsedLabel || '0:00'}
-          </div>
           {/* Bottom record cluster — fullscreen owns Start/Stop (page header
               is outside the fullscreen element) */}
           <div className="absolute bottom-6 left-0 right-0 z-40 flex flex-col items-center gap-2">
             <button
               onClick={onStartStop}
+              disabled={!isRecording && !canStart}
               aria-label={isRecording ? 'Stop workout' : 'Start workout'}
-              className={`w-16 h-16 rounded-full flex items-center justify-center active:scale-95 transition-transform border-4 ${
+              className={`w-16 h-16 rounded-full flex items-center justify-center active:scale-95 transition-transform border-4 disabled:opacity-40 disabled:cursor-not-allowed ${
                 isRecording
                   ? 'bg-white/20 border-white'
                   : 'bg-[#e63030] border-white/80 shadow-[var(--shadow-md)]'
@@ -307,9 +305,6 @@ export default function WebcamFeed({
                 ? <span className="w-6 h-6 rounded-[6px] bg-white" />
                 : <span className="w-5 h-5 rounded-full bg-white" />}
             </button>
-            <span className="text-[length:var(--fs-13)] font-bold tabular-nums text-white drop-shadow">
-              {elapsedLabel || '0:00'}
-            </span>
           </div>
         </>
       )}

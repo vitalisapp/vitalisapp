@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 // Pose skeleton overlay — draws the reference-style tracker (yellow bones,
 // green joints, red for low-confidence) on a canvas over the video.
 // Reads the latest landmarks from a ref (no re-renders) at rAF pace and
-// replicates object-cover math so dots sit on the body, not beside it.
+// replicates object-fit:contain math so the full camera image remains visible.
 //
 // Accuracy rules (fixes face-cluster + stray bottom line):
 // - Bones draw ONLY when both endpoints have visibility >= BONE_MIN_VIS.
@@ -12,7 +12,7 @@ import { useEffect, useRef } from "react";
 // - Face landmarks 0-10 draw small/faded — the old code drew all 33 dots at
 //   full size, so a head-only close-up looked like a bug cluster on the eye.
 // - Dots below DOT_MIN_VIS are skipped entirely (not drawn red in a pile).
-// - Front camera (`mirrored`) flips X in the same object-cover space as the
+// - Front camera (`mirrored`) flips X in the same contained space as the
 //   mirrored <video> preview, so the skeleton isn't left-right flipped.
 const BONES = [
   [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
@@ -62,20 +62,13 @@ export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored 
 
       if (!lm || !video || !video.videoWidth) return;
 
-      // Torso gate: shoulders (11,12) + hips (23,24) are the anchor of every
-      // rep counter. When none of them is confident (face-only close-up, dark
-      // room) the model hallucinates scattered joints — draw nothing instead
-      // of a confusing dot cloud. The framing guide overlay handles the hint.
       const visOf = (p) => (typeof p?.visibility === "number" ? p.visibility : 1);
-      const torsoVis = Math.max(visOf(lm[11]), visOf(lm[12]), visOf(lm[23]), visOf(lm[24]));
-      if (torsoVis < 0.5) return;
 
-      // object-cover mapping: full-frame landmarks -> visible crop.
-      // Front camera preview is mirrored (scaleX(-1) on <video>) so flip X
-      // here too — otherwise the skeleton is left-right reversed vs the body.
+      // object-fit:contain mapping: retain the complete camera frame and
+      // center any letterbox area rather than cropping the user's body.
       const vw = video.videoWidth;
       const vh = video.videoHeight;
-      const scale = Math.max(cw / vw, ch / vh);
+      const scale = Math.min(cw / vw, ch / vh);
       const dw = vw * scale;
       const dh = vh * scale;
       const dx = (cw - dw) / 2;

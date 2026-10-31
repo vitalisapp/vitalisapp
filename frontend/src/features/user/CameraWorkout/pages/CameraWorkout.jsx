@@ -36,6 +36,21 @@ import ExerciseChoiceModal from '../components/ExerciseChoiceModal.jsx';
 // ── Minimum reps required to count a session as complete ─────────────────────
 const MIN_REPS_DEFAULT = 5;
 
+// Whole-body readiness is shared by framing guidance and the rep gate so an
+// exercise cannot count from a face/torso-only crop. Wrists proxy for hands.
+const WHOLE_BODY_LANDMARKS = [0, 15, 16, 23, 24, 27, 28];
+function assessWholeBody(landmarks) {
+  const points = WHOLE_BODY_LANDMARKS.map((index) => landmarks?.[index]);
+  const confident = points.every((point) => point && Number.isFinite(point.x) && Number.isFinite(point.y) && (point.visibility ?? 0) >= 0.45);
+  if (!confident) return { ready: false, hint: 'Step into view and keep your head, hands and feet visible' };
+  if (points.some((point) => point.x < 0.015 || point.x > 0.985 || point.y < 0.015 || point.y > 0.985)) {
+    return { ready: false, hint: 'Move the phone back slightly until your whole body fits' };
+  }
+  const height = Math.max(...points.map((point) => point.y)) - Math.min(...points.map((point) => point.y));
+  if (height < 0.32) return { ready: false, hint: 'Move a little closer while keeping your head and feet in frame' };
+  return { ready: true, hint: 'Full body visible — ready to start' };
+}
+
 // ── Activity types that should NOT launch the camera (use manual complete) ───
 const REST_ACTIVITY_TYPES = new Set(['Recovery', 'Mobility', 'Flexibility']);
 
@@ -275,6 +290,10 @@ const CameraWorkout = () => {
   // Rep + hold targets (user picks before Start). Manual input allowed.
   const [repTarget, setRepTarget] = useState(5);
   const [repCustom, setRepCustom] = useState('');
+  const [setTarget, setSetTarget] = useState(3);
+  const [setCustom, setSetCustom] = useState('');
+  const [completedSets, setCompletedSets] = useState(0);
+  const completedSetsRef = useRef(0);
   const [holdTarget, setHoldTarget] = useState(45);
   const [holdCustom, setHoldCustom] = useState('');
 
@@ -290,6 +309,9 @@ const CameraWorkout = () => {
   // Flips state on transitions only (pose fires ~10/sec) to avoid re-renders.
   const [tracking, setTracking] = useState(false);
   const trackingRef = useRef(false);
+  const [trackingHint, setTrackingHint] = useState('Step into view and keep your whole body visible');
+  const trackingHintRef = useRef('');
+  const fullBodySinceRef = useRef(0);
 
   // Session timer
   const [elapsedSecs, setElapsedSecs] = useState(0);
@@ -326,6 +348,7 @@ const CameraWorkout = () => {
   // warning voice per 4s; overlay text still updates every frame.
   const lastWarnRef = useRef(0);
   const lastHoldCueRef = useRef(0);
+  const wasHoldingRef = useRef(true);
   const WARN_COOLDOWN_MS = 4000;
   // Target-reached fires the stop sequence once — without this the rep/hold
   // branch re-triggers every frame until the 800ms stop lands (double logs,
@@ -348,7 +371,7 @@ const CameraWorkout = () => {
 
   const { repCount, repCountRef, countRep, resetReps }           = useRepCounter({ voiceEnabled });
   const { holdSecs, holdRef, updateHold, resetHold, setHoldTarget: setHoldGoal } = useHoldTimer({ voiceEnabled });
-  const { aiFeedback, isAnalyzing, setAiFeedback, maybeAnalyze } = useAICoach({ workoutType: resolved?.label ?? workoutType, voiceEnabled });
+  const { aiFeedback, isAnalyzing, setAiFeedback, maybeAnalyze, cancelAnalysis } = useAICoach({ workoutType: resolved?.label ?? workoutType, voiceEnabled });
   const { startSession, pauseSession, resumeSession, endSession, sessionResult } = useWorkoutSession();
 
   useEffect(() => { setHoldGoal(holdTarget); }, [holdTarget, setHoldGoal]);
@@ -396,20 +419,21 @@ const CameraWorkout = () => {
       }
       return Math.floor(holdRef.current) >= minHoldSecs;
     }
-    const reps = repCountRef.current;
+    const reps = completedSetsRef.current * repTarget + repCountRef.current;
     if (requiredMins > 0) {
       return elapsedMins >= Math.ceil(requiredMins * 0.5) && reps >= minReps;
     }
     return reps >= minReps;
-  }, [fromPlan, requiredMins, elapsedMins, minReps, minHoldSecs, workoutMode, repCountRef, holdRef]);
+  }, [fromPlan, requiredMins, elapsedMins, minReps, minHoldSecs, workoutMode, repCountRef, holdRef, repTarget]);
 
   // ── The actual stop logic (called after confirmation if needed) ─
   const doStop = useCallback(() => {
-    endSession('completed', repCountRef.current).catch(err => {
+    cancelAnalysis();
+    const final = workoutMode === 'hold' ? repCountRef.current : completedSetsRef.current * repTarget + repCountRef.current;
+    endSession('completed', final).catch(err => {
       if (import.meta.env.DEV) console.warn('[endSession] background error:', err);
     });
 
-    const final = repCountRef.current;
     const held = Math.floor(holdRef.current);
     const label = resolved?.label ?? workoutType;
     const msg = workoutMode === 'hold'
@@ -456,7 +480,9 @@ const CameraWorkout = () => {
     if (!skipSummaryRef.current) {
       setSummary({
       exercise: label,
-      achieved: workoutMode === 'hold' ? `${held}s / ${holdTarget}s held` : `${final} / ${repTarget} reps`,
+      achieved: workoutMode === 'hold'
+        ? `${held}s / ${holdTarget}s held`
+        : `${final} / ${repTarget * setTarget} reps (${setTarget} × ${repTarget})`,
       score,
       rows: [
         { label: 'Alignment', icon: 'accessibility_new', good: alignGood, state: avgSym > 0 ? (alignGood ? 'Good' : 'Needs work') : '—' },
@@ -498,7 +524,7 @@ const CameraWorkout = () => {
     setElapsedSecs(0);
     setIsRecording(false);
     setPaused(false);
-  }, [endSession, repCountRef, holdRef, workoutType, workoutMode, resolved, voiceEnabled, user, fromPlan, isSessionComplete, navigate, setAiFeedback, aiFeedback, repTarget, holdTarget]);
+  }, [cancelAnalysis, endSession, repCountRef, holdRef, workoutType, workoutMode, resolved, voiceEnabled, user, fromPlan, isSessionComplete, navigate, setAiFeedback, aiFeedback, repTarget, setTarget, holdTarget]);
 
   // Pause / resume: freezes timer + rep counting; video and skeleton
   // preview keep running. Voice cues are gated on paused upstream.
@@ -508,14 +534,20 @@ const CameraWorkout = () => {
     if (!isRecording) return;
     setPaused(prev => {
       const next = !prev;
-      if (next) pauseSession();
+      if (next) {
+        pauseSession();
+        // Clear the previous frame timestamp so resuming cannot credit the
+        // pause interval toward a held pose.
+        updateHold(null, false);
+        wasHoldingRef.current = false;
+      }
       else resumeSession();
       const msg = next ? 'Paused — press Resume to continue' : 'Resumed — keep going';
       setAiFeedback(msg);
       if (voiceEnabled) speak(msg, 0.95, 1.0);
       return next;
     });
-  }, [isRecording, voiceEnabled, setAiFeedback, pauseSession, resumeSession]);
+  }, [isRecording, voiceEnabled, setAiFeedback, pauseSession, resumeSession, updateHold]);
 
   // Summary Done: dismiss, then either collect the post-workout self-report
   // (Module 5) or flush any deferred plan navigation. Feedback only for
@@ -545,12 +577,24 @@ const CameraWorkout = () => {
   const handleStartStop = async () => {
     if (!chosen) return;
     if (!isRecording) {
+      if (workoutMode !== 'hold' && counterType === 'generic') {
+        setManualTitle(resolved?.label ?? workoutType);
+        setManualOpen(true);
+        setAiFeedback('Camera rep counting is not supported for this movement. Log it manually to keep your workout accurate.');
+        return;
+      }
+      if (!trackingRef.current) {
+        setAiFeedback(trackingHintRef.current || 'Fit your head, hands and feet in the camera view before starting');
+        return;
+      }
       // ── START ──────────────────────────────────────────────────
       startSession(workoutType).catch(err => {
         if (import.meta.env.DEV) console.warn('[startSession] background error:', err);
       });
       resetReps();
       resetHold();
+      completedSetsRef.current = 0;
+      setCompletedSets(0);
       samplesRef.current = [];
       pendingNavRef.current = null;
       skipSummaryRef.current = false;
@@ -562,7 +606,9 @@ const CameraWorkout = () => {
 
       const label = resolved?.label ?? workoutType;
       const cue = resolved?.cue ?? '';
-      const goal = workoutMode === 'hold' ? `Hold for ${holdTarget} seconds.` : `Target ${repTarget} reps.`;
+      const goal = workoutMode === 'hold'
+        ? `Hold for ${holdTarget} seconds.`
+        : `Target ${setTarget} sets of ${repTarget} reps.`;
       const msg = fromPlan
         ? `Starting Day ${fromPlan.dayNumber}: ${fromPlan.dayTitle}. ${cue} ${goal}`
         : `Starting ${label}. ${cue} ${goal}`;
@@ -576,7 +622,7 @@ const CameraWorkout = () => {
       if (fromPlan && !isSessionComplete()) {
         // FIX: snapshot the current rep count into state NOW (event handler,
         // not during render) so the dialog can display it as a plain number.
-        setEarlyExitReps(repCountRef.current);
+        setEarlyExitReps(completedSetsRef.current * repTarget + repCountRef.current);
         setShowEarlyExit(true);
         return;
       }
@@ -608,40 +654,41 @@ const CameraWorkout = () => {
   const { poseReady, loadError } = usePoseEngine({
     cameraOn,
     webcamRef,
-    workoutType,
-    onPoseResult: (landmarks, type, noDetectCount) => {
+    workoutType: counterType,
+    onPoseResult: (landmarks, type) => {
       landmarksRef.current = landmarks;
       const setTracked = (t) => {
         if (t !== trackingRef.current) { trackingRef.current = t; setTracking(t); }
       };
-      if (!landmarks) {
-        setTracked(false);
-        if (isRecording && !paused) {
-          if (noDetectCount === 3) {
-            const msg = 'Camera blocked — step back so your full body is visible';
-            setAiFeedback(msg);
-            if (voiceEnabled) speak(msg, 0.95, 1.0);
-          }
-          maybeAnalyze(null);
+      const setFrame = (ready, hint) => {
+        const wasReady = trackingRef.current;
+        setTracked(ready);
+        if (trackingHintRef.current !== hint) {
+          trackingHintRef.current = hint;
+          setTrackingHint(hint);
         }
+        if (isRecording && wasReady && !ready) {
+          setAiFeedback(hint);
+          if (voiceEnabled && Date.now() - lastWarnRef.current > WARN_COOLDOWN_MS) {
+            lastWarnRef.current = Date.now();
+            speak(hint, 0.95, 1.0, false);
+          }
+        }
+      };
+      if (!landmarks) {
+        fullBodySinceRef.current = 0;
+        setFrame(false, 'Step into view so your whole body can be seen');
         publishBiometrics({ alignment: 0, velocity: 0, symmetry: 0 });
         return;
       }
 
-      const upperBody   = ['pushup', 'bicep_curl', 'overhead', 'lateral_raise'];
-      const checkPoints = upperBody.includes(type) ? [11, 12, 13, 14] : [23, 24, 25, 26];
-      const isVisible   = checkPoints.every(i => landmarks[i] && landmarks[i].visibility > 0.4);
-      setTracked(isVisible);
+      const framing = assessWholeBody(landmarks);
+      if (!framing.ready) fullBodySinceRef.current = 0;
+      else if (!fullBodySinceRef.current) fullBodySinceRef.current = Date.now();
+      const isVisible = framing.ready && Date.now() - fullBodySinceRef.current >= 350;
+      setFrame(isVisible, isVisible ? framing.hint : framing.ready ? 'Hold still — checking full-body framing' : framing.hint);
 
       if (!isVisible && isRecording && !paused) {
-        const msg = 'Move back — position your full body in the camera view';
-        setAiFeedback(msg);
-        // Throttled: this branch runs ~10/sec — unguarded it restarts the
-        // utterance every frame (stutter). Overlay text still updates live.
-        if (voiceEnabled && Date.now() - lastWarnRef.current > WARN_COOLDOWN_MS) {
-          lastWarnRef.current = Date.now();
-          speak(msg, 0.95, 1.0);
-        }
         setBiometrics(prev => (prev.alignment === 30 ? prev : { ...prev, alignment: 30 }));
         return;
       }
@@ -649,29 +696,40 @@ const CameraWorkout = () => {
       if (isRecording && isVisible && !paused) {
         if (workoutMode === 'hold') {
           const { holding } = updateHold(landmarks, true);
-          if (!holding && voiceEnabled && Date.now() - lastHoldCueRef.current > WARN_COOLDOWN_MS) {
+          if (!holding && wasHoldingRef.current && voiceEnabled && Date.now() - lastHoldCueRef.current > WARN_COOLDOWN_MS) {
             lastHoldCueRef.current = Date.now();
             setAiFeedback('Hold steady — keep your position');
-            speak('Hold steady — keep your position', 0.95, 1.0);
+            speak('Hold steady — keep your position', 0.95, 1.0, false);
           }
+          wasHoldingRef.current = holding;
           maybeAnalyze(landmarks);
           if (Math.floor(holdRef.current) >= holdTarget && !reachedRef.current) {
             reachedRef.current = true;
             const msg = `Target reached! ${holdTarget} seconds held.`;
             setAiFeedback(msg);
-            if (voiceEnabled) speak(msg, 1.0, 1.05);
-            setTimeout(() => doStopRef.current?.(), 800);
+            doStopRef.current?.();
           }
         } else {
           const before = repCountRef.current;
-          countRep(landmarks, counterType);
+          countRep(landmarks, type);
           maybeAnalyze(landmarks);
-          if (repCountRef.current >= repTarget && before < repTarget && !reachedRef.current) {
-            reachedRef.current = true;
-            const msg = `Target reached! ${repTarget} reps.`;
-            setAiFeedback(msg);
-            if (voiceEnabled) speak(msg, 1.0, 1.05);
-            setTimeout(() => doStopRef.current?.(), 800);
+          if (repCountRef.current >= repTarget && before < repTarget) {
+            const nextSet = completedSetsRef.current + 1;
+            completedSetsRef.current = nextSet;
+            setCompletedSets(nextSet);
+            // Clear the completed set before stopping as well, so the final
+            // set is represented only in the completed-set total.
+            resetReps();
+            if (nextSet >= setTarget) {
+              reachedRef.current = true;
+              doStopRef.current?.();
+            } else {
+              const restCue = `Set ${nextSet} of ${setTarget} complete — rest, then press Resume when ready`;
+              setAiFeedback(restCue);
+              pauseSession();
+              setPaused(true);
+              if (voiceEnabled) speak(restCue, 0.95, 1.0, false);
+            }
           }
         }
       }
@@ -703,6 +761,12 @@ const CameraWorkout = () => {
     if (!next) {
       // Drop the last pose so a stale skeleton never freezes on screen.
       landmarksRef.current = null;
+      trackingRef.current = false;
+      setTracking(false);
+      trackingHintRef.current = 'Camera is off — turn it on to frame your body';
+      setTrackingHint(trackingHintRef.current);
+      fullBodySinceRef.current = 0;
+      updateHold(null, false);
       if (isRecording) setIsRecording(false);
     }
     if (voiceEnabled) speak(next ? 'Camera on.' : 'Camera off.');
@@ -818,11 +882,6 @@ const CameraWorkout = () => {
               </span>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              {isRecording && (
-                <span className="text-[length:var(--fs-10)] font-black tabular-nums text-[var(--accent)]">
-                  {formatTime(elapsedSecs)}
-                </span>
-              )}
               {requiredMins > 0 && (
                 <span className="text-[length:var(--fs-10)] text-[var(--text-muted)] uppercase tracking-widest whitespace-nowrap">
                   Goal: {Math.ceil(requiredMins * 0.5)} min
@@ -835,7 +894,7 @@ const CameraWorkout = () => {
         {chosen && (
           <SessionHeader
             workoutLabel={resolved?.label ?? workoutType}
-            workoutSub={`${resolved?.muscle ?? 'Full body'} · ${workoutMode === 'hold' ? `${holdTarget}s hold` : `${repTarget} reps`}`}
+            workoutSub={`${resolved?.muscle ?? 'Full body'} · ${workoutMode === 'hold' ? `${holdTarget}s hold` : `${setTarget} sets × ${repTarget} reps`}`}
             isRecording={isRecording}
             paused={paused}
             cameraOn={cameraOn}
@@ -892,12 +951,13 @@ const CameraWorkout = () => {
               repCount={workoutMode === 'hold' ? Math.floor(holdSecs) : repCount}
               onCameraToggle={handleCameraToggle}
               landmarksRef={landmarksRef}
-              elapsedLabel={formatTime(elapsedSecs)}
               onStartStop={handleStartStop}
               tracking={tracking}
+              trackingHint={trackingHint}
+              canStart={tracking && cameraOn}
               hideRepCount
             />
-            {isRecording && !paused && aiFeedback && aiFeedback !== 'Select Exercise & Start' && (
+            {isRecording && aiFeedback && aiFeedback !== 'Select Exercise & Start' && (
               <CorrectionBanner
                 text={aiFeedback}
                 warn={formStatus(biometrics.alignment, biometrics.symmetry) === 'adjust'}
@@ -914,7 +974,7 @@ const CameraWorkout = () => {
                 <RepProgressRing
                   value={workoutMode === 'hold' ? Math.floor(holdSecs) : repCount}
                   target={workoutMode === 'hold' ? holdTarget : repTarget}
-                  label={workoutMode === 'hold' ? 'SECS' : 'REPS'}
+                  label={workoutMode === 'hold' ? 'SECS' : `SET ${Math.min(completedSets + 1, setTarget)}/${setTarget}`}
                   size={112}
                 />
               </div>
@@ -935,7 +995,7 @@ const CameraWorkout = () => {
                     <p className="text-[length:var(--fs-9)] font-bold uppercase tracking-widest text-[var(--text-muted)]">Tempo</p>
                     <p className="text-[length:var(--fs-13)] font-bold tabular-nums text-[var(--text-primary)] mt-0.5">
                       {workoutMode === 'hold'
-                        ? formatTime(elapsedSecs)
+                        ? formatTime(Math.floor(holdSecs))
                         : (repCount > 0 && elapsedSecs > 0 ? `${(elapsedSecs / repCount).toFixed(1)}s/rep` : '—')}
                     </p>
                   </div>
@@ -945,7 +1005,7 @@ const CameraWorkout = () => {
                 </div>
               </div>
             </div>
-            <p className="text-[length:var(--fs-10)] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] mt-4 mb-2">Set target</p>
+            <p className="text-[length:var(--fs-10)] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] mt-4 mb-2">{workoutMode === 'hold' ? 'Hold target' : 'Reps per set'}</p>
             {workoutMode === 'hold' ? (
               <div className="flex items-center gap-2 flex-wrap">
                 {[30, 45, 60, 90].map((s) => (
@@ -981,6 +1041,27 @@ const CameraWorkout = () => {
                   className="flex-1 min-w-[110px] h-12 min-h-[48px] rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] px-4 text-[length:var(--fs-16)] sm:text-[length:var(--fs-12)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" />
               </div>
             )}
+            {workoutMode !== 'hold' && (
+              <>
+                <p className="text-[length:var(--fs-10)] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] mt-4 mb-2">Sets</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {[1, 2, 3, 4, 5].map((count) => (
+                    <button key={count} onClick={() => { setSetTarget(count); setSetCustom(''); }} disabled={isRecording}
+                      className={`px-4 py-2.5 min-h-[44px] rounded-xl text-[length:var(--fs-12)] font-bold border transition-all active:scale-95 ${setTarget === count ? 'bg-[var(--accent)] text-[var(--text-inverse)] border-[var(--accent)]' : 'border-[var(--border-light)] text-[var(--text-muted)]'}`}>
+                      {count}
+                    </button>
+                  ))}
+                  <input type="number" min={1} max={20} placeholder="Custom sets" value={setCustom}
+                    disabled={isRecording}
+                    onChange={(e) => {
+                      setSetCustom(e.target.value);
+                      const value = Number(e.target.value);
+                      if (Number.isInteger(value) && value >= 1 && value <= 20) setSetTarget(value);
+                    }}
+                    className="flex-1 min-w-[110px] h-12 min-h-[48px] rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] px-4 text-[length:var(--fs-16)] sm:text-[length:var(--fs-12)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" />
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -995,6 +1076,7 @@ const CameraWorkout = () => {
               isRecording={isRecording}
               paused={paused}
               cameraOn={cameraOn}
+              canStart={tracking && cameraOn}
               onPauseToggle={handlePauseToggle}
               onStartStop={handleStartStop}
             />
