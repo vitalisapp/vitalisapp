@@ -34,25 +34,32 @@ const bmiCategory = (bmi) => {
 const ALLERGEN_PRESETS = ['Gluten', 'Peanuts', 'Tree nuts', 'Milk', 'Eggs', 'Fish', 'Shellfish', 'Soy', 'Sesame'];
 
 const TITLES = [
-  "Let's Personalize Vitalis",
-  'What Do You Want to Achieve?',
-  'Goal Details',
-  'How Active Are You?',
-  'Your Training Setup',
-  'Your Lifestyle',
-  'Generating Your Plan',
-  'Your Vitalis Plan Is Ready',
+  "Let's start with you.",
+  'What moves you forward?',
+  'Make your goal your own.',
+  'Find your everyday rhythm.',
+  'Training that fits your life.',
+  'Good progress starts with balance.',
+  'Putting it all together.',
+  'A fresh start, made for you.',
 ];
 
-const STEP_ICONS = [
-  'person',
-  'flag',
-  'tune',
-  'directions_walk',
-  'fitness_center',
-  'self_improvement',
-  'auto_awesome',
-  'check_circle',
+const STEP_LABELS = ['The basics', 'Your goal', 'The details', 'Daily activity', 'Training setup', 'Your wellbeing', 'Creating your plan', 'Ready to begin'];
+const STEP_DESCRIPTIONS = [
+  'A few details help us find the right starting point for your body.',
+  'Choose your main focus. We’ll build your starting plan around it.',
+  'Set a direction that feels right. You can adjust it as you go.',
+  'Think about a typical week, including work, movement and exercise.',
+  'Your space, your schedule, your pace. Every preference here is optional.',
+  'Help us understand your sleep, energy and recovery.',
+  'Turning your answers into your personal starting targets.',
+  'Here’s your starting point. Your plan evolves as you build your routine.',
+];
+const SETUP_PHASES = [
+  { title: 'Your foundation', description: 'A little about you', start: 0, end: 0, icon: 'person' },
+  { title: 'Your direction', description: 'Goals & daily movement', start: 1, end: 3, icon: 'flag' },
+  { title: 'Your routine', description: 'Training & wellbeing', start: 4, end: 5, icon: 'fitness_center' },
+  { title: 'Your personal plan', description: 'Bring it all together', start: 6, end: 7, icon: 'auto_awesome' },
 ];
 
 // Module 3 — Training setup step mirrors trainingPreferences exactly (same
@@ -72,7 +79,7 @@ const Chip = ({ active, onClick, children, label = undefined }) => (
     aria-label={label}
     className={`onb-chip${active ? ' is-selected' : ''}`}
   >
-    {active && <Icon name="check" className="onb-chip__check" />}
+    <Icon name="check" className="onb-chip__check" />
     <span>{children}</span>
   </button>
 );
@@ -372,37 +379,46 @@ const Onboarding = () => {
             </span>
           </div>
 
+          <div className="onb-rail__intro">
+            <p className="onb-rail__eyebrow">A stronger everyday</p>
+            <h2>A little setup.<br />A lot of possibility.</h2>
+            <p>Let’s build a routine that feels like you.</p>
+          </div>
+
           <ol className="onb-rail__list">
-            {TITLES.map((title, index) => {
-              const state = index < step ? 'done' : index === step ? 'active' : 'todo';
+            {SETUP_PHASES.map((phase) => {
+              const state = phase.end < step ? 'done' : step >= phase.start && step <= phase.end ? 'active' : 'todo';
               return (
                 <li
-                  key={title}
+                  key={phase.title}
                   className={`onb-rail__item is-${state}`}
-                  aria-current={index === step ? 'step' : undefined}
+                  aria-current={state === 'active' ? 'step' : undefined}
                 >
                   <span className="onb-rail__marker" aria-hidden="true">
-                    <Icon name={index < step ? 'check' : STEP_ICONS[index]} />
+                    <Icon name={state === 'done' ? 'check' : phase.icon} />
                   </span>
                   <span className="onb-rail__copy">
-                    <span className="onb-rail__title">{title}</span>
-                    <span className="onb-rail__meta">
-                      {index < step ? 'Completed' : index === step ? 'Current step' : `Step ${index + 1}`}
-                    </span>
+                    <span className="onb-rail__title">{phase.title}</span>
+                    <span className="onb-rail__meta">{state === 'done' ? 'Completed' : phase.description}</span>
                   </span>
                 </li>
               );
             })}
           </ol>
 
+          <div className="onb-rail__note">
+            <span className="onb-rail__note-icon" aria-hidden="true"><Icon name="spa" /></span>
+            <p>Small steps.<br /><strong>Lasting progress.</strong></p>
+            <span>A plan shaped around your everyday.</span>
+          </div>
           <div className="onb-rail__progress">
-            <span>Step {step + 1} of {TOTAL_STEPS}</span>
-            <span>{progress}% complete</span>
+            <span>Your setup</span><span>{progress}%</span>
+            <div><span style={{ width: `${progress}%` }} /></div>
           </div>
         </aside>
 
         <section className="onb-main">
-          <div className="onb-mobilebar">
+          <div className="onb-topbar">
             <div className="onb-brand onb-brand--mobile">
               <img src="/pwa-192x192.png" alt="" width="34" height="34" />
               <span className="onb-brand__copy">
@@ -410,24 +426,24 @@ const Onboarding = () => {
                 <small>Personal setup</small>
               </span>
             </div>
+            <span className="onb-topbar__label"><Icon name="tune" /> Your personal setup</span>
             {step < 6 && (
-              <button type="button" onClick={skip} className="onb-skip onb-skip--mobile">
-                Skip for now
+              <button type="button" onClick={skip} className="onb-skip">
+                Set up later <Icon name="arrow_forward" />
               </button>
             )}
           </div>
 
-          <div className="onb-progress" aria-hidden="true">
-            <div className="onb-progress__track">
-              <div className="onb-progress__fill" style={{ width: `${progress}%` }} />
-            </div>
+          <div className="onb-progress" role="progressbar" aria-label="Setup progress" aria-valuemin={0} aria-valuemax={TOTAL_STEPS} aria-valuenow={step + 1} aria-valuetext={`Step ${step + 1} of ${TOTAL_STEPS}: ${STEP_LABELS[step]}`}>
+            {TITLES.map((title, index) => <span key={title} className={index <= step ? 'is-complete' : ''} />)}
           </div>
 
+          <div className="onb-scroll" ref={scrollRef} style={{ scrollbarWidth: 'thin' }}>
           <header className="onb-head">
-            <span className="onb-step-icon" aria-hidden="true">
-              <Icon name={STEP_ICONS[step]} />
-            </span>
-            <p className="onb-eyebrow">Step {step + 1} of {TOTAL_STEPS}</p>
+            <div className="onb-head__meta">
+              <p className="onb-eyebrow"><span>{String(step + 1).padStart(2, '0')} / {String(TOTAL_STEPS).padStart(2, '0')}</span>{STEP_LABELS[step]}</p>
+              {step === 0 && <span className="onb-time"><Icon name="schedule" /> About 3 min</span>}
+            </div>
             <h1
               id="onboarding-title"
               ref={titleRef}
@@ -436,10 +452,9 @@ const Onboarding = () => {
             >
               {TITLES[step]}
             </h1>
-            {step === 0 && <p className="onb-lede">Eight quick questions · about 2 minutes</p>}
+            <p className="onb-lede">{STEP_DESCRIPTIONS[step]}</p>
           </header>
 
-          <div className="onb-scroll" ref={scrollRef} style={{ scrollbarWidth: 'thin' }}>
             {/* UI-only step transition (respects OS reduced-motion via MotionConfig) */}
             <MotionConfig reducedMotion="user">
               <AnimatePresence mode="wait" initial={false}>
@@ -456,14 +471,14 @@ const Onboarding = () => {
                     <div className="onb-form">
                       <div className="onb-field">
                         <label className="onb-label" htmlFor="ob-dob">Date of birth</label>
-                        <input id="ob-dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="onb-input" />
+                        <input id="ob-dob" type="date" autoComplete="bday" value={dob} onChange={(e) => setDob(e.target.value)} className="onb-input" />
                       </div>
 
                       <fieldset className="onb-fieldset">
                         <legend className="onb-label">
                           Sex <span className="onb-label__hint">(for metabolic calculation)</span>
                         </legend>
-                        <div className="onb-chip-row">
+                        <div className="onb-chip-row onb-chip-row--segments">
                           {['MALE', 'FEMALE', 'OTHER'].map((s) => (
                             <Chip key={s} active={sex === s} onClick={() => setSex(s)}>{humanizeOption(s)}</Chip>
                           ))}
@@ -472,24 +487,23 @@ const Onboarding = () => {
 
                       <div className="onb-grid-2">
                         <div className="onb-field">
-                          <label className="onb-label" htmlFor="ob-height">Height (cm)</label>
-                          <input id="ob-height" type="number" min="100" max="230" placeholder="175" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} className="onb-input" />
+                          <label className="onb-label" htmlFor="ob-height">Height <span className="onb-label__hint">(cm)</span></label>
+                          <div className="onb-input-wrap"><input id="ob-height" type="number" inputMode="decimal" min="100" max="230" placeholder="175" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} className="onb-input" /><span aria-hidden="true">cm</span></div>
                         </div>
                         <div className="onb-field">
-                          <label className="onb-label" htmlFor="ob-weight">Weight (kg)</label>
-                          <input id="ob-weight" type="number" min="30" max="250" placeholder="80" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} className="onb-input" />
+                          <label className="onb-label" htmlFor="ob-weight">Weight <span className="onb-label__hint">(kg)</span></label>
+                          <div className="onb-input-wrap"><input id="ob-weight" type="number" inputMode="decimal" min="30" max="250" placeholder="80" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} className="onb-input" /><span aria-hidden="true">kg</span></div>
                         </div>
                       </div>
 
-                      {bmi != null && (
-                        <div className="onb-bmi">
+                        <div className="onb-bmi" aria-live="polite">
+                          <span className="onb-bmi__icon" aria-hidden="true"><Icon name="monitor_weight" /></span>
                           <div>
-                            <p className="onb-bmi__label">Current BMI</p>
-                            <p className="onb-bmi__category">{bmiCategory(bmi)}</p>
+                            <p className="onb-bmi__label">Your starting snapshot</p>
+                            <p className="onb-bmi__category">{bmi == null ? 'Add your height and weight to see your BMI.' : bmiCategory(bmi)}</p>
                           </div>
-                          <p className="onb-bmi__value">{bmi}</p>
+                          <p className="onb-bmi__value">{bmi ?? '—'}<span>BMI</span></p>
                         </div>
-                      )}
                     </div>
                   )}
 
@@ -604,7 +618,7 @@ const Onboarding = () => {
                   {step === 4 && (
                     <div className="onb-form">
                       <p className="onb-note">
-                        Optional — Vitalis uses this for your plan length, weekly schedule and equipment-safe exercise swaps. You can change it anytime in Plans → Preferences.
+                        <Icon name="info" /> Pick what works for you. You can update these in Plans → Preferences anytime.
                       </p>
                       <fieldset className="onb-fieldset">
                         <legend className="onb-label">
@@ -840,20 +854,15 @@ const Onboarding = () => {
                 </div>
                 <div className="onb-footer__primary">
                   {step < 6 && (
-                    <button type="button" onClick={skip} className="onb-skip onb-skip--footer">
-                      Skip for now
-                    </button>
-                  )}
-                  {step < 6 && (
                     <button type="button" onClick={next} disabled={!canGo} aria-disabled={!canGo} className="onb-btn onb-btn--primary">
-                      {step === 5 ? 'Generate My Plan' : 'Continue'}
+                      {step === 5 ? 'Create my plan' : 'Continue'}
                       <Icon name="arrow_forward" className="onb-btn__icon" />
                     </button>
                   )}
                   {step === 7 && (
                     <button type="button" onClick={finish} disabled={saving} className="onb-btn onb-btn--primary">
                       {saving && <span className="onb-btn__spinner" aria-hidden="true" />}
-                      {saving ? 'Saving...' : 'Start My Vitalis Journey'}
+                      {saving ? 'Saving...' : 'Explore my plan'}
                       {!saving && <Icon name="arrow_forward" className="onb-btn__icon" />}
                     </button>
                   )}
