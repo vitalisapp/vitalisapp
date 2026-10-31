@@ -50,6 +50,7 @@ export default function WebcamFeed({
   onCameraToggle,
   landmarksRef,
   onStartStop,
+  onFullscreenChange,
   tracking = false,
   trackingHint = 'Fit your head, hands and feet in the frame',
   hideRepCount = false,
@@ -164,6 +165,10 @@ export default function WebcamFeed({
   const mirrored = facing === 'user';
 
   useEffect(() => {
+    onFullscreenChange?.(isFullscreen);
+  }, [isFullscreen, onFullscreenChange]);
+
+  useEffect(() => {
     if (!isFullscreen || !feedLive) return undefined;
     const canvas = fullscreenCanvasRef.current;
     const ctx = canvas?.getContext('2d');
@@ -189,22 +194,10 @@ export default function WebcamFeed({
       ctx.clearRect(0, 0, width, height);
       if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
 
-      // Fill mismatched phone aspect ratios with a softened cover-fit layer,
-      // then draw the complete un-cropped camera frame sharply on top. This
-      // avoids the black letterbox bars without zooming/cropping the tracker.
-      const coverScale = Math.max(width / video.videoWidth, height / video.videoHeight) * 1.15;
-      const coverWidth = video.videoWidth * coverScale;
-      const coverHeight = video.videoHeight * coverScale;
-      ctx.save();
-      if (mirrored) {
-        ctx.translate(width, 0);
-        ctx.scale(-1, 1);
-      }
-      ctx.filter = 'blur(28px) brightness(0.58)';
-      ctx.drawImage(video, (width - coverWidth) / 2, (height - coverHeight) / 2, coverWidth, coverHeight);
-      ctx.restore();
-
-      const scale = Math.min(width / video.videoWidth, height / video.videoHeight);
+      // Fullscreen uses cover-fit so the sharp camera image fills the screen.
+      // The parent framing gate checks that body landmarks remain inside this
+      // visible crop before allowing reps to count.
+      const scale = Math.max(width / video.videoWidth, height / video.videoHeight);
       const drawWidth = video.videoWidth * scale;
       const drawHeight = video.videoHeight * scale;
       const x = (width - drawWidth) / 2;
@@ -358,10 +351,9 @@ export default function WebcamFeed({
       )}
 
       {/* Skeleton tracker over the live feed */}
-      {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} />}
+      {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} fullscreen={isFullscreen} />}
 
-      {/* Whole-body guide: the feed uses object-fit:contain, so no camera
-          pixels are cropped to fill the preview. */}
+      {/* Framing guidance remains visible in both preview and fullscreen. */}
       {!collapsed && feedLive && !tracking && (
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-3 px-6 pointer-events-none text-center">
           <span className="w-16 h-16 rounded-2xl bg-[rgba(8,11,8,0.72)] border border-[var(--accent-border)] backdrop-blur-xl flex items-center justify-center shadow-[var(--shadow-lg)]">
