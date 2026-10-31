@@ -13,9 +13,12 @@ const mobileConstraints  = {
   facingMode: 'user',
   width: { ideal: 720 },
   height: { ideal: 1520 },
-  // Match a tall phone display so contain-fit can show the whole frame without
-  // a centered landscape strip, blur, stretch, or fullscreen crop.
+  // Match a tall phone display so contain-fit uses nearly the entire portrait
+  // viewport without blur, stretch, or fullscreen display cropping.
   aspectRatio: { ideal: 9 / 19 },
+  // Some mobile browsers otherwise return a landscape sensor stream despite
+  // the portrait ideals above. Ask the browser to produce a portrait output.
+  resizeMode: { ideal: 'crop-and-scale' },
 };
 const desktopConstraints = {
   facingMode: 'user',
