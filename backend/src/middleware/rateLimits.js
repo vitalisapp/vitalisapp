@@ -1,13 +1,16 @@
 // Central rate-limit presets (single-instance in-memory buckets).
 const rateLimit = require('express-rate-limit');
 
-function makeLimiter({ windowMs, limit, message }) {
+// Extra options (keyGenerator, skipSuccessfulRequests, …) pass through to
+// express-rate-limit for limiters that need a custom bucket key.
+function makeLimiter({ windowMs, limit, message, ...options }) {
   return rateLimit({
     windowMs,
     limit,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     message: { error: message },
+    ...options,
   });
 }
 

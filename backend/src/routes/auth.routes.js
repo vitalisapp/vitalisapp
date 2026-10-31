@@ -20,10 +20,20 @@ const sendVerificationLimiter = makeLimiter({
   message: 'Too many verification emails. Try again later.',
 });
 
+// Keyed per link TOKEN, not just per IP. The old shared bucket (20/15 min
+// per IP) let unrelated traffic exhaust it before a fresh account's FIRST
+// click: a hosted backend sees mobile-carrier CGNAT IPs (thousands of users
+// behind one address) and public-endpoint scanners, so new users inherited a
+// dead bucket. Per-token buckets can't starve other users, and successful
+// verifications never count, so accidental double-clicks don't burn attempts
+// either. Brute force is unaffected — tokens are 256-bit single-use values,
+// so guessing happens in the DB, not via this endpoint's budget.
 const verifyEmailLimiter = makeLimiter({
   windowMs: 15 * 60 * 1000,
   limit: 20,
   message: 'Too many verification attempts. Try again later.',
+  keyGenerator: (req) => `${req.ip}:${String(req.query?.token || '').slice(0, 64) || 'none'}`,
+  skipSuccessfulRequests: true,
 });
 
 const googleLoginLimiter = makeLimiter({
