@@ -64,6 +64,7 @@ export default function WebcamFeed({
   const [facing, setFacing] = useState(() => safeGet('vitalis_facing', 'user') || 'user');
   const containerRef = useRef(null);
   const fullscreenBackdropRef = useRef(null);
+  const fullscreenCanvasRef = useRef(null);
 
   // getUserMedia is missing on HTTP origins and camera-less devices — without
   // this guard the UI hangs on "Starting camera…" forever with no recovery.
@@ -159,6 +160,9 @@ export default function WebcamFeed({
   }, [onCameraToggle]);
 
   const feedLive = cameraOn && streamLive && !streamError;
+  // Front camera behaves like a mirror; the skeleton and fullscreen canvas
+  // use the same orientation as the video preview.
+  const mirrored = facing === 'user';
 
   // Phones can return a camera aspect ratio that differs from the screen.
   // In fullscreen, use a blurred, cover-fitted copy only as the backdrop;
@@ -174,6 +178,50 @@ export default function WebcamFeed({
       backdrop.srcObject = null;
     };
   }, [isFullscreen, feedLive, webcamRef]);
+
+  useEffect(() => {
+    if (!isFullscreen || !feedLive) return undefined;
+    const canvas = fullscreenCanvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return undefined;
+
+    let frameId = 0;
+    const draw = () => {
+      frameId = requestAnimationFrame(draw);
+      const video = webcamRef.current?.video;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      if (!width || !height) return;
+
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const pixelWidth = Math.round(width * dpr);
+      const pixelHeight = Math.round(height * dpr);
+      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+        canvas.width = pixelWidth;
+        canvas.height = pixelHeight;
+      }
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
+
+      const scale = Math.min(width / video.videoWidth, height / video.videoHeight);
+      const drawWidth = video.videoWidth * scale;
+      const drawHeight = video.videoHeight * scale;
+      const x = (width - drawWidth) / 2;
+      const y = (height - drawHeight) / 2;
+      ctx.save();
+      if (mirrored) {
+        ctx.translate(width, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.drawImage(video, x, y, drawWidth, drawHeight);
+      ctx.restore();
+    };
+
+    draw();
+    return () => cancelAnimationFrame(frameId);
+  }, [isFullscreen, feedLive, webcamRef, mirrored]);
 
   useEffect(() => {
     const onFSChange = () => {
@@ -201,11 +249,6 @@ export default function WebcamFeed({
   const collapsed = !isFullscreen && !feedLive;
   const off = !cameraOn;
 
-  // Front camera behaves like a mirror (selfie preview); the rear camera does
-  // not. The skeleton overlay mirrors its X mapping with the same flag so
-  // dots sit on the body instead of flipped left-right.
-  const mirrored = facing === 'user';
-
   const webcamEl = cameraOn && cameraSupported && (
     <Webcam
       audio={false}
@@ -222,9 +265,9 @@ export default function WebcamFeed({
          display: 'block',
          backgroundColor: isFullscreen ? 'transparent' : '#000',
        }}
-      className={collapsed
-        ? 'absolute bottom-0 right-0 w-px h-px opacity-0 pointer-events-none'
-        : 'absolute inset-0 w-full h-full grayscale-[0.2]'}
+        className={collapsed
+          ? 'absolute bottom-0 right-0 w-px h-px opacity-0 pointer-events-none'
+        : `absolute inset-0 w-full h-full grayscale-[0.2] ${isFullscreen ? 'opacity-0' : ''}`}
       onUserMedia={() => { setStreamLive(true); setStreamError(''); }}
       onUserMediaError={(err) => {
         setStreamLive(false);
@@ -317,6 +360,14 @@ export default function WebcamFeed({
       )}
 
       {webcamEl}
+
+      {isFullscreen && feedLive && (
+        <canvas
+          ref={fullscreenCanvasRef}
+          className="absolute inset-0 z-[2] h-full w-full pointer-events-none"
+          aria-hidden="true"
+        />
+      )}
 
       {/* Skeleton tracker over the live feed */}
       {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} />}
