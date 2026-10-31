@@ -52,7 +52,6 @@ export default function WebcamFeed({
   onStartStop,
   tracking = false,
   trackingHint = 'Fit your head, hands and feet in the frame',
-  canStart = false,
   hideRepCount = false,
 }) {
   const isNarrow = useViewport();
@@ -64,6 +63,7 @@ export default function WebcamFeed({
   const [streamError, setStreamError] = useState('');
   const [facing, setFacing] = useState(() => safeGet('vitalis_facing', 'user') || 'user');
   const containerRef = useRef(null);
+  const fullscreenBackdropRef = useRef(null);
 
   // getUserMedia is missing on HTTP origins and camera-less devices — without
   // this guard the UI hangs on "Starting camera…" forever with no recovery.
@@ -160,6 +160,21 @@ export default function WebcamFeed({
 
   const feedLive = cameraOn && streamLive && !streamError;
 
+  // Phones can return a camera aspect ratio that differs from the screen.
+  // In fullscreen, use a blurred, cover-fitted copy only as the backdrop;
+  // the sharp preview stays contain-fitted so the body is never cropped.
+  useEffect(() => {
+    const backdrop = fullscreenBackdropRef.current;
+    const source = webcamRef.current?.video;
+    if (!isFullscreen || !feedLive || !backdrop || !source?.srcObject) return undefined;
+    backdrop.srcObject = source.srcObject;
+    backdrop.play().catch(() => {});
+    return () => {
+      backdrop.pause();
+      backdrop.srcObject = null;
+    };
+  }, [isFullscreen, feedLive, webcamRef]);
+
   useEffect(() => {
     const onFSChange = () => {
       const fsEl = document.fullscreenElement || /** @type {any} */ (document).webkitFullscreenElement;
@@ -217,6 +232,14 @@ export default function WebcamFeed({
   return (
     <div
       ref={containerRef}
+      style={isFullscreen ? {
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100dvh',
+        maxHeight: '100dvh',
+        zIndex: 200,
+      } : undefined}
       className={collapsed
         ? 'col-span-1 lg:col-span-8 relative overflow-hidden bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl px-4 py-3'
         : [
@@ -274,6 +297,18 @@ export default function WebcamFeed({
         </>
       )}
 
+      {isFullscreen && feedLive && (
+        <video
+          ref={fullscreenBackdropRef}
+          autoPlay
+          muted
+          playsInline
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover blur-2xl opacity-50"
+          style={{ transform: mirrored ? 'scale(1.1) scaleX(-1)' : 'scale(1.1)' }}
+        />
+      )}
+
       {webcamEl}
 
       {/* Skeleton tracker over the live feed */}
@@ -303,7 +338,7 @@ export default function WebcamFeed({
           <div className="absolute bottom-6 left-0 right-0 z-40 flex flex-col items-center gap-2">
             <button
               onClick={onStartStop}
-              disabled={!isRecording && !canStart}
+              disabled={!cameraOn && !isRecording}
               aria-label={isRecording ? 'Stop workout' : 'Start workout'}
               className={`w-16 h-16 rounded-full flex items-center justify-center active:scale-95 transition-transform border-4 disabled:opacity-40 disabled:cursor-not-allowed ${
                 isRecording

@@ -583,10 +583,6 @@ const CameraWorkout = () => {
         setAiFeedback('Camera rep counting is not supported for this movement. Log it manually to keep your workout accurate.');
         return;
       }
-      if (!trackingRef.current) {
-        setAiFeedback(trackingHintRef.current || 'Fit your head, hands and feet in the camera view before starting');
-        return;
-      }
       // ── START ──────────────────────────────────────────────────
       startSession(workoutType).catch(err => {
         if (import.meta.env.DEV) console.warn('[startSession] background error:', err);
@@ -954,7 +950,6 @@ const CameraWorkout = () => {
               onStartStop={handleStartStop}
               tracking={tracking}
               trackingHint={trackingHint}
-              canStart={tracking && cameraOn}
               hideRepCount
             />
             {isRecording && aiFeedback && aiFeedback !== 'Select Exercise & Start' && (
@@ -1076,7 +1071,6 @@ const CameraWorkout = () => {
               isRecording={isRecording}
               paused={paused}
               cameraOn={cameraOn}
-              canStart={tracking && cameraOn}
               onPauseToggle={handlePauseToggle}
               onStartStop={handleStartStop}
             />
