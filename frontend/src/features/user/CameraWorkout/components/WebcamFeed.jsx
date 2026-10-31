@@ -202,32 +202,15 @@ export default function WebcamFeed({
       ctx.clearRect(0, 0, width, height);
       if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
 
-      // Fill the screen behind the camera with a softened cover-fit layer,
-      // then show the complete sharp camera frame without zoom or cropping.
-      const coverScale = Math.max(width / video.videoWidth, height / video.videoHeight) * 1.15;
-      const coverWidth = video.videoWidth * coverScale;
-      const coverHeight = video.videoHeight * coverScale;
-      ctx.save();
-      if (mirrored) {
-        ctx.translate(width, 0);
-        ctx.scale(-1, 1);
-      }
-      ctx.filter = 'blur(28px) brightness(0.58)';
-      ctx.drawImage(video, (width - coverWidth) / 2, (height - coverHeight) / 2, coverWidth, coverHeight);
-      ctx.restore();
-
-      const scale = Math.min(width / video.videoWidth, height / video.videoHeight);
-      const drawWidth = video.videoWidth * scale;
-      const drawHeight = video.videoHeight * scale;
-      const x = (width - drawWidth) / 2;
-      const y = (height - drawHeight) / 2;
+      // Stretch the complete source frame to the viewport: no crop, zoom, or
+      // letterbox. Portrait screens may distort proportions for landscape feeds.
       ctx.save();
       if (mirrored) {
         ctx.translate(width, 0);
         ctx.scale(-1, 1);
       }
       ctx.filter = 'none';
-      ctx.drawImage(video, x, y, drawWidth, drawHeight);
+      ctx.drawImage(video, 0, 0, width, height);
       ctx.restore();
     };
 
@@ -370,7 +353,7 @@ export default function WebcamFeed({
       )}
 
       {/* Skeleton tracker over the live feed */}
-      {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} />}
+      {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} fullscreen={isFullscreen} />}
 
       {/* Framing guidance remains visible in both preview and fullscreen. */}
       {!collapsed && feedLive && !tracking && (

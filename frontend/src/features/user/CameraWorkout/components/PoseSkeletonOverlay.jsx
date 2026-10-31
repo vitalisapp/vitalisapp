@@ -34,7 +34,7 @@ const DOT_MIN_VIS = 0.25;
 // MediaPipe pose: 0-10 = face, 11-32 = torso + limbs.
 const isFaceLandmark = (i) => i <= 10;
 
-export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored = true }) {
+export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored = true, fullscreen = false }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -64,14 +64,14 @@ export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored 
 
       const visOf = (p) => (typeof p?.visibility === "number" ? p.visibility : 1);
 
-      // Match the camera's complete-frame contain-fit in windowed and fullscreen modes.
+      // Match fullscreen's full-frame stretch, otherwise use contain-fit.
       const vw = video.videoWidth;
       const vh = video.videoHeight;
       const scale = Math.min(cw / vw, ch / vh);
-      const dw = vw * scale;
-      const dh = vh * scale;
-      const dx = (cw - dw) / 2;
-      const dy = (ch - dh) / 2;
+      const dw = fullscreen ? cw : vw * scale;
+      const dh = fullscreen ? ch : vh * scale;
+      const dx = fullscreen ? 0 : (cw - dw) / 2;
+      const dy = fullscreen ? 0 : (ch - dh) / 2;
       const px = (p) => dx + (mirrored ? (1 - p.x) : p.x) * dw;
       const py = (p) => dy + p.y * dh;
 
@@ -123,7 +123,7 @@ export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored 
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [landmarksRef, webcamRef, mirrored]);
+  }, [landmarksRef, webcamRef, mirrored, fullscreen]);
 
   return (
     <canvas
