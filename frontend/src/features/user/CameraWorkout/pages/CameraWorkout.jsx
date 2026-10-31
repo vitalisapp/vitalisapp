@@ -39,16 +39,10 @@ const MIN_REPS_DEFAULT = 5;
 // Whole-body readiness is shared by framing guidance and the rep gate so an
 // exercise cannot count from a face/torso-only crop. Wrists proxy for hands.
 const WHOLE_BODY_LANDMARKS = [0, 15, 16, 23, 24, 27, 28];
-function assessWholeBody(landmarks, visibleBounds = null) {
+function assessWholeBody(landmarks) {
   const points = WHOLE_BODY_LANDMARKS.map((index) => landmarks?.[index]);
   const confident = points.every((point) => point && Number.isFinite(point.x) && Number.isFinite(point.y) && (point.visibility ?? 0) >= 0.45);
   if (!confident) return { ready: false, hint: 'Step into view and keep your head, hands and feet visible' };
-  if (visibleBounds && points.some((point) => (
-    point.x < visibleBounds.left || point.x > visibleBounds.right ||
-    point.y < visibleBounds.top || point.y > visibleBounds.bottom
-  ))) {
-    return { ready: false, hint: 'Step back and center yourself so your whole body fits the fullscreen view' };
-  }
   if (points.some((point) => point.x < 0.015 || point.x > 0.985 || point.y < 0.015 || point.y > 0.985)) {
     return { ready: false, hint: 'Move the phone back slightly until your whole body fits' };
   }
@@ -314,7 +308,6 @@ const CameraWorkout = () => {
   // Skeleton lock: true only while shoulders/hips are confidently visible.
   // Flips state on transitions only (pose fires ~10/sec) to avoid re-renders.
   const [tracking, setTracking] = useState(false);
-  const [cameraFullscreen, setCameraFullscreen] = useState(false);
   const trackingRef = useRef(false);
   const [trackingHint, setTrackingHint] = useState('Step into view and keep your whole body visible');
   const trackingHintRef = useRef('');
@@ -685,21 +678,7 @@ const CameraWorkout = () => {
         return;
       }
 
-      const video = webcamRef.current?.video;
-      const container = video?.parentElement;
-      let visibleBounds = null;
-      if (cameraFullscreen && video?.videoWidth && video?.videoHeight && container?.clientWidth && container?.clientHeight) {
-        const scale = Math.max(container.clientWidth / video.videoWidth, container.clientHeight / video.videoHeight);
-        const visibleWidth = container.clientWidth / scale / video.videoWidth;
-        const visibleHeight = container.clientHeight / scale / video.videoHeight;
-        visibleBounds = {
-          left: (1 - visibleWidth) / 2,
-          right: (1 + visibleWidth) / 2,
-          top: (1 - visibleHeight) / 2,
-          bottom: (1 + visibleHeight) / 2,
-        };
-      }
-      const framing = assessWholeBody(landmarks, visibleBounds);
+      const framing = assessWholeBody(landmarks);
       if (!framing.ready) fullBodySinceRef.current = 0;
       else if (!fullBodySinceRef.current) fullBodySinceRef.current = Date.now();
       const isVisible = framing.ready && Date.now() - fullBodySinceRef.current >= 350;
@@ -967,7 +946,6 @@ const CameraWorkout = () => {
               isAnalyzing={isAnalyzing}
               repCount={workoutMode === 'hold' ? Math.floor(holdSecs) : repCount}
               onCameraToggle={handleCameraToggle}
-              onFullscreenChange={setCameraFullscreen}
               landmarksRef={landmarksRef}
               onStartStop={handleStartStop}
               tracking={tracking}

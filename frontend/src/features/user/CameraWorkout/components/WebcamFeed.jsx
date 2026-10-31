@@ -50,7 +50,6 @@ export default function WebcamFeed({
   onCameraToggle,
   landmarksRef,
   onStartStop,
-  onFullscreenChange,
   tracking = false,
   trackingHint = 'Fit your head, hands and feet in the frame',
   hideRepCount = false,
@@ -164,9 +163,18 @@ export default function WebcamFeed({
   // use the same orientation as the video preview.
   const mirrored = facing === 'user';
 
+  // Prefer the camera's widest supported field of view (0.5× when available).
+  // Many selfie cameras only expose 1×; in that case keep the native stream and
+  // never simulate zoom by cropping the user's frame.
   useEffect(() => {
-    onFullscreenChange?.(isFullscreen);
-  }, [isFullscreen, onFullscreenChange]);
+    if (!feedLive) return undefined;
+    const track = webcamRef.current?.video?.srcObject?.getVideoTracks?.()[0];
+    const zoomRange = track?.getCapabilities?.().zoom;
+    if (!track?.applyConstraints || !zoomRange || zoomRange.min >= 1) return undefined;
+    const widestZoom = Math.max(zoomRange.min, Math.min(0.5, zoomRange.max));
+    track.applyConstraints({ advanced: [{ zoom: widestZoom }] }).catch(() => {});
+    return undefined;
+  }, [feedLive, webcamRef, facing]);
 
   useEffect(() => {
     if (!isFullscreen || !feedLive) return undefined;
@@ -194,10 +202,21 @@ export default function WebcamFeed({
       ctx.clearRect(0, 0, width, height);
       if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
 
-      // Fullscreen uses cover-fit so the sharp camera image fills the screen.
-      // The parent framing gate checks that body landmarks remain inside this
-      // visible crop before allowing reps to count.
-      const scale = Math.max(width / video.videoWidth, height / video.videoHeight);
+      // Fill the screen behind the camera with a softened cover-fit layer,
+      // then show the complete sharp camera frame without zoom or cropping.
+      const coverScale = Math.max(width / video.videoWidth, height / video.videoHeight) * 1.15;
+      const coverWidth = video.videoWidth * coverScale;
+      const coverHeight = video.videoHeight * coverScale;
+      ctx.save();
+      if (mirrored) {
+        ctx.translate(width, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.filter = 'blur(28px) brightness(0.58)';
+      ctx.drawImage(video, (width - coverWidth) / 2, (height - coverHeight) / 2, coverWidth, coverHeight);
+      ctx.restore();
+
+      const scale = Math.min(width / video.videoWidth, height / video.videoHeight);
       const drawWidth = video.videoWidth * scale;
       const drawHeight = video.videoHeight * scale;
       const x = (width - drawWidth) / 2;
@@ -351,7 +370,7 @@ export default function WebcamFeed({
       )}
 
       {/* Skeleton tracker over the live feed */}
-      {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} fullscreen={isFullscreen} />}
+      {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} />}
 
       {/* Framing guidance remains visible in both preview and fullscreen. */}
       {!collapsed && feedLive && !tracking && (
