@@ -9,8 +9,18 @@ import RepCounterOverlay from "./RepCounterOverlay.jsx";
 import PoseStatusBadge from "./PoseStatusBadge.jsx";
 import PoseSkeletonOverlay from "./PoseSkeletonOverlay.jsx";
 
-const mobileConstraints  = { facingMode: 'user', width: { ideal: 720 },  height: { ideal: 960 } };
-const desktopConstraints = { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } };
+const mobileConstraints  = {
+  facingMode: 'user',
+  width: { ideal: 720 },
+  height: { ideal: 960 },
+  aspectRatio: { ideal: 3 / 4 },
+};
+const desktopConstraints = {
+  facingMode: 'user',
+  width: { ideal: 1280 },
+  height: { ideal: 720 },
+  aspectRatio: { ideal: 16 / 9 },
+};
 
 // Viewport tracking: narrow screens get the portrait camera profile.
 // Fullscreen stays in whatever orientation the user holds — no forced
@@ -189,7 +199,7 @@ export default function WebcamFeed({
       playsInline
       screenshotFormat="image/jpeg"
       videoConstraints={videoConstraints}
-       style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', backgroundColor: '#000' }}
+       style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block', backgroundColor: '#000' }}
       className={collapsed
         ? 'absolute bottom-0 right-0 w-px h-px opacity-0 pointer-events-none'
         : 'absolute inset-0 w-full h-full grayscale-[0.2]'}
