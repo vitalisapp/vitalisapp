@@ -63,7 +63,6 @@ export default function WebcamFeed({
   const [streamError, setStreamError] = useState('');
   const [facing, setFacing] = useState(() => safeGet('vitalis_facing', 'user') || 'user');
   const containerRef = useRef(null);
-  const fullscreenBackdropRef = useRef(null);
   const fullscreenCanvasRef = useRef(null);
 
   // getUserMedia is missing on HTTP origins and camera-less devices — without
@@ -164,21 +163,6 @@ export default function WebcamFeed({
   // use the same orientation as the video preview.
   const mirrored = facing === 'user';
 
-  // Phones can return a camera aspect ratio that differs from the screen.
-  // In fullscreen, use a blurred, cover-fitted copy only as the backdrop;
-  // the sharp preview stays contain-fitted so the body is never cropped.
-  useEffect(() => {
-    const backdrop = fullscreenBackdropRef.current;
-    const source = webcamRef.current?.video;
-    if (!isFullscreen || !feedLive || !backdrop || !source?.srcObject) return undefined;
-    backdrop.srcObject = source.srcObject;
-    backdrop.play().catch(() => {});
-    return () => {
-      backdrop.pause();
-      backdrop.srcObject = null;
-    };
-  }, [isFullscreen, feedLive, webcamRef]);
-
   useEffect(() => {
     if (!isFullscreen || !feedLive) return undefined;
     const canvas = fullscreenCanvasRef.current;
@@ -205,6 +189,21 @@ export default function WebcamFeed({
       ctx.clearRect(0, 0, width, height);
       if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
 
+      // Fill mismatched phone aspect ratios with a softened cover-fit layer,
+      // then draw the complete un-cropped camera frame sharply on top. This
+      // avoids the black letterbox bars without zooming/cropping the tracker.
+      const coverScale = Math.max(width / video.videoWidth, height / video.videoHeight) * 1.15;
+      const coverWidth = video.videoWidth * coverScale;
+      const coverHeight = video.videoHeight * coverScale;
+      ctx.save();
+      if (mirrored) {
+        ctx.translate(width, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.filter = 'blur(28px) brightness(0.58)';
+      ctx.drawImage(video, (width - coverWidth) / 2, (height - coverHeight) / 2, coverWidth, coverHeight);
+      ctx.restore();
+
       const scale = Math.min(width / video.videoWidth, height / video.videoHeight);
       const drawWidth = video.videoWidth * scale;
       const drawHeight = video.videoHeight * scale;
@@ -215,6 +214,7 @@ export default function WebcamFeed({
         ctx.translate(width, 0);
         ctx.scale(-1, 1);
       }
+      ctx.filter = 'none';
       ctx.drawImage(video, x, y, drawWidth, drawHeight);
       ctx.restore();
     };
@@ -345,18 +345,6 @@ export default function WebcamFeed({
           <ScanLineOverlay isRecording={isRecording} cameraOn={cameraOn} />
           <CameraOffPlaceholder cameraOn={cameraOn} onTurnOn={() => { setStreamLive(false); setStreamError(''); onCameraToggle?.(); }} />
         </>
-      )}
-
-      {isFullscreen && feedLive && (
-        <video
-          ref={fullscreenBackdropRef}
-          autoPlay
-          muted
-          playsInline
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover blur-2xl opacity-50"
-          style={{ transform: mirrored ? 'scale(1.1) scaleX(-1)' : 'scale(1.1)' }}
-        />
       )}
 
       {webcamEl}
