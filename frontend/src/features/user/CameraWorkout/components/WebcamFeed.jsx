@@ -214,7 +214,14 @@ export default function WebcamFeed({
       playsInline
       screenshotFormat="image/jpeg"
       videoConstraints={videoConstraints}
-       style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block', backgroundColor: '#000' }}
+       style={{
+         width: '100%',
+         height: '100%',
+         objectFit: 'contain',
+         objectPosition: 'center',
+         display: 'block',
+         backgroundColor: isFullscreen ? 'transparent' : '#000',
+       }}
       className={collapsed
         ? 'absolute bottom-0 right-0 w-px h-px opacity-0 pointer-events-none'
         : 'absolute inset-0 w-full h-full grayscale-[0.2]'}
