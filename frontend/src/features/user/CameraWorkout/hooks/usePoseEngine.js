@@ -118,14 +118,22 @@ export function usePoseEngine({
   useEffect(() => {
     if (!cameraOn || !poseReady) return;
 
+    // One inference at a time. The 100ms interval is faster than the model
+    // on low-end laptops; without this guard sends queue up and the preview
+    // stutters while MediaPipe burns CPU on stale frames.
+    let inFlight = false;
     const sendFrame = async () => {
+      if (inFlight) return;
       const video = webcamRef.current?.video;
       if (!poseRef.current || !video) return;
       if (video.readyState < 2 || video.paused || video.videoWidth === 0) return;
+      inFlight = true;
       try {
         await poseRef.current.send({ image: video });
       } catch {
         /* ignore single-frame errors */
+      } finally {
+        inFlight = false;
       }
     };
 

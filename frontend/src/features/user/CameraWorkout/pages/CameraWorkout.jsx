@@ -331,6 +331,20 @@ const CameraWorkout = () => {
   // branch re-triggers every frame until the 800ms stop lands (double logs,
   // double notifications, double navigations).
   const reachedRef = useRef(false);
+  // Pose results arrive ~10/sec. The stat cards only need a few refreshes per
+  // second — publishing every frame re-rendered the whole workout tree and
+  // made menus/camera controls feel sluggish on ordinary laptops.
+  const bioPublishRef = useRef(0);
+  const publishBiometrics = useCallback((next) => {
+    const now = performance.now();
+    if (now - bioPublishRef.current < 400) return;
+    bioPublishRef.current = now;
+    setBiometrics((prev) => (
+      prev.alignment === next.alignment &&
+      prev.velocity === next.velocity &&
+      prev.symmetry === next.symmetry
+    ) ? prev : next);
+  }, []);
 
   const { repCount, repCountRef, countRep, resetReps }           = useRepCounter({ voiceEnabled });
   const { holdSecs, holdRef, updateHold, resetHold, setHoldTarget: setHoldGoal } = useHoldTimer({ voiceEnabled });
@@ -610,7 +624,7 @@ const CameraWorkout = () => {
           }
           maybeAnalyze(null);
         }
-        setBiometrics({ alignment: 0, velocity: 0, symmetry: 0 });
+        publishBiometrics({ alignment: 0, velocity: 0, symmetry: 0 });
         return;
       }
 
@@ -628,7 +642,7 @@ const CameraWorkout = () => {
           lastWarnRef.current = Date.now();
           speak(msg, 0.95, 1.0);
         }
-        setBiometrics(prev => ({ ...prev, alignment: 30 }));
+        setBiometrics(prev => (prev.alignment === 30 ? prev : { ...prev, alignment: 30 }));
         return;
       }
 
@@ -669,7 +683,7 @@ const CameraWorkout = () => {
       // Alignment mirrors the same real postural signal (not random); rep speed
       // is not instrumented yet so velocity stays 0 until wired. Card header
       // carries a Demo badge (see BioMetricsCard) — no fake precision.
-      setBiometrics({
+      publishBiometrics({
         alignment: isVisible ? Math.round(symScore) : 0,
         velocity:  0,
         symmetry:  Math.floor(symScore),

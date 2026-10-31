@@ -8,7 +8,7 @@ import {
   evaluateFix,
   formatPace,
   DEFAULT_GATES,
-} from "../../src/features/ActivityMap/utils/geo.js";
+} from "../../src/features/user/ActivityMap/utils/geo.js";
 
 describe("haversineMeters", () => {
   it("is ~0 for identical points", () => {

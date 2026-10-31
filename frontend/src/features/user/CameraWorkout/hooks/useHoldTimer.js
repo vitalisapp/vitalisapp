@@ -19,8 +19,6 @@ export function useHoldTimer({ voiceEnabled }) {
   const spokenRef = useRef(new Set());
   const targetRef = useRef(45);
 
-  useEffect(() => { holdRef.current = holdSecs; }, [holdSecs]);
-
   const setTarget = useCallback((secs) => {
     targetRef.current = Math.max(5, Math.min(600, Number(secs) || 45));
     spokenRef.current = new Set();
@@ -51,7 +49,11 @@ export function useHoldTimer({ voiceEnabled }) {
     if (stable) {
       const next = holdRef.current + FRAME_DT;
       holdRef.current = next;
-      setHoldSecs(next);
+      // The UI only shows whole seconds (ring, timer, milestones). Publishing
+      // every 150ms frame re-rendered the entire workout tree ~10x/sec; keep
+      // the precise clock in the ref and render once per second instead.
+      const shown = Math.floor(next);
+      setHoldSecs((prev) => (prev === shown ? prev : shown));
     }
     return { holding: stable, stable };
   }, []);
