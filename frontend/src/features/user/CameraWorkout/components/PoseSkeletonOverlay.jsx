@@ -34,7 +34,7 @@ const DOT_MIN_VIS = 0.25;
 // MediaPipe pose: 0-10 = face, 11-32 = torso + limbs.
 const isFaceLandmark = (i) => i <= 10;
 
-export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored = true, fullscreen = false }) {
+export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored = true }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -64,10 +64,10 @@ export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored 
 
       const visOf = (p) => (typeof p?.visibility === "number" ? p.visibility : 1);
 
-      // Match the fullscreen cover crop or windowed contain-fit preview.
+      // Match the complete camera frame, contained without crop or stretch.
       const vw = video.videoWidth;
       const vh = video.videoHeight;
-      const scale = fullscreen ? Math.max(cw / vw, ch / vh) : Math.min(cw / vw, ch / vh);
+      const scale = Math.min(cw / vw, ch / vh);
       const dw = vw * scale;
       const dh = vh * scale;
       const dx = (cw - dw) / 2;
@@ -123,7 +123,7 @@ export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored 
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [landmarksRef, webcamRef, mirrored, fullscreen]);
+  }, [landmarksRef, webcamRef, mirrored]);
 
   return (
     <canvas

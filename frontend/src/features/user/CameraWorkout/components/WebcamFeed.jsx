@@ -12,8 +12,10 @@ import PoseSkeletonOverlay from "./PoseSkeletonOverlay.jsx";
 const mobileConstraints  = {
   facingMode: 'user',
   width: { ideal: 720 },
-  height: { ideal: 1280 },
-  aspectRatio: { ideal: 9 / 16 },
+  height: { ideal: 1520 },
+  // Match a tall phone display so contain-fit can show the whole frame without
+  // a centered landscape strip, blur, stretch, or fullscreen crop.
+  aspectRatio: { ideal: 9 / 19 },
 };
 const desktopConstraints = {
   facingMode: 'user',
@@ -202,19 +204,18 @@ export default function WebcamFeed({
       ctx.clearRect(0, 0, width, height);
       if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
 
-      // Fill fullscreen with the sharp camera image itself (no blurred
-      // letterbox). Cover-fit preserves proportions but can crop if the
-      // camera and screen aspect ratios differ.
+      // Show the complete camera frame at its natural aspect ratio. Mobile
+      // capture requests a tall portrait stream to closely match this viewport.
       ctx.save();
       if (mirrored) {
         ctx.translate(width, 0);
         ctx.scale(-1, 1);
       }
-      const coverScale = Math.max(width / video.videoWidth, height / video.videoHeight);
-      const coverWidth = video.videoWidth * coverScale;
-      const coverHeight = video.videoHeight * coverScale;
+      const fitScale = Math.min(width / video.videoWidth, height / video.videoHeight);
+      const fitWidth = video.videoWidth * fitScale;
+      const fitHeight = video.videoHeight * fitScale;
       ctx.filter = 'none';
-      ctx.drawImage(video, (width - coverWidth) / 2, (height - coverHeight) / 2, coverWidth, coverHeight);
+      ctx.drawImage(video, (width - fitWidth) / 2, (height - fitHeight) / 2, fitWidth, fitHeight);
       ctx.restore();
     };
 
@@ -357,7 +358,7 @@ export default function WebcamFeed({
       )}
 
       {/* Skeleton tracker over the live feed */}
-      {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} fullscreen={isFullscreen} />}
+      {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} />}
 
       {/* Framing guidance remains visible in both preview and fullscreen. */}
       {!collapsed && feedLive && !tracking && (
