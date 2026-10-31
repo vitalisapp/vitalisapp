@@ -202,15 +202,25 @@ export default function WebcamFeed({
       ctx.clearRect(0, 0, width, height);
       if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
 
-      // Stretch the complete source frame to the viewport: no crop, zoom, or
-      // letterbox. Portrait screens may distort proportions for landscape feeds.
+      // Fill the viewport with a softened cover-fit backdrop, then draw the
+      // complete sharp source frame at its natural aspect ratio. This avoids
+      // both the distortion of stretching and the body crop of cover-fit.
       ctx.save();
       if (mirrored) {
         ctx.translate(width, 0);
         ctx.scale(-1, 1);
       }
+      const coverScale = Math.max(width / video.videoWidth, height / video.videoHeight);
+      const coverWidth = video.videoWidth * coverScale;
+      const coverHeight = video.videoHeight * coverScale;
+      ctx.filter = 'blur(24px) brightness(0.55)';
+      ctx.drawImage(video, (width - coverWidth) / 2, (height - coverHeight) / 2, coverWidth, coverHeight);
+
+      const fitScale = Math.min(width / video.videoWidth, height / video.videoHeight);
+      const fitWidth = video.videoWidth * fitScale;
+      const fitHeight = video.videoHeight * fitScale;
       ctx.filter = 'none';
-      ctx.drawImage(video, 0, 0, width, height);
+      ctx.drawImage(video, (width - fitWidth) / 2, (height - fitHeight) / 2, fitWidth, fitHeight);
       ctx.restore();
     };
 
@@ -353,7 +363,7 @@ export default function WebcamFeed({
       )}
 
       {/* Skeleton tracker over the live feed */}
-      {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} fullscreen={isFullscreen} />}
+      {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} />}
 
       {/* Framing guidance remains visible in both preview and fullscreen. */}
       {!collapsed && feedLive && !tracking && (
