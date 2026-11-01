@@ -26,11 +26,15 @@ export const useGeolocation = (isRecording) => {
   const [locationAccuracy, setLocationAccuracy] = useState(null);
   const [locationError, setLocationError]     = useState(null);
   const [mapCenter, setMapCenter]             = useState(DEFAULT_MAP_CENTER);
-  const [path, setPath]                       = useState([]);
+  const [path, updatePath]                    = useState([]);
 
   const watchIdRef = useRef(null);
-  // Last fix actually considered, used for the move / speed gates.
+  // Only accepted route points may anchor the move / speed gates.
   const lastFixRef = useRef(null);
+  const setPath = useCallback((points) => {
+    lastFixRef.current = null;
+    updatePath(points);
+  }, []);
 
   // ── Initial fix (also powers the retry button) ─────────────────────────────
   // NB: no synchronous setState here — React sees state updates only from the
@@ -46,15 +50,12 @@ export const useGeolocation = (isRecording) => {
           return;
         }
         const c = [latitude, longitude];
-        lastFixRef.current = { lat: latitude, lng: longitude, t: Date.now() };
         setUserLocation(c);
         setStartCoords(c);
         setMapCenter(c);
         setLocationAccuracy(Number.isFinite(accuracy) ? accuracy : null);
         setLocationError(null);
         setLocationStatus('granted');
-        // Don't clobber a run that already started.
-        setPath((prev) => (prev.length ? prev : [c]));
       },
       (err) => {
         setLocationStatus(statusFromError(err));
@@ -91,15 +92,19 @@ export const useGeolocation = (isRecording) => {
       return undefined;
     }
 
+    let active = true;
+    const recordingStartedAt = Date.now();
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
+        if (!active || !Number.isFinite(pos.timestamp) ||
+            pos.timestamp < recordingStartedAt || Date.now() - pos.timestamp > 10000) return;
         const { latitude, longitude, accuracy } = pos.coords || {};
         const acc = Number.isFinite(accuracy) ? accuracy : null;
 
         const verdict = evaluateFix(
           lastFixRef.current,
           { lat: latitude, lng: longitude, accuracy: acc },
-          Date.now(),
+          pos.timestamp,
         );
 
         if (verdict.reason === 'invalid') return;
@@ -110,18 +115,18 @@ export const useGeolocation = (isRecording) => {
           return;
         }
 
-        const c = [latitude, longitude];
         setLocationAccuracy(acc);
+        if (!verdict.accept) return;
+        const c = [latitude, longitude];
         setUserLocation(c);
         setLocationStatus('granted');
         setLocationError(null);
 
-        // 'duplicate' / 'jump' keep the marker fresh but not the route.
-        if (verdict.accept) setPath((p) => [...p, c]);
-        // Always re-anchor so a rejected jump doesn't wedge future fixes.
-        lastFixRef.current = { lat: latitude, lng: longitude, t: Date.now() };
+        updatePath((p) => [...p, c]);
+        lastFixRef.current = { lat: latitude, lng: longitude, accuracy: acc, t: pos.timestamp };
       },
       (err) => {
+        if (!active) return;
         // Watch errors are often transient (tunnel, brief timeout). Keep the
         // last known status so a single hiccup doesn't freeze the whole run.
         setLocationError(err?.message || 'Location signal lost');
@@ -130,6 +135,7 @@ export const useGeolocation = (isRecording) => {
     );
 
     return () => {
+      active = false;
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;

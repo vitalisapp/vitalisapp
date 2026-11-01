@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 
-export const useRunControls = ({ userLocation, startCoords, metrics, path, splits, resetMetrics, setPath }) => {
+export const useRunControls = ({ userLocation, metrics, path, splits, resetMetrics, setPath }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [hasPaused, setHasPaused]     = useState(false);
   const [runFinished, setRunFinished] = useState(false);
@@ -10,9 +10,9 @@ export const useRunControls = ({ userLocation, startCoords, metrics, path, split
   const finishedSplitsRef  = useRef([]);
 
   const handleStartRun = () => {
-    const origin = userLocation || startCoords;
     resetMetrics();
-    setPath([origin]);
+    // Start with a fresh recording fix, not the location from opening the map.
+    setPath([]);
     setHasPaused(false);
     setRunFinished(false);
     setIsRecording(true);

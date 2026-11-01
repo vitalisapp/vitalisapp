@@ -76,6 +76,34 @@ describe("evaluateFix", () => {
     assert.equal(evaluateFix(prev, { lat: 0.0005, lng: 0, accuracy: 5 }, t0 + 1000, gates).accept, true);
     assert.equal(evaluateFix(prev, { lat: 0.0005, lng: 0, accuracy: 6 }, t0 + 1000, gates).reason, "accuracy");
   });
+
+  it("rejects unknown accuracy, invalid coordinates and stale timestamps", () => {
+    assert.equal(evaluateFix(null, { lat: 0, lng: 0 }, t0).reason, "accuracy");
+    assert.equal(evaluateFix(null, { lat: 91, lng: 0, accuracy: 5 }, t0).reason, "invalid");
+    const prev = { lat: 0, lng: 0, t: t0, accuracy: 5 };
+    assert.equal(evaluateFix(prev, { lat: 0.0001, lng: 0, accuracy: 5 }, t0).reason, "invalid");
+  });
+
+  it("suppresses drift within GPS uncertainty while accumulating slow walking", () => {
+    let prev = { lat: 0, lng: 0, t: t0, accuracy: 10 };
+    const accepted = [];
+    for (let second = 1; second <= 12; second += 1) {
+      const fix = { lat: second / 111195, lng: 0, accuracy: 10 };
+      const t = t0 + second * 1000;
+      if (evaluateFix(prev, fix, t).accept) {
+        accepted.push(fix);
+        prev = { ...fix, t };
+      }
+    }
+    assert.equal(accepted.length, 2);
+    assert.ok(haversineMeters([0, 0], [prev.lat, prev.lng]) > 10);
+  });
+
+  it("recovers after a spike without including it in the route", () => {
+    const prev = { lat: 0, lng: 0, t: t0, accuracy: 5 };
+    assert.equal(evaluateFix(prev, { lat: 0.001, lng: 0, accuracy: 5 }, t0 + 1000).reason, "jump");
+    assert.equal(evaluateFix(prev, { lat: 0.00006, lng: 0, accuracy: 5 }, t0 + 3000).accept, true);
+  });
 });
 
 describe("formatPace", () => {

@@ -20,7 +20,7 @@ export const useRunTimer = (isRecording, locationStatus, path) => {
   const totalsRef         = useRef({ time: 0, distance: 0 });
   // Index into path of the first point NOT yet consumed for distance.
   const processedIdxRef   = useRef(1);
-  // Skip exactly one boundary segment after (re)start — the GPS settle jump.
+  // Skip the pause boundary only; a new run begins with a fresh GPS fix.
   const resumeSkipRef     = useRef(false);
   const wasRecordingRef   = useRef(false);
   // Monotonic wall clock (immune to system clock changes / tab throttling
@@ -35,7 +35,7 @@ export const useRunTimer = (isRecording, locationStatus, path) => {
   // Arm the one-segment boundary skip whenever recording (re)starts.
   useEffect(() => {
     if (isRecording && !wasRecordingRef.current) {
-      resumeSkipRef.current = true;
+      resumeSkipRef.current = prevPathRef.current.length > 0;
       lastTickRef.current = performance.now();
     }
     wasRecordingRef.current = isRecording;
@@ -117,7 +117,7 @@ export const useRunTimer = (isRecording, locationStatus, path) => {
     lastSplitRef.current     = 0;
     splitStartTimeRef.current = 0;
     processedIdxRef.current  = 1;
-    resumeSkipRef.current    = true; // skip the initial GPS settle jump
+    resumeSkipRef.current    = false;
   };
 
   return {

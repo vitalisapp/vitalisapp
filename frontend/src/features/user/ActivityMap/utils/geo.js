@@ -15,33 +15,37 @@ export const haversineMeters = ([lat1, lon1], [lat2, lon2]) => {
 };
 
 // Default recording gates, tuned for phone GPS while running:
-//  · maxAccuracyM — a 25 m cap silently dropped most real fixes; 50 m keeps
-//    genuinely usable readings without accepting obvious junk.
-//  · minMoveM      — sub-metre change is jitter / a repeated fix.
-//  · maxSpeedMps   — ~43 km/h; faster between fixes is a teleport, not a step.
+//  · maxAccuracyM — exclude coarse fixes that can dwarf a walking step.
+//  · minMoveM      — minimum displacement before extending the route.
+//  · maxSpeedMps   — reject implausible walking / jogging jumps.
 export const DEFAULT_GATES = {
-  maxAccuracyM: 50,
-  minMoveM: 0.8,
-  maxSpeedMps: 12,
+  maxAccuracyM: 25,
+  minMoveM: 3,
+  maxSpeedMps: 8,
+  accuracyMoveFactor: 0.5,
 };
 
 // Decide whether a fresh fix should extend the recorded route.
 // `prev` = { lat, lng, t } | null · `fix` = { lat, lng, accuracy } · nowMs.
 // Returns { accept, reason } with reason ∈ ok | accuracy | duplicate | jump | invalid.
 export const evaluateFix = (prev, fix, nowMs, gates = DEFAULT_GATES) => {
-  if (!fix || !Number.isFinite(fix.lat) || !Number.isFinite(fix.lng)) {
+  if (!fix || !Number.isFinite(fix.lat) || !Number.isFinite(fix.lng) ||
+      Math.abs(fix.lat) > 90 || Math.abs(fix.lng) > 180 || !Number.isFinite(nowMs)) {
     return { accept: false, reason: 'invalid' };
   }
 
   const acc = Number.isFinite(fix.accuracy) ? fix.accuracy : null;
-  if (acc != null && acc > gates.maxAccuracyM) {
+  if (acc == null || acc < 0 || acc > gates.maxAccuracyM) {
     return { accept: false, reason: 'accuracy' };
   }
 
   if (prev && Number.isFinite(prev.lat) && Number.isFinite(prev.lng)) {
     const dist = haversineMeters([prev.lat, prev.lng], [fix.lat, fix.lng]);
-    if (dist < gates.minMoveM) return { accept: false, reason: 'duplicate' };
-    const dt = Math.max(0.001, (nowMs - prev.t) / 1000);
+    if (!Number.isFinite(prev.t) || nowMs <= prev.t) return { accept: false, reason: 'invalid' };
+    const minMove = Math.max(gates.minMoveM,
+      Math.max(acc, prev.accuracy ?? acc) * (gates.accuracyMoveFactor ?? 0));
+    if (dist < minMove) return { accept: false, reason: 'duplicate' };
+    const dt = (nowMs - prev.t) / 1000;
     if (dist / dt > gates.maxSpeedMps) return { accept: false, reason: 'jump' };
   }
 
