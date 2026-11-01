@@ -23,7 +23,7 @@ const BONES = [
 ];
 
 const BONE_COLOR = "#76FF35";
-const JOINT_COLOR = "#22C55E";
+const JOINT_COLOR = "#F4FFE9";
 const WEAK_COLOR = "#EF4444";
 
 // Endpoints below this never form a bone — kills the stray bottom line when
@@ -108,10 +108,13 @@ export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored 
         const face = isFaceLandmark(i);
         const r = face ? dotR * 0.55 : dotR;
         ctx.beginPath();
+        ctx.shadowColor = '#90ff45';
+        ctx.shadowBlur = face ? 5 : 12;
         ctx.arc(px(p), py(p), r, 0, Math.PI * 2);
         ctx.globalAlpha = face ? 0.7 : 1;
         ctx.fillStyle = vis > 0.5 ? JOINT_COLOR : WEAK_COLOR;
         ctx.fill();
+        ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
         if (!face) {
           ctx.lineWidth = 1.5;

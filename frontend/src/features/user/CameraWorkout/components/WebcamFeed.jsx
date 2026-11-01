@@ -166,9 +166,37 @@ export default function WebcamFeed({
   }, [onStreamReset]);
 
   const feedLive = cameraOn && streamLive && !streamError;
-  // Front camera behaves like a mirror; the skeleton and fullscreen canvas
-  // use the same orientation as the video preview.
+  // Front camera behaves like a mirror; skeleton and video share orientation.
   const mirrored = (actualFacing ?? facing) === 'user';
+
+  // A camera driver can retain zoom from another capture session. Contain-fit
+  // cannot undo that sensor crop: reset the actual track, never scale the UI.
+  useEffect(() => {
+    if (!feedLive) return;
+    const track = webcamRef.current?.video?.srcObject?.getVideoTracks?.()[0];
+    if (!track?.applyConstraints) return;
+    let active = true;
+    const resetCapture = async () => {
+      try {
+        const caps = track.getCapabilities?.() ?? {};
+        const constraints = {};
+        if (caps.resizeMode?.includes('none')) constraints.resizeMode = { exact: 'none' };
+        if (Number.isFinite(caps.zoom?.min) && Number.isFinite(caps.zoom?.max)) {
+          // Restore native 1x, or the nearest supported value. Do not assume
+          // a phone exposes its ultrawide lens as a zoom setting.
+          constraints.zoom = { exact: Math.max(caps.zoom.min, Math.min(1, caps.zoom.max)) };
+        }
+        if (!Object.keys(constraints).length) return;
+        onStreamReset?.();
+        await track.applyConstraints(constraints);
+        if (active) onStreamReset?.();
+      } catch {
+        // Some drivers advertise controls they reject. Retain the live feed.
+      }
+    };
+    resetCapture();
+    return () => { active = false; };
+  }, [feedLive, facing, cameraAttempt, onStreamReset, webcamRef]);
 
   useEffect(() => {
     if (!dismissFullscreen || !isFullscreen) return;
@@ -305,7 +333,7 @@ export default function WebcamFeed({
         </div>
       ) : (
         <>
-          <ScanLineOverlay isRecording={isRecording} cameraOn={cameraOn} />
+          {!isFullscreen && <ScanLineOverlay isRecording={isRecording} cameraOn={cameraOn} />}
           <CameraOffPlaceholder cameraOn={cameraOn} onTurnOn={() => { setStreamLive(false); setStreamError(''); onCameraToggle?.(); }} />
         </>
       )}
@@ -317,7 +345,7 @@ export default function WebcamFeed({
       {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} />}
 
       {/* Framing guidance remains visible in both preview and fullscreen. */}
-      {!collapsed && feedLive && !tracking && (
+      {!collapsed && !isFullscreen && feedLive && !tracking && (
         <div className={`absolute inset-x-0 z-20 flex flex-col items-center gap-3 px-6 pointer-events-none text-center ${isFullscreen ? 'bottom-28' : 'top-1/2 -translate-y-1/2'}`}>
           <span className="w-16 h-16 rounded-2xl bg-[rgba(8,11,8,0.72)] border border-[var(--accent-border)] backdrop-blur-xl flex items-center justify-center shadow-[var(--shadow-lg)]">
             <span className="material-symbols-outlined text-[length:var(--fs-32)] text-[var(--accent)]">accessibility_new</span>
@@ -336,35 +364,56 @@ export default function WebcamFeed({
           <div className="absolute bottom-0 left-0 right-0 h-44 z-20 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
           {/* Bottom record cluster — fullscreen owns Start/Stop (page header
               is outside the fullscreen element) */}
-          <div className="absolute left-16 right-28 top-3 z-30 text-white">
-            <h2 className="font-bold truncate">{workoutLabel}</h2>
-            <p className="text-xs text-white/80">{workoutSub}</p>
-          </div>
-          {tracking && <div className="absolute bottom-36 inset-x-6 z-30 text-center text-white pointer-events-none">
-            <div className="inline-block rounded-2xl bg-black/65 px-5 py-3">
-              <p className="font-bold text-lime-400">Tracking active</p><p className="text-xs mt-1">{trackingHint}</p>
+          <div className="absolute inset-0 z-40 flex flex-col text-white pointer-events-none"
+            style={{ padding: 'max(10px, env(safe-area-inset-top)) clamp(12px, 3vw, 32px) max(16px, env(safe-area-inset-bottom))', gap: 'clamp(10px, 2dvh, 24px)' }}>
+            <div className="flex items-center gap-3 shrink-0">
+              <button onClick={exitFullscreen} aria-label="Exit fullscreen" className="pointer-events-auto shrink-0 rounded-full bg-black/65 flex items-center justify-center w-11 h-11 sm:w-14 sm:h-14">
+                <Icon name="arrow_back" className="text-3xl" />
+              </button>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-bold text-xl sm:text-3xl truncate">{workoutLabel}</h2>
+                <p className="text-xs sm:text-base text-white/90 leading-snug">{workoutSub}</p>
+              </div>
+              <button onClick={flipCamera} disabled={!feedLive} aria-label="Switch camera" className="pointer-events-auto shrink-0 rounded-full bg-black/65 flex items-center justify-center w-11 h-11 sm:w-14 sm:h-14 disabled:opacity-40">
+                <Icon name="flip_camera_ios" className="text-2xl sm:text-3xl" />
+              </button>
+              <button onClick={exitFullscreen} aria-label="Exit fullscreen" className="pointer-events-auto shrink-0 rounded-full bg-black/65 flex items-center justify-center w-11 h-11 sm:w-14 sm:h-14">
+                <Icon name="fullscreen_exit" className="text-2xl sm:text-3xl" />
+              </button>
             </div>
-          </div>}
-          <div style={{ bottom: 'max(16px, env(safe-area-inset-bottom))' }} className="absolute left-4 right-4 z-40 flex items-center justify-between gap-3 text-white">
-            <div className="rounded-2xl bg-black/65 p-3 min-w-20"><p className="text-xs">Progress</p><strong className="text-2xl">{repCount}</strong> / {target}</div>
-            <div className="flex flex-col items-center gap-2">
-            <button
-              onClick={onStartStop}
-               disabled={(!feedLive || !poseReady) && !isRecording}
-              aria-label={isRecording ? 'Stop workout' : 'Start workout'}
-              className={`w-16 h-16 rounded-full flex items-center justify-center active:scale-95 transition-transform border-4 disabled:opacity-40 disabled:cursor-not-allowed ${
-                isRecording
-                   ? 'bg-red-500 border-white'
-                  : 'bg-[#e63030] border-white/80 shadow-[var(--shadow-md)]'
-              }`}
-            >
-              {isRecording
-                ? <span className="w-6 h-6 rounded-[6px] bg-white" />
-                : <span className="w-5 h-5 rounded-full bg-white" />}
-            </button>
-            {isRecording && <button onClick={onPauseToggle} className="rounded-full bg-black/65 px-4 py-2 text-xs">{paused ? 'Resume' : 'Pause'}</button>}
+            <CoachFeedbackOverlay aiFeedback={!tracking ? trackingHint : aiFeedback} isAnalyzing={isAnalyzing} fullscreen voiceEnabled={voiceEnabled} onVoiceToggle={onVoiceToggle} />
+            <div className="relative flex-1 min-h-0">
+              {['top-0 left-0 border-t-[3px] border-l-[3px] rounded-tl-lg', 'top-0 right-0 border-t-[3px] border-r-[3px] rounded-tr-lg', 'bottom-0 left-0 border-b-[3px] border-l-[3px] rounded-bl-lg', 'bottom-0 right-0 border-b-[3px] border-r-[3px] rounded-br-lg'].map(corner => (
+                <span key={corner} className={`absolute w-6 h-6 sm:w-9 sm:h-9 border-[#54ff38] ${corner}`} />
+              ))}
+              <div className="flex items-start justify-between gap-2 p-2 sm:p-4">
+                <div className="rounded-2xl bg-black/60 px-3 py-2 flex items-center gap-2 backdrop-blur-sm">
+                  <Icon name="accessibility_new" className="text-[#90ff45] text-2xl sm:text-3xl" />
+                  <div><p className="text-[#90ff45] font-bold text-xs sm:text-lg">{tracking ? trackingHint.split(' · ')[0] : 'Finding pose'}</p><p className="text-[10px] sm:text-sm">Automatic angle tracking</p></div>
+                </div>
+                <div className="rounded-2xl bg-black/60 px-3 py-2 backdrop-blur-sm text-[10px] sm:text-sm">
+                  <p className="font-semibold mb-1">Angle Detection</p>
+                  {[{ text: 'Required joints', ok: tracking }, { text: tracking ? 'Tracking active' : 'Positioning', ok: tracking && !paused }].map(row => (
+                    <p key={row.text} className="flex items-center gap-1.5 mt-1"><Icon name={row.ok ? 'check_circle' : 'radio_button_unchecked'} className={row.ok ? 'text-[#54ff38]' : 'text-white/60'} />{row.text}</p>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="rounded-2xl bg-black/65 p-3 min-w-20"><p className="text-xs">Set</p><strong className="text-2xl">{setNumber}</strong> / {setTarget}</div>
+            <div className="self-center w-[82%] max-w-lg rounded-[20px] bg-black/65 backdrop-blur-md text-center px-4 py-3 sm:py-4 shrink-0">
+              <p className="font-bold text-[#90ff45] text-lg sm:text-2xl flex justify-center items-center gap-2"><Icon name={tracking ? 'check_circle' : 'accessibility_new'} />{paused ? 'Workout Paused' : tracking ? 'Pose Detected' : 'Get Into Position'}</p>
+              <p className="text-xs sm:text-base mt-1 leading-snug">{paused ? 'Press Resume when you are ready.' : tracking ? 'Keep your movement steady and controlled.' : trackingHint}</p>
+            </div>
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-[clamp(16px,8vw,72px)] px-1 pb-2 shrink-0">
+              <div className="rounded-[20px] bg-black/65 px-4 py-3 sm:py-5"><p className="text-sm sm:text-lg text-white/90">{workoutSub?.includes('hold') ? 'Seconds' : 'Reps'}</p><strong className="text-3xl sm:text-5xl">{repCount}</strong><span className="text-lg sm:text-2xl"> / {target}</span></div>
+              <div className="flex flex-col items-center gap-2 pointer-events-auto">
+                <button onClick={onStartStop} disabled={(!feedLive || !poseReady) && !isRecording} aria-label={isRecording ? 'Stop workout' : 'Start workout'}
+                  className="w-[clamp(64px,16vw,100px)] h-[clamp(64px,16vw,100px)] rounded-full bg-[#ff3847] border-4 border-white ring-1 ring-white/60 shadow-lg flex items-center justify-center active:scale-95 transition-transform disabled:opacity-40">
+                  {isRecording ? <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-md bg-white" /> : <Icon name="play_arrow" className="text-4xl" />}
+                </button>
+                {isRecording && <button onClick={onPauseToggle} className="rounded-full bg-black/65 px-4 min-h-8 text-xs">{paused ? 'Resume' : 'Pause'}</button>}
+              </div>
+              <div className="rounded-[20px] bg-black/65 px-4 py-3 sm:py-5 text-center"><p className="text-sm sm:text-lg text-white/90">Set</p><strong className="text-3xl sm:text-5xl">{setNumber}</strong><span className="text-lg sm:text-2xl"> / {setTarget}</span></div>
+            </div>
           </div>
         </>
       )}
@@ -394,12 +443,12 @@ export default function WebcamFeed({
 
       {/* Live-feed overlays only — hidden in the collapsed banner (see above)
           where they would clip/overlap inside the slim overflow-hidden box. */}
-      {!collapsed && <CoachFeedbackOverlay aiFeedback={!tracking ? trackingHint : aiFeedback} isAnalyzing={isAnalyzing} fullscreen={isFullscreen} voiceEnabled={voiceEnabled} onVoiceToggle={onVoiceToggle} />}
+      {!collapsed && !isFullscreen && <CoachFeedbackOverlay aiFeedback={!tracking ? trackingHint : aiFeedback} isAnalyzing={isAnalyzing} voiceEnabled={voiceEnabled} onVoiceToggle={onVoiceToggle} />}
       {!collapsed && !hideRepCount && <RepCounterOverlay repCount={repCount} />}
       {!collapsed && !isFullscreen && <PoseStatusBadge poseReady={poseReady} loadError={loadError} />}
 
       {/* Fullscreen toggle — live feed only */}
-      {!collapsed && (
+      {!collapsed && !isFullscreen && (
         <button
           onClick={toggleFullscreen}
           className="absolute top-3 right-3 z-40 flex items-center justify-center w-9 h-9 rounded-xl bg-[rgba(8,11,8,0.72)] border border-white/15 shadow-[var(--shadow-md)] backdrop-blur-md active:scale-95 transition-transform touch-manipulation"
@@ -414,7 +463,7 @@ export default function WebcamFeed({
 
       {/* Front/back lens switch — tablets and phones without a usable
           front camera can still train with the rear lens. */}
-      {cameraOn && streamLive && (
+      {cameraOn && streamLive && !isFullscreen && (
         <button
           onClick={flipCamera}
           aria-label={facing === 'user' ? 'Switch to back camera' : 'Switch to front camera'}
@@ -424,16 +473,6 @@ export default function WebcamFeed({
         </button>
       )}
 
-      {/* Back / exit-fullscreen — visible only in fullscreen */}
-      {isFullscreen && (
-        <button
-          onClick={exitFullscreen}
-          aria-label="Exit fullscreen"
-          className="absolute top-3 left-3 z-40 flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-xl bg-[rgba(8,11,8,0.72)] border border-white/15 shadow-[var(--shadow-md)] backdrop-blur-md text-[length:var(--fs-12)] font-bold text-white active:scale-95 transition-transform touch-manipulation"
-        >
-          <Icon name="arrow_back" className="text-[length:var(--fs-18)] leading-none" />
-        </button>
-      )}
 
     </div>
   );
