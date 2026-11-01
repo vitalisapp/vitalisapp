@@ -6,7 +6,7 @@ import Icon from '../../../../components/Icon.jsx';
 import { useAuth } from '../../../../hooks/useAuth.jsx';
 import { WORKOUT_OPTIONS } from '../constants/workout.js';
 import { getPickerOptions, resolveWorkout, searchGuideExercises, frameUrl, BRYL_CREDIT, guideFilterOptions, getAllGuideExercises } from '../constants/workoutGuide.js';
-import { useRepCounter, speak } from '../hooks/useRepCounter.js';
+import { useRepCounter, speak, assessPose } from '../hooks/useRepCounter.js';
 import { useHoldTimer } from '../hooks/useHoldTimer.js';
 import { useAICoach } from "../hooks/useAiCoach.js";
 import { usePoseEngine }        from '../hooks/usePoseEngine.js';
@@ -36,20 +36,6 @@ import ExerciseChoiceModal from '../components/ExerciseChoiceModal.jsx';
 // ── Minimum reps required to count a session as complete ─────────────────────
 const MIN_REPS_DEFAULT = 5;
 
-// Whole-body readiness is shared by framing guidance and the rep gate so an
-// exercise cannot count from a face/torso-only crop. Wrists proxy for hands.
-const WHOLE_BODY_LANDMARKS = [0, 15, 16, 23, 24, 27, 28];
-function assessWholeBody(landmarks) {
-  const points = WHOLE_BODY_LANDMARKS.map((index) => landmarks?.[index]);
-  const confident = points.every((point) => point && Number.isFinite(point.x) && Number.isFinite(point.y) && (point.visibility ?? 0) >= 0.45);
-  if (!confident) return { ready: false, hint: 'Step into view and keep your head, hands and feet visible' };
-  if (points.some((point) => point.x < 0.015 || point.x > 0.985 || point.y < 0.015 || point.y > 0.985)) {
-    return { ready: false, hint: 'Move the phone back slightly until your whole body fits' };
-  }
-  const height = Math.max(...points.map((point) => point.y)) - Math.min(...points.map((point) => point.y));
-  if (height < 0.32) return { ready: false, hint: 'Move a little closer while keeping your head and feet in frame' };
-  return { ready: true, hint: 'Full body visible — ready to start' };
-}
 
 // ── Activity types that should NOT launch the camera (use manual complete) ───
 const REST_ACTIVITY_TYPES = new Set(['Recovery', 'Mobility', 'Flexibility']);
@@ -312,6 +298,7 @@ const CameraWorkout = () => {
   const [trackingHint, setTrackingHint] = useState('Step into view and keep your whole body visible');
   const trackingHintRef = useRef('');
   const fullBodySinceRef = useRef(0);
+  const poseSideRef = useRef(null);
 
   // Session timer
   const [elapsedSecs, setElapsedSecs] = useState(0);
@@ -369,7 +356,7 @@ const CameraWorkout = () => {
     ) ? prev : next);
   }, []);
 
-  const { repCount, repCountRef, countRep, resetReps }           = useRepCounter({ voiceEnabled });
+  const { repCount, repCountRef, countRep, resetReps, invalidateRep } = useRepCounter({ voiceEnabled });
   const { holdSecs, holdRef, updateHold, resetHold, setHoldTarget: setHoldGoal } = useHoldTimer({ voiceEnabled });
   const { aiFeedback, isAnalyzing, setAiFeedback, maybeAnalyze, cancelAnalysis } = useAICoach({ workoutType: resolved?.label ?? workoutType, voiceEnabled });
   const { startSession, pauseSession, resumeSession, endSession, sessionResult } = useWorkoutSession();
@@ -532,6 +519,7 @@ const CameraWorkout = () => {
   // excludes pause time (fire-and-forget — never blocks the session UI).
   const handlePauseToggle = useCallback(() => {
     if (!isRecording) return;
+    invalidateRep();
     setPaused(prev => {
       const next = !prev;
       if (next) {
@@ -547,7 +535,7 @@ const CameraWorkout = () => {
       if (voiceEnabled) speak(msg, 0.95, 1.0);
       return next;
     });
-  }, [isRecording, voiceEnabled, setAiFeedback, pauseSession, resumeSession, updateHold]);
+  }, [isRecording, voiceEnabled, setAiFeedback, pauseSession, resumeSession, updateHold, invalidateRep]);
 
   // Summary Done: dismiss, then either collect the post-workout self-report
   // (Module 5) or flush any deferred plan navigation. Feedback only for
@@ -651,19 +639,18 @@ const CameraWorkout = () => {
     cameraOn,
     webcamRef,
     workoutType: counterType,
-    onPoseResult: (landmarks, type) => {
+    onPoseResult: (landmarks, type, world) => {
       landmarksRef.current = landmarks;
       const setTracked = (t) => {
         if (t !== trackingRef.current) { trackingRef.current = t; setTracking(t); }
       };
       const setFrame = (ready, hint) => {
-        const wasReady = trackingRef.current;
         setTracked(ready);
         if (trackingHintRef.current !== hint) {
           trackingHintRef.current = hint;
           setTrackingHint(hint);
         }
-        if (isRecording && wasReady && !ready) {
+        if (isRecording && !paused && !ready) {
           setAiFeedback(hint);
           if (voiceEnabled && Date.now() - lastWarnRef.current > WARN_COOLDOWN_MS) {
             lastWarnRef.current = Date.now();
@@ -672,19 +659,25 @@ const CameraWorkout = () => {
         }
       };
       if (!landmarks) {
+        invalidateRep();
+        updateHold(null, false);
         fullBodySinceRef.current = 0;
         setFrame(false, 'Step into view so your whole body can be seen');
         publishBiometrics({ alignment: 0, velocity: 0, symmetry: 0 });
         return;
       }
 
-      const framing = assessWholeBody(landmarks);
+      const video = webcamRef.current?.video;
+      const framing = assessPose(landmarks, type, video?.videoWidth / video?.videoHeight || 1, world, poseSideRef.current);
+      if (framing.ready) poseSideRef.current = framing.side;
       if (!framing.ready) fullBodySinceRef.current = 0;
       else if (!fullBodySinceRef.current) fullBodySinceRef.current = Date.now();
       const isVisible = framing.ready && Date.now() - fullBodySinceRef.current >= 350;
-      setFrame(isVisible, isVisible ? framing.hint : framing.ready ? 'Hold still — checking full-body framing' : framing.hint);
+      setFrame(isVisible, isVisible ? framing.hint : framing.ready ? 'Hold still — checking exercise landmarks' : framing.hint);
 
-      if (!isVisible && isRecording && !paused) {
+      if (!isVisible || paused) {
+        invalidateRep();
+        updateHold(null, false);
         setBiometrics(prev => (prev.alignment === 30 ? prev : { ...prev, alignment: 30 }));
         return;
       }
@@ -707,7 +700,7 @@ const CameraWorkout = () => {
           }
         } else {
           const before = repCountRef.current;
-          countRep(landmarks, type);
+          countRep(landmarks, type, framing);
           maybeAnalyze(landmarks);
           if (repCountRef.current >= repTarget && before < repTarget) {
             const nextSet = completedSetsRef.current + 1;
@@ -749,6 +742,16 @@ const CameraWorkout = () => {
       }
     },
   });
+
+  const handleStreamReset = useCallback(() => {
+    poseSideRef.current = null;
+    landmarksRef.current = null;
+    trackingRef.current = false;
+    setTracking(false);
+    fullBodySinceRef.current = 0;
+    invalidateRep();
+    updateHold(null, false);
+  }, [invalidateRep, updateHold]);
 
   const handleCameraToggle = () => {
     const next = !cameraOn;
@@ -949,7 +952,18 @@ const CameraWorkout = () => {
               landmarksRef={landmarksRef}
               onStartStop={handleStartStop}
               tracking={tracking}
-              trackingHint={trackingHint}
+               trackingHint={trackingHint}
+               onStreamReset={handleStreamReset}
+               workoutLabel={resolved?.label ?? workoutType}
+               workoutSub={`${resolved?.muscle ?? 'Full body'} · ${workoutMode === 'hold' ? `${holdTarget}s hold` : `${setTarget} sets × ${repTarget} reps`}`}
+               target={workoutMode === 'hold' ? holdTarget : repTarget}
+               setNumber={Math.min(completedSets + 1, setTarget)}
+               setTarget={setTarget}
+               paused={paused}
+               onPauseToggle={handlePauseToggle}
+               voiceEnabled={voiceEnabled}
+               onVoiceToggle={handleVoiceToggle}
+               dismissFullscreen={Boolean(summary || showEarlyExit || manualOpen)}
               hideRepCount
             />
             {isRecording && aiFeedback && aiFeedback !== 'Select Exercise & Start' && (

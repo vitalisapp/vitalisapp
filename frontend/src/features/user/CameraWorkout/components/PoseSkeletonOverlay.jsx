@@ -22,7 +22,7 @@ const BONES = [
   [15, 17], [16, 18], [15, 21], [16, 22],
 ];
 
-const BONE_COLOR = "#FACC15";
+const BONE_COLOR = "#76FF35";
 const JOINT_COLOR = "#22C55E";
 const WEAK_COLOR = "#EF4444";
 
@@ -30,7 +30,7 @@ const WEAK_COLOR = "#EF4444";
 // the torso is out of frame (close-up / dark room hallucinations).
 const BONE_MIN_VIS = 0.55;
 // Dots below this are not drawn at all; between this and 0.5 they draw red.
-const DOT_MIN_VIS = 0.25;
+const DOT_MIN_VIS = 0.6;
 // MediaPipe pose: 0-10 = face, 11-32 = torso + limbs.
 const isFaceLandmark = (i) => i <= 10;
 
@@ -62,7 +62,7 @@ export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored 
 
       if (!lm || !video || !video.videoWidth) return;
 
-      const visOf = (p) => (typeof p?.visibility === "number" ? p.visibility : 1);
+      const visOf = (p) => (Number.isFinite(p?.x) && Number.isFinite(p?.y) && p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1 ? p.visibility ?? 0 : 0);
 
       // Match the complete camera frame, contained without crop or stretch.
       const vw = video.videoWidth;

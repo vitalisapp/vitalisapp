@@ -38,6 +38,7 @@ export function getWorkoutMode(ex) {
 }
 
 export function counterTypeFor(slug) {
+  if (slug === 'jumping-jack' || slug === 'jumpingjack') return 'jumpingjack';
   if (!slug) return 'generic';
   if (SLUG_TO_COUNTER[slug]) return SLUG_TO_COUNTER[slug];
   // Legacy internal ids still work (pushup, squat, ...).

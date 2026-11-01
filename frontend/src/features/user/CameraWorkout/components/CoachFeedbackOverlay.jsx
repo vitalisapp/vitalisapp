@@ -1,4 +1,4 @@
-export default function CoachFeedbackOverlay({ aiFeedback, isAnalyzing, fullscreen = false }) {
+export default function CoachFeedbackOverlay({ aiFeedback, isAnalyzing, fullscreen = false, voiceEnabled, onVoiceToggle }) {
   return (
     <div className={fullscreen
       // Fullscreen: below the top controls + scrim, full-width, above scrims
@@ -16,9 +16,10 @@ export default function CoachFeedbackOverlay({ aiFeedback, isAnalyzing, fullscre
           <span className="text-[length:var(--fs-10)] font-black uppercase tracking-[0.18em] text-[var(--accent)]">
             {isAnalyzing ? 'Analyzing…' : 'Coach Response'}
           </span>
+          {onVoiceToggle && <button onClick={onVoiceToggle} aria-label={voiceEnabled ? 'Mute coaching' : 'Enable voice coaching'} className="ml-auto min-w-10 min-h-10 text-lime-400 material-symbols-outlined">{voiceEnabled ? 'volume_up' : 'volume_off'}</button>}
         </div>
         <p className={`mt-1.5 font-semibold text-white leading-relaxed line-clamp-3 ${fullscreen ? 'text-[length:var(--fs-13)]' : 'text-[length:var(--fs-12)] sm:text-[length:var(--fs-13)]'}`}>
-          {`"${aiFeedback}"`}
+          {aiFeedback || 'Get into position to begin your workout.'}
         </p>
       </div>
     </div>

@@ -12,19 +12,15 @@ import PoseSkeletonOverlay from "./PoseSkeletonOverlay.jsx";
 const mobileConstraints  = {
   facingMode: 'user',
   width: { ideal: 720 },
-  height: { ideal: 1520 },
-  // Match a tall phone display so contain-fit uses nearly the entire portrait
-  // viewport without blur, stretch, or fullscreen display cropping.
-  aspectRatio: { ideal: 9 / 19 },
-  // Some mobile browsers otherwise return a landscape sensor stream despite
-  // the portrait ideals above. Ask the browser to produce a portrait output.
-  resizeMode: { ideal: 'crop-and-scale' },
+  height: { ideal: 1280 },
+  // Resolution ideals only: never ask the browser to crop the sensor image.
+  resizeMode: 'none',
 };
 const desktopConstraints = {
   facingMode: 'user',
   width: { ideal: 1280 },
   height: { ideal: 720 },
-  aspectRatio: { ideal: 16 / 9 },
+  resizeMode: 'none',
 };
 
 // Viewport tracking: narrow screens get the portrait camera profile.
@@ -58,6 +54,9 @@ export default function WebcamFeed({
   tracking = false,
   trackingHint = 'Fit your head, hands and feet in the frame',
   hideRepCount = false,
+  workoutLabel, workoutSub, target, setNumber, setTarget,
+  paused, onPauseToggle, voiceEnabled, onVoiceToggle, onStreamReset,
+  dismissFullscreen = false,
 }) {
   const isNarrow = useViewport();
   // fsMode: 'api' = Fullscreen API, 'css' = fixed-position fallback for
@@ -66,10 +65,10 @@ export default function WebcamFeed({
   const isFullscreen = fsMode !== null;
   const [streamLive, setStreamLive] = useState(false);
   const [streamError, setStreamError] = useState('');
-  const [portraitConstraintFallback, setPortraitConstraintFallback] = useState(false);
+  const [cameraAttempt, setCameraAttempt] = useState(0);
   const [facing, setFacing] = useState(() => safeGet('vitalis_facing', 'user') || 'user');
+  const [actualFacing, setActualFacing] = useState(null);
   const containerRef = useRef(null);
-  const fullscreenCanvasRef = useRef(null);
 
   // getUserMedia is missing on HTTP origins and camera-less devices — without
   // this guard the UI hangs on "Starting camera…" forever with no recovery.
@@ -78,18 +77,13 @@ export default function WebcamFeed({
   // Stable constraints: memoized so the stream only renegotiates when the
   // profile or lens actually changes (never on fullscreen toggle).
   const videoConstraints = useMemo(() => ({
-    ...(isNarrow && !portraitConstraintFallback
-      ? {
-          ...mobileConstraints,
-          aspectRatio: { exact: 9 / 19 },
-          resizeMode: { ideal: 'crop-and-scale' },
-        }
-      : isNarrow ? mobileConstraints : desktopConstraints),
-    facingMode: facing,
-  }), [isNarrow, facing, portraitConstraintFallback]);
+    ...(isNarrow ? mobileConstraints : desktopConstraints),
+    facingMode: { ideal: facing },
+  }), [isNarrow, facing]);
 
   const flipCamera = useCallback(() => {
-    setPortraitConstraintFallback(false);
+    onStreamReset?.();
+    webcamRef.current?.stream?.getTracks().forEach(track => track.stop());
     setFacing((f) => {
       const next = f === 'user' ? 'environment' : 'user';
       safeSet('vitalis_facing', next);
@@ -97,7 +91,7 @@ export default function WebcamFeed({
     });
     setStreamLive(false);
     setStreamError('');
-  }, []);
+  }, [onStreamReset, webcamRef]);
 
   const describeStreamError = (err) => {
     switch (err?.name) {
@@ -167,72 +161,20 @@ export default function WebcamFeed({
   const handleRetry = useCallback(() => {
     setStreamLive(false);
     setStreamError('');
-    onCameraToggle?.();
-    setTimeout(() => onCameraToggle?.(), 300);
-  }, [onCameraToggle]);
+    onStreamReset?.();
+    setCameraAttempt(n => n + 1);
+  }, [onStreamReset]);
 
   const feedLive = cameraOn && streamLive && !streamError;
   // Front camera behaves like a mirror; the skeleton and fullscreen canvas
   // use the same orientation as the video preview.
-  const mirrored = facing === 'user';
-
-  // Prefer the camera's widest supported field of view (0.5× when available).
-  // Many selfie cameras only expose 1×; in that case keep the native stream and
-  // never simulate zoom by cropping the user's frame.
-  useEffect(() => {
-    if (!feedLive) return undefined;
-    const track = webcamRef.current?.video?.srcObject?.getVideoTracks?.()[0];
-    const zoomRange = track?.getCapabilities?.().zoom;
-    if (!track?.applyConstraints || !zoomRange || zoomRange.min >= 1) return undefined;
-    const widestZoom = Math.max(zoomRange.min, Math.min(0.5, zoomRange.max));
-    track.applyConstraints({ advanced: [{ zoom: widestZoom }] }).catch(() => {});
-    return undefined;
-  }, [feedLive, webcamRef, facing]);
+  const mirrored = (actualFacing ?? facing) === 'user';
 
   useEffect(() => {
-    if (!isFullscreen || !feedLive) return undefined;
-    const canvas = fullscreenCanvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return undefined;
-
-    let frameId = 0;
-    const draw = () => {
-      frameId = requestAnimationFrame(draw);
-      const video = webcamRef.current?.video;
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-      if (!width || !height) return;
-
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      const pixelWidth = Math.round(width * dpr);
-      const pixelHeight = Math.round(height * dpr);
-      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-        canvas.width = pixelWidth;
-        canvas.height = pixelHeight;
-      }
-
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, width, height);
-      if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
-
-      // Show the complete camera frame at its natural aspect ratio. Mobile
-      // capture requests a tall portrait stream to closely match this viewport.
-      ctx.save();
-      if (mirrored) {
-        ctx.translate(width, 0);
-        ctx.scale(-1, 1);
-      }
-      const fitScale = Math.min(width / video.videoWidth, height / video.videoHeight);
-      const fitWidth = video.videoWidth * fitScale;
-      const fitHeight = video.videoHeight * fitScale;
-      ctx.filter = 'none';
-      ctx.drawImage(video, (width - fitWidth) / 2, (height - fitHeight) / 2, fitWidth, fitHeight);
-      ctx.restore();
-    };
-
-    draw();
-    return () => cancelAnimationFrame(frameId);
-  }, [isFullscreen, feedLive, webcamRef, mirrored]);
+    if (!dismissFullscreen || !isFullscreen) return;
+    const frame = requestAnimationFrame(exitFullscreen);
+    return () => cancelAnimationFrame(frame);
+  }, [dismissFullscreen, isFullscreen, exitFullscreen]);
 
   useEffect(() => {
     const onFSChange = () => {
@@ -262,6 +204,7 @@ export default function WebcamFeed({
 
   const webcamEl = cameraOn && cameraSupported && (
     <Webcam
+      key={`${facing}:${cameraAttempt}`}
       audio={false}
       ref={webcamRef}
       mirrored={mirrored}
@@ -278,17 +221,16 @@ export default function WebcamFeed({
        }}
         className={collapsed
           ? 'absolute bottom-0 right-0 w-px h-px opacity-0 pointer-events-none'
-        : `absolute inset-0 w-full h-full grayscale-[0.2] ${isFullscreen ? 'opacity-0' : ''}`}
-      onUserMedia={() => { setStreamLive(true); setStreamError(''); }}
+         : 'absolute inset-0 w-full h-full'}
+      onUserMedia={(stream) => {
+        const track = stream.getVideoTracks()[0];
+        setActualFacing(track?.getSettings?.().facingMode || facing);
+        setStreamLive(true);
+        setStreamError('');
+      }}
       onUserMediaError={(err) => {
         setStreamLive(false);
-        if (isNarrow && !portraitConstraintFallback && err?.name === 'OverconstrainedError') {
-          // Some cameras cannot produce an exact portrait stream. Retry with
-          // non-exact ideals rather than leaving the camera unavailable.
-          setPortraitConstraintFallback(true);
-          setStreamError('');
-          return;
-        }
+        onStreamReset?.();
         setStreamError(describeStreamError(err));
       }}
     />
@@ -306,6 +248,9 @@ export default function WebcamFeed({
         width: '100vw',
         height: '100dvh',
         maxHeight: '100dvh',
+        maxWidth: 'none',
+        aspectRatio: 'auto',
+        border: 0,
         zIndex: 200,
       } : undefined}
       className={collapsed
@@ -367,13 +312,6 @@ export default function WebcamFeed({
 
       {webcamEl}
 
-      {isFullscreen && feedLive && (
-        <canvas
-          ref={fullscreenCanvasRef}
-          className="absolute inset-0 z-[2] h-full w-full pointer-events-none"
-          aria-hidden="true"
-        />
-      )}
 
       {/* Skeleton tracker over the live feed */}
       {!collapsed && <PoseSkeletonOverlay landmarksRef={landmarksRef} webcamRef={webcamRef} mirrored={mirrored} />}
@@ -386,7 +324,7 @@ export default function WebcamFeed({
           </span>
           <div className="rounded-2xl bg-[rgba(8,11,8,0.72)] border border-white/12 backdrop-blur-xl px-4 py-2.5 shadow-[var(--shadow-lg)]">
             <p className="text-[length:var(--fs-13)] font-bold text-white">{trackingHint}</p>
-            <p className="text-[length:var(--fs-11)] text-white/75 mt-0.5">Keep head, both wrists and both feet visible</p>
+             <p className="text-[length:var(--fs-11)] text-white/75 mt-0.5">Counting waits for reliable exercise landmarks</p>
           </div>
         </div>
       )}
@@ -398,14 +336,25 @@ export default function WebcamFeed({
           <div className="absolute bottom-0 left-0 right-0 h-44 z-20 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
           {/* Bottom record cluster — fullscreen owns Start/Stop (page header
               is outside the fullscreen element) */}
-          <div className="absolute bottom-6 left-0 right-0 z-40 flex flex-col items-center gap-2">
+          <div className="absolute left-16 right-28 top-3 z-30 text-white">
+            <h2 className="font-bold truncate">{workoutLabel}</h2>
+            <p className="text-xs text-white/80">{workoutSub}</p>
+          </div>
+          {tracking && <div className="absolute bottom-36 inset-x-6 z-30 text-center text-white pointer-events-none">
+            <div className="inline-block rounded-2xl bg-black/65 px-5 py-3">
+              <p className="font-bold text-lime-400">Tracking active</p><p className="text-xs mt-1">{trackingHint}</p>
+            </div>
+          </div>}
+          <div style={{ bottom: 'max(16px, env(safe-area-inset-bottom))' }} className="absolute left-4 right-4 z-40 flex items-center justify-between gap-3 text-white">
+            <div className="rounded-2xl bg-black/65 p-3 min-w-20"><p className="text-xs">Progress</p><strong className="text-2xl">{repCount}</strong> / {target}</div>
+            <div className="flex flex-col items-center gap-2">
             <button
               onClick={onStartStop}
-              disabled={!cameraOn && !isRecording}
+               disabled={(!feedLive || !poseReady) && !isRecording}
               aria-label={isRecording ? 'Stop workout' : 'Start workout'}
               className={`w-16 h-16 rounded-full flex items-center justify-center active:scale-95 transition-transform border-4 disabled:opacity-40 disabled:cursor-not-allowed ${
                 isRecording
-                  ? 'bg-white/20 border-white'
+                   ? 'bg-red-500 border-white'
                   : 'bg-[#e63030] border-white/80 shadow-[var(--shadow-md)]'
               }`}
             >
@@ -413,6 +362,9 @@ export default function WebcamFeed({
                 ? <span className="w-6 h-6 rounded-[6px] bg-white" />
                 : <span className="w-5 h-5 rounded-full bg-white" />}
             </button>
+            {isRecording && <button onClick={onPauseToggle} className="rounded-full bg-black/65 px-4 py-2 text-xs">{paused ? 'Resume' : 'Pause'}</button>}
+            </div>
+            <div className="rounded-2xl bg-black/65 p-3 min-w-20"><p className="text-xs">Set</p><strong className="text-2xl">{setNumber}</strong> / {setTarget}</div>
           </div>
         </>
       )}
@@ -442,9 +394,9 @@ export default function WebcamFeed({
 
       {/* Live-feed overlays only — hidden in the collapsed banner (see above)
           where they would clip/overlap inside the slim overflow-hidden box. */}
-      {!collapsed && <CoachFeedbackOverlay aiFeedback={aiFeedback} isAnalyzing={isAnalyzing} fullscreen={isFullscreen} />}
+      {!collapsed && <CoachFeedbackOverlay aiFeedback={!tracking ? trackingHint : aiFeedback} isAnalyzing={isAnalyzing} fullscreen={isFullscreen} voiceEnabled={voiceEnabled} onVoiceToggle={onVoiceToggle} />}
       {!collapsed && !hideRepCount && <RepCounterOverlay repCount={repCount} />}
-      {!collapsed && <PoseStatusBadge poseReady={poseReady} loadError={loadError} />}
+      {!collapsed && !isFullscreen && <PoseStatusBadge poseReady={poseReady} loadError={loadError} />}
 
       {/* Fullscreen toggle — live feed only */}
       {!collapsed && (
@@ -466,7 +418,7 @@ export default function WebcamFeed({
         <button
           onClick={flipCamera}
           aria-label={facing === 'user' ? 'Switch to back camera' : 'Switch to front camera'}
-          className="absolute top-14 right-3 z-40 flex items-center justify-center w-9 h-9 rounded-xl bg-[rgba(8,11,8,0.72)] border border-white/15 shadow-[var(--shadow-md)] backdrop-blur-md active:scale-95 transition-transform touch-manipulation"
+          className="absolute top-3 right-14 z-40 flex items-center justify-center w-9 h-9 rounded-xl bg-[rgba(8,11,8,0.72)] border border-white/15 shadow-[var(--shadow-md)] backdrop-blur-md active:scale-95 transition-transform touch-manipulation"
         >
           <Icon name="flip_camera_ios" className="text-white text-xl leading-none" />
         </button>
@@ -480,7 +432,6 @@ export default function WebcamFeed({
           className="absolute top-3 left-3 z-40 flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-xl bg-[rgba(8,11,8,0.72)] border border-white/15 shadow-[var(--shadow-md)] backdrop-blur-md text-[length:var(--fs-12)] font-bold text-white active:scale-95 transition-transform touch-manipulation"
         >
           <Icon name="arrow_back" className="text-[length:var(--fs-18)] leading-none" />
-          Back
         </button>
       )}
 

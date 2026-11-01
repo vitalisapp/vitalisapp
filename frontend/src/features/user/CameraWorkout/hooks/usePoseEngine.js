@@ -53,6 +53,7 @@ export function usePoseEngine({
   const onPoseResultRef = useRef(onPoseResult);
   const workoutTypeRef  = useRef(workoutType);
   const noDetectRef     = useRef(0);
+  const inputRef = useRef(null);
 
   useEffect(() => { onPoseResultRef.current = onPoseResult; }, [onPoseResult]);
   useEffect(() => { workoutTypeRef.current  = workoutType;  }, [workoutType]);
@@ -80,18 +81,22 @@ export function usePoseEngine({
 
         pose.onResults((results) => {
           if (!active) return;
+          const input = inputRef.current;
+          const video = webcamRef.current?.video;
+          if (!input || video !== input.video || video.srcObject !== input.stream || !input.stream?.active) return;
 
           if (!results.poseLandmarks || results.poseLandmarks.length === 0) {
             noDetectRef.current += 1;
-            onPoseResultRef.current(null, workoutTypeRef.current, noDetectRef.current);
+            onPoseResultRef.current(null, workoutTypeRef.current, null);
             return;
           }
 
           noDetectRef.current = 0;
-          onPoseResultRef.current(results.poseLandmarks, workoutTypeRef.current, 0);
+          onPoseResultRef.current(results.poseLandmarks, workoutTypeRef.current, results.poseWorldLandmarks);
         });
 
         await pose.initialize();
+        if (!active) { await pose.close(); return; }
 
         poseRef.current = pose;
         if (active) setPoseReady(true);
@@ -112,7 +117,7 @@ export function usePoseEngine({
       poseRef.current = null;
       setPoseReady(false);
     };
-  }, []);
+  }, [webcamRef]);
 
   // Live skeleton during preview too; counting stays gated on isRecording.
   useEffect(() => {
@@ -125,20 +130,28 @@ export function usePoseEngine({
     const sendFrame = async () => {
       if (inFlight) return;
       const video = webcamRef.current?.video;
-      if (!poseRef.current || !video) return;
-      if (video.readyState < 2 || video.paused || video.videoWidth === 0) return;
+      if (!poseRef.current || !video || video.readyState < 2 || video.paused || video.videoWidth === 0 || !video.srcObject?.active) {
+        inputRef.current = null;
+        onPoseResultRef.current(null, workoutTypeRef.current, null);
+        return;
+      }
       inFlight = true;
       try {
+        if (inputRef.current?.stream !== video.srcObject) {
+          onPoseResultRef.current(null, workoutTypeRef.current, null);
+          await poseRef.current.reset();
+        }
+        inputRef.current = { video, stream: video.srcObject };
         await poseRef.current.send({ image: video });
       } catch {
-        /* ignore single-frame errors */
+        onPoseResultRef.current(null, workoutTypeRef.current, null);
       } finally {
         inFlight = false;
       }
     };
 
     const id = setInterval(sendFrame, 100);
-    return () => clearInterval(id);
+    return () => { clearInterval(id); inputRef.current = null; };
   }, [cameraOn, poseReady, webcamRef]);
 
   return { poseReady, loadError };
