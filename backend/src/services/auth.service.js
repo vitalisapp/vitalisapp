@@ -407,6 +407,9 @@ async function googleLogin(code) {
   if (!email) {
     throw new AppError("Google account has no email", 401, "GOOGLE_AUTH_FAILED");
   }
+  if (payload.email_verified !== true) {
+    throw new AppError("Google email is not verified", 401, "GOOGLE_AUTH_FAILED");
+  }
 
   const [users] = await db.execute(LOGIN_USER_SELECT, [email]);
 
@@ -419,8 +422,8 @@ async function googleLogin(code) {
     const defaultGoal = "Unspecified (Google Auth)";
 
     const [insertResult] = await db.execute(
-      "INSERT INTO users (name, email, password, fitness_goal, is_online, avatar_url, is_verified, onboarding_completed, role, accepted_terms_at, accepted_terms_version) VALUES (?, ?, ?, ?, ?, ?, 1, 0, ?, NOW(), ?)",
-      [name, email, randomHashedPw, defaultGoal, 1, picture, isSeedAdmin(email) ? "admin" : "member", CONSENT_VERSION],
+      "INSERT INTO users (name, email, password, fitness_goal, is_online, avatar_url, is_verified, onboarding_completed, role, accepted_terms_at, accepted_terms_version) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, NOW(), ?)",
+      [name, email, randomHashedPw, defaultGoal, 0, picture, isSeedAdmin(email) ? "admin" : "member", CONSENT_VERSION],
     );
 
     const [newUsers] = await db.execute(
@@ -430,10 +433,16 @@ async function googleLogin(code) {
     user = newUsers[0];
   } else {
     user = users[0];
-    // Google-verified email counts as verified
-    await db.execute("UPDATE users SET is_online = 1, is_verified = 1 WHERE id = ?", [user.id]);
-    user.is_verified = 1;
   }
+
+  // Google authentication does not replace the app's email verification.
+  // Retrying Google sign-in must not verify a pending account or issue a session.
+  if (!user.is_verified) {
+    const verification = await resendVerification(email);
+    return { user, needsVerification: true, ...verification };
+  }
+
+  await db.execute("UPDATE users SET is_online = 1 WHERE id = ?", [user.id]);
 
   const [profileRows] = await db.execute("SELECT avatar_url FROM user_profiles WHERE user_id = ?", [
     user.id,

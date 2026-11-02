@@ -103,14 +103,18 @@ export const useRegister = () => {
     }
   };
 
-  // Google sign-up reuses POST /api/auth/google-login: the backend auto-creates
-  // the account for first-time Google users (verified, consent recorded) and
-  // issues the session — so a "Sign up with Google" needs no separate endpoint.
+  // Google sign-up creates a pending account; app email verification is required
+  // before a subsequent Google sign-in can establish a session.
   const handleGoogleSuccess = async (codeResponse) => {
     setError('');
     setLoading(true);
     try {
       const data = await apiPost('/api/auth/google-login', { code: codeResponse.code }, { skipAuthRedirect: true });
+      if (data.needsVerification) {
+        setUser(null);
+        navigate('/check-email', { state: { email: data.email, devLink: data.devVerificationLink, deliveryToken: data.deliveryToken, deliveryStatus: data.deliveryStatus } });
+        return;
+      }
       const user = normalizeUser(data);
       if (!user.id) throw new Error('Google response did not include a user ID.');
       setUser(user);

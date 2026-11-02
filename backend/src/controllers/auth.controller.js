@@ -248,7 +248,21 @@ async function postgoogleLogin(req, res, next) {
     }
 
     try {
-      const { user, latestAvatar } = await service.googleLogin(code);
+      const { user, latestAvatar, needsVerification, link, emailed, deliveryToken } = await service.googleLogin(code);
+
+      if (needsVerification) {
+        res.clearCookie(COOKIE_NAME, getClearCookieOptions(req));
+        const payload = {
+          needsVerification: true,
+          isVerified: false,
+          email: user.email,
+          message: "Check your inbox to verify your email before signing in with Google.",
+          deliveryToken,
+          deliveryStatus: emailed ? "accepted" : "failed",
+        };
+        if (!emailed && DEV_VERIFY_FALLBACK) payload.devVerificationLink = link;
+        return res.json(payload);
+      }
 
       setSessionCookie(res, user.id, user.email, req, user.token_version);
       await service.logUserSession(req, user.id);
@@ -259,7 +273,7 @@ async function postgoogleLogin(req, res, next) {
         email: user.email,
         avatar: latestAvatar,
         goal: user.fitness_goal,
-        isVerified: true,
+        isVerified: Boolean(user.is_verified),
         onboardingCompleted: Boolean(user.onboarding_completed),
       });
     } catch (err) {

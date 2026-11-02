@@ -166,6 +166,12 @@ export const useLogin = () => {
     try {
       const data = await apiPost('/api/auth/google-login', { code: codeResponse.code }, { skipAuthRedirect: true });
 
+      if (data.needsVerification) {
+        setUser(null);
+        navigate('/check-email', { state: { email: data.email, devLink: data.devVerificationLink, deliveryToken: data.deliveryToken, deliveryStatus: data.deliveryStatus } });
+        return;
+      }
+
       const user = normalizeUser(data);
       if (!user.id) throw new Error('Google login response did not include a user ID.');
 
