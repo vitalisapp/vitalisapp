@@ -148,7 +148,22 @@ const Dashboard = () => {
   const foodKcal = viewMeals.kcal || 0;
   const remaining = Math.max(0, tKcal - foodKcal + caloriesBurned);
 
-  const onCheckInSaved = () => { refreshDashboard(); refreshMeals(); bumpCalendar(); };
+  const onCheckInSaved = (savedCheckin) => {
+    if (savedCheckin) {
+      setData(prev => ({
+        ...prev,
+        checkin: savedCheckin,
+        stats: {
+          ...prev.stats,
+          sleep_duration: Number(savedCheckin.sleep_hours ?? 0),
+          sleep_quality: savedCheckin.sleep_quality ?? null,
+        },
+      }));
+    }
+    refreshDashboard();
+    refreshMeals();
+    bumpCalendar();
+  };
   // Refetch when returning from other pages (MealTracker, etc.)
   useEffect(() => {
     const onFocus = () => { refreshDashboard(); refreshMeals(); };

@@ -84,8 +84,8 @@ export const useDashboardData = (USER_ID) => {
           stats: {
             ...result.stats,
             water_intake_ml: result.stats?.water_intake_ml ?? sleepData?.water_intake_ml ?? 0,
-            sleep_duration:  result.stats?.sleep_duration  ?? sleepData?.sleep_duration  ?? 0,
-            sleep_quality:   result.stats?.sleep_quality   ?? sleepData?.sleep_quality   ?? 0,
+            sleep_duration:  result.checkin?.sleep_hours ?? result.stats?.sleep_duration ?? sleepData?.sleep_duration ?? 0,
+            sleep_quality:   result.checkin?.sleep_quality ?? result.stats?.sleep_quality ?? (sleepData?.sleep_quality || null),
           },
         }));
 

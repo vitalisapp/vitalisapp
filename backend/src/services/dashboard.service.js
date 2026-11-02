@@ -70,7 +70,8 @@ async function getDashboard(userId, clientToday) {
 
   return {
     stats:    { ...s, water_intake_ml: Number(waterRow?.water_ml || 0),
-                sleep_duration: Number(waterRow?.sleep_h || 0),
+                sleep_duration: Number(checkins[0]?.sleep_hours ?? waterRow?.sleep_h ?? 0),
+                sleep_quality: checkins[0]?.sleep_quality ?? null,
                 readiness: r.readiness, readinessSource: r.source,
                 readinessNote: r.recommendation },
     profile:  user[0]   || { name: "Guest" },
@@ -320,7 +321,7 @@ async function getDaySnapshot(userId, dateStr) {
     nutrition: { items: mealRows, totals: nutritionTotals },
     recovery: {
       checkin: checkinRow,
-      sleepHours: Number(sleepRow.hours || 0),
+      sleepHours: Number(checkinRow?.sleep_hours ?? sleepRow.hours ?? 0),
       waterMl: Number(sleepRow.water_ml || 0),
       readiness: readiness.readiness,
       readinessNote: readiness.recommendation,
