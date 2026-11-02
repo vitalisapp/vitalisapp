@@ -6,7 +6,7 @@
 import { exercises, getExercise, searchExercises, getAssetUrl } from '@bryllim/workout-guide';
 
 // Bryl slug -> internal rep-counter type (useRepCounter switch cases).
-// Unmapped slugs stay selectable but route to manual logging; never estimate reps.
+// Unmapped slugs use active sessions with self-tracked reps; never estimate reps.
 const SLUG_TO_COUNTER = {
   'push-up': 'pushup',
   'weighted-push-up': 'pushup',

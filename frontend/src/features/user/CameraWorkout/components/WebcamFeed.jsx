@@ -51,6 +51,8 @@ export default function WebcamFeed({
   onCameraToggle,
   landmarksRef,
   onStartStop,
+  onAddRep,
+  elapsedTime,
   tracking = false,
   trackingHint = 'Fit your head, hands and feet in the frame',
   hideRepCount = false,
@@ -419,6 +421,15 @@ export default function WebcamFeed({
               <p className="font-bold text-[#90ff45] text-lg sm:text-2xl flex justify-center items-center gap-2"><Icon name={tracking ? 'check_circle' : 'accessibility_new'} />{paused ? 'Workout Paused' : tracking ? 'Pose Detected' : 'Get Into Position'}</p>
               <p className="text-xs sm:text-base mt-1 leading-snug">{paused ? 'Press Resume when you are ready.' : tracking ? 'Keep your movement steady and controlled.' : trackingHint}</p>
             </div>
+            {onAddRep && (
+              <div className="self-center flex items-center gap-3 pointer-events-auto shrink-0">
+                <span className="text-xs">Self-tracked reps · {elapsedTime}</span>
+                <button type="button" onClick={onAddRep} disabled={!isRecording || paused}
+                  className="min-h-[44px] px-4 rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] font-bold disabled:opacity-40">
+                  +1 rep
+                </button>
+              </div>
+            )}
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-[clamp(16px,8vw,72px)] px-1 pb-2 shrink-0">
               <div style={{ background: 'rgba(45,48,43,.9)', padding: '12px', minHeight: 76 }} className="rounded-[20px]"><p className="text-sm sm:text-lg text-white/90">{workoutSub?.includes('hold') ? 'Seconds' : 'Reps'}</p><strong style={{ fontSize: 'clamp(28px, 6vw, 48px)' }}>{repCount}</strong><span className="text-lg sm:text-2xl"> / {target}</span></div>
               <div className="flex flex-col items-center gap-2 pointer-events-auto">

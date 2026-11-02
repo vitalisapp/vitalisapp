@@ -1,9 +1,12 @@
 import Icon from "../../../../components/Icon.jsx";
+import { resolveWorkout } from '../constants/workoutGuide.js';
 
 // ── Exercise choice: after picking a card, decide HOW to log the session ────
 // Offered for every library exercise: launch the AI camera tracker, or enter
 // the session by hand (reps / sets / weight) through the reused manual modal.
 export default function ExerciseChoiceModal({ exercise, onUseCamera, onLogManually, onClose }) {
+  const workout = resolveWorkout(exercise?.id);
+  const selfTracked = workout?.mode !== 'hold' && workout?.counterType === 'generic';
   return (
     <div
       className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center p-4 overflow-y-auto"
@@ -54,7 +57,7 @@ export default function ExerciseChoiceModal({ exercise, onUseCamera, onLogManual
             </span>
             <span className="min-w-0">
               <span className="block text-[length:var(--fs-13)] font-black text-[var(--text-primary)]">Use camera</span>
-              <span className="block text-[length:var(--fs-11)] text-[var(--text-muted)] font-semibold mt-0.5">AI rep counting &amp; live form feedback</span>
+              <span className="block text-[length:var(--fs-11)] text-[var(--text-muted)] font-semibold mt-0.5">{selfTracked ? 'Workout timer & self-tracked reps' : workout?.mode === 'hold' ? 'Hold timer & live form feedback' : 'AI rep counting & live form feedback'}</span>
             </span>
             <span className="material-symbols-outlined ml-auto text-[length:var(--fs-18)] text-[var(--accent)] shrink-0">arrow_forward</span>
           </button>

@@ -216,5 +216,10 @@ export function useRepCounter({ voiceEnabled }) {
     repCountRef.current = 0;
   }, []);
 
-  return { repCount, repCountRef, countRep, resetReps, invalidateRep };
+  const addRep = useCallback(() => {
+    repCountRef.current += 1;
+    setRepCount(repCountRef.current);
+  }, []);
+
+  return { repCount, repCountRef, countRep, resetReps, invalidateRep, addRep };
 }
