@@ -72,12 +72,13 @@ function createApp(io) {
   // separately-hosted frontend embeds these URLs in <img> tags.
   app.use(
     "/uploads",
+    (req, res, next) => {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+      next();
+    },
     express.static(UPLOAD_ROOT, {
       fallthrough: true,
       maxAge: "30d",
-      setHeaders: (res) => {
-        try { res.setHeader("Cross-Origin-Resource-Policy", "cross-origin"); } catch { /* noop */ }
-      },
     }),
   );
   app.use((req, res, next) => {
