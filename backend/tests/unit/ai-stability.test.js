@@ -46,44 +46,46 @@ describe('ai model config (stabilize MVP)', () => {
     assert.equal(gemini.stripDataUriPrefix(raw), raw);
   });
 
-  it('validateAndCorrectMacros clamps + derives calories', () => {
+  it('preserves portion calories and flags conflicting AI macros', () => {
     const out = gemini.validateAndCorrectMacros({
-      food_name: 'fried chicken (2 pcs)', serving: 'x',
-      calories: 10, protein: 999, carbs: 0, fat: 0,
+      food_name: 'Meal', serving: '100 g',
+      calories: 200, protein: 25, carbs: 50, fat: 12,
       saturated_fat: -5, trans_fat: 0, polyunsaturated_fat: 0, monounsaturated_fat: 0,
     });
-    assert.ok(out.protein <= 50, `protein capped by piece count, got ${out.protein}`);
-    assert.ok(out.carbs >= 10, 'breaded food gets min carbs');
-    assert.ok(out.fat > 0, 'fried food gets min fat');
-    assert.equal(out.calories, out.protein * 4 + out.carbs * 4 + out.fat * 9);
+    assert.equal(out.calories, 200);
+    assert.equal(out.low_confidence, true);
+    assert.equal(out.saturated_fat, 0);
   });
 
-  it('rejects absurd main-dish results (double cheeseburger 47 kcal)', () => {
+  it('flags unusually small main-dish portions without replacing them', () => {
     const out = gemini.validateAndCorrectMacros({
       food_name: 'Double Cheeseburger with Spread and Lettuce', serving: '1 pc',
       calories: 47, protein: 0, carbs: 5, fat: 3,
       saturated_fat: 0, trans_fat: 0, polyunsaturated_fat: 0, monounsaturated_fat: 0,
     });
-    assert.equal(out, null, 'absurd main-dish result must be rejected so next model is tried');
+    assert.equal(out.calories, 47);
+    assert.equal(out.low_confidence, true);
   });
 
-  it('injects protein floor for meaty food with 0g protein', () => {
+  it('flags missing protein without inventing nutrients', () => {
     const out = gemini.validateAndCorrectMacros({
       food_name: 'Grilled chicken salad bowl', serving: '1 bowl',
       calories: 400, protein: 0, carbs: 30, fat: 12,
       saturated_fat: 0, trans_fat: 0, polyunsaturated_fat: 0, monounsaturated_fat: 0,
     });
-    assert.ok(out && out.protein >= 8, `meaty food gets protein floor, got ${out && out.protein}`);
+    assert.equal(out.protein, 0);
+    assert.equal(out.calories, 400);
     assert.equal(out.low_confidence, true);
   });
 
-  it('anchor guard rejects far-under scans, keeps in-band ones', () => {
+  it('anchor guard flags far-under scans and preserves portion calories', () => {
     const bad = gemini.validateAndCorrectMacros({
       food_name: 'Double Cheeseburger', serving: '1 pc',
       calories: 100, protein: 8, carbs: 10, fat: 5,
       saturated_fat: 0, trans_fat: 0, polyunsaturated_fat: 0, monounsaturated_fat: 0,
     });
-    assert.equal(bad, null, '100 kcal double burger (<40% of 750 anchor) must be rejected');
+    assert.equal(bad.calories, 100);
+    assert.equal(bad.low_confidence, true);
     const good = gemini.validateAndCorrectMacros({
       food_name: 'Double Cheeseburger', serving: '1 pc',
       calories: 600, protein: 30, carbs: 40, fat: 30,
@@ -104,6 +106,39 @@ describe('ai model config (stabilize MVP)', () => {
     assert.ok(parsed && parsed.items.length === 2, `both items parsed, got ${parsed && parsed.items.length}`);
     const norm = gemini.normalizeItems(raw);
     assert.ok(norm && norm.items.length === 2, 'normalized keeps both items');
+  });
+
+  it('parses fractions, mixed numbers, unicode and plates correctly', () => {
+    for (const [text, qty, unit] of [
+      ['1/2 cup', 0.5, 'cup'], ['1 1/2 cups', 1.5, 'cup'],
+      ['½ cup', 0.5, 'cup'], ['1½ cups', 1.5, 'cup'],
+      ['2 plates', 2, 'serving'], ['0.25 kg', 250, 'g'],
+    ]) assert.deepEqual(gemini.parseServingQuantity(text), { qty, unit });
+    assert.equal(gemini.parseServingQuantity('1/0 cup'), null);
+  });
+
+  it('does not compare gram portions to full-piece references', () => {
+    assert.equal(gemini.anchorExpected('Burger', '80 g'), null);
+    const out = gemini.validateAndCorrectMacros({
+      food_name: 'Burger', serving: '80 g', calories: 200,
+      protein: 10, carbs: 22, fat: 8,
+    });
+    assert.equal(out.calories, 200);
+    assert.equal(Boolean(out.low_confidence), false);
+  });
+
+  it('preserves small, zero and shared portions without nutrient floors or caps', () => {
+    for (const calories of [0, 25, 100, 200, 800, 3200]) {
+      const out = gemini.validateAndCorrectMacros({
+        food_name: 'Food', serving: '100 g', calories,
+        protein: 0, carbs: calories / 4, fat: 0,
+      });
+      assert.equal(out.calories, calories);
+      assert.equal(out.fat, 0);
+    }
+    const out = gemini.validateAndCorrectMacros({ food_name: 'Food', protein: 2.7, carbs: 28.2, fat: 0.3 });
+    assert.equal(out.calories, 126);
+    assert.equal(out.fat, 0.3);
   });
 
   it('classifies retryable overload errors (503/429/quota), not 404/auth', () => {

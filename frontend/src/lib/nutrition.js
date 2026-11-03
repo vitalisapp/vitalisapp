@@ -40,6 +40,25 @@ export function scaleFromPer100(per100, grams) {
   };
 }
 
+// Absolute portion scaling preserves label/AI calories independently of macros.
+export function scalePortion(item, factor) {
+  const f = Number(factor);
+  if (!Number.isFinite(f) || f <= 0 || f > 10) return item;
+  const base = item.portionBase || { ...item };
+  const next = {
+    ...item,
+    portionBase: base,
+    serving: f === 1 ? base.serving : `${f} × (${base.serving || 'original portion'})`,
+    calories: Math.max(0, roundKcal((Number(base.calories) || 0) * f)),
+    scaled: true,
+    corrected: true,
+  };
+  for (const key of ['protein', 'carbs', 'fat', 'saturated_fat', 'trans_fat', 'polyunsaturated_fat', 'monounsaturated_fat']) {
+    next[key] = Math.max(0, round1((Number(base[key]) || 0) * f));
+  }
+  return next;
+}
+
 // Atwater estimate — used when a macro is edited by hand.
 export function kcalFromMacros({ protein = 0, carbs = 0, fat = 0 } = {}) {
   return Math.max(

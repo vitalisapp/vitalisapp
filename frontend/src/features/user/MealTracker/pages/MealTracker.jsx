@@ -542,8 +542,9 @@ export default function MealTracker() {
       cancelEstimate();
       setDensityError("");
       setManualForm((current) => {
-        const next = { ...current, [key]: value, macroOverride: true };
-        if (key !== "calories") {
+        const next = { ...current, [key]: value, macroOverride: true,
+          calorieOverride: key === "calories" ? value !== "" : Boolean(current.calorieOverride && current.macroOverride) };
+        if (key !== "calories" && !next.calorieOverride) {
           // Keep kcal honest with the edited macros (same rule as the scan editor).
           next.calories = toInputValue(
             kcalFromMacros({

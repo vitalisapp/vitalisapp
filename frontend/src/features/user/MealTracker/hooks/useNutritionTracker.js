@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from '../../../../lib/apiClient.js';
 import { qk } from '../../../../lib/queries.js';
 import { useToastStore } from '../../../../stores/toastStore.js';
+import { scalePortion } from '../../../../lib/nutrition.js';
 
 async function compressImageToBase64(dataUrl) {
   return new Promise((resolve, reject) => {
@@ -133,9 +134,9 @@ function toScanResult(data) {
         food_name: String(it.food_name || 'Unknown food'),
         serving: String(it.serving || ''),
         calories: Math.max(0, Math.round(Number(it.calories) || 0)),
-        protein: Math.max(0, Math.round(Number(it.protein) || 0)),
-        carbs: Math.max(0, Math.round(Number(it.carbs) || 0)),
-        fat: Math.max(0, Math.round(Number(it.fat) || 0)),
+        protein: Math.max(0, Math.round((Number(it.protein) || 0) * 10) / 10),
+        carbs: Math.max(0, Math.round((Number(it.carbs) || 0) * 10) / 10),
+        fat: Math.max(0, Math.round((Number(it.fat) || 0) * 10) / 10),
         saturated_fat: Math.max(0, Number(it.saturated_fat) || 0),
         trans_fat: Math.max(0, Number(it.trans_fat) || 0),
         polyunsaturated_fat: Math.max(0, Number(it.polyunsaturated_fat) || 0),
@@ -241,33 +242,17 @@ export function useNutritionTracker(USER_ID) {
     });
   }, []);
 
-  // Photo can't know portion size: scale selected items, re-derive kcal (P*4+C*4+F*9).
+  // Scale from the last confirmed base, never from an already scaled portion.
   const scaleSelected = useCallback((factor) => {
     const f = Number(factor);
     if (!f || f <= 0 || f > 10) return;
-    const scaleMacro = (v) => Math.max(0, Math.round((Number(v) || 0) * f));
-    const scaleGram = (v) => Math.max(0, Number(((Number(v) || 0) * f).toFixed(1)));
     setResult(prev => {
       if (!prev) return prev;
       return {
         ...prev,
         items: prev.items.map(it => {
           if (!it.selected) return it;
-          const protein = scaleMacro(it.protein);
-          const carbs = scaleMacro(it.carbs);
-          const fat = scaleMacro(it.fat);
-          return {
-            ...it,
-            protein, carbs, fat,
-            saturated_fat: scaleGram(it.saturated_fat),
-            trans_fat: scaleGram(it.trans_fat),
-            polyunsaturated_fat: scaleGram(it.polyunsaturated_fat),
-            monounsaturated_fat: scaleGram(it.monounsaturated_fat),
-            calories: protein * 4 + carbs * 4 + fat * 9,
-            scaled: true,
-            // Portion scaling is also a user correction — counts, not AI.
-            corrected: true,
-          };
+          return scalePortion(it, f);
         }),
       };
     });
@@ -277,21 +262,22 @@ export function useNutritionTracker(USER_ID) {
   // item. Scaled truth: if macros change, kcal is re-derived (P*4+C*4+F*9)
   // unless the kcal itself was edited, in which case it wins.
   const editItem = useCallback((key, patch) => {
-    const clampG = (v) => Math.max(0, Math.round(Number(v) || 0));
+    const clampG = (v) => Math.max(0, Math.round((Number(v) || 0) * 10) / 10);
     setResult(prev => {
       if (!prev) return prev;
       return {
         ...prev,
         items: prev.items.map(it => {
           if (it.key !== key) return it;
-          const next = { ...it, ...patch, key };
+          const next = { ...it, ...Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined)), key };
           const protein = clampG(next.protein);
           const carbs = clampG(next.carbs);
           const fat = clampG(next.fat);
           const kcalGiven = patch.calories !== undefined;
-          next.calories = kcalGiven ? clampG(next.calories) : protein * 4 + carbs * 4 + fat * 9;
+          next.calories = Math.round(kcalGiven ? clampG(next.calories) : protein * 4 + carbs * 4 + fat * 9);
           next.protein = protein; next.carbs = carbs; next.fat = fat;
           next.corrected = true;
+          delete next.portionBase;
           return next;
         }),
       };

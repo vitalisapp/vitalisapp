@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import {
   normalizeGrams,
   scaleFromPer100,
+  scalePortion,
   kcalFromMacros,
   isPer100,
   toInputValue,
@@ -61,6 +62,21 @@ describe("kcalFromMacros", () => {
 
   it("never returns a negative calorie count", () => {
     assert.equal(kcalFromMacros({ protein: -10, carbs: -20, fat: -5 }), 0);
+  });
+});
+
+describe('photo and custom portion scaling', () => {
+  it('does not compound button clicks and restores the exact base', () => {
+    for (const calories of [25, 200, 475, 1200, 3200]) {
+      const base = { calories, protein: 2.7, carbs: 28.2, fat: 0.3, serving: '100 g' };
+      const double = scalePortion(base, 2);
+      assert.equal(scalePortion(double, 2).calories, calories * 2);
+      const restored = scalePortion(scalePortion(double, 0.5), 1);
+      for (const key of Object.keys(base)) assert.equal(restored[key], base[key]);
+    }
+  });
+  it('preserves custom calories when macros are unknown', () => {
+    assert.equal(scalePortion({ calories: 350, protein: 0, carbs: 0, fat: 0 }, 0.5).calories, 175);
   });
 });
 

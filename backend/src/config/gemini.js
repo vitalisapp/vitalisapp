@@ -328,10 +328,8 @@ function extractPieceCount(foodName = "") {
 }
 
 // ─── ANCHOR DB (canonical per-serving values, mirrors foodAnalysisPrompt) ────
-// Used as a plausibility guard: if AI reports < 40% of the anchor-scaled
-// expectation the item is rejected (next model tried); if > 250% it is
-// pulled back toward the anchor and flagged low_confidence. Within band the
-// photo-specific AI estimate is kept untouched.
+// References flag unusual estimates only. They must not replace the visible
+// portion with a generic serving or force retries toward larger estimates.
 const ANCHOR_DB = [
   { keys: ["double cheeseburger", "double burger", "double patty burger"], unit: "pc", qty: 1, calories: 750, protein: 44, carbs: 44, fat: 40 },
   { keys: ["cheeseburger", "burger"], unit: "pc", qty: 1, calories: 550, protein: 30, carbs: 40, fat: 30 },
@@ -379,14 +377,16 @@ const ANCHOR_DB = [
 
 // Parse "2 pcs" / "0.5 cup" / "250g" / "3 slices" / "1 bowl" from serving text.
 function parseServingQuantity(serving = "") {
-  const s = String(serving || "").toLowerCase();
+  const s = String(serving || "").toLowerCase()
+    .replace(/(\d)?([½¼¾⅓⅔])/g, (_, whole, fraction) => String((Number(whole) || 0) + ({ '½': 0.5, '¼': 0.25, '¾': 0.75, '⅓': 1 / 3, '⅔': 2 / 3 })[fraction]))
+    .replace(/(?:(\d+)\s+)?(\d+)\s*\/\s*(\d+)/g, (_, whole, numerator, denominator) => Number(denominator) > 0 ? String((Number(whole) || 0) + Number(numerator) / Number(denominator)) : 'invalid');
   const m = s.match(/(\d+(?:\.\d+)?)\s*(cups?|pcs?|pieces?|g(?:rams?)?|kg|slices?|bowls?|servings?|plates?|bottles?|cans?|glasses?|sachets?)/);
   if (!m) return null;
   let qty = parseFloat(m[1]);
   let unit = m[2];
   if (unit.startsWith("kg")) { qty *= 1000; unit = "g"; }
   else if (unit.startsWith("cup")) unit = "cup";
-  else if (unit[0] === "p" || unit.startsWith("piece")) unit = "pc";
+  else if (unit.startsWith("pc") || unit.startsWith("piece")) unit = "pc";
   else if (unit.startsWith("slic")) unit = "slice";
   else if (unit.startsWith("bowl")) unit = "bowl";
   else if (unit.startsWith("serv") || unit.startsWith("plate")) unit = "serving";
@@ -411,7 +411,8 @@ function anchorExpected(foodName = "", serving = "") {
       scaled: true,
     };
   }
-  return { ...anchor, scaled: false };
+  // Incompatible units (e.g. grams vs pieces) cannot establish portion size.
+  return null;
 }
 
 // ─── MACRO VALIDATION & CORRECTION ───────────────────────────────────────────
@@ -430,10 +431,12 @@ function validateAndCorrectMacros(parsed) {
   );
 
   // Clamp negatives
-  protein = Math.max(0, Math.round(Number(protein) || 0));
-  carbs = Math.max(0, Math.round(Number(carbs) || 0));
-  fat = Math.max(0, Math.round(Number(fat) || 0));
-  calories = Math.max(1, Math.round(Number(calories) || 0));
+  const nutrient = (value) => Number.isFinite(Number(value)) ? Math.max(0, Math.round(Number(value) * 10) / 10) : 0;
+  const hasCalories = calories != null && calories !== "" && Number.isFinite(Number(calories)) && Number(calories) >= 0;
+  protein = nutrient(protein);
+  carbs = nutrient(carbs);
+  fat = nutrient(fat);
+  calories = Math.round(nutrient(calories));
   // Clamp fats to 1 decimal
   saturated_fat = Math.round(saturated_fat * 10) / 10;
   trans_fat = Math.round(trans_fat * 10) / 10;
@@ -449,69 +452,27 @@ function validateAndCorrectMacros(parsed) {
     monounsaturated_fat = Math.round(monounsaturated_fat * scale * 10) / 10;
   }
 
-  // Enforce carbs for breaded/starchy/sweet foods
-  if (carbs === 0 && !isZeroCarbAllowed(food_name)) {
-    devWarn(`[VITALIS IMAGE] Zero carb correction for "${food_name}"`);
-    carbs = Math.max(5, Math.round((calories * 0.1) / 4));
-  }
+  // Missing nutrients are uncertain, not evidence for inventing extra food.
+  let low_confidence = Boolean(parsed.low_confidence) ||
+    (protein === 0 && isMeatyFood(food_name));
 
-  // Enforce fat for fried/oily foods
-  if (fat === 0 && !isZeroFatAllowed(food_name)) {
-    devWarn(`[VITALIS IMAGE] Zero fat correction for "${food_name}"`);
-    fat = Math.max(3, Math.round((calories * 0.08) / 9));
-  }
-
-  // Protein floor for meaty / high-protein foods — 0g protein for a
-  // burger, chicken, egg, cheese etc. is never plausible (e.g. the
-  // "Double Cheeseburger 47 kcal P0" case). Inject a minimum derived
-  // from stated calories and flag low confidence.
-  let low_confidence = false;
-  if (protein === 0 && isMeatyFood(food_name)) {
-    protein = Math.max(8, Math.round((calories * 0.15) / 4));
-    low_confidence = true;
-    devWarn(`[VITALIS IMAGE] Zero protein correction for "${food_name}" → ${protein}g (low confidence)`);
-  }
-
-  // Protein cap for fried chicken by piece count
-  if (isBreadedFood(food_name)) {
-    const pieceCount = extractPieceCount(food_name);
-    if (pieceCount) {
-      const maxProtein = pieceCount * 25;
-      if (protein > maxProtein) {
-        devWarn(
-          `[VITALIS IMAGE] Protein cap: ${protein}g → ${maxProtein}g for ${pieceCount} pieces`,
-        );
-        protein = maxProtein;
-      }
-    }
-
-    // Minimum carbs for breaded foods
-    if (carbs < 10) {
-      carbs = Math.max(15, Math.round((calories * 0.12) / 4));
-    }
-  }
-
-  // Always recalculate calories from macros — macros are source of truth
+  // Both calories and macros are estimates. A disagreement must not silently
+  // replace portion calories with a larger, equally uncertain macro estimate.
   const macroCalories = protein * 4 + carbs * 4 + fat * 9;
 
-  if (macroCalories > 0) {
+  if (!hasCalories) {
+    calories = Math.round(macroCalories);
+    low_confidence = true;
+  } else {
     const diff = Math.abs(macroCalories - calories) / Math.max(calories, 1);
     if (diff > 0.05) {
-      devWarn(
-        `[VITALIS IMAGE] Calorie mismatch: stated=${calories}, macro-derived=${macroCalories} — using macro-derived`,
-      );
-      calories = macroCalories;
+      low_confidence = true;
     }
   }
 
-  // Sanity cap: single dishes rarely exceed 2500 kcal
+  // Shared meals can legitimately exceed 2500 kcal; flag rather than truncate.
   if (calories > 2500) {
-    devWarn(`[VITALIS IMAGE] Calorie cap: ${calories} → 2500`);
-    const scale = 2500 / calories;
-    calories = 2500;
-    protein = Math.round(protein * scale);
-    carbs = Math.round(carbs * scale);
-    fat = Math.round(fat * scale);
+    low_confidence = true;
   }
 
   // Serving is free text from AI — cap length so it fits the DB column
@@ -520,46 +481,30 @@ function validateAndCorrectMacros(parsed) {
       ? parsed.serving.trim().slice(0, 100)
       : "";
 
-  // Absurd-result reject: a photographed main dish can never plausibly be
-  // < 120 kcal with < 30g total macros (e.g. "Double Cheeseburger 47 kcal").
-  // Return null so normalizeItems drops the item and analyzeFoodImage tries
-  // the next model instead of showing a nonsense number.
+  // Small main-dish estimates need review, but may be legitimate small portions.
   const totalMacros = protein + carbs + fat;
   if (isMainDish(food_name) && calories < 120 && totalMacros < 30) {
-    devWarn(`[VITALIS IMAGE] Absurd result rejected for "${food_name}": ${calories} kcal P${protein}/C${carbs}/F${fat} — trying next model`);
-    return null;
+    low_confidence = true;
   }
 
   // Weight plausibility: when the model supplies estimated_weight_g,
   // kcal/g must be physically possible (0.05–9.5 covers lettuce → oil).
-  // Outside that band the estimate is hallucinated → retry next model.
+  // Outside that band flag uncertainty without inventing a replacement portion.
   const estW = Number(parsed.estimated_weight_g);
   if (estW > 0 && Number.isFinite(estW)) {
     const perGram = calories / estW;
     if (perGram < 0.05 || perGram > 9.5) {
-      devWarn(`[VITALIS IMAGE] Weight implausible for "${food_name}": ${calories} kcal / ${estW}g = ${perGram.toFixed(2)}/g — trying next model`);
-      return null;
+      low_confidence = true;
     }
   }
-  // Anchor plausibility guard: compare against the canonical per-serving
-  // values (scaled when the serving parses, e.g. "2 pcs"). < 40% of anchor
-  // means the model missed most of the food → reject (retry next model).
-  // > 250% means hallucinated abundance → pull back to 1.5x anchor + flag.
-  // Inside the band the photo-specific estimate is kept untouched.
+  // Compare references only for compatible units, without overriding calories.
   const expected = anchorExpected(food_name, serving);
   if (expected && expected.calories > 0) {
     if (calories < expected.calories * 0.4) {
-      devWarn(`[VITALIS IMAGE] Anchor reject for "${food_name}": ${calories} kcal vs anchor ${Math.round(expected.calories)} — trying next model`);
-      return null;
+      low_confidence = true;
     }
     if (calories > expected.calories * 2.5) {
-      const scale = (expected.calories * 1.5) / calories;
-      calories = Math.round(expected.calories * 1.5);
-      protein = Math.round(protein * scale);
-      carbs = Math.round(carbs * scale);
-      fat = Math.round(fat * scale);
       low_confidence = true;
-      devWarn(`[VITALIS IMAGE] Anchor cap for "${food_name}" → ${calories} kcal (low confidence)`);
     }
   }
 

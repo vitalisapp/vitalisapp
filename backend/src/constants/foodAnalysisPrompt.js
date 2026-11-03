@@ -10,9 +10,9 @@ List EVERY distinct food visible in this photo as its own item, then output a si
       serving    – string: estimated serving size (e.g. "1 cup", "0.5 cup cooked", "2 pcs"),
       estimated_weight_g – integer: total visible grams of THIS item (e.g. 180),
       calories   – integer: kcal for the VISIBLE PORTION ONLY,
-      protein    – integer: grams of protein,
-      carbs      – integer: grams of carbohydrates,
-      fat        – integer: grams of total fat,
+       protein    – number: grams of protein (up to 1 decimal),
+       carbs      – number: grams of carbohydrates (up to 1 decimal),
+       fat        – number: grams of total fat (up to 1 decimal),
       saturated_fat       – number: grams of saturated fat (1 decimal, e.g. 4.2),
       trans_fat           – number: grams of trans fat (1 decimal),
       polyunsaturated_fat – number: grams of polyunsaturated fat (1 decimal),
@@ -33,19 +33,28 @@ PORTION ESTIMATION RULES
 2. Count pieces when applicable and include the count in food_name.
 3. Compare food size to standard references: plate (~25cm), bowl (~16cm), utensils, or packaging.
 4. A standard Filipino plate of rice = 1 cup (~180g cooked rice).
+   This is only a size reference, never a default portion. Scale every reference
+   to the visible amount; do not assume a whole serving for a small portion.
 5. FIRST estimate total visible grams per item (estimated_weight_g), THEN derive
    macros from that weight. kcal per gram must be plausible: watery veg/fruit
    0.1–1, cooked rice/noodles 1–1.5, bread 2–3, meat 1.5–3, fried/fast food
    2–4, cheese 3–4.5, oil/butter ~9. If your numbers fall outside, re-estimate
-   the weight before outputting.
+    the weight before outputting.
+   Calculate each nutrient as its per-100g value × estimated_weight_g / 100.
+   Use the matching cooked/raw preparation and edible weight (exclude bones).
+   Do not count a composite dish and its ingredients again as separate items.
+   When a nutrition label is clearly readable, use its values and serving basis.
 
 MACRO RULES (non-negotiable)
-5. NEVER output 0g carbs for: fried/breaded foods, rice, bread, pasta, noodles, sauced dishes, desserts, fruits, or drinks with sugar.
-6. NEVER output 0g fat for: fried foods, meat dishes, coconut-based dishes, fast food, dairy, or anything cooked in oil.
-7. Macro energy MUST match calories within 5%:
+5. Account for carbohydrate-containing ingredients actually present in the portion.
+6. Account for fat from the preparation; do not assume extra oil or dressing.
+7. Check macro energy against calories:
    (protein × 4) + (carbs × 4) + (fat × 9) = calories ± 5%
-   Verify this math BEFORE outputting. Adjust until it holds.
-8. All values must be POSITIVE INTEGERS. No decimals. No negatives.
+    Use this as a consistency check, not a reason to inflate a portion. Label
+    calories can differ because of fiber, sugar alcohols, alcohol and rounding.
+8. Calories must be non-negative integers; nutrient grams may have 1 decimal.
+   Zero is valid for nutrients absent from a food; never add minimum quantities
+   just to make a nutrient nonzero. References are approximate, not minimums.
 
 ─── CALIBRATION ANCHORS ────────────────────────────────────────────────────
 
@@ -221,9 +230,8 @@ DAIRY & EGGS:
 ─── END OF CALIBRATION ANCHORS ────────────────────────────────────────────────
 
 CRITICAL MISTAKES TO AVOID
-- Never output 0g carbs for fried, breaded, sauced, sweet, or starchy foods
-- Never output 0g fat for fried, oily, meaty, dairy, or fast food items
-- Never assign 2000+ kcal to a single non-shared portion
+- Do not add arbitrary minimum carbs or fat to small portions
+- Scale shared and small portions by their actual estimated weight
 - Always verify: (protein × 4) + (carbs × 4) + (fat × 9) ≈ your calorie number ± 5%
 - If the food is not in the anchors, use the closest similar food as your base estimate
 
@@ -233,7 +241,7 @@ FAT BREAKDOWN RULES
 11. If unsure, split remaining fat after saturated/trans as 40% mono, 35% poly, remainder.
 
 OUTPUT FORMAT (raw JSON only — no markdown, no prose, no code fences):
-{"items":[{"food_name":"...","serving":"...","calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"possible_allergens":[]}],"suggestion":"..."}`;
+{"items":[{"food_name":"...","serving":"...","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"possible_allergens":[]}],"suggestion":"..."}`;
 
 // Per-100 g density for ONE named food. Used by the manual meal form's
 // "Estimate nutrition" action when a dish is not in `food_catalog`, so a user
