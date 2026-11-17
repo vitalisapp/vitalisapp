@@ -49,6 +49,18 @@ function getVisionModels() {
   return ["gemini-3.6-flash", "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash"];
 }
 
+// Independent Groq vision leg — catches Gemini-wide outages/overload.
+// qwen/qwen3.8-27b is Groq's documented vision model (image_url + JSON mode,
+// 20MB request limit — images are server-compressed before this point).
+function getGroqVisionModels() {
+  const fromEnv = String(process.env.GROQ_VISION_MODELS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (fromEnv.length) return fromEnv;
+  return ["qwen/qwen3.8-27b"];
+}
+
 // Exponential backoff with jitter for 503/429; fixed 1s for the rest.
 function isRetryableError(err) {
   const msg = String((err && err.message) || err || "").toLowerCase();
@@ -72,10 +84,13 @@ function backoffSleep(attempt, err) {
 }
 
 const AI_TEXT_TIMEOUT_MS = 25000;
-// Env-tunable so deploys can trade latency for coverage. 40s keeps thinking
-// models comfortable while the chain-wide deadline (analyzeFoodImage) still
-// brings the whole scan home inside the client's abort window.
-const AI_VISION_TIMEOUT_MS = Number.parseInt(process.env.AI_VISION_TIMEOUT_MS || "40000", 10) || 40000;
+// Env-tunable so deploys can trade latency for coverage. Healthy vision models
+// answer in ~2-5s: 20s per provider caps a hung one while leaving headroom for
+// slow-but-alive thinking models. The chain-wide deadline (analyzeFoodImage)
+// plus the Groq fallback leg keep the whole scan inside the client's window.
+const AI_VISION_TIMEOUT_MS = Number.parseInt(process.env.AI_VISION_TIMEOUT_MS || "20000", 10) || 20000;
+// Groq vision is a plain chat.completions call (no thinking budget) — fast.
+const AI_GROQ_VISION_TIMEOUT_MS = Number.parseInt(process.env.AI_GROQ_VISION_TIMEOUT_MS || "20000", 10) || 20000;
 
 // SDKs expose no AbortSignal: race caps a hung provider so it fails over
 // instead of parking the request (and its 10MB body) forever.
@@ -737,12 +752,45 @@ async function analyzeWithGeminiVision(base64Data, mimeType, modelName) {
   return text;
 }
 
-// Chain-wide budget: stop trying further models once this much has elapsed so
-// a full 4-model failover still finishes inside the client's abort window.
-const VISION_CHAIN_BUDGET_MS = 120000;
+// Chain-wide budget: stop trying further Gemini models once this much has
+// elapsed — the Groq fallback leg still runs after this with its own timeout.
+const VISION_CHAIN_BUDGET_MS = 60000;
 // Transient Gemini overload ("busy") windows recover in seconds: wait this
 // long and sweep the model list one more time before giving up.
-const VISION_BUSY_COOLDOWN_MS = 10000;
+const VISION_BUSY_COOLDOWN_MS = 5000;
+
+// Groq vision fallback: chat.completions with a base64 data-URI image part.
+// JSON mode is safe here — FOOD_ANALYSIS_PROMPT explicitly asks for JSON.
+async function analyzeWithGroqVision(base64Data, mimeType, modelName) {
+  devLog(`[VITALIS IMAGE] Trying Groq ${modelName}...`);
+  const completion = await withTimeout(
+    getGroq().chat.completions.create({
+      model: modelName,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: FOOD_ANALYSIS_PROMPT },
+            {
+              type: "image_url",
+              image_url: { url: `data:${mimeType};base64,${base64Data}` },
+            },
+          ],
+        },
+      ],
+      temperature: 0,
+      max_completion_tokens: 4096,
+      response_format: { type: "json_object" },
+    }),
+    AI_GROQ_VISION_TIMEOUT_MS,
+    `Groq ${modelName}`,
+  );
+
+  const text = completion?.choices?.[0]?.message?.content;
+  if (!text) throw new Error(`Groq ${modelName} returned empty response`);
+  devLog(`[VITALIS IMAGE] Groq ${modelName} raw:`, String(text).slice(0, 200));
+  return text;
+}
 
 // MAIN EXPORT
 async function analyzeFoodImage(base64Data, mimeType = "image/jpeg") {
@@ -790,7 +838,11 @@ async function analyzeFoodImage(base64Data, mimeType = "image/jpeg") {
           devError("[VITALIS IMAGE] ❌ Provider failed:", err.message);
           seenOther = true;
         }
-        await backoffSleep(i, err);
+        // Moving to the NEXT provider needs no exponential backoff — a fresh
+        // model isn't rate-limited by the previous one's 503. Short pause only.
+        await new Promise((r) =>
+          setTimeout(r, isRetryableError(err) ? 750 : 150),
+        );
       }
     }
     return null;
@@ -804,6 +856,30 @@ async function analyzeFoodImage(base64Data, mimeType = "image/jpeg") {
     devLog("[VITALIS IMAGE] All providers busy — cooling down and retrying once…");
     await new Promise((r) => setTimeout(r, VISION_BUSY_COOLDOWN_MS));
     if (Date.now() < chainDeadline) rawJson = await tryModelRound();
+  }
+
+  // Groq fallback leg: an independent provider that rescans the photo when the
+  // whole Gemini chain is down/overloaded. Runs even if the chain deadline has
+  // lapsed — it's the last real attempt before the empty fallback, capped by
+  // AI_GROQ_VISION_TIMEOUT_MS per model.
+  if (!rawJson && process.env.GROQ_API_KEY) {
+    for (const groqModel of getGroqVisionModels()) {
+      try {
+        const raw = await analyzeWithGroqVision(cleanBase64, mimeType, groqModel);
+        const result = normalizeItems(raw);
+        if (result && result.items && result.items.length > 0) {
+          devLog(
+            "[VITALIS IMAGE] ✅ Final result (Groq):",
+            JSON.stringify(result).slice(0, 300),
+          );
+          rawJson = JSON.stringify(result);
+          break;
+        }
+        devWarn("[VITALIS IMAGE] Groq parse failed or rejected — no vision providers left");
+      } catch (err) {
+        devError("[VITALIS IMAGE] ❌ Groq vision failed:", err.message);
+      }
+    }
   }
 
   if (rawJson) return rawJson;
@@ -900,6 +976,7 @@ function safeParseAI(raw, fallback = null) {
 module.exports = {
   AI_TEXT_TIMEOUT_MS,
   AI_VISION_TIMEOUT_MS,
+  AI_GROQ_VISION_TIMEOUT_MS,
   withTimeout,
   get genAI() {
     return getGenAI();
@@ -910,6 +987,7 @@ module.exports = {
   aiConfigured,
   getTextModels,
   getVisionModels,
+  getGroqVisionModels,
   stripDataUriPrefix(base64) {
     const s = String(base64 || "");
     return s.includes(",") ? s.split(",").pop() : s;
