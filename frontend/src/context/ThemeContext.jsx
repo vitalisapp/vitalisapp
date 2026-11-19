@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { apiGet, apiFetch } from '../lib/apiClient.js';
 import { safeGet, safeSet } from '../lib/storage.js';
 import { useAuth } from '../hooks/useAuth.jsx';
@@ -39,6 +40,17 @@ const resolveEffective = (pref) => {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
 
+// Root theme class + browser chrome color. Called from the effect and also
+// synchronously inside the view-transition callback.
+const applyRootTheme = (theme) => {
+  const root = document.documentElement;
+  root.classList.remove('light-theme', 'dark-theme');
+  root.classList.add(`${theme}-theme`);
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute('content', theme === 'light' ? '#f5f7f1' : '#0d110c');
+};
+
 const persistServerTheme = (theme) => {
   if (!serverSessionKnownGood) return Promise.resolve(null);
   try {
@@ -75,18 +87,48 @@ export const ThemeProvider = ({ children }) => {
     return saved ? resolveEffective(saved) : resolveEffective('system');
   });
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const switchTimer = useRef(null);
-  const smoothThemeWindow = useCallback(() => {
+  const transitionRef = useRef(null);
+  // Flip the theme with one snapshot crossfade (View Transitions API) instead
+  // of tweening every element's colors — that per-element tween was the lag.
+  // Unsupported browsers / reduced motion: instant, transition-free switch.
+  const switchTheme = useCallback((nextPref, nextTheme) => {
+    const root = document.documentElement;
+    const commit = () => {
+      flushSync(() => {
+        setPreferenceState(nextPref);
+        setTheme(nextTheme);
+      });
+      // Apply the class synchronously so the new snapshot is already themed.
+      applyRootTheme(nextTheme);
+    };
+    const reduceMotion = typeof window !== 'undefined' && window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    root.classList.add('theme-switching');
+    if (reduceMotion || typeof document.startViewTransition !== 'function') {
+      commit();
+      requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-switching')));
+      return;
+    }
+
+    try { transitionRef.current?.skipTransition?.(); } catch { /* noop */ }
+    setIsTransitioning(true);
+    let vt;
     try {
-      const reduceMotion = typeof window !== 'undefined' && window.matchMedia
-        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (reduceMotion) return;
-      if (switchTimer.current) clearTimeout(switchTimer.current);
-      document.documentElement.classList.add('theme-switching');
-      switchTimer.current = setTimeout(() => {
-        try { document.documentElement.classList.remove('theme-switching'); } catch { /* noop */ }
-      }, 500);
-    } catch { /* noop */ }
+      vt = document.startViewTransition(commit);
+    } catch {
+      commit();
+      root.classList.remove('theme-switching');
+      setIsTransitioning(false);
+      return;
+    }
+    transitionRef.current = vt;
+    vt.finished.catch(() => {}).finally(() => {
+      if (transitionRef.current !== vt) return;
+      transitionRef.current = null;
+      root.classList.remove('theme-switching');
+      setIsTransitioning(false);
+    });
   }, []);
   const hydratedFromServer = useRef(false);
   // Gate on proven session, not cached user (stale cache + dead cookie = 401 spam).
@@ -117,13 +159,8 @@ export const ThemeProvider = ({ children }) => {
   }, [authUserId]);
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.classList.remove('light-theme', 'dark-theme');
-    root.classList.add(`${theme}-theme`);
-    // Keep the browser/PWA chrome (address bar, status bar) in step with the theme.
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', theme === 'light' ? '#f5f7f1' : '#0d110c');
+    // Keep the root class and browser/PWA chrome in step with the theme.
+    applyRootTheme(theme);
     safeSet(THEME_STORAGE_KEY, preference);
     if (!authUserId) return;
     persistServerTheme(preference);
@@ -143,25 +180,17 @@ export const ThemeProvider = ({ children }) => {
 
   const setPreferenceValue = useCallback((newTheme) => {
     if (newTheme === 'light' || newTheme === 'dark' || newTheme === 'system') {
-      setIsTransitioning(true);
-      smoothThemeWindow();
-      setPreferenceState(newTheme);
-      setTheme(resolveEffective(newTheme));
-      setTimeout(() => setIsTransitioning(false), 500);
+      switchTheme(newTheme, resolveEffective(newTheme));
     }
-  }, [smoothThemeWindow]);
+  }, [switchTheme]);
 
   const toggleTheme = useCallback(() => {
     // Quick toggle always lands on an explicit theme: flipping while on
     // 'system' pins the opposite of whatever is currently effective.
-    setIsTransitioning(true);
-    smoothThemeWindow();
     const effective = document.documentElement.classList.contains('light-theme') ? 'light' : 'dark';
     const next = effective === 'dark' ? 'light' : 'dark';
-    setPreferenceState(next);
-    setTheme(next);
-    setTimeout(() => setIsTransitioning(false), 500);
-  }, [smoothThemeWindow]);
+    switchTheme(next, next);
+  }, [switchTheme]);
 
   return (
     <ThemeContext.Provider value={{

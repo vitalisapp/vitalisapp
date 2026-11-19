@@ -1,7 +1,8 @@
 const { it } = require('node:test');
 const assert = require('node:assert/strict');
 
-process.env.NODE_ENV = 'development';
+// Verification is enforced everywhere except NODE_ENV=development.
+process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret-min-32-chars-0123456789ab';
 let queries = [];
 let verified = false;
@@ -51,7 +52,7 @@ function response() {
 }
 const nextError = (err) => { throw err; };
 
-it('requires email confirmation in development, issues no signup session, and gates existing sessions', async () => {
+it('requires email confirmation outside development, issues no signup session, and gates existing sessions', async () => {
   queries = [];
   const res = response();
   await postregister({ body: { name: 'Test', email: 'test@example.com', password: 'password123', agreed: true }, headers: {} }, res, nextError);
@@ -105,4 +106,29 @@ it('rejects old-address links after changing email', async () => {
   await assert.rejects(service.verifyEmail(oldToken), { code: 'INVALID_TOKEN' });
   await service.verifyEmail(new URL(sentLink).searchParams.get('token'));
   assert.equal(verified, true);
+});
+
+it('skips verification in development: signup is verified, gets a session, and login auto-verifies', async () => {
+  process.env.NODE_ENV = 'development';
+  try {
+    verified = false;
+    sentLink = undefined;
+    queries = [];
+    let cookieSet = false;
+    const res = { ...response(), cookie() { cookieSet = true; } };
+    await postregister({ body: { name: 'Dev', email: 'test@example.com', password: 'password123', agreed: true }, headers: {} }, res, nextError);
+    assert.equal(res.statusCode, 201);
+    assert.equal(res.body.needsVerification, false);
+    assert.equal(cookieSet, true);
+    assert.equal(sentLink, undefined);
+    assert.equal(queries.some((sql) => sql.startsWith('INSERT INTO email_verifications')), false);
+
+    // Pre-existing unverified account signs in without the check-email step.
+    verified = false;
+    const { user: loggedIn } = await service.login({ email: 'test@example.com', password: 'password123' });
+    assert.equal(Boolean(loggedIn.is_verified), true);
+    assert.equal(verified, true);
+  } finally {
+    process.env.NODE_ENV = 'test';
+  }
 });

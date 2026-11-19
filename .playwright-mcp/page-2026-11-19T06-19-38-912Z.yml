@@ -1,0 +1,27 @@
+- main [ref=f2e11]:
+  - region "Email verification" [ref=f2e12]:
+    - generic [aria-hidden] [ref=f2e14]: smartphone
+    - heading "VERIFY YOUR PHONE" [level=1] [ref=f2e15]
+    - paragraph [ref=f2e16]: Confirm your number to receive a 6-digit code.
+    - generic [ref=f2e17]:
+      - generic [ref=f2e18]: Account email
+      - textbox "Account email" [ref=f2e19]:
+        - /placeholder: you@example.com
+    - generic [ref=f2e20]:
+      - paragraph [ref=f2e21]: Enter the 6-digit code
+      - group "Enter the 6-digit code" [ref=f2e23]:
+        - textbox "Digit 1 of 6" [active] [ref=f2e24]
+        - textbox "Digit 2 of 6" [ref=f2e25]
+        - textbox "Digit 3 of 6" [ref=f2e26]
+        - textbox "Digit 4 of 6" [ref=f2e27]
+        - textbox "Digit 5 of 6" [ref=f2e28]
+        - textbox "Digit 6 of 6" [ref=f2e29]
+      - button "Verify Code" [disabled] [ref=f2e30]
+    - generic [ref=f2e31]:
+      - paragraph [ref=f2e32]:
+        - text: Didn't receive it?
+        - button "Resend Code" [ref=f2e33] [cursor=pointer]
+      - paragraph [ref=f2e34]:
+        - text: Wrong number?
+        - button "Change Number" [ref=f2e35] [cursor=pointer]
+    - button "Back to Sign In" [ref=f2e36]

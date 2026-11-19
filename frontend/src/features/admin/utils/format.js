@@ -25,3 +25,18 @@ export const humanize = (value) => String(value || '—')
   .toLowerCase()
   .replace(/_/g, ' ')
   .replace(/\b\w/g, (c) => c.toUpperCase());
+
+// +639059335613 -> "+63 905 933 5613". Anything unexpected is shown as-is.
+export const fmtPhone = (value) => {
+  const raw = String(value || '').trim();
+  const m = /^\+63(9\d{2})(\d{3})(\d{4})$/.exec(raw);
+  return m ? `+63 ${m[1]} ${m[2]} ${m[3]}` : (raw || '—');
+};
+
+// Verification method from the admin API (verification_method / pending_method).
+export const verificationMeta = (user) => {
+  if (user?.verification_method === 'phone') return { label: 'Phone (SMS)', short: 'Phone', icon: 'smartphone', tone: 'active' };
+  if (user?.verification_method === 'email') return { label: 'Email', short: 'Email', icon: 'mail', tone: 'info' };
+  if (user?.pending_method === 'phone') return { label: 'Pending · Phone (SMS)', short: 'Pending SMS', icon: 'sms', tone: 'warn' };
+  return { label: 'Pending · Email', short: 'Pending email', icon: 'mark_email_unread', tone: 'warn' };
+};

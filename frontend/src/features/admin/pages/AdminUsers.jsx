@@ -9,7 +9,7 @@ import {
   SearchField,
 } from '../components/AdminBits.jsx';
 import { useAdminToast } from '../hooks/useAdminToast.jsx';
-import { fmtNum, fmtWhen, initials } from '../utils/format.js';
+import { fmtNum, fmtWhen, initials, verificationMeta } from '../utils/format.js';
 
 const PAGE_SIZE = 12;
 
@@ -130,7 +130,7 @@ export default function AdminUsers() {
                   <th>Member</th>
                   <th>Role</th>
                   <th>Status</th>
-                  <th>Verified</th>
+                  <th>Verification</th>
                   <th>Joined</th>
                   <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
@@ -150,9 +150,10 @@ export default function AdminUsers() {
                     <td><Badge tone={row.role === 'admin' ? 'admin' : 'member'}>{row.role}</Badge></td>
                     <td><Badge tone={row.status === 'active' ? 'active' : 'off'}>{row.status}</Badge></td>
                     <td>
-                      <Badge tone={row.is_verified ? 'info' : 'warn'} icon={row.is_verified ? 'verified' : 'mark_email_unread'}>
-                        {row.is_verified ? 'Verified' : 'Pending'}
-                      </Badge>
+                      {(() => {
+                        const v = verificationMeta(row);
+                        return <Badge tone={v.tone} icon={v.icon}>{v.short}</Badge>;
+                      })()}
                     </td>
                     <td className="adm-cell-muted">{fmtWhen(row.created_at)}</td>
                     <td onClick={(e) => e.stopPropagation()}>

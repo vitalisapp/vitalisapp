@@ -428,6 +428,7 @@ const Profile = ({ embedded = false }) => {
     handleInputChange, handleDiscard, confirmDiscard, cancelDiscard, showDiscardConfirm, handleSave, handleLogout,
     handleRevoke,
     showToast,
+    phoneVerified,
   } = useProfile();
 
   const {
@@ -779,7 +780,7 @@ const Profile = ({ embedded = false }) => {
             <div className="pf-list">
               {/* My Account */}
               <div className="pf-list-item" ref={accountSectionRef}>
-                <SectionRow icon="person" title="My Account" subtitle="Name, contact & bio" attention={needsOnboarding} expanded={openSection === 'account'} onClick={() => toggle('account')} />
+                <SectionRow icon="person" title="My Account" subtitle="Name, mobile, contact & bio" attention={needsOnboarding} expanded={openSection === 'account'} onClick={() => toggle('account')} />
                 {openSection === 'account' && (
                   <div className="pf-row-panel">
                     <div className={`pf-account-form ${isMasterEditing ? '' : 'is-readonly'}`}>
@@ -793,6 +794,44 @@ const Profile = ({ embedded = false }) => {
                       <div className="min-w-0">
                         <label htmlFor="pf-email" className="text-[length:var(--fs-10)] font-bold uppercase tracking-widest text-[var(--text-muted)]">Email (locked)</label>
                         <input id="pf-email" value={formData.email} readOnly className="mt-1 w-full h-12 min-h-[44px] rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] px-3 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] text-[var(--text-muted)] opacity-60" />
+                      </div>
+                      <div className="pf-form-span min-w-0">
+                        <label htmlFor="pf-phone" className="text-[length:var(--fs-10)] font-bold uppercase tracking-widest text-[var(--text-muted)]">Mobile number</label>
+                        <div className="relative mt-1">
+                          <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[length:var(--fs-18)] text-[var(--text-muted)]" aria-hidden="true">smartphone</span>
+                          {/* type="tel" + numeric keypad: digits only. type="number" would drop
+                              the leading 0 and allow e/+/- and spinner arrows. */}
+                          <input
+                            id="pf-phone"
+                            type="tel"
+                            inputMode="numeric"
+                            pattern="09[0-9]{9}"
+                            maxLength={11}
+                            autoComplete="tel-national"
+                            value={formData.phone}
+                            disabled={!isMasterEditing}
+                            onChange={(e) => handleInputChange({ target: { value: e.target.value.replace(/\D/g, '').slice(0, 11) } }, 'phone')}
+                            onKeyDown={(e) => {
+                              // Block non-digit characters; keep editing/navigation keys.
+                              if (e.key.length === 1 && !/\d/.test(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault();
+                            }}
+                            placeholder="09XXXXXXXXX"
+                            aria-describedby="pf-phone-hint"
+                            aria-invalid={Boolean(formData.phone) && !/^09\d{9}$/.test(formData.phone)}
+                            className="w-full h-12 min-h-[44px] rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] pl-10 pr-28 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] tabular-nums tracking-wide text-[var(--text-primary)] outline-none focus:border-[var(--accent)] aria-[invalid=true]:border-[var(--error)] disabled:opacity-60"
+                          />
+                          {formData.phone && (
+                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[length:var(--fs-10)] font-bold ${phoneVerified ? 'bg-[var(--success-bg)] text-[var(--success)]' : 'bg-[var(--warning-bg)] text-[var(--warning)]'}`}>
+                              <span className="material-symbols-outlined text-[length:var(--fs-12)]" aria-hidden="true">{phoneVerified ? 'verified' : 'schedule'}</span>
+                              {phoneVerified ? 'Verified' : 'Not verified'}
+                            </span>
+                          )}
+                        </div>
+                        <p id="pf-phone-hint" className={`mt-1 text-[length:var(--fs-11)] ${formData.phone && !/^09\d{9}$/.test(formData.phone) ? 'text-[var(--error)]' : 'text-[var(--text-muted)]'}`}>
+                          {formData.phone && !/^09\d{9}$/.test(formData.phone)
+                            ? `Enter 11 digits starting with 09 (${formData.phone.length}/11).`
+                            : 'Philippine mobile number, digits only. Used for account verification.'}
+                        </p>
                       </div>
                       <div className="pf-form-span min-w-0">
                         <label htmlFor="pf-contact" className="text-[length:var(--fs-10)] font-bold uppercase tracking-widest text-[var(--text-muted)]">Emergency contact</label>

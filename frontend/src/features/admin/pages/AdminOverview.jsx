@@ -8,6 +8,7 @@ import {
 } from '../components/AdminBits.jsx';
 import AdminUsageChart from '../components/AdminUsageChart.jsx';
 import AdminCalendar from '../components/AdminCalendar.jsx';
+import AdminSmsPanel from '../components/AdminSmsPanel.jsx';
 import { buildUsageSeries } from '../utils/usage.js';
 import { metaForAction } from '../utils/actionMeta.js';
 import { fmtAgo, localDayKey } from '../utils/time.js';
@@ -139,6 +140,7 @@ export default function AdminOverview() {
   const overview = useAdminResource(OVERVIEW_PATH);
   const usage = useAdminResource(`/api/admin/ai-usage?days=${windowDays}`);
   const audit = useAdminResource('/api/admin/audit?limit=120&offset=0');
+  const sms = useAdminResource('/api/admin/sms?days=' + windowDays);
 
   const usageSeries = useMemo(
     () => buildUsageSeries(usage.data?.perDay || [], windowDays),
@@ -171,6 +173,7 @@ export default function AdminOverview() {
     overview.reload();
     usage.reload();
     audit.reload();
+    sms.reload();
   };
 
   const hero = (
@@ -335,6 +338,8 @@ export default function AdminOverview() {
                 </>
               )}
             </div>
+
+            <AdminSmsPanel resource={sms} windowDays={windowDays} />
           </section>
 
           <div className="adm-dash__lower">

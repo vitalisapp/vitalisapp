@@ -656,7 +656,7 @@ const CameraWorkout = () => {
     }
   }, [isRecording, fromPlan, navigate]);
 
-  const { poseReady, loadError } = usePoseEngine({
+  const { poseReady, loadError, retryPose } = usePoseEngine({
     cameraOn,
     webcamRef,
     workoutType: counterType,
@@ -948,6 +948,7 @@ const CameraWorkout = () => {
               isRecording={isRecording}
               poseReady={poseReady}
               loadError={loadError}
+              onRetryPose={retryPose}
               aiFeedback={aiFeedback}
               isAnalyzing={isAnalyzing}
               repCount={workoutMode === 'hold' ? Math.floor(holdSecs) : repCount}

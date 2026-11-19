@@ -160,7 +160,7 @@ const StatsPanel = ({
           onClick={() => setSheetOpen((open) => !open)}
           aria-label={sheetOpen ? 'Hide run details' : 'Show run details'}
           aria-expanded={sheetOpen}
-          className="am-chevron"
+          className="am-chevron v-touch-target"
         >
           <Icon name="expand_more" />
         </button>

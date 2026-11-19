@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import { apiPost } from '../../../../../lib/apiClient.js';
 import { GOOGLE_CLIENT_ID } from '../../../../../app/config/env.js';
+import { isValidPhMobile } from '../../../../../lib/phone.js';
 import { useAuth } from '../../../../../hooks/useAuth.jsx';
 
 export const useRegister = () => {
@@ -83,6 +84,12 @@ export const useRegister = () => {
       setError('Please agree to the Terms of Use and Privacy Policy.');
       return;
     }
+    // Registration verification channel — email keeps the existing link flow.
+    const verificationMethod = formData.verificationMethod === 'sms' ? 'sms' : 'email';
+    if (verificationMethod === 'sms' && !isValidPhMobile(formData.phone)) {
+      setError('Enter a valid Philippine mobile number (09XXXXXXXXX or +639XXXXXXXXX).');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -92,9 +99,37 @@ export const useRegister = () => {
         password: formData.password,
         // Module 1 — explicit consent flag; server records the audit trail.
         agreed: true,
+        verificationMethod,
+        ...(verificationMethod === 'sms' ? { phone: String(formData.phone || '').trim() } : {}),
       }, { skipAuthRedirect: true });
 
+      // Backend NODE_ENV=development skips verification and issues a session
+      // right away (needsVerification:false) — go straight to onboarding.
+      if (data.needsVerification === false && data.id) {
+        const user = normalizeUser(data);
+        setUser(user);
+        if (!(await refreshAuth())) {
+          setError(COOKIE_BLOCKED_MSG);
+          return;
+        }
+        routeAfterRegister(user);
+        return;
+      }
+
       setUser(null);
+      if (data.verificationMethod === 'sms') {
+        navigate('/verify-phone', {
+          state: {
+            email,
+            phoneMasked: data.phoneMasked,
+            retryAfter: data.retryAfter,
+            expiresIn: data.expiresIn,
+            deliveryStatus: data.deliveryStatus,
+            smsMocked: data.smsMocked,
+          },
+        });
+        return;
+      }
       navigate('/check-email', { state: { email, devLink: data.devVerificationLink, deliveryToken: data.deliveryToken, deliveryStatus: data.deliveryStatus } });
     } catch (err) {
       setError(err.message);

@@ -226,7 +226,7 @@
     grid-column: 2;
     grid-row: 1;
     position: sticky;
-    top: 88px;
+    top: calc(88px + var(--safe-top));
   }
 
   .pf-main {

@@ -1,41 +1,79 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /** @typedef {{ Pose?: new (config: { locateFile?: (file: string) => string }) => any }} WindowWithPose */
 
 // Pinned: mismatched pose.js/wasm versions break with Aborted(Assertion failed).
 const POSE_VERSION = '0.5.1675469404';
+const POSE_SCRIPTS = [
+  'https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js',
+  'https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1675466124/drawing_utils.js',
+  `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${POSE_VERSION}/pose.js`,
+];
+// pose.js + wasm + model is ~15 MB on a cold cache. 40 s covers a slow phone;
+// the old fixed 300 ms sample gave up before pose.js had even finished.
+const POSE_LOAD_TIMEOUT_MS = 40000;
 
-function loadMediaPipe() {
+// Shared across effect passes: React StrictMode mounts this twice, and the
+// second pass must await the SAME load (and see the SAME failure) instead of
+// racing its own copy. Cleared on failure so a retry can try again.
+/** @type {Promise<void> | null} */
+let poseLoadPromise = null;
+
+function startScriptLoad() {
   return new Promise((resolve, reject) => {
     if (/** @type {WindowWithPose} */ (window).Pose) { resolve(); return; }
 
-    const scripts = [
-      'https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js',
-      'https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1675466124/drawing_utils.js',
-      `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${POSE_VERSION}/pose.js`,
-    ];
-
-    let loaded = 0;
-    const onLoad = () => {
-      loaded++;
-      if (loaded === scripts.length) {
-        setTimeout(() => {
-          if (/** @type {WindowWithPose} */ (window).Pose) resolve();
-          else reject(new Error('window.Pose not found after script load'));
-        }, 300);
-      }
+    let settled = false;
+    /** @type {HTMLScriptElement[]} */
+    const added = [];
+    /** @param {Error | null} err */
+    const finish = (err) => {
+      if (settled) return;
+      settled = true;
+      clearInterval(poll);
+      clearTimeout(timer);
+      if (!err) { resolve(); return; }
+      // A tag that failed (or stalled) must not survive the attempt: the retry
+      // path skips tags that already exist, so leaving it would make every
+      // retry wait out the timeout instead of re-requesting the script.
+      added.forEach((el) => { try { el.remove(); } catch { /* detached */ } });
+      reject(err);
     };
 
-    scripts.forEach((src) => {
-      if (document.querySelector(`script[src="${src}"]`)) { onLoad(); return; }
+    // A <script> tag already in the DOM is NOT a loaded script: the second
+    // StrictMode pass used to count the tag as "loaded" and then sample once
+    // 300 ms later, while pose.js was still downloading.
+    POSE_SCRIPTS.forEach((src) => {
+      if (document.querySelector(`script[src="${src}"]`)) return;
       const s = document.createElement('script');
       s.src = src;
       s.crossOrigin = 'anonymous';
-      s.onload = onLoad;
-      s.onerror = () => reject(new Error(`Failed to load ${src}`));
+      s.addEventListener('error', () => finish(new Error(`Failed to load ${src}`)), { once: true });
       document.head.appendChild(s);
+      added.push(s);
     });
+
+    // Poll for the real global. Covers tags owned by another pass and retries
+    // where the scripts are cached and only the model needs re-initialising.
+    const poll = setInterval(() => {
+      if (/** @type {WindowWithPose} */ (window).Pose) finish(null);
+    }, 50);
+    const timer = setTimeout(
+      () => finish(new Error('window.Pose not found after script load')),
+      POSE_LOAD_TIMEOUT_MS,
+    );
   });
+}
+
+function loadMediaPipe() {
+  if (/** @type {WindowWithPose} */ (window).Pose) return Promise.resolve();
+  if (!poseLoadPromise) {
+    poseLoadPromise = startScriptLoad().catch((err) => {
+      poseLoadPromise = null;
+      throw err;
+    });
+  }
+  return poseLoadPromise;
 }
 
 /**
@@ -49,6 +87,9 @@ export function usePoseEngine({
 }) {
   const [poseReady, setPoseReady]     = useState(false);
   const [loadError, setLoadError]     = useState(false);
+  // Bumping this re-runs the init effect — the only way out of a failed load
+  // without a full page reload.
+  const [retryToken, setRetryToken]   = useState(0);
   const poseRef         = useRef(null);
   const onPoseResultRef = useRef(onPoseResult);
   const workoutTypeRef  = useRef(workoutType);
@@ -70,7 +111,6 @@ export function usePoseEngine({
           locateFile: (file) =>
             `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${POSE_VERSION}/${file}`,
         });
-
         pose.setOptions({
           modelComplexity:        1,
           smoothLandmarks:        true,
@@ -99,7 +139,7 @@ export function usePoseEngine({
         if (!active) { await pose.close(); return; }
 
         poseRef.current = pose;
-        if (active) setPoseReady(true);
+        if (active) { setLoadError(false); setPoseReady(true); }
       } catch (err) {
         if (import.meta.env.DEV) console.error('[usePoseEngine] init failed:', err);
         if (active) setLoadError(true);
@@ -117,7 +157,15 @@ export function usePoseEngine({
       poseRef.current = null;
       setPoseReady(false);
     };
-  }, [webcamRef]);
+  }, [webcamRef, retryToken]);
+
+  // Recovery path for a failed model load. Pose scripts stay cached in the
+  // DOM, so a retry is fast — it re-runs initialize(), not the 15 MB download.
+  const retryPose = useCallback(() => {
+    setLoadError(false);
+    setPoseReady(false);
+    setRetryToken((n) => n + 1);
+  }, []);
 
   // Live skeleton during preview too; counting stays gated on isRecording.
   useEffect(() => {
@@ -154,5 +202,5 @@ export function usePoseEngine({
     return () => { clearInterval(id); inputRef.current = null; };
   }, [cameraOn, poseReady, webcamRef]);
 
-  return { poseReady, loadError };
+  return { poseReady, loadError, retryPose };
 }

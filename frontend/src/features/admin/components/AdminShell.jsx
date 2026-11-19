@@ -72,7 +72,10 @@ export default function AdminShell() {
         />
 
         <main id="admin-main" className="adm-content">
-          <Outlet />
+          {/* Keyed wrapper: content fades in on each console route change. */}
+          <div key={pathname} className="v-page-enter">
+            <Outlet />
+          </div>
         </main>
 
         <AdminBottomNav items={ADMIN_NAV} />

@@ -239,7 +239,7 @@ const Login = () => {
                     onClick={() => setShowPw(v => !v)}
                     disabled={loading}
                     aria-label={showPw ? 'Hide password' : 'Show password'}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-[var(--accent)] transition-colors bg-transparent border-none cursor-pointer text-[18px] leading-none"
+                    className="v-touch-target absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-[var(--accent)] transition-colors bg-transparent border-none cursor-pointer text-[18px] leading-none"
                   >
                     <span className="material-symbols-outlined text-[20px]">{showPw ? 'visibility_off' : 'visibility'}</span>
                   </button>
@@ -247,7 +247,7 @@ const Login = () => {
               </div>
 
               <div className="v-card-forgot flex justify-end -mt-3">
-                <Link to="/reset-password" className="text-[10px] font-semibold tracking-widest uppercase text-[var(--accent-dark)]/70 hover:text-[var(--accent)] transition-colors">
+                <Link to="/reset-password" className="v-touch-target text-[10px] font-semibold tracking-widest uppercase text-[var(--accent-dark)]/70 hover:text-[var(--accent)] transition-colors">
                   Forgot Password?
                 </Link>
               </div>
@@ -289,7 +289,7 @@ const Login = () => {
 
             <div className="v-card-footer mt-7 text-center text-xs text-[#c4c9b0]/45">
               Don't have an account?
-              <Link to="/register" className="text-[var(--accent-dark)] font-semibold ml-1 hover:text-[var(--accent)] transition-colors">Register</Link>
+              <Link to="/register" className="v-touch-target text-[var(--accent-dark)] font-semibold ml-1 hover:text-[var(--accent)] transition-colors">Register</Link>
             </div>
           </div>
         </div>

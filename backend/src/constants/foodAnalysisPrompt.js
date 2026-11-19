@@ -3,6 +3,7 @@ Estimates are approximate general fitness info only — not medical or dietetic 
 
 TASK
 List EVERY distinct food visible in this photo as its own item, then output a single JSON object with an "items" array:
+If NO food or drink is visible, return {"items":[],"suggestion":"No food detected"} — never invent a dish.
 {
   "items": [
     {
@@ -243,6 +244,41 @@ FAT BREAKDOWN RULES
 OUTPUT FORMAT (raw JSON only — no markdown, no prose, no code fences):
 {"items":[{"food_name":"...","serving":"...","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"possible_allergens":[]}],"suggestion":"..."}`;
 
+// Compact variant for providers with tight input budgets (Groq free tier:
+// 7,000 tokens/minute). Keeps the rules that drive accuracy — visible-portion
+// estimation, macro energy check, Filipino anchors — without the full list.
+// Verified live: 1,398 input tokens, ~1s, same JSON shape as the full prompt.
+const FOOD_ANALYSIS_PROMPT_COMPACT = `You are an AI nutrition estimator. Estimate the food and portions visible in this photo.
+Estimates are approximate general fitness info only — not medical advice.
+
+TASK
+List EVERY distinct food as its own item. Maximum 8. Group identical pieces (e.g. "3 pcs nuggets").
+If NO food or drink is visible, return {"items":[],"suggestion":"No food detected"} — never invent a dish.
+Output ONLY raw JSON, no markdown or prose:
+{"items":[{"food_name":"...","serving":"1 cup","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"possible_allergens":[]}],"suggestion":"one short tip"}
+
+RULES
+1. Estimate only what is visible. Count pieces and put the count in food_name. Never assume off-screen food.
+2. Estimate grams first, then derive macros from that weight. Do not count a composite dish and its ingredients twice.
+3. kcal/g must be plausible: watery veg 0.1–1, rice/noodles 1–1.5, bread 2–3, meat 1.5–3, fried food 2–4, oil ~9.
+4. Check energy: (protein × 4) + (carbs × 4) + (fat × 9) ≈ calories ± 5%. Zero is valid for absent nutrients — never add a minimum.
+5. Saturated + trans + poly + mono fat ≤ fat (1g rounding). possible_allergens: only peanut, tree nut, milk, egg, gluten, soy, fish, shellfish, sesame — else [].
+
+PHILIPPINE / COMMON ANCHORS (scale to the visible portion, never assume a whole serving)
+- Steamed white rice 1 cup ~180g: 206 kcal | P4 C45 F0
+- Chicken adobo ~200g: 320 kcal | P28 C8 F18
+- Sinigang na baboy 1 bowl ~350ml: 210 kcal | P18 C12 F9
+- Tinola 1 bowl ~300ml: 180 kcal | P20 C8 F6
+- Pancit canton ~200g: 320 kcal | P12 C48 F8
+- Fried chicken 1 pc ~120g: 270 kcal | P20 C12 F15
+- Grilled chicken breast 200g: 330 kcal | P62 C0 F7
+- Fried rice 1 cup ~180g: 290 kcal | P6 C42 F10
+- Pandesal 1 pc ~50g: 150 kcal | P4 C28 F2
+- Boiled egg 1 large: 78 kcal | P6 C1 F5
+- Medium banana ~120g: 105 kcal | P1 C27 F0
+Use the closest anchor when a dish is not listed.`;
+
+
 // Per-100 g density for ONE named food. Used by the manual meal form's
 // "Estimate nutrition" action when a dish is not in `food_catalog`, so a user
 // can type a weight and get macros. The food name is user input: strip control
@@ -288,4 +324,8 @@ CALIBRATION (per 100 g, as eaten)
 - Chocolate cake:          370 kcal | P 4.5 | C 54   | F 16`;
 }
 
-module.exports = { FOOD_ANALYSIS_PROMPT, buildFoodDensityPrompt };
+module.exports = {
+  FOOD_ANALYSIS_PROMPT,
+  FOOD_ANALYSIS_PROMPT_COMPACT,
+  buildFoodDensityPrompt,
+};

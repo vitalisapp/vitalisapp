@@ -31,6 +31,11 @@ export const SOCKET_URL = rawSocket ? normalizeUrl(rawSocket) || API_BASE_URL : 
 
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
+// Display name of the SMS sender, shown in the network notice. This is NOT the
+// secret key — it is safe in the frontend. Keep it in sync with the backend's
+// UNISMS_SENDER_ID when that changes.
+export const SMS_SENDER_ID = (import.meta.env.VITE_SMS_SENDER_ID || 'Unisoft').trim() || 'Unisoft';
+
 // Backend-stored assets (e.g. /uploads/food/x.jpg from the multer pipeline) are
 // relative to the API origin. In dev the Vite proxy serves them same-origin;
 // in prod they must ride on the absolute VITE_API_URL base.

@@ -1,18 +1,34 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AccountPageShell from '../../../../components/app/AccountPageShell.jsx';
 import PageHeader from '../../../../components/app/PageHeader.jsx';
+import Icon from '../../../../components/Icon.jsx';
 import { useAuth } from '../../../../hooks/useAuth.jsx';
 import { apiGet, apiFetch } from '../../../../lib/apiClient.js';
 import { useToastStore } from '../../../../stores/toastStore.js';
 import LoadingState from '../../../../components/feedback/LoadingState.jsx';
 import ErrorState from '../../../../components/feedback/ErrorState.jsx';
+import { NotificationCard, NotificationEmpty, NotificationSkeleton } from '../components/NotificationParts.jsx';
+import {
+  NOTIFICATION_CATEGORIES,
+  getCategory,
+  getCategoryIcon,
+  getCategoryLabel,
+  groupByDay,
+} from '../notificationPresentation.js';
+
+const STATUS_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'unread', label: 'Unread' },
+  { key: 'read', label: 'Read' },
+];
 
 const Notifications = ({ embedded = false }) => {
   const navigate = useNavigate();
   const { user, loading, logout } = useAuth();
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [cat, setCat] = useState('ALL');
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState(null);
 
@@ -55,12 +71,28 @@ const Notifications = ({ embedded = false }) => {
     }
   };
 
-  const CATS = ['SOCIAL', 'TRAINING', 'NUTRITION', 'RECOVERY', 'GOAL', 'SYSTEM'];
-  const [cat, setCat] = useState('ALL');
-  const shown = items
-    .filter((n) => (filter === 'unread' ? !n.is_read : true))
-    .filter((n) => (cat === 'ALL' ? true : (n.category || 'SYSTEM') === cat));
+  const unreadCount = useMemo(() => items.filter((n) => !n.is_read).length, [items]);
+  const statusCounts = { all: items.length, unread: unreadCount, read: items.length - unreadCount };
+
+  // Category chip counts follow the selected status filter.
+  const statusFiltered = useMemo(
+    () => items.filter((n) => (filter === 'unread' ? !n.is_read : filter === 'read' ? !!n.is_read : true)),
+    [items, filter],
+  );
+  const catCounts = useMemo(() => {
+    const c = {};
+    for (const n of statusFiltered) { const k = getCategory(n); c[k] = (c[k] || 0) + 1; }
+    return c;
+  }, [statusFiltered]);
+  const shown = useMemo(
+    () => statusFiltered.filter((n) => (cat === 'ALL' ? true : getCategory(n) === cat)),
+    [statusFiltered, cat],
+  );
+  const groups = useMemo(() => groupByDay(shown), [shown]);
+
   const handleLogout = async () => { await logout(); navigate('/login'); };
+  const resetFilters = () => { setFilter('all'); setCat('ALL'); };
+
   if (loading) {
     return (
       <AccountPageShell embedded={embedded} userId={user?.id} onLogout={handleLogout} contentClassName="app-container app-container--reading">
@@ -69,56 +101,110 @@ const Notifications = ({ embedded = false }) => {
     );
   }
 
+  const initialLoading = listLoading && items.length === 0 && !listError;
+
+  let empty = null;
+  if (!initialLoading && !listError && shown.length === 0) {
+    if (items.length === 0) {
+      empty = (
+        <NotificationEmpty
+          icon="notifications"
+          title="No notifications yet"
+          message="Log activity, meals or sleep to trigger AI Coach insights. They'll show up here."
+        />
+      );
+    } else if (filter === 'unread' && cat === 'ALL') {
+      empty = <NotificationEmpty icon="done_all" title="You're all caught up" message="No unread notifications. Nice work staying on top of things." />;
+    } else {
+      empty = (
+        <NotificationEmpty
+          icon="filter_alt_off"
+          title="Nothing matches this filter"
+          message="Try another category or status."
+          action={<button type="button" className="vn-text-btn" onClick={resetFilters}>Clear filters</button>}
+        />
+      );
+    }
+  }
+
   return (
     <AccountPageShell embedded={embedded} userId={user?.id} onLogout={handleLogout} contentClassName="app-container app-container--reading">
         <div className="pb-6">
           <PageHeader
             eyebrow="Inbox"
             title="Notifications"
-            description="Coach insights, reminders and account updates — newest first."
+            description={unreadCount > 0
+              ? `You have ${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}. Coach insights, reminders and account updates, newest first.`
+              : 'Coach insights, reminders and account updates, newest first.'}
             actions={(
-              <button onClick={markAll} className="app-btn app-btn--ghost app-btn--sm">
+              <button type="button" onClick={markAll} disabled={unreadCount === 0} className="app-btn app-btn--ghost app-btn--sm">
+                <Icon name="done_all" weight={400} className="text-[length:var(--fs-16)]" />
                 Mark all read
               </button>
             )}
           />
-          <div className="flex gap-2" role="group" aria-label="Read status filter">
-            {['all', 'unread'].map((f) => (
-              <button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f}
-                className={`h-9 px-4 rounded-full text-[length:var(--fs-12)] font-bold capitalize ${filter === f ? 'bg-[var(--accent)] text-[var(--text-inverse)]' : 'bg-[var(--bg-card)] border border-[var(--border-light)]'}`}>
-                {f}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-2 mt-2 flex-wrap" role="group" aria-label="Category filter">
-            {['ALL', ...CATS].map((c) => (
-              <button key={c} onClick={() => setCat(c)} aria-pressed={cat === c}
-                className={`h-8 px-3 rounded-full text-[length:var(--fs-11)] font-bold ${cat === c ? 'bg-[var(--accent)] text-[var(--text-inverse)]' : 'bg-[var(--bg-card)] border border-[var(--border-light)] text-[var(--text-muted)]'}`}>
-                {c.charAt(0) + c.slice(1).toLowerCase()}
-              </button>
-            ))}
-          </div>
-          {listError && <div className="mt-4"><ErrorState message={listError.message || 'Could not load notifications.'} onRetry={load} /></div>}
-          {listLoading && items.length === 0 && !listError && <div className="mt-4"><LoadingState message="Loading notifications…" /></div>}
-          <div className="mt-4 space-y-2">
-            {shown.length === 0 && (
-              <div className="p-8 text-center rounded-[14px] border border-dashed border-[var(--border-light)] text-[length:var(--fs-13)] text-[var(--text-muted)]">
-                No notifications yet. Log activity or sleep to trigger AI Coach insights.
-              </div>
-            )}
-            {shown.map((n) => (
-              <div key={n.id} className={`p-4 rounded-[14px] border ${n.is_read ? 'glass-card border-[var(--border-light)]' : 'bg-[var(--accent-bg)] border-[var(--accent-border)]'}`}>
-                <span className="inline-block text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--accent)] bg-[var(--accent-bg)] px-2 py-0.5 rounded-full mb-1.5">
-                  {(n.category || 'SYSTEM').toLowerCase()}
+
+          <div className="vn-page-summary" aria-label="Notification summary">
+            {[
+              { label: 'Total', value: items.length, icon: 'notifications', fg: 'var(--text-secondary)', bg: 'var(--bg-tertiary)' },
+              { label: 'Unread', value: unreadCount, icon: 'mark_email_unread', fg: 'var(--accent)', bg: 'var(--accent-bg)' },
+              { label: 'Read', value: items.length - unreadCount, icon: 'done_all', fg: 'var(--success)', bg: 'var(--success-bg)' },
+            ].map((s) => (
+              <div key={s.label} className="vn-stat">
+                <span className="vn-stat__icon" style={{ '--vn-tone': s.fg, '--vn-tone-bg': s.bg }} aria-hidden="true">
+                  <Icon name={s.icon} weight={400} />
                 </span>
-                <p className="text-[length:var(--fs-13)]">{n.message}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-[length:var(--fs-10)] uppercase tracking-widest text-[var(--text-muted)]">{n.created_at ? new Date(n.created_at).toLocaleString() : ''}</span>
-                  {!n.is_read && <button onClick={() => markRead(n.id)} className="text-[length:var(--fs-11)] font-bold text-[var(--accent)]">Mark read</button>}
-                </div>
+                <span className="vn-stat__text">
+                  <span className="vn-stat__value">{s.value}</span>
+                  <span className="vn-stat__label">{s.label}</span>
+                </span>
               </div>
             ))}
           </div>
+
+          <div className="vn-toolbar">
+            <div className="vn-segment" role="group" aria-label="Read status filter">
+              {STATUS_FILTERS.map((f) => (
+                <button key={f.key} type="button" onClick={() => setFilter(f.key)} aria-pressed={filter === f.key} className="vn-segment__btn">
+                  {f.label}
+                  <span className="vn-count">{statusCounts[f.key]}</span>
+                </button>
+              ))}
+            </div>
+            <div className="vn-chips" role="group" aria-label="Category filter">
+              <button type="button" onClick={() => setCat('ALL')} aria-pressed={cat === 'ALL'} className="vn-filter-chip">
+                <Icon name="apps" weight={400} />
+                All
+              </button>
+              {NOTIFICATION_CATEGORIES.map((c) => (
+                <button key={c} type="button" onClick={() => setCat(c)} aria-pressed={cat === c} className="vn-filter-chip">
+                  <Icon name={getCategoryIcon(c)} weight={400} />
+                  {getCategoryLabel(c)}
+                  {catCounts[c] ? <span className="vn-filter-chip__n">{catCounts[c]}</span> : null}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {listError && <div className="mb-4"><ErrorState message={listError.message || 'Could not load notifications.'} onRetry={load} /></div>}
+          {initialLoading && <NotificationSkeleton rows={5} />}
+          {empty}
+
+          {groups.map((group) => (
+            <section key={group.key} className="vn-group" aria-label={group.label}>
+              <h2 className="vn-group__head">
+                {group.label}
+                <span className="vn-group__count">{group.items.length}</span>
+              </h2>
+              <ul className="vn-list">
+                {group.items.map((n) => (
+                  <li key={n.id}>
+                    <NotificationCard notification={n} onMarkRead={markRead} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
         </div>
     </AccountPageShell>
   );

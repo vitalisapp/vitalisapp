@@ -57,13 +57,17 @@ export function QuickLogCard({
   preview = null,
   isAnalyzing = false,
   hasResult = false,
+  scanError = null,
   manualOpen = false,
   onCamera = undefined,
   onUpload = undefined,
   onManual = undefined,
   onClear = undefined,
+  onRetry = undefined,
 }) {
   const hasPreview = Boolean(preview) || isAnalyzing;
+  const failed = Boolean(scanError) && !isAnalyzing && !hasResult;
+  const noFood = failed && scanError?.code === 'NO_FOOD_DETECTED';
 
   return (
     <section className="mt-log mt-panel" aria-labelledby="mt-log-title">
@@ -88,15 +92,35 @@ export function QuickLogCard({
 
           <div className="mt-photo-preview-copy">
             <p className="mt-photo-preview-title">
-              {isAnalyzing ? 'Analyzing photo' : hasResult ? 'Photo ready' : 'Scan didn\u2019t complete'}
+              {isAnalyzing
+                ? 'Analyzing photo'
+                : hasResult
+                  ? 'Photo ready'
+                  : noFood
+                    ? 'No food detected'
+                    : failed
+                      ? 'AI scan unavailable'
+                      : 'Scan didn\u2019t complete'}
             </p>
             <p className="mt-photo-preview-note">
               {isAnalyzing
                 ? 'Finding foods and estimating nutrition…'
                 : hasResult
                   ? 'Review the detected items below.'
-                  : 'No items were detected. Try again — clearer, brighter photo or another angle.'}
+                  : failed
+                    ? scanError.message
+                    : 'No items were detected. Try again — clearer, brighter photo or another angle.'}
             </p>
+            {failed && scanError?.retryable && onRetry && (
+              <button
+                type="button"
+                className="mt-photo-retry"
+                onClick={onRetry}
+              >
+                <Icon name="refresh" className="mt-photo-retry-icon" />
+                Try again
+              </button>
+            )}
           </div>
 
           {isAnalyzing ? (

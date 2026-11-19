@@ -3,7 +3,8 @@
 
 .v-toast-container {
   position: fixed;
-  top: calc(var(--topbar-h) + 16px);
+  /* Clear the real topbar (64/72px + safe-area inset), not the legacy 56px. */
+  top: calc(72px + var(--safe-top) + 16px);
   right: 18px;
   z-index: var(--z-toast);
   display: flex;
@@ -213,7 +214,7 @@
 
 @media (max-width: 640px) {
   .v-toast-container {
-    top: calc(var(--topbar-h) + 10px);
+    top: calc(64px + var(--safe-top) + 10px);
     right: 12px;
     width: calc(100vw - 24px);
   }

@@ -157,7 +157,7 @@
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
-  --duration-sidebar: 220ms;
+  --duration-sidebar: 260ms;
   --touch-target: 44px;
 }
 
@@ -298,7 +298,7 @@
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
-  --duration-sidebar: 220ms;
+  --duration-sidebar: 260ms;
   --touch-target: 44px;
 }
 
@@ -308,6 +308,13 @@
    smoothly between small and large screens instead of being frozen.
    ══════════════════════════════════════════════════════════════ */
 :root {
+  /* Device safe areas (notch / Dynamic Island / status bar in standalone PWA
+     with viewport-fit=cover + black-translucent). 0 in normal browser tabs.
+     Applied ONCE per surface: the fixed topbar pads by --safe-top and content
+     offsets use "<bar height> + --safe-top" — never both on nested elements. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
   --fs-8: clamp(10px, 0.58rem + 0.15vw, 11px);
   --fs-9: clamp(10.5px, 0.61rem + 0.15vw, 11.5px);
   --fs-10: clamp(11px, 0.64rem + 0.16vw, 12px);
@@ -344,17 +351,46 @@
     color 0.15s ease;
 }
 
-/* ── Smooth theme switch: temporarily lengthen color crossfades ──
-   Added/removed by ThemeContext around the flip (~500ms). Pure CSS color
-   tweens only — no snapshots, no layout work, nothing to lag. The toggle
-   button subtree is exempt so its icon morph stays crisp. */
+/* ── Smooth theme switch ──
+   ThemeContext flips the theme inside document.startViewTransition(): the
+   browser snapshots the old screen and crossfades it into the new one as a
+   single GPU-composited animation. Per-element color tweens are switched off
+   while that happens — animating thousands of elements at once was what made
+   the old switch lag. The toggle subtree keeps its icon morph. */
 .theme-switching *:not(.theme-toggle):not(.theme-toggle *),
 .theme-switching *::before,
 .theme-switching *::after {
-  transition:
-    background-color 0.45s ease,
-    border-color 0.45s ease,
-    color 0.45s ease !important;
+  transition: none !important;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Shared overlay motion (modals, menus, dropdowns, page enter) ── */
+@keyframes v-overlay-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes v-overlay-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes v-dialog-in   { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes v-dialog-out  { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(8px) scale(0.98); } }
+@keyframes v-menu-in     { from { opacity: 0; transform: translateY(-6px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes v-menu-out    { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-6px) scale(0.97); } }
+@keyframes v-page-enter  { from { opacity: 0; } to { opacity: 1; } }
+
+.v-motion-backdrop         { animation: v-overlay-in 0.2s ease-out both; }
+.v-motion-backdrop.is-closing { animation: v-overlay-out 0.18s ease-in both; pointer-events: none; }
+.v-motion-dialog           { animation: v-dialog-in 0.26s var(--ease-default) both; }
+.v-motion-dialog.is-closing { animation: v-dialog-out 0.18s ease-in both; }
+.v-motion-menu             { transform-origin: top right; animation: v-menu-in 0.18s var(--ease-default) both; }
+.v-motion-menu.is-closing  { animation: v-menu-out 0.15s ease-in both; pointer-events: none; }
+.v-motion-menu--left       { transform-origin: top left; }
+
+/* Page content fades in on every route change (each page mounts its own
+   shell). Opacity only — a transform here would re-anchor fixed children. */
+.vapp .app-main > :first-child,
+.v-page-enter {
+  animation: v-page-enter 0.3s ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -576,6 +612,9 @@ body {
 }
 /* Frosted top navigation bar — blurs scrolled content beneath */
 .glass-topbar {
+  /* Push controls below the OS status bar / notch; the bar background still
+     fills the inset so the status bar sits on the topbar glass. */
+  padding-top: var(--safe-top);
   background: var(--glass-bg);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
   backdrop-filter: blur(20px) saturate(1.4);
@@ -849,6 +888,26 @@ select:disabled {
 
 .animate-ping-slow {
   animation: ping-slow 0.5s cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+/* Invisible ≥44×44 hit box for controls that must stay visually smaller
+   (WCAG 2.5.5 / Apple HIG). Keep enough layout space around the control so
+   neighbouring hit boxes never overlap. */
+/* Base layer: a Tailwind `absolute`/`fixed` utility on the same element
+   still wins, so adding this class never re-positions a control. */
+@layer base {
+  .v-touch-target {
+    position: relative;
+  }
+}
+.v-touch-target::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
 }
 
 /* Shared theme-toggle ripple (components/ThemeToggle.jsx variants). */

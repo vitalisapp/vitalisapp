@@ -5,6 +5,10 @@ import Button from './ui/Button.jsx';
 import { apiPost } from '../lib/apiClient.js';
 
 export default function FeedbackModal({ onClose }) {
+  // Callers mount this conditionally; close locally first so the Modal exit
+  // animation plays, then tell the parent once it has finished.
+  const [open, setOpen] = useState(true);
+  const close = () => setOpen(false);
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -46,8 +50,9 @@ export default function FeedbackModal({ onClose }) {
 
   return (
     <Modal
-      isOpen={true}
-      onClose={onClose}
+      isOpen={open}
+      onClose={close}
+      onExited={onClose}
       title={submitted ? undefined : 'Send Feedback'}
       subtitle={submitted ? undefined : 'Help us make Vitalis better'}
       icon={submitted ? undefined : 'chat_bubble'}
@@ -65,7 +70,7 @@ export default function FeedbackModal({ onClose }) {
             <p className="text-[length:var(--fs-18)] font-extrabold text-[var(--text-primary)] tracking-tight">Feedback Received</p>
             <p className="text-[length:var(--fs-12)] text-[var(--text-muted)] leading-relaxed mt-2 max-w-[260px]">Thanks for helping us improve Vitalis. We'll review your message shortly.</p>
           </div>
-          <Button type="button" variant="primary" size="lg" fullWidth onClick={onClose}>Close</Button>
+          <Button type="button" variant="primary" size="lg" fullWidth onClick={close}>Close</Button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

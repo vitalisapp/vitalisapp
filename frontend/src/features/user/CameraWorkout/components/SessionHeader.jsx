@@ -16,7 +16,7 @@ export default function SessionHeader({
 
   if (minimal) {
     return (
-      <header className="sticky top-[var(--app-topbar)] z-40 bg-[var(--bg-secondary)]/80 backdrop-blur-xl border-b border-[var(--border-light)] min-h-[56px] md:h-16 flex items-center justify-end px-3 sm:px-6 gap-2 py-2">
+      <header className="sticky top-[var(--app-topbar-offset)] z-40 bg-[var(--bg-secondary)]/80 backdrop-blur-xl border-b border-[var(--border-light)] min-h-[56px] md:h-16 flex items-center justify-end px-3 sm:px-6 gap-2 py-2">
         <VoiceToggleButton voiceEnabled={voiceEnabled} onToggle={onVoiceToggle} />
         <CameraToggleButton cameraOn={cameraOn} onToggle={onCameraToggle} />
       </header>
@@ -26,7 +26,7 @@ export default function SessionHeader({
   const closeAnd = (fn) => () => { setMenuOpen(false); fn?.(); };
 
   return (
-    <header className={`sticky top-[var(--app-topbar)] ${menuOpen ? 'z-[var(--z-topbar)]' : 'z-40'} bg-[var(--bg-secondary)]/80 backdrop-blur-xl border-b border-[var(--border-light)] min-h-[60px] flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-3 py-2`}>
+    <header className={`sticky top-[var(--app-topbar-offset)] ${menuOpen ? 'z-[var(--z-topbar)]' : 'z-40'} bg-[var(--bg-secondary)]/80 backdrop-blur-xl border-b border-[var(--border-light)] min-h-[60px] flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-3 py-2`}>
       <div className="flex flex-1 items-center gap-2 sm:gap-3 min-w-0">
         {onBack && (
           <button

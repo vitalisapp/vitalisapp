@@ -384,7 +384,7 @@ const ForgotPassword = () => {
 
           <div className="mt-6 text-center text-[12px] text-[#c4c9b0]/45">
             Remember it?{' '}
-            <Link to="/login" className="text-[var(--accent-dark)] font-semibold ml-1 no-underline transition-colors duration-200 hover:text-[var(--accent)]">
+            <Link to="/login" className="v-touch-target text-[var(--accent-dark)] font-semibold ml-1 no-underline transition-colors duration-200 hover:text-[var(--accent)]">
               Sign in
             </Link>
           </div>

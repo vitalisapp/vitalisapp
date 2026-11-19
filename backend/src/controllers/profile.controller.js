@@ -1,5 +1,6 @@
 
 const profileService = require('../services/profile.service');
+const { normalizePhMobile } = require('../utils/phone');
 
 const MAX_AVATAR_CHARS = 200 * 1024; // 200KB — base64 data-URLs bigger than this risk max_allowed_packet
 
@@ -16,7 +17,27 @@ async function putupdate(req,res,next){
   try{
         const userId = req.user?.id;
         if (!userId) return res.status(401).json({ error: 'Not authenticated' });
-        const { fullName, contact, bio, avatar_url } = req.body || {};
+        const { fullName, contact, bio, avatar_url, phone } = req.body || {};
+
+        // Optional mobile number. undefined = leave unchanged, '' / null = clear.
+        // Must be a Philippine mobile number (digits only, e.g. 09XXXXXXXXX).
+        let phoneValue;
+        if (phone !== undefined) {
+          if (phone === null || phone === '') {
+            phoneValue = null;
+          } else if (typeof phone !== 'string' && typeof phone !== 'number') {
+            return res.status(400).json({ error: 'Mobile number must be digits only.', code: 'PHONE_INVALID' });
+          } else {
+            const raw = String(phone).trim();
+            if (!/^\+?\d+$/.test(raw.replace(/[\s-]/g, ''))) {
+              return res.status(400).json({ error: 'Mobile number must contain digits only.', code: 'PHONE_INVALID' });
+            }
+            phoneValue = normalizePhMobile(raw);
+            if (!phoneValue) {
+              return res.status(400).json({ error: 'Enter a valid Philippine mobile number (09XXXXXXXXX).', code: 'PHONE_INVALID' });
+            }
+          }
+        }
     
         if (typeof fullName !== 'string' || !fullName.trim()) {
             return res.status(400).json({ error: 'Full name is required' });
@@ -38,6 +59,15 @@ async function putupdate(req,res,next){
         }
     
         try {
+            // Phone first: a duplicate number fails before anything else is written.
+            if (phoneValue !== undefined) {
+              try {
+                await profileService.updatePhone(userId, phoneValue);
+              } catch (err) {
+                if (err.isOperational) return res.status(err.status).json({ error: err.message, code: err.code });
+                throw err;
+              }
+            }
             const updated = await profileService.updateProfile(userId, {
                 fullName: fullName.trim(),
                 contact: cContact.value,

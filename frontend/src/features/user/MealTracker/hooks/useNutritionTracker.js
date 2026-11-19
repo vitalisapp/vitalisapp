@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from '../../../../lib/apiClient.js';
 import { qk } from '../../../../lib/queries.js';
@@ -40,11 +40,18 @@ function dataUrlToBlob(dataUrl) {
 const ANALYZE_TIMEOUT_MS = 150000;
 
 async function apiAnalyzeFoodImage(dataUrl) {
-  // Server compresses again anyway (≤1600px); client downscale just trims the
-  // upload on slow connections.
-  const base64 = await compressImageToBase64(dataUrl);
+  // Downscale client-side when the browser can decode the format (JPG/PNG/
+  // WebP/GIF/JFIF). HEIC, AVIF, and TIFF often cannot be decoded by <img>, so
+  // fall back to the ORIGINAL bytes and let sharp normalize them server-side.
+  let blob;
+  try {
+    const base64 = await compressImageToBase64(dataUrl);
+    blob = dataUrlToBlob(`data:image/jpeg;base64,${base64}`);
+  } catch {
+    blob = dataUrlToBlob(dataUrl);
+  }
   const form = new FormData();
-  form.append("image", dataUrlToBlob(`data:image/jpeg;base64,${base64}`), "meal.jpg");
+  form.append("image", blob, "meal.jpg");
   return apiFetch(`/api/food-logs/analyze-pic`, {
     method: "POST",
     body: form,
@@ -173,6 +180,8 @@ export function useNutritionTracker(USER_ID) {
   const [toast,           setToast]           = useState(null);
   const [summarySeed,     setSummarySeed]     = useState(0);
   const [lastLoggedMeal,  setLastLoggedMeal]  = useState(null);
+  const [scanError,       setScanError]       = useState(null);
+  const lastScanRef = useRef(null);
   const qc = useQueryClient();
 
   const showToast = useCallback((msg) => {
@@ -202,12 +211,21 @@ export function useNutritionTracker(USER_ID) {
   useEffect(() => { loadHistory(); }, [loadHistory]);
 
   const handleAnalyze = async (dataUrl) => {
+    if (dataUrl) lastScanRef.current = dataUrl;
     setIsAnalyzing(true);
     setResult(null);
+    setScanError(null);
     try {
       const data = await apiAnalyzeFoodImage(dataUrl);
       const scan = toScanResult(data);
-      if (!scan || scan.items.length === 0) throw new Error('Could not detect food in this photo.');
+      if (!scan || scan.items.length === 0) {
+        setScanError({
+          code: 'NO_FOOD_DETECTED',
+          message: 'No food was detected in this photo.',
+          retryable: true,
+        });
+        return;
+      }
       // All-failures fallback: the backend answers 200 with one "Unknown food"
       // @ 0kcal. Rendering that silently looks like a broken AI — surface it.
       const emptyFallback =
@@ -215,17 +233,47 @@ export function useNutritionTracker(USER_ID) {
         scan.items[0].food_name === 'Unknown food' &&
         Number(scan.items[0].calories) === 0;
       if (emptyFallback) {
-        throw new Error(scan.suggestion || "Couldn't identify any food in this photo. Try a clearer, brighter shot.");
+        setScanError({
+          code: 'AI_UNAVAILABLE',
+          message: scan.suggestion || "Couldn't identify any food in this photo. Try a clearer, brighter shot.",
+          retryable: Boolean(scan.retryable),
+        });
+        return;
       }
       setResult(scan);
     } catch (err) {
-      showToast("❌ " + err.message);
+      // The backend now classifies failures, so "AI busy" no longer masquerades
+      // as "no food in the photo". Keep the reason and whether a retry helps.
+      const code = err?.code || null;
+      const retryable =
+        code === 'AI_RATE_LIMITED' ||
+        code === 'AI_UNAVAILABLE' ||
+        code === 'AI_ANALYZE_FAILED' ||
+        code === 'TIMEOUT' ||
+        code === 'UPSTREAM';
+      setScanError({
+        code,
+        message: err?.message || 'The AI scan could not complete. Please try again.',
+        retryable,
+      });
+      showToast("❌ " + (err?.message || 'Scan failed'));
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const clearResult = useCallback(() => setResult(null), []);
+  const retryAnalyze = useCallback(() => {
+    if (lastScanRef.current) handleAnalyze(lastScanRef.current);
+    // handleAnalyze is stable enough for a user-triggered retry; it only reads
+    // the ref and setters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const clearResult = useCallback(() => {
+    setResult(null);
+    setScanError(null);
+    lastScanRef.current = null;
+  }, []);
 
   // Manual form: AI per-100 g density for dishes missing from the catalog.
   // Errors bubble to the form so it can render an inline retry next to the
@@ -397,6 +445,7 @@ export function useNutritionTracker(USER_ID) {
 
   return {
     result, isAnalyzing, isLogging,
+    scanError, retryAnalyze,
     history, historyLoading, historyError, loadHistory,
     toast, summarySeed,
     lastLoggedMeal,

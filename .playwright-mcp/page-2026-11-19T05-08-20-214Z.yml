@@ -1,0 +1,3 @@
+- generic [active] [ref=e1]:
+  - heading "booting" [level=1] [ref=e2]
+  - generic [ref=e3]: "script ok: camera_utils.js script ok: drawing_utils.js script ok: pose.js all scripts loaded in 1329ms"

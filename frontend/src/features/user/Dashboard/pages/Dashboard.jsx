@@ -205,14 +205,18 @@ const Dashboard = () => {
   // AI recommendations based on progress and goals
   const [aiRec, setAiRec] = useState(null);
   const [aiRecLoading, setAiRecLoading] = useState(false);
+  const [aiRecError, setAiRecError] = useState(false);
   const fetchAiRec = async () => {
     if (!USER_ID) return;
     setAiRecLoading(true);
+    setAiRecError(false);
     try {
       const res = await apiGet('/api/ai/summary');
       setAiRec(res);
     } catch {
       setAiRec(null);
+      // Don't let a network/AI failure masquerade as "finish onboarding".
+      setAiRecError(true);
     } finally {
       setAiRecLoading(false);
     }
@@ -434,7 +438,9 @@ const Dashboard = () => {
         leftOffsetClass="vdash-offset"
         leftSlot={(
           <>
-            <div className="md:hidden">
+            {/* min-w-0 lets the greeting shrink so its name ellipsis kicks in
+                instead of overflowing under the bell/avatar on 320–360px. */}
+            <div className="min-w-0 md:hidden">
               <DashboardGreeting name={displayName} avatar={user?.avatar || data.profile?.avatar_url} />
             </div>
             <div className="hidden md:block">
@@ -571,7 +577,7 @@ const Dashboard = () => {
               <section className="vd-quick">
                 <div className="vd-quick-head">
                   <h2 className="vd-quick-title">Quick Actions</h2>
-                  <button type="button" className="vd-text-btn" onClick={() => setLogOpen(true)}>
+                  <button type="button" className="vd-text-btn v-touch-target" onClick={() => setLogOpen(true)}>
                     Log <Icon name="add" style={{ fontSize: 14 }} />
                   </button>
                 </div>
@@ -674,7 +680,13 @@ const Dashboard = () => {
                     : 'No sessions logged today yet')}
                 onOpenWorkouts={() => navigate('/dashboard/workouts')}
               />
-              <AiCoachCard aiRec={aiRec} loading={aiRecLoading} onRefresh={fetchAiRec} />
+              <AiCoachCard
+                aiRec={aiRec}
+                loading={aiRecLoading}
+                error={aiRecError}
+                onRefresh={fetchAiRec}
+                onCompleteOnboarding={() => navigate('/onboarding?edit=1')}
+              />
             </div>
           </div>
         </div>

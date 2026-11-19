@@ -528,3 +528,8 @@
   .po-refresh,
   .po-canvas { transition: none; }
 }
+
+/* Touch devices: 44px-tall range buttons (desktop/mouse unchanged). */
+@media (pointer: coarse) {
+  .po-range { min-height: 44px; }
+}

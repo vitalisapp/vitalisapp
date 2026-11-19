@@ -3,7 +3,7 @@ import { apiDelete, apiPost } from '../../../lib/apiClient.js';
 import { useAdminResource } from '../hooks/useAdminResource.js';
 import Icon from '../../../components/Icon.jsx';
 import { Badge, ConfirmDialog, MiniStat, StateBlock, TableSkeleton } from './AdminBits.jsx';
-import { fmtNum, fmtWhen, initials } from '../utils/format.js';
+import { fmtNum, fmtPhone, fmtWhen, initials, verificationMeta } from '../utils/format.js';
 
 const humanize = (value) => String(value || '—')
   .toLowerCase()
@@ -74,6 +74,7 @@ export default function UserDrawer({ userId, currentAdminId, onClose, onToast, o
   const isSelf = user && Number(user.id) === Number(currentAdminId);
   const isAdmin = user?.role === 'admin';
   const locked = isSelf || isAdmin;
+  const verify = user ? verificationMeta(user) : null;
 
   return (
     <>
@@ -116,6 +117,7 @@ export default function UserDrawer({ userId, currentAdminId, onClose, onToast, o
                     <Badge tone={user.is_verified ? 'info' : 'warn'} icon={user.is_verified ? 'verified' : 'mark_email_unread'}>
                       {user.is_verified ? 'Verified' : 'Unverified'}
                     </Badge>
+                    <Badge tone={verify.tone} icon={verify.icon}>{verify.short}</Badge>
                   </div>
                 </div>
               </div>
@@ -130,6 +132,32 @@ export default function UserDrawer({ userId, currentAdminId, onClose, onToast, o
                 <MiniStat value={data.counts.photos} label="Photos" />
                 <MiniStat value={data.counts.measurements} label="Measures" />
                 <MiniStat value={data.counts.personalPlans} label="Personal" />
+              </div>
+
+              <div>
+                <p className="adm-section-title">Verification &amp; contact</p>
+                <div className="adm-kv-list">
+                  <div className="adm-kv">
+                    <span className="adm-kv__k"><Icon name="verified_user" /> Verified by</span>
+                    <span className="adm-kv__v"><Badge tone={verify.tone} icon={verify.icon}>{verify.label}</Badge></span>
+                  </div>
+                  <div className="adm-kv">
+                    <span className="adm-kv__k"><Icon name="mail" /> Email</span>
+                    <span className="adm-kv__v adm-kv__v--wrap">{user.email}</span>
+                  </div>
+                  <div className="adm-kv">
+                    <span className="adm-kv__k"><Icon name="call" /> Phone</span>
+                    <span className="adm-kv__v">
+                      {user.phone ? <a className="adm-kv__link" href={`tel:${user.phone}`}>{fmtPhone(user.phone)}</a> : 'Not provided'}
+                    </span>
+                  </div>
+                  {user.phone && (
+                    <div className="adm-kv">
+                      <span className="adm-kv__k"><Icon name="sms" /> Phone verified</span>
+                      <span className="adm-kv__v">{user.phone_verified_at ? fmtWhen(user.phone_verified_at) : 'Not yet'}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>

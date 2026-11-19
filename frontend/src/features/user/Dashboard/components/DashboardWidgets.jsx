@@ -21,7 +21,7 @@ const MiniRow = ({ label, value }) => (
 );
 
 const TextButton = ({ onClick, icon = null, children = null, ariaLabel = undefined }) => (
-  <button type="button" className="vd-text-btn" onClick={onClick} aria-label={ariaLabel}>
+  <button type="button" className="vd-text-btn v-touch-target" onClick={onClick} aria-label={ariaLabel}>
     {children}
     {icon && <Icon name={icon} style={{ fontSize: 14 }} />}
   </button>
@@ -284,7 +284,7 @@ export const TodaysPlanCard = ({
               : 'Explore training plans to build today\u2019s schedule'}
         </span>
       </div>
-      <button type="button" onClick={plan ? onOpenPlan : onOpenPlans} disabled={plansLoading}>
+      <button type="button" className="v-touch-target" onClick={plan ? onOpenPlan : onOpenPlans} disabled={plansLoading}>
         {plan ? 'Open plan' : 'Explore plans'}
       </button>
     </div>
@@ -556,7 +556,7 @@ export const RecentWorkoutsCard = ({ workouts = [], subtitle = '', onOpenWorkout
   </section>
 );
 
-export const AiCoachCard = ({ aiRec = null, loading = false, onRefresh = undefined }) => {
+export const AiCoachCard = ({ aiRec = null, loading = false, error = false, onRefresh = undefined, onCompleteOnboarding = undefined }) => {
   const summary = aiRec?.summary || null;
   const nutrition = summary?.nutrition || null;
   const projection = summary?.projection || null;
@@ -574,9 +574,23 @@ export const AiCoachCard = ({ aiRec = null, loading = false, onRefresh = undefin
         <div className="vd-ai-loading" role="status" aria-label="Loading AI coaching">
           <span /><span /><span />
         </div>
+      ) : error && !aiRec ? (
+        <EmptyPrompt icon="cloud_off" title="Coach didn't load" onClick={onRefresh}>
+          We couldn&apos;t reach the AI coach. Check your connection and try again.
+          <span className="vd-empty-cta">
+            Try again <Icon name="refresh" style={{ fontSize: 13 }} />
+          </span>
+        </EmptyPrompt>
       ) : !aiRec?.goal ? (
-        <EmptyPrompt icon="info" title="Coaching locked">
+        <EmptyPrompt
+          icon="info"
+          title="Coaching locked"
+          onClick={onCompleteOnboarding}
+        >
           Complete your onboarding to unlock personalized coaching
+          <span className="vd-empty-cta">
+            Complete onboarding <Icon name="arrow_forward" style={{ fontSize: 13 }} />
+          </span>
         </EmptyPrompt>
       ) : summary ? (
         <>

@@ -29,7 +29,11 @@ async function postanalyzePic(req, res, next) {
         imageUrl = stored.url;
       } catch (err) {
         console.error("[analyze-pic] compress failed:", err.message);
-        return next(new AppError("Could not process that image. Try another photo.", 400, "IMAGE_DECODE_FAILED"));
+        return next(new AppError(
+          "That image could not be read. Try a JPG, PNG, WebP, HEIC, AVIF, or TIFF photo.",
+          400,
+          "IMAGE_DECODE_FAILED",
+        ));
       }
     } else if (req.body?.base64Image) {
       let base64 = String(req.body.base64Image);
@@ -50,7 +54,11 @@ async function postanalyzePic(req, res, next) {
         imageUrl = stored.url;
       } catch (err) {
         console.error("[analyze-pic] encode/store failed:", err.message);
-        return next(new AppError("Could not process that image. Try another photo.", 400, "IMAGE_DECODE_FAILED"));
+        return next(new AppError(
+          "That image could not be read. Try a JPG, PNG, WebP, HEIC, AVIF, or TIFF photo.",
+          400,
+          "IMAGE_DECODE_FAILED",
+        ));
       }
     }
 
@@ -58,6 +66,24 @@ async function postanalyzePic(req, res, next) {
 
     try {
       const { result, cached, joined } = await service.analyzeImage(aiImage);
+
+      // Coded AI failure — never dress an outage up as a successful scan with
+      // 0-kcal "Unknown food" items. The status code carries the distinction:
+      // 422 = the photo really had no food, 503 = the AI could not complete.
+      if (result && result.success === false) {
+        const code = String(result.code || "AI_UNAVAILABLE");
+        const status =
+          code === "NO_FOOD_DETECTED" ? 422 :
+          code === "INVALID_IMAGE" ? 400 :
+          503;
+        return res.status(status).json({
+          error: result.suggestion || "The AI scan could not complete. Please try again.",
+          code,
+          retryable: Boolean(result.retryable),
+          detected: false,
+        });
+      }
+
       const payload = { ...result, ...(imageUrl ? { image_url: imageUrl } : {}) };
 
       if (cached) {

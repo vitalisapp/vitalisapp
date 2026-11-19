@@ -6,13 +6,14 @@ const { generatePlan, calcBmi } = require('../../src/utils/planEngine');
 const { calcReadiness } = require('../../src/utils/readiness');
 
 describe('ai model config (stabilize MVP)', () => {
-  it('tries valid public IDs first, keeps legacy last', () => {
+  it('leads with the verified fast Gemini models, not the hanging 3.x flagships', () => {
     delete process.env.GEMINI_TEXT_MODELS;
     delete process.env.GEMINI_VISION_MODELS;
     const text = gemini.getTextModels();
     const vision = gemini.getVisionModels();
-    assert.ok(text[0].includes('gemini-3.6-flash') || text[0].includes('gemini-3.8-flash'));
-    assert.ok(vision[0].includes('gemini-3.6-flash') || vision[0].includes('gemini-3.8-flash'));
+    assert.match(text[0], /flash-lite/);
+    assert.match(vision[0], /flash-lite/);
+    assert.ok(!text.some((m) => /^gemini-3\.[678]-flash$/.test(m)), 'hanging flagships excluded');
     assert.ok(text.length >= 2 && vision.length >= 2);
   });
 
@@ -22,15 +23,51 @@ describe('ai model config (stabilize MVP)', () => {
     delete process.env.GEMINI_TEXT_MODELS;
   });
 
+  it('default OpenRouter chain stays on free models', () => {
+    delete process.env.OPENROUTER_VISION_MODELS;
+    delete process.env.OPENROUTER_VISION_MODEL;
+    delete process.env.OPENROUTER_TEXT_MODELS;
+    delete process.env.OPENROUTER_TEXT_MODEL;
+    for (const m of gemini.getOpenRouterVisionModels()) assert.match(m, /:free$/);
+    for (const m of gemini.getOpenRouterTextModels()) assert.match(m, /:free$/);
+  });
+
   it('returns static fallback fast when no keys configured', async () => {
     const prevG = process.env.GEMINI_API_KEY;
     const prevQ = process.env.GROQ_API_KEY;
+    const prevO = process.env.OPENROUTER_API_KEY;
     delete process.env.GEMINI_API_KEY;
     delete process.env.GROQ_API_KEY;
+    delete process.env.OPENROUTER_API_KEY;
     const out = await gemini.callGeminiWithFallback('hello');
     assert.match(out, /high demand/i);
     if (prevG !== undefined) process.env.GEMINI_API_KEY = prevG;
     if (prevQ !== undefined) process.env.GROQ_API_KEY = prevQ;
+    if (prevO !== undefined) process.env.OPENROUTER_API_KEY = prevO;
+  });
+
+  it('separates empty photos from unparseable provider output', () => {
+    const empty = gemini.visionOutcome('{"items":[],"suggestion":"No food detected"}');
+    assert.equal(empty.status, 'empty');
+
+    const placeholder = gemini.visionOutcome(
+      '{"items":[{"food_name":"Unknown food","calories":0}]}',
+    );
+    assert.equal(placeholder.status, 'empty', 'placeholder is not real food');
+
+    assert.equal(gemini.visionOutcome('not json').status, 'invalid');
+
+    const ok = gemini.visionOutcome(
+      '{"items":[{"food_name":"Chicken rice","serving":"1 cup","calories":400,"protein":25,"carbs":45,"fat":10}]}',
+    );
+    assert.equal(ok.status, 'ok');
+    assert.equal(ok.result.items.length, 1);
+  });
+
+  it('classifies token-limit and auth errors apart from retryable overload', () => {
+    assert.equal(gemini.isTokenLimitError(new Error('413 Request too large (ITPM: Limit 7000)')), true);
+    assert.equal(gemini.isAuthError(new Error('401 Unauthorized: invalid api key')), true);
+    assert.equal(gemini.isRetryableError(new Error('413 Request too large')), false);
   });
 
   it('safeParseAI handles markdown + garbage without throwing', () => {

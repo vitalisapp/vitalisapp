@@ -5,6 +5,7 @@ const { z } = require("zod");
 const { COOKIE_NAME, getCookieOptions, getClearCookieOptions } = require("../utils/cookies");
 const service = require("../services/auth.service");
 const emailService = require("../services/email.service");
+const phoneVerification = require("../services/phoneVerification.service");
 const notificationController = require("./notification.controller");
 
 const { normEmail, DEV_VERIFY_FALLBACK } = service;
@@ -40,6 +41,22 @@ const registerSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters").max(128),
   // Module 1 — explicit consent flag must survive schema validation.
   agreed: z.boolean().optional().default(false),
+  // Registration verification channel. 'email' keeps the existing link flow.
+  verificationMethod: z.enum(["email", "sms"]).optional().default("email"),
+  // Only required when verificationMethod === 'sms'; validated in the service
+  // so both formats (09XXXXXXXXX / +639XXXXXXXXX) are accepted.
+  phone: z.string().trim().max(24).optional(),
+});
+
+const smsOtpSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Invalid email address"),
+  // Optional: the code is sent to the number already stored on the account.
+  phone: z.string().trim().max(24).optional(),
+});
+
+const smsVerifySchema = z.object({
+  email: z.string().trim().toLowerCase().email("Invalid email address"),
+  code: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code"),
 });
 
 const loginSchema = z.object({
@@ -147,21 +164,45 @@ async function postregister(req, res, next) {
     }
 
     try {
-      const { link, emailed, deliveryToken, autoVerified, user } = await service.register({
+      const { link, emailed, deliveryToken, autoVerified, user, verificationMethod } = await service.register({
         name,
         email,
         password,
+        phone: req.body?.phone,
+        verificationMethod: req.body?.verificationMethod || "email",
       });
 
-      // Registration does not grant a session. Confirm email, then sign in.
-      res.clearCookie(COOKIE_NAME, getClearCookieOptions(req));
+      // SMS branch: send the 6-digit code now. A provider outage must not
+      // destroy the account — the user can request another code from the
+      // verification screen.
+      let smsDelivery = null;
+      if (!autoVerified && verificationMethod === "sms") {
+        try {
+          smsDelivery = await phoneVerification.sendCode({ email, phone: user.phone });
+        } catch (smsErr) {
+          // Operational provider errors are reported on the verification
+          // screen, not as a failed registration.
+          console.error("SMS verification send failed:", smsErr.code || smsErr.message);
+        }
+      }
 
-      /** @type {{ success: boolean, message: string, id: number, name: string, email: string, avatar: string|null, goal: string, isVerified: boolean, onboardingCompleted: boolean, role: string, status: string, acceptedTermsAt: string|null, acceptedTermsVersion: number|null, needsVerification: boolean, devVerificationLink?: string }} */
+      if (autoVerified) {
+        // Development: verification skipped — sign the new user straight in.
+        setSessionCookie(res, user.id, user.email, req, user.token_version);
+        await service.logUserSession(req, user.id);
+      } else {
+        // Registration does not grant a session. Confirm email, then sign in.
+        res.clearCookie(COOKIE_NAME, getClearCookieOptions(req));
+      }
+
+      /** @type {{ success: boolean, message: string, id: number, name: string, email: string, avatar: string|null, goal: string, isVerified: boolean, onboardingCompleted: boolean, role: string, status: string, acceptedTermsAt: string|null, acceptedTermsVersion: number|null, needsVerification: boolean, verificationMethod: string, phoneMasked?: string, devVerificationLink?: string }} */
       const payload = {
         success: true,
         message: autoVerified
-          ? "Account created. You can sign in now."
-          : "Account created. Check your inbox to verify your email before signing in.",
+          ? "Account created. You're signed in."
+          : verificationMethod === "sms"
+            ? "Account created. Enter the 6-digit code we sent to your phone."
+            : "Account created. Check your inbox to verify your email before signing in.",
         // Same shape /login and /me return so AuthContext stays consistent.
         id: user.id,
         name: user.name,
@@ -175,15 +216,22 @@ async function postregister(req, res, next) {
         acceptedTermsAt: user.accepted_terms_at,
         acceptedTermsVersion: user.accepted_terms_version,
         needsVerification: !autoVerified,
+        verificationMethod: autoVerified ? null : verificationMethod,
         deliveryToken,
-        deliveryStatus: emailed ? 'accepted' : 'failed',
+        deliveryStatus: autoVerified ? 'skipped' : verificationMethod === "sms" ? (smsDelivery ? 'accepted' : 'failed') : emailed ? 'accepted' : 'failed',
       };
-      if (payload.needsVerification && !emailed && DEV_VERIFY_FALLBACK) {
+      if (smsDelivery) {
+        payload.phoneMasked = smsDelivery.phoneMasked;
+        payload.retryAfter = smsDelivery.retryAfter;
+        payload.expiresIn = smsDelivery.expiresIn;
+        payload.smsMocked = smsDelivery.mocked;
+      }
+      if (payload.needsVerification && verificationMethod === "email" && !emailed && DEV_VERIFY_FALLBACK) {
         payload.devVerificationLink = link;
       }
       res.status(201).json(payload);
     } catch (err) {
-      if (err.isOperational) return res.status(err.status).json({ error: err.message });
+      if (err.isOperational) return res.status(err.status).json({ error: err.message, code: err.code, details: err.details });
       console.error("Register error:", err.code || err.message);
       next(err);
     }
@@ -226,6 +274,7 @@ async function postlogin(req, res, next) {
         if (err.code === "NEEDS_VERIFICATION") {
           body.code = "NEEDS_VERIFICATION";
           body.email = err.details?.email;
+          body.verificationMethod = err.details?.verificationMethod;
         }
         if (err.code === "ACCOUNT_DEACTIVATED") {
           body.code = "ACCOUNT_DEACTIVATED";
@@ -402,6 +451,53 @@ async function postsendVerification(req, res, next) {
   }
 }
 
+// ─── POST /api/auth/sms-otp { email, phone? } — send a 6-digit SMS code
+// Used by the registration screen and its "resend" button. Rate limiting is
+// layered: IP limiter in the route, per-account cooldown/hourly cap in the
+// service. The code itself never appears in this response.
+async function postsmsOtp(req, res, next) {
+  try {
+    const email = normEmail(req.body?.email);
+    const result = await phoneVerification.sendCode({ email, phone: req.body?.phone });
+    res.json({
+      success: true,
+      message: `We sent a 6-digit code to ${result.phoneMasked}.`,
+      phoneMasked: result.phoneMasked,
+      retryAfter: result.retryAfter,
+      expiresIn: result.expiresIn,
+      mocked: result.mocked,
+    });
+  } catch (err) {
+    if (err.isOperational) {
+      return res.status(err.status).json({ error: err.message, code: err.code, details: err.details });
+    }
+    console.error("SMS OTP send error:", err.code || err.message);
+    next(err);
+  }
+}
+
+// ─── POST /api/auth/sms-verify { email, code } — verify the SMS code
+// Registration-only flow: a successful code activates the account but does
+// not create a session — the user then signs in with email + password.
+async function postsmsVerify(req, res, next) {
+  try {
+    const email = normEmail(req.body?.email);
+    const user = await phoneVerification.verifyCode({ email, code: req.body?.code });
+    res.json({
+      success: true,
+      message: "Phone verified. Your Vitalis account is now active — sign in to continue.",
+      email: user.email,
+      phoneMasked: user.phone_masked,
+    });
+  } catch (err) {
+    if (err.isOperational) {
+      return res.status(err.status).json({ error: err.message, code: err.code, details: err.details });
+    }
+    console.error("SMS OTP verify error:", err.code || err.message);
+    next(err);
+  }
+}
+
 // ─── GET /api/auth/verify-email?token=... — activate account via link
 async function getverifyEmail(req, res, next) {
   try {
@@ -535,6 +631,8 @@ module.exports = {
   postchangePassword,
   postlogout,
   postsendVerification,
+  postsmsOtp,
+  postsmsVerify,
   getverifyEmail,
   patchchangeEmail,
   postcompleteOnboarding,
@@ -544,6 +642,8 @@ module.exports = {
   registerSchema,
   loginSchema,
   googleLoginSchema,
+  smsOtpSchema,
+  smsVerifySchema,
   changePasswordSchema,
   changeEmailSchema,
   loginIpLimiter,

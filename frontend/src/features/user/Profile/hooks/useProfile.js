@@ -12,6 +12,14 @@ import { goalLabel, GOAL_TYPES } from '../../Onboarding/constants/goals.js';
 const GOAL_KEYS = new Set(GOAL_TYPES.map((g) => g.key));
 const prettyBio = (raw) => (GOAL_KEYS.has(raw) ? goalLabel(raw) : (raw || ''));
 
+// Mobile number helpers. Stored as +639XXXXXXXXX, edited as 09XXXXXXXXX.
+const LOCAL_PHONE_RE = /^09\d{9}$/;
+const toLocalPhone = (e164) => {
+  const m = /^\+63(9\d{9})$/.exec(String(e164 || ''));
+  return m ? `0${m[1]}` : '';
+};
+const toE164Phone = (local) => (LOCAL_PHONE_RE.test(local || '') ? `+63${local.slice(1)}` : null);
+
 export const useProfile = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -46,6 +54,7 @@ export const useProfile = () => {
     fullName: '',
     email:    '',
     contact:  '',
+    phone:    '',
     bio:      '',
     height_cm: '',
     weight_kg: '',
@@ -102,6 +111,7 @@ export const useProfile = () => {
       fullName:  dbData.fullName || user?.name  || '',
       email:     dbData.email    || user?.email || '',
       contact:   dbData.contact  || '',
+      phone:     toLocalPhone(dbData.phone),
       bio:       prettyBio(dbData.bio || (/unspecified/i.test(user?.goal || '') ? '' : user?.goal)),
       height_cm: dbData.height_cm ?? dbData.onboarding?.heightCm ?? '',
       weight_kg: dbData.weight_kg ?? dbData.onboarding?.weightKg ?? '',
@@ -145,6 +155,7 @@ export const useProfile = () => {
     const formChanged =
       formData.fullName !== savedData.fullName ||
       formData.contact  !== savedData.contact  ||
+      formData.phone    !== savedData.phone    ||
       formData.bio      !== savedData.bio;
     const identityChanged = dob !== savedDob || sex !== savedSex;
     setIsDirty(formChanged || identityChanged || !!pendingAvatar);
@@ -196,6 +207,11 @@ export const useProfile = () => {
 
   const handleSave = async () => {
     if (!USER_ID) return;
+    // Mobile number: digits only, PH format 09XXXXXXXXX (or empty to remove).
+    if (formData.phone && !LOCAL_PHONE_RE.test(formData.phone)) {
+      showToast('Enter a valid mobile number: 11 digits starting with 09', 'error');
+      return;
+    }
     setIsSaving(true);
     try {
       const avatarToSave = pendingAvatar
@@ -209,9 +225,11 @@ export const useProfile = () => {
       const body = {
         fullName:   formData.fullName,
         contact:    formData.contact,
+        phone:      formData.phone,
         bio:        formData.bio,
         avatar_url: avatarToSave,
       };
+      const phoneChanged = formData.phone !== savedData.phone;
 
       await apiFetch('/api/profile/update', {
         method: 'PUT',
@@ -246,6 +264,9 @@ export const useProfile = () => {
         fullName: formData.fullName,
         email: formData.email,
         contact: formData.contact,
+        phone: toE164Phone(formData.phone),
+        // A changed number is not verified yet (the server resets it too).
+        phone_verified_at: phoneChanged ? null : prev.phone_verified_at,
         bio: formData.bio,
         avatar_url: avatarToSave,
       } : prev));
@@ -268,7 +289,10 @@ export const useProfile = () => {
       showToast('Profile saved');
     } catch (err) {
       if (import.meta.env.DEV) console.error('Save error:', err);
-      showToast('Save failed — check your connection', 'error');
+      // Validation errors (e.g. number already linked / invalid) carry a
+      // readable server message; network failures keep the generic one.
+      const clientError = Number(err?.status) >= 400 && Number(err?.status) < 500 && err?.message;
+      showToast(clientError ? err.message : 'Save failed — check your connection', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -279,8 +303,13 @@ export const useProfile = () => {
     navigate('/login');
   };
 
+  // Saved number has been confirmed by SMS (and hasn't been edited since).
+  const phoneVerified = Boolean(profileQuery.data?.phone_verified_at)
+    && Boolean(formData.phone) && formData.phone === savedData.phone;
+
   return {
     user, loading, USER_ID,
+    phoneVerified,
     isLoading, isSaving, isEditing, isDirty,
     toastVisible, toastMessage, toastVariant,
     sessions, sessionsLoaded, sessionsLoading, loadSessions,

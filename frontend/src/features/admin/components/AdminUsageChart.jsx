@@ -77,14 +77,19 @@ const compactNumber = (value) => {
  * a restrained secondary line for distinct members. All colours resolve from
  * the live theme tokens, so light / dark mode stay in sync without duplication.
  */
-export default function AdminUsageChart({ series = [], height = 260, showMembers = true, label = 'AI activity' }) {
+// primaryLabel / secondaryLabel let other series (e.g. SMS sent vs verified)
+// reuse this chart; defaults keep the AI activity chart unchanged.
+export default function AdminUsageChart({
+  series = [], height = 260, showMembers = true, label = 'AI activity',
+  primaryLabel = 'AI calls', secondaryLabel = 'Active members',
+}) {
   const palette = usePalette();
   const reduceMotion = typeof window !== 'undefined'
     && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
   const chartData = useMemo(() => {
     const datasets = [{
-      label: 'AI calls',
+      label: primaryLabel,
       data: series.map((point) => Number(point.calls || 0)),
       borderColor: palette.accent,
       backgroundColor: (context) => {
@@ -112,7 +117,7 @@ export default function AdminUsageChart({ series = [], height = 260, showMembers
 
     if (showMembers) {
       datasets.push({
-        label: 'Active members',
+        label: secondaryLabel,
         data: series.map((point) => Number(point.users || 0)),
         borderColor: palette.accent2,
         backgroundColor: 'transparent',
@@ -131,7 +136,7 @@ export default function AdminUsageChart({ series = [], height = 260, showMembers
     }
 
     return { labels: series.map((point) => fmtDay(point.usage_day)), datasets };
-  }, [series, palette, showMembers]);
+  }, [series, palette, showMembers, primaryLabel, secondaryLabel]);
 
   const options = useMemo(() => ({
     responsive: true,

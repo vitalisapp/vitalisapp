@@ -336,6 +336,8 @@ export default function MealTracker() {
     result,
     isAnalyzing,
     isLogging,
+    scanError,
+    retryAnalyze,
     history,
     historyLoading,
     historyError,
@@ -915,6 +917,8 @@ export default function MealTracker() {
               preview={preview}
               isAnalyzing={isAnalyzing}
               hasResult={Boolean(result?.items?.length)}
+              scanError={scanError}
+              onRetry={retryAnalyze}
               manualOpen={showManual}
               onCamera={() => setShowScanner(true)}
               onUpload={() => fileRef.current?.click()}
@@ -989,7 +993,13 @@ export default function MealTracker() {
       </div>
 
       {/* sr-only (not display:none): keeps the input tappable on mobile browsers */}
-      <input ref={fileRef} type="file" accept="image/*" className="sr-only" onChange={onFile} />
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*,.jpg,.jpeg,.jpe,.jfif,.png,.apng,.webp,.gif,.avif,.heic,.heif,.tif,.tiff,.bmp,.svg"
+        className="sr-only"
+        onChange={onFile}
+      />
 
       {showScanner && (
         <CameraScanner onCapture={onScanCapture} onClose={() => setShowScanner(false)} />

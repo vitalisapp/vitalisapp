@@ -8,6 +8,8 @@
   --app-rail: var(--sidebar-w-expanded);
   --app-rail-collapsed: var(--sidebar-w-collapsed);
   --app-topbar: 64px;
+  /* Bar height + safe-area inset: everything that sits "below the topbar". */
+  --app-topbar-offset: calc(var(--app-topbar) + var(--safe-top));
   --app-gap: 16px;
   min-height: 100dvh;
   background: var(--bg-primary);
@@ -19,15 +21,16 @@
 
 /* ── Topbar ────────────────────────────────────────────────────────── */
 .vapp .app-topbar {
-  height: var(--app-topbar);
-  padding-inline: 14px;
+  height: var(--app-topbar-offset);
+  padding-inline: max(14px, var(--safe-left)) max(14px, var(--safe-right));
 }
 .vapp .app-topbar.app-rail-offset { left: 0; }
 @media (min-width: 768px) {
-  .vapp .app-topbar { padding-inline: 20px; }
+  .vapp .app-topbar { padding-inline: 20px max(20px, var(--safe-right)); }
   .vapp .app-topbar.app-rail-offset {
     left: var(--app-rail);
     transition-duration: var(--duration-sidebar);
+    transition-timing-function: var(--ease-default);
   }
   .vapp.is-sidebar-collapsed .app-topbar.app-rail-offset {
     left: var(--app-rail-collapsed);
@@ -195,7 +198,7 @@
 /* ── Main layout ───────────────────────────────────────────────────── */
 .vapp .app-main {
   min-height: 100dvh;
-  padding-top: var(--app-topbar);
+  padding-top: var(--app-topbar-offset);
   padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   transition: margin-left var(--duration-sidebar) var(--ease-default);
 }

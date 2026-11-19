@@ -22,7 +22,46 @@ const UPLOAD_ROOT = process.env.UPLOAD_DIR
 
 // Categories double as subfolder names — bounded so path traversal can't win.
 const ALLOWED_CATEGORIES = new Set(['food', 'progress', 'misc']);
-const IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']);
+// Accept every still-image type browsers/phones commonly produce, not just
+// JPEG/PNG/WebP. `.jfif` is just JPEG with a different extension and some
+// clients label it `image/jfif` (or send no type at all), so extension is a
+// fallback whenever the declared MIME is missing/generic.
+const IMAGE_MIME = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/pjpeg',
+  'image/jfif',
+  'image/png',
+  'image/x-png',
+  'image/apng',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+  'image/heic',
+  'image/heif',
+  'image/tiff',
+  'image/bmp',
+  'image/x-ms-bmp',
+  'image/svg+xml',
+  'image/x-icon',
+  'image/vnd.microsoft.icon',
+]);
+const IMAGE_EXT = new Set([
+  '.jpg', '.jpeg', '.jpe', '.jfif', '.pjpeg',
+  '.png', '.apng', '.webp', '.gif', '.avif',
+  '.heic', '.heif', '.tif', '.tiff', '.bmp', '.svg', '.ico',
+]);
+
+function isAcceptedImage(file) {
+  const mime = String(file?.mimetype || '').toLowerCase().trim();
+  if (IMAGE_MIME.has(mime)) return true;
+  // Browsers/OSes often submit .jfif or HEIC as "" or application/octet-stream;
+  // trust the extension in that case and let sharp validate the bytes.
+  if (!mime || mime === 'application/octet-stream' || mime === 'binary/octet-stream') {
+    return IMAGE_EXT.has(path.extname(String(file?.originalname || '')).toLowerCase());
+  }
+  return false;
+}
 
 // Compress target: 1600px long edge keeps food-portion cues; ~150–300KB out.
 const MAX_DIMENSION = 1600;
@@ -68,8 +107,12 @@ function makeUploader(category) {
     }),
     limits: { fileSize: 20 * 1024 * 1024, files: 1 },
     fileFilter: (_req, file, cb) => {
-      if (IMAGE_MIME.has(file.mimetype)) return cb(null, true);
-      cb(new AppError('Only image files (JPEG, PNG, WebP, GIF, HEIC) are allowed.', 400, 'INVALID_FILE_TYPE'));
+      if (isAcceptedImage(file)) return cb(null, true);
+      cb(new AppError(
+        'Unsupported file type. Use a JPG, JPEG, JFIF, PNG, WebP, GIF, AVIF, HEIC/HEIF, TIFF, BMP, or SVG image.',
+        400,
+        'INVALID_FILE_TYPE',
+      ));
     },
   });
 }
@@ -119,7 +162,11 @@ async function compressBufferAndStore(buffer, category) {
   const target = path.join(dir, name);
   const buf = await compressImageBuffer(buffer);
   await fs.promises.writeFile(target, buf);
-  return { url: `/uploads/${path.basename(dir)}/${name}`, bytes: buf.length };
+  return {
+    url: `/uploads/${path.basename(dir)}/${name}`,
+    buffer: buf,
+    bytes: buf.length,
+  };
 }
 
 // Legacy analyze-pic: oversized base64 → server-side compress (was: hard 413).
@@ -135,6 +182,7 @@ module.exports = {
   makeUploader,
   normalizeMulterError,
   compressImageBuffer,
+  isAcceptedImage,
   compressAndStore,
   compressBufferAndStore,
   compressImageBase64,

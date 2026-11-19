@@ -45,6 +45,7 @@ export default function WebcamFeed({
   isRecording,
   poseReady,
   loadError,
+  onRetryPose,
   aiFeedback,
   isAnalyzing,
   repCount,
@@ -70,7 +71,6 @@ export default function WebcamFeed({
   const [cameraAttempt, setCameraAttempt] = useState(0);
   const [facing, setFacing] = useState(() => safeGet('vitalis_facing', 'user') || 'user');
   const [actualFacing, setActualFacing] = useState(null);
-  const [captureShape, setCaptureShape] = useState('');
   const containerRef = useRef(null);
 
   // getUserMedia is missing on HTTP origins and camera-less devices — without
@@ -207,15 +207,6 @@ export default function WebcamFeed({
   }, [feedLive, facing, cameraAttempt, isNarrow, onStreamReset, webcamRef]);
 
   useEffect(() => {
-    const video = webcamRef.current?.video;
-    if (!feedLive || !video) return;
-    const update = () => setCaptureShape(video.videoWidth > video.videoHeight ? 'Landscape camera · complete image' : 'Portrait camera · complete image');
-    video.addEventListener('resize', update);
-    const frame = requestAnimationFrame(update);
-    return () => { video.removeEventListener('resize', update); cancelAnimationFrame(frame); };
-  }, [feedLive, facing, cameraAttempt, webcamRef]);
-
-  useEffect(() => {
     if (!dismissFullscreen || !isFullscreen) return;
     const frame = requestAnimationFrame(exitFullscreen);
     return () => cancelAnimationFrame(frame);
@@ -325,15 +316,25 @@ export default function WebcamFeed({
               <p className="text-[length:var(--fs-11)] text-[var(--text-muted)] truncate">
                 {!cameraSupported
                   ? 'This browser or connection blocks camera access — use HTTPS on a device with a camera.'
-                  : off ? 'Turn it on for live rep counting' : (streamError || 'Starting camera… allow access when asked.')}
+                  : off
+                    ? 'Turn it on for live rep counting'
+                    : streamError
+                      ? streamError
+                      : loadError
+                        ? 'Pose AI failed to load — tap Retry'
+                        : !poseReady
+                          ? 'Loading pose model…'
+                          : !streamLive
+                            ? 'Starting camera… allow access when asked.'
+                            : 'Camera ready — step into frame.'}
               </p>
             </div>
             {cameraSupported && (
               <button
-                onClick={off ? handleTurnOn : handleRetry}
+                onClick={off ? handleTurnOn : (loadError && onRetryPose ? onRetryPose : handleRetry)}
                 className="shrink-0 px-4 py-2 min-h-[40px] rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[length:var(--fs-12)] font-bold active:scale-95 transition-transform"
               >
-                {off ? 'Turn on' : 'Retry'}
+                {off ? 'Turn on' : loadError ? 'Retry AI' : 'Retry'}
               </button>
             )}
           </div>
@@ -374,72 +375,133 @@ export default function WebcamFeed({
         </div>
       )}
 
-      {/* Fullscreen cinematic scrims (reference style) */}
+      {/* Fullscreen — deliberately minimal: the feed is the interface.
+          Only a slim glass top bar, one hint line and a compact control bar
+          sit over the video. Neutral glass + fixed light text keeps it legible
+          over any camera image in both light and dark theme. */}
       {isFullscreen && (
         <>
-          <div className="absolute top-0 left-0 right-0 h-24 z-20 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 h-44 z-20 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
-          {/* Bottom record cluster — fullscreen owns Start/Stop (page header
-              is outside the fullscreen element) */}
-          <div className="absolute inset-0 z-40 flex flex-col text-white pointer-events-none"
-            style={{ padding: 'max(10px, env(safe-area-inset-top)) clamp(12px, 3vw, 32px) max(16px, env(safe-area-inset-bottom))', gap: 'clamp(10px, 2dvh, 24px)' }}>
-            <div className="flex items-center gap-3 shrink-0">
-              <button onClick={exitFullscreen} aria-label="Exit fullscreen" style={{ background: 'rgba(40,43,39,.9)', width: 44, height: 44 }} className="pointer-events-auto shrink-0 rounded-full flex items-center justify-center">
-                <Icon name="arrow_back" className="text-3xl" />
-              </button>
-              <div className="flex-1 min-w-0">
-                <h2 style={{ fontSize: 'clamp(18px, 4vw, 30px)' }} className="font-bold truncate">{workoutLabel}</h2>
-                <p className="text-xs sm:text-base text-white/90 leading-snug">{workoutSub}</p>
+          <div className="absolute inset-x-0 top-0 z-20 h-24 bg-gradient-to-b from-black/55 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 z-20 h-40 bg-gradient-to-t from-black/65 to-transparent pointer-events-none" />
+
+          <div
+            className="absolute inset-x-0 top-0 z-30 flex items-center gap-2 px-3 pb-2.5"
+            style={{ paddingTop: 'max(10px, env(safe-area-inset-top))' }}
+          >
+            <button
+              onClick={exitFullscreen}
+              aria-label="Back to workout"
+              className="pointer-events-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-md transition-transform active:scale-95"
+            >
+              <Icon name="arrow_back" className="text-xl" />
+            </button>
+            <div className="min-w-0 flex-1 px-0.5">
+              <p className="truncate text-[13px] font-semibold leading-tight text-white">{workoutLabel}</p>
+              <p className="truncate text-[11px] leading-tight text-white/65">{workoutSub}</p>
+            </div>
+            <button
+              onClick={flipCamera}
+              disabled={!feedLive}
+              aria-label="Switch camera"
+              className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-md transition-transform active:scale-95 disabled:opacity-40"
+            >
+              <Icon name="flip_camera_ios" className="text-lg" />
+            </button>
+            <button
+              onClick={exitFullscreen}
+              aria-label="Exit fullscreen"
+              className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-md transition-transform active:scale-95"
+            >
+              <Icon name="fullscreen_exit" className="text-lg" />
+            </button>
+          </div>
+
+          {/* One quiet line until the model finds a body — no cards, no HUD. */}
+          {!tracking && (
+            <p className="pointer-events-none absolute inset-x-0 top-[42%] z-30 mx-auto max-w-[290px] px-8 text-center text-[12.5px] leading-snug text-white/85 [text-shadow:0_1px_6px_rgba(0,0,0,.9)]">
+              {trackingHint}
+            </p>
+          )}
+
+          <div
+            className="absolute inset-x-0 bottom-0 z-30 flex flex-col items-center gap-2 px-3 pt-6"
+            style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+          >
+            {aiFeedback && aiFeedback !== 'Select Exercise & Start' && (
+              <div className="pointer-events-auto flex w-full max-w-[420px] items-start gap-2 rounded-2xl border border-white/10 bg-black/45 px-3 py-2 backdrop-blur-md">
+                <span
+                  aria-hidden="true"
+                  className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${isAnalyzing ? 'animate-pulse' : ''}`}
+                  style={{ background: 'var(--accent)' }}
+                />
+                <p className="line-clamp-2 flex-1 text-[12px] leading-snug text-white/90">{aiFeedback}</p>
+                {onVoiceToggle && (
+                  <button
+                    onClick={onVoiceToggle}
+                    aria-label={voiceEnabled ? 'Mute coaching' : 'Enable voice coaching'}
+                    className="pointer-events-auto -my-1 -mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/70 transition-transform active:scale-95"
+                  >
+                    <Icon name={voiceEnabled ? 'volume_up' : 'volume_off'} className="text-base" />
+                  </button>
+                )}
               </div>
-              <button onClick={flipCamera} disabled={!feedLive} aria-label="Switch camera" style={{ background: 'rgba(40,43,39,.9)', width: 44, height: 44 }} className="pointer-events-auto shrink-0 rounded-full flex items-center justify-center disabled:opacity-40">
-                <Icon name="flip_camera_ios" className="text-2xl sm:text-3xl" />
-              </button>
-              <button onClick={exitFullscreen} aria-label="Exit fullscreen" style={{ background: 'rgba(40,43,39,.9)', width: 44, height: 44 }} className="pointer-events-auto shrink-0 rounded-full flex items-center justify-center">
-                <Icon name="fullscreen_exit" className="text-2xl sm:text-3xl" />
-              </button>
-            </div>
-            <CoachFeedbackOverlay aiFeedback={!tracking ? trackingHint : aiFeedback} isAnalyzing={isAnalyzing} fullscreen voiceEnabled={voiceEnabled} onVoiceToggle={onVoiceToggle} />
-            <div className="relative flex-1 min-h-0">
-              {['top-0 left-0 border-t-[3px] border-l-[3px] rounded-tl-lg', 'top-0 right-0 border-t-[3px] border-r-[3px] rounded-tr-lg', 'bottom-0 left-0 border-b-[3px] border-l-[3px] rounded-bl-lg', 'bottom-0 right-0 border-b-[3px] border-r-[3px] rounded-br-lg'].map(corner => (
-                <span key={corner} className={`absolute w-6 h-6 sm:w-9 sm:h-9 border-[#54ff38] ${corner}`} />
-              ))}
-              <div className="flex items-start justify-between gap-2 p-2 sm:p-4">
-                <div style={{ background: 'rgba(45,51,42,.85)' }} className="rounded-2xl px-3 py-2 flex items-center gap-2 backdrop-blur-sm">
-                  <Icon name="accessibility_new" className="text-[#90ff45] text-2xl sm:text-3xl" />
-                  <div><p className="text-[#90ff45] font-bold text-xs sm:text-lg">{tracking ? trackingHint.split(' · ')[0] : 'Finding pose'}</p><p className="text-[10px] sm:text-sm">Automatic angle tracking</p></div>
-                </div>
-                <div style={{ background: 'rgba(45,51,42,.85)' }} className="rounded-2xl px-3 py-2 backdrop-blur-sm text-[10px] sm:text-sm">
-                  <p className="font-semibold mb-1">Angle Detection</p>
-                  {[{ text: 'Required joints', ok: tracking }, { text: tracking ? 'Tracking active' : 'Positioning', ok: tracking && !paused }].map(row => (
-                    <p key={row.text} className="flex items-center gap-1.5 mt-1"><Icon name={row.ok ? 'check_circle' : 'radio_button_unchecked'} className={row.ok ? 'text-[#54ff38]' : 'text-white/60'} />{row.text}</p>
-                  ))}
-                </div>
-              </div>
-              <p className="absolute bottom-2 inset-x-2 text-center text-[11px] text-white/80">{captureShape}</p>
-            </div>
-            <div style={{ background: 'rgba(45,48,43,.9)', border: '1px solid rgba(255,255,255,.15)' }} className="self-center w-[82%] max-w-lg rounded-[20px] backdrop-blur-md text-center px-4 py-3 sm:py-4 shrink-0">
-              <p className="font-bold text-[#90ff45] text-lg sm:text-2xl flex justify-center items-center gap-2"><Icon name={tracking ? 'check_circle' : 'accessibility_new'} />{paused ? 'Workout Paused' : tracking ? 'Pose Detected' : 'Get Into Position'}</p>
-              <p className="text-xs sm:text-base mt-1 leading-snug">{paused ? 'Press Resume when you are ready.' : tracking ? 'Keep your movement steady and controlled.' : trackingHint}</p>
-            </div>
-            {onAddRep && (
-              <div className="self-center flex items-center gap-3 pointer-events-auto shrink-0">
-                <span className="text-xs">Self-tracked reps · {elapsedTime}</span>
-                <button type="button" onClick={onAddRep} disabled={!isRecording || paused}
-                  className="min-h-[44px] px-4 rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] font-bold disabled:opacity-40">
-                  +1 rep
+            )}
+
+            {onAddRep && isRecording && (
+              <div className="flex w-full max-w-[420px] justify-end">
+                <button
+                  type="button"
+                  onClick={onAddRep}
+                  disabled={paused}
+                  className="pointer-events-auto rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur-md transition-transform active:scale-95 disabled:opacity-40"
+                >
+                  +1 rep · {elapsedTime}
                 </button>
               </div>
             )}
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-[clamp(16px,8vw,72px)] px-1 pb-2 shrink-0">
-              <div style={{ background: 'rgba(45,48,43,.9)', padding: '12px', minHeight: 76 }} className="rounded-[20px]"><p className="text-sm sm:text-lg text-white/90">{workoutSub?.includes('hold') ? 'Seconds' : 'Reps'}</p><strong style={{ fontSize: 'clamp(28px, 6vw, 48px)' }}>{repCount}</strong><span className="text-lg sm:text-2xl"> / {target}</span></div>
-              <div className="flex flex-col items-center gap-2 pointer-events-auto">
-                <button onClick={onStartStop} disabled={(!feedLive || !poseReady) && !isRecording} aria-label={isRecording ? 'Stop workout' : 'Start workout'}
-                  className="w-[clamp(64px,16vw,100px)] h-[clamp(64px,16vw,100px)] rounded-full bg-[#ff3847] border-4 border-white ring-1 ring-white/60 shadow-lg flex items-center justify-center active:scale-95 transition-transform disabled:opacity-40">
-                  {isRecording ? <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-md bg-white" /> : <Icon name="play_arrow" className="text-4xl" />}
-                </button>
-                {isRecording && <button onClick={onPauseToggle} className="rounded-full bg-black/65 px-4 min-h-8 text-xs">{paused ? 'Resume' : 'Pause'}</button>}
+
+            <div className="pointer-events-auto grid w-full max-w-[420px] grid-cols-[1fr_auto_1fr] items-center gap-2">
+              <div className="min-w-0 rounded-2xl border border-white/10 bg-white/10 px-3 py-2 backdrop-blur-md">
+                <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-white/55">
+                  {workoutSub?.includes('hold') ? 'Seconds' : 'Reps'}
+                </p>
+                <p className="mt-0.5 text-xl font-semibold leading-none tabular-nums text-white">
+                  {repCount}
+                  <span className="ml-1 text-[12px] font-normal text-white/50">/ {target}</span>
+                </p>
               </div>
-              <div style={{ background: 'rgba(45,48,43,.9)', padding: '12px', minHeight: 76 }} className="rounded-[20px] text-center"><p className="text-sm sm:text-lg text-white/90">Set</p><strong style={{ fontSize: 'clamp(28px, 6vw, 48px)' }}>{setNumber}</strong><span className="text-lg sm:text-2xl"> / {setTarget}</span></div>
+
+              <div className="flex items-center gap-2">
+                {isRecording && (
+                  <button
+                    onClick={onPauseToggle}
+                    aria-label={paused ? 'Resume workout' : 'Pause workout'}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-md transition-transform active:scale-95"
+                  >
+                    <Icon name={paused ? 'play_arrow' : 'pause'} className="text-lg" fill={1} />
+                  </button>
+                )}
+                <button
+                  onClick={onStartStop}
+                  disabled={(!feedLive || !poseReady) && !isRecording}
+                  aria-label={isRecording ? 'Stop workout' : 'Start workout'}
+                  className={`flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95 disabled:opacity-40 ${
+                    isRecording ? 'bg-[#ff3b30] text-white' : 'bg-[var(--accent)] text-[var(--text-inverse)]'
+                  }`}
+                >
+                  {isRecording
+                    ? <span className="h-5 w-5 rounded-[5px] bg-white" />
+                    : <Icon name="play_arrow" className="text-2xl" fill={1} />}
+                </button>
+              </div>
+
+              <div className="min-w-0 rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-right backdrop-blur-md">
+                <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-white/55">Set</p>
+                <p className="mt-0.5 text-xl font-semibold leading-none tabular-nums text-white">
+                  {setNumber}
+                  <span className="ml-1 text-[12px] font-normal text-white/50">/ {setTarget}</span>
+                </p>
+              </div>
             </div>
           </div>
         </>
@@ -461,10 +523,19 @@ export default function WebcamFeed({
       )}
 
       {loadError && !collapsed && (
-        <div className="absolute bottom-3 left-3 z-30 bg-[var(--error-bg)] border border-[var(--error)]/30 px-3 py-1.5 rounded-xl">
+        <div className="absolute bottom-3 left-3 z-30 flex items-center gap-2 bg-[var(--error-bg)] border border-[var(--error)]/30 pl-3 pr-1.5 py-1.5 rounded-xl">
           <p className="text-[length:var(--fs-9)] text-[var(--error)] font-bold uppercase tracking-widest">
-            Pose AI failed to load — check your connection
+            Pose AI failed to load
           </p>
+          {onRetryPose && (
+            <button
+              type="button"
+              onClick={onRetryPose}
+              className="shrink-0 min-h-[28px] px-2.5 rounded-lg bg-[var(--error)] text-white text-[length:var(--fs-9)] font-black uppercase tracking-widest active:scale-95 transition-transform"
+            >
+              Retry
+            </button>
+          )}
         </div>
       )}
 
@@ -472,7 +543,7 @@ export default function WebcamFeed({
           where they would clip/overlap inside the slim overflow-hidden box. */}
       {!collapsed && !isFullscreen && <CoachFeedbackOverlay aiFeedback={!tracking ? trackingHint : aiFeedback} isAnalyzing={isAnalyzing} voiceEnabled={voiceEnabled} onVoiceToggle={onVoiceToggle} />}
       {!collapsed && !hideRepCount && <RepCounterOverlay repCount={repCount} />}
-      {!collapsed && !isFullscreen && <PoseStatusBadge poseReady={poseReady} loadError={loadError} />}
+      {!collapsed && !isFullscreen && <PoseStatusBadge poseReady={poseReady} loadError={loadError} onRetry={onRetryPose} />}
 
       {/* Fullscreen toggle — live feed only */}
       {!collapsed && !isFullscreen && (

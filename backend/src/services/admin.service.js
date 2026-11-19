@@ -15,6 +15,28 @@ const { AppError } = require("../utils/errors");
 const ROLES = ["member", "admin"];
 const STATUSES = ["active", "deactivated"];
 
+// How the account proved ownership. The users table has no sign-in-provider
+// column, so Google sign-ups are reported as "email" (Google verifies email).
+//   verification_method: 'phone' | 'email' | null (not verified yet)
+//   pending_method:      'phone' | 'email' | null (what an unverified user is waiting on)
+// phone_verified_at is reset when a user changes their number in Profile, so
+// SMS sign-ups are also recognised by having phone_verifications rows (only
+// the SMS flow creates them) — `has_sms_history` from SMS_HISTORY_SQL.
+const SMS_HISTORY_SQL =
+  "EXISTS (SELECT 1 FROM phone_verifications pv WHERE pv.user_id = u.id) AS has_sms_history";
+
+function verificationInfo(row) {
+  const verified = Boolean(row.is_verified);
+  const viaSms = Boolean(row.phone_verified_at) || (verified && Boolean(Number(row.has_sms_history)));
+  const { has_sms_history: _omit, ...rest } = row;
+  void _omit;
+  return {
+    ...rest,
+    verification_method: viaSms ? "phone" : verified ? "email" : null,
+    pending_method: verified ? null : row.phone ? "phone" : "email",
+  };
+}
+
 // ─── AUDIT (fail-soft) ─────────────────────────────────────────────────
 async function writeAudit(adminId, action, targetUserId, details) {
   try {
@@ -134,8 +156,9 @@ async function listUsers({ q, role, status, limit = 30, offset = 0 } = {}) {
   // db.query (not execute) — LIMIT/OFFSET placeholders rejected by server-side
   // prepares on some MySQL versions (house pattern from foodLogs.service).
   const [rows] = await db.query(
-    `SELECT u.id, u.name, u.email, u.role, u.status, u.is_verified, u.is_online,
+    `SELECT u.id, u.name, u.email, u.phone, u.phone_verified_at, u.role, u.status, u.is_verified, u.is_online,
             u.onboarding_completed, u.accepted_terms_at, u.accepted_terms_version,
+            ${SMS_HISTORY_SQL},
             DATE_FORMAT(u.created_at, '%Y-%m-%d %H:%i') AS created_at
      FROM users u
      ${whereSql}
@@ -143,16 +166,17 @@ async function listUsers({ q, role, status, limit = 30, offset = 0 } = {}) {
      LIMIT ${cap} OFFSET ${off}`,
     params,
   );
+  const records = rows.map(verificationInfo);
   const [[countRow]] = await db.query(
     `SELECT COUNT(*) AS total FROM users u ${whereSql}`,
     params,
   );
-  return { records: rows, total: countRow?.total ?? 0, limit: cap, offset: off };
+  return { records, total: countRow?.total ?? 0, limit: cap, offset: off };
 }
 
 async function _getTargetUser(userId) {
   const [rows] = await db.execute(
-    `SELECT id, name, email, role, status, is_verified, onboarding_completed, token_version
+    `SELECT id, name, email, phone, phone_verified_at, role, status, is_verified, onboarding_completed, token_version
      FROM users WHERE id = ?`,
     [userId],
   );
@@ -175,6 +199,15 @@ function assertMutableAdmin(adminId, target, verb) {
 
 async function getUserDetail(adminId, userId) {
   const user = await _getTargetUser(userId);
+  try {
+    const [[h]] = await db.execute(
+      "SELECT EXISTS (SELECT 1 FROM phone_verifications WHERE user_id = ?) AS has_sms_history",
+      [userId],
+    );
+    user.has_sms_history = h.has_sms_history;
+  } catch (e) {
+    if (e.code !== "ER_NO_SUCH_TABLE") throw e;
+  }
   const [[profile]] = await db.execute(
     `SELECT height_cm, weight_kg, avatar_url IS NOT NULL AS has_avatar
      FROM user_profiles WHERE user_id = ?`,
@@ -215,7 +248,7 @@ async function getUserDetail(adminId, userId) {
   );
   return {
     user: {
-      ...user,
+      ...verificationInfo(user),
       is_verified: Boolean(user.is_verified),
       onboarding_completed: Boolean(user.onboarding_completed),
     },
@@ -373,6 +406,81 @@ async function getAiUsageLedger({ days = 14, limit = 30, offset = 0 } = {}) {
   return { windowDays: window, perDay, topUsers: { records: topUsers, total: countRow?.total ?? 0 } };
 }
 
+// ─── 6. SMS (UniSMS) ───────────────────────────────────────────────────
+// Live credit balance from UniSMS + daily verification sends from our own
+// ledger. UniSMS exposes no message history, so the per-day series comes
+// from phone_verifications: a row survives only when the provider accepted
+// the send (failed sends are deleted), so COUNT(*) = SMS actually sent.
+const SMS_LOW_CREDITS = 20;
+const SMS_CRITICAL_CREDITS = 5;
+
+async function getSmsStats({ days = 14 } = {}) {
+  const sms = require("./sms.service");
+  const window = Math.min(Math.max(Number(days) || 14, 1), 90);
+
+  const balancePromise = sms.getAccount().catch(() => ({
+    ok: false, code: "SMS_UNAVAILABLE", message: "UniSMS could not be reached.",
+  }));
+
+  let perDay = [];
+  let totals = { sent: 0, verified: 0, sentToday: 0, phoneVerifiedUsers: 0 };
+  try {
+    const [sentRows] = await db.query(
+      `SELECT DATE_FORMAT(DATE(created_at), '%Y-%m-%d') AS day, COUNT(*) AS sent
+       FROM phone_verifications
+       WHERE created_at >= CURDATE() - INTERVAL ${window - 1} DAY
+       GROUP BY day`,
+    );
+    const [verifiedRows] = await db.query(
+      `SELECT DATE_FORMAT(DATE(phone_verified_at), '%Y-%m-%d') AS day, COUNT(*) AS verified
+       FROM users
+       WHERE phone_verified_at >= CURDATE() - INTERVAL ${window - 1} DAY
+       GROUP BY day`,
+    );
+    const [[t]] = await db.query(
+      `SELECT
+         (SELECT COUNT(*) FROM phone_verifications) AS sent,
+         (SELECT COUNT(*) FROM phone_verifications WHERE created_at >= CURDATE()) AS sentToday,
+         (SELECT COUNT(*) FROM users WHERE phone_verified_at IS NOT NULL) AS phoneVerifiedUsers
+       FROM DUAL`,
+    );
+    const sentBy = new Map(sentRows.map((r) => [r.day, Number(r.sent)]));
+    const verBy = new Map(verifiedRows.map((r) => [r.day, Number(r.verified)]));
+    // Use the DB clock for "today" so the zero-filled days line up with DATE().
+    const [[{ today }]] = await db.query("SELECT DATE_FORMAT(CURDATE(), '%Y-%m-%d') AS today");
+    const base = new Date(`${today}T00:00:00Z`);
+    for (let i = window - 1; i >= 0; i -= 1) {
+      const d = new Date(base.getTime() - i * 86400000).toISOString().slice(0, 10);
+      perDay.push({ day: d, sent: sentBy.get(d) || 0, verified: verBy.get(d) || 0 });
+    }
+    totals = {
+      sent: Number(t.sent),
+      sentToday: Number(t.sentToday),
+      verified: perDay.reduce((sum, r) => sum + r.verified, 0),
+      phoneVerifiedUsers: Number(t.phoneVerifiedUsers),
+    };
+  } catch (e) {
+    // Pre-046 databases: no phone tables yet — still report the balance.
+    if (e.code !== "ER_NO_SUCH_TABLE" && e.code !== "ER_BAD_FIELD_ERROR") throw e;
+    perDay = [];
+  }
+
+  const balance = await balancePromise;
+  let level = "unknown";
+  if (balance.ok && Number.isFinite(balance.credits)) {
+    level = balance.credits <= SMS_CRITICAL_CREDITS ? "critical"
+      : balance.credits < SMS_LOW_CREDITS ? "low" : "ok";
+  }
+
+  return {
+    windowDays: window,
+    balance: { ...balance, level, lowAt: SMS_LOW_CREDITS, criticalAt: SMS_CRITICAL_CREDITS },
+    perDay,
+    totals,
+    senderId: sms.senderId(),
+  };
+}
+
 module.exports = {
   ROLES,
   STATUSES,
@@ -389,4 +497,5 @@ module.exports = {
   listCommunityPosts,
   deleteCommunityPost,
   getAiUsageLedger,
+  getSmsStats,
 };

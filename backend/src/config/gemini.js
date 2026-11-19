@@ -1,5 +1,6 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Groq = require("groq-sdk");
+const { OpenRouter } = require("@openrouter/sdk");
 
 function devLog(...args) {
   if (process.env.NODE_ENV !== "production") console.log(...args);
@@ -13,6 +14,7 @@ function devError(...args) {
 
 let _genAI = null;
 let _groq = null;
+let _openRouter = null;
 function getGenAI() {
   if (!_genAI)
     _genAI = new GoogleGenerativeAI(
@@ -25,40 +27,88 @@ function getGroq() {
     _groq = new Groq({ apiKey: process.env.GROQ_API_KEY || "missing-key" });
   return _groq;
 }
+function getOpenRouter() {
+  if (!_openRouter)
+    _openRouter = new OpenRouter({
+      apiKey: process.env.OPENROUTER_API_KEY || "missing-key",
+    });
+  return _openRouter;
+}
 function aiConfigured() {
-  return Boolean(process.env.GEMINI_API_KEY || process.env.GROQ_API_KEY);
+  return Boolean(
+    process.env.GEMINI_API_KEY ||
+      process.env.GROQ_API_KEY ||
+      process.env.OPENROUTER_API_KEY,
+  );
 }
 
-// Model IDs rotatable via env. 2.0/1.5/2.5-flash are retired (404);
-// 3.6-flash verified working, Groq is the final fallback.
-function getTextModels() {
-  const fromEnv = String(process.env.GEMINI_TEXT_MODELS || "")
+function envList(value) {
+  return String(value || "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+// Model IDs rotatable via env.
+// Verified live (Nov 2026) with the project key: 3.6/3.7/3.8-flash answer
+// 503 or hang past the timeout, and 3.5-flash hung >200s. The flash-lite
+// family answers correctly in 2–4s, so it leads every default chain.
+const DEFAULT_GEMINI_MODELS = [
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+  "gemini-flash-lite-latest",
+];
+
+function getTextModels() {
+  const fromEnv = envList(process.env.GEMINI_TEXT_MODELS);
   if (fromEnv.length) return fromEnv;
-  return ["gemini-3.6-flash", "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash"];
+  return [...DEFAULT_GEMINI_MODELS];
 }
 
 function getVisionModels() {
-  const fromEnv = String(process.env.GEMINI_VISION_MODELS || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const fromEnv = envList(process.env.GEMINI_VISION_MODELS);
   if (fromEnv.length) return fromEnv;
-  return ["gemini-3.6-flash", "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash"];
+  return [...DEFAULT_GEMINI_MODELS];
 }
 
 // Independent Groq vision leg — catches Gemini-wide outages/overload.
-// qwen/qwen3.8-27b is Groq's documented vision model (image_url + JSON mode,
-// 20MB request limit — images are server-compressed before this point).
+// qwen/qwen3.8-27b is Groq's documented vision model (image_url + JSON mode).
+// Groq's free tier caps input at 7,000 tokens/minute, so this leg uses the
+// compact prompt (the full anchor list alone is ~4.3k tokens).
 function getGroqVisionModels() {
-  const fromEnv = String(process.env.GROQ_VISION_MODELS || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const fromEnv = envList(process.env.GROQ_VISION_MODELS);
   if (fromEnv.length) return fromEnv;
   return ["qwen/qwen3.8-27b"];
+}
+
+function getGroqTextModel() {
+  return String(process.env.GROQ_TEXT_MODEL || "openai/gpt-oss-20b").trim();
+}
+
+// Final leg: OpenRouter free vision models (verified in the live catalog:
+// image input, $0 prompt/completion, 1M context). Env-overridable; the first
+// usable one wins. Never a paid model unless the operator explicitly sets it.
+function getOpenRouterVisionModels() {
+  const fromEnv = envList(
+    process.env.OPENROUTER_VISION_MODELS ||
+      process.env.OPENROUTER_VISION_MODEL,
+  );
+  if (fromEnv.length) return fromEnv;
+  return [
+    "inclusionai/ling-3.2-flash:free",
+    "nvidia/nemotron-3.5-super-vl:free",
+  ];
+}
+
+function getOpenRouterTextModels() {
+  const fromEnv = envList(
+    process.env.OPENROUTER_TEXT_MODELS || process.env.OPENROUTER_TEXT_MODEL,
+  );
+  if (fromEnv.length) return fromEnv;
+  return [
+    "inclusionai/ling-3.2-flash:free",
+    "google/gemma-4-31b-it:free",
+  ];
 }
 
 // Exponential backoff with jitter for 503/429; fixed 1s for the rest.
@@ -76,6 +126,33 @@ function isRetryableError(err) {
   );
 }
 
+// Groq free tier returns 413 with "input tokens per minute" — the provider is
+// healthy, the prompt simply does not fit. Move to the next provider instead
+// of retrying the same oversized request.
+function isTokenLimitError(err) {
+  const msg = String((err && err.message) || err || "").toLowerCase();
+  return (
+    msg.includes("413") ||
+    msg.includes("request too large") ||
+    msg.includes("tokens per minute") ||
+    msg.includes("itpm") ||
+    msg.includes("context length")
+  );
+}
+
+function isAuthError(err) {
+  const msg = String((err && err.message) || err || "").toLowerCase();
+  return (
+    msg.includes("401") ||
+    msg.includes("403") ||
+    msg.includes("unauthorized") ||
+    msg.includes("api key not valid") ||
+    msg.includes("invalid api key") ||
+    msg.includes("user not found") ||
+    msg.includes("no auth credentials")
+  );
+}
+
 function backoffSleep(attempt, err) {
   const base = isRetryableError(err) ? 2000 * Math.pow(2, attempt) : 1000;
   const capped = Math.min(base, 15000);
@@ -83,14 +160,13 @@ function backoffSleep(attempt, err) {
   return new Promise((r) => setTimeout(r, capped + jitter));
 }
 
-const AI_TEXT_TIMEOUT_MS = 25000;
-// Env-tunable so deploys can trade latency for coverage. Healthy vision models
-// answer in ~2-5s: 20s per provider caps a hung one while leaving headroom for
-// slow-but-alive thinking models. The chain-wide deadline (analyzeFoodImage)
-// plus the Groq fallback leg keep the whole scan inside the client's window.
-const AI_VISION_TIMEOUT_MS = Number.parseInt(process.env.AI_VISION_TIMEOUT_MS || "20000", 10) || 20000;
+// Healthy flash-lite models answer in 2–9s; 15s caps a hung provider without
+// burning the whole client window on one dead model.
+const AI_TEXT_TIMEOUT_MS = Number.parseInt(process.env.AI_TEXT_TIMEOUT_MS || "15000", 10) || 15000;
+const AI_VISION_TIMEOUT_MS = Number.parseInt(process.env.AI_VISION_TIMEOUT_MS || "15000", 10) || 15000;
 // Groq vision is a plain chat.completions call (no thinking budget) — fast.
-const AI_GROQ_VISION_TIMEOUT_MS = Number.parseInt(process.env.AI_GROQ_VISION_TIMEOUT_MS || "20000", 10) || 20000;
+const AI_GROQ_VISION_TIMEOUT_MS = Number.parseInt(process.env.AI_GROQ_VISION_TIMEOUT_MS || "15000", 10) || 15000;
+const AI_OPENROUTER_TIMEOUT_MS = Number.parseInt(process.env.AI_OPENROUTER_TIMEOUT_MS || "20000", 10) || 20000;
 
 // SDKs expose no AbortSignal: race caps a hung provider so it fails over
 // instead of parking the request (and its 10MB body) forever.
@@ -103,70 +179,135 @@ function withTimeout(promise, ms, label) {
   return Promise.race([Promise.resolve(promise), timeout]).finally(() => clearTimeout(t));
 }
 
+// Single OpenRouter call used by both the text and vision chains. The key
+// never leaves the backend; images ride as data URIs, never third-party storage.
+async function callOpenRouter({
+  model,
+  prompt,
+  base64Data = null,
+  mimeType = "image/jpeg",
+  timeoutMs = AI_OPENROUTER_TIMEOUT_MS,
+  maxTokens = 2048,
+  json = false,
+}) {
+  const content = [{ type: "text", text: prompt }];
+  if (base64Data) {
+    content.push({
+      type: "image_url",
+      imageUrl: { url: `data:${mimeType};base64,${base64Data}` },
+    });
+  }
+  const res = await withTimeout(
+    getOpenRouter().chat.send({
+      appTitle: "Vitalis",
+      chatRequest: {
+        model,
+        messages: [{ role: "user", content }],
+        temperature: 0,
+        maxTokens,
+        ...(json ? { responseFormat: { type: "json_object" } } : {}),
+      },
+    }),
+    timeoutMs,
+    `OpenRouter ${model}`,
+  );
+  const raw = res?.choices?.[0]?.message?.content;
+  const text = typeof raw === "string"
+    ? raw
+    : Array.isArray(raw)
+      ? raw.map((part) => (typeof part?.text === "string" ? part.text : "")).join("")
+      : "";
+  if (!text) throw new Error(`OpenRouter ${model} returned empty response`);
+  return text;
+}
+
+// Ordered chain for every non-vision AI feature: Gemini → Groq → OpenRouter.
 async function callGeminiWithFallback(prompt) {
   // Fail fast when no keys are configured — same static fallback as before,
-  // but without burning 25s x N timeouts first.
+  // but without burning 15s x N timeouts first.
   if (!aiConfigured()) {
-    devWarn("[VITALIS AI] No GEMINI_API_KEY/GROQ_API_KEY — static fallback");
+    devWarn("[VITALIS AI] No AI keys configured — static fallback");
     return "I'm currently experiencing high demand. Please try again in a moment.";
   }
-  const models = getTextModels();
 
-  for (let i = 0; i < models.length; i++) {
-    const modelName = models[i];
+  if (process.env.GEMINI_API_KEY) {
+    for (const modelName of getTextModels()) {
+      try {
+        devLog(`[VITALIS AI] Trying ${modelName}...`);
+        const model = getGenAI().getGenerativeModel({ model: modelName });
+        const result = await withTimeout(model.generateContent(prompt), AI_TEXT_TIMEOUT_MS, modelName);
+        const text = result.response.text();
+        if (text) {
+          devLog(`[VITALIS AI] ✅ Success with ${modelName}`);
+          return text;
+        }
+        try {
+          const reason = result?.response?.candidates?.[0]?.finishReason
+            || result?.response?.promptFeedback?.blockReason;
+          if (reason) devWarn(`[VITALIS AI] ${modelName} empty text (finishReason=${reason})`);
+        } catch { /* candidates shape varies by SDK — best effort only */ }
+      } catch (err) {
+        // A different model is not rate-limited by the previous one's 503, so
+        // move on immediately; long backoff only delays the user for no gain.
+        if (isRetryableError(err)) {
+          devWarn(`[VITALIS AI] ↻ ${modelName} busy (${String(err.message).slice(0, 120)}) — trying next model…`);
+        } else {
+          devWarn(`[VITALIS AI] ✕ ${modelName} failed: ${String(err.message).slice(0, 160)}`);
+        }
+      }
+    }
+  }
+
+  if (process.env.GROQ_API_KEY) {
+    const groqModel = getGroqTextModel();
     try {
-      devLog(`[VITALIS AI] Trying ${modelName}...`);
-      const model = getGenAI().getGenerativeModel({ model: modelName });
-      const result = await withTimeout(model.generateContent(prompt), AI_TEXT_TIMEOUT_MS, modelName);
-      const text = result.response.text();
+      const resp = await withTimeout(getGroq().chat.completions.create({
+        model: groqModel,
+        max_tokens: 2000,
+        temperature: 0.3,
+        messages: [{ role: "user", content: prompt }],
+      }), AI_TEXT_TIMEOUT_MS, `Groq ${groqModel}`);
+      const text = resp.choices[0]?.message?.content;
       if (text) {
-        devLog(`[VITALIS AI] ✅ Success with ${modelName}`);
+        devLog(`[VITALIS AI] ✅ Success with Groq ${groqModel}`);
         return text;
       }
-      // Empty text: distinguish safety-block from capacity failure
+    } catch (groqErr) {
+      devWarn("[VITALIS AI] ✕ Groq text leg failed:", String(groqErr.message).slice(0, 160));
+    }
+  }
+
+  if (process.env.OPENROUTER_API_KEY) {
+    for (const model of getOpenRouterTextModels()) {
       try {
-        const reason = result?.response?.candidates?.[0]?.finishReason
-          || result?.response?.promptFeedback?.blockReason;
-        if (reason) devWarn(`[VITALIS AI] ${modelName} empty text (finishReason=${reason})`);
-      } catch { /* candidates shape varies by SDK — best effort only */ }
-    } catch (err) {
-      // Retryable 503/429 (capacity pressure) is routine during demand spikes
-      // and the chain continues — log as warn with next-step, not ❌ error, so
-      // consoles don't look crashed when failover is working as designed.
-      if (isRetryableError(err)) {
-        devWarn(`[VITALIS AI] ↻ ${modelName} busy (${String(err.message).slice(0, 120)}) — trying next model…`);
-      } else {
-        devError(`[VITALIS AI] ❌ ${modelName} failed:`, err.message);
+        const text = await callOpenRouter({
+          model,
+          prompt,
+          timeoutMs: AI_OPENROUTER_TIMEOUT_MS,
+          maxTokens: 2048,
+        });
+        if (text) {
+          devLog(`[VITALIS AI] ✅ Success with OpenRouter ${model}`);
+          return text;
+        }
+      } catch (orErr) {
+        devWarn(`[VITALIS AI] ✕ OpenRouter ${model} failed: ${String(orErr.message).slice(0, 160)}`);
       }
-      await backoffSleep(i, err);
     }
   }
 
-  devWarn("[VITALIS AI] All Gemini text models failed → Groq fallback");
-  try {
-    const resp = await withTimeout(getGroq().chat.completions.create({
-      model: "openai/gpt-oss-20b",
-      max_tokens: 2000,
-      temperature: 0.3,
-      messages: [{ role: "user", content: prompt }],
-    }), AI_TEXT_TIMEOUT_MS, "Groq openai/gpt-oss-20b");
-    const text = resp.choices[0]?.message?.content;
-    if (text) {
-      devLog("[VITALIS AI] ✅ Success with Groq openai/gpt-oss-20b");
-      return text;
-    }
-  } catch (groqErr) {
-    devError("[VITALIS AI] ❌ Groq fallback failed:", groqErr.message);
-  }
-
-  devWarn("[VITALIS AI] All models failed — returning static fallback");
+  devWarn("[VITALIS AI] All text providers failed — returning static fallback");
   return "I'm currently experiencing high demand. Please try again in a moment.";
 }
 
 // SECTION 2 — FOOD IMAGE ANALYSIS (vision)
 
-// Prompt extracted to constants/foodAnalysisPrompt.js (clean separation)
-const { FOOD_ANALYSIS_PROMPT } = require("../constants/foodAnalysisPrompt");
+// Prompt extracted to constants/foodAnalysisPrompt.js (clean separation).
+// The compact variant exists because Groq's free tier caps input at 7k tokens.
+const {
+  FOOD_ANALYSIS_PROMPT,
+  FOOD_ANALYSIS_PROMPT_COMPACT,
+} = require("../constants/foodAnalysisPrompt");
 
 // ─── FOOD CATEGORY DETECTION ──────────────────────────────────────────────────
 
@@ -643,57 +784,65 @@ function parseNutritionJSON(raw) {
 }
 
 // MULTI-ITEM NORMALIZER
-function normalizeItems(raw) {
+// Provider outcome classification: ok (items), empty (the model explicitly saw
+// no food), invalid (unparseable output). Keeping these separate is what lets
+// the API say "AI unavailable" instead of pretending the photo had no food.
+function isPlaceholderItem(item) {
+  return (
+    String(item?.food_name || "").trim().toLowerCase() === "unknown food" &&
+    Number(item?.calories) === 0
+  );
+}
+
+function visionOutcome(raw) {
   const parsed = parseNutritionJSON(raw);
-  if (!parsed) return null;
+  if (!parsed) return { status: "invalid" };
 
   if (Array.isArray(parsed.items)) {
     const items = parsed.items
       .filter(Boolean)
       .slice(0, 8)
       .map(validateAndCorrectMacros)
-      .filter(Boolean);
-    if (items.length === 0) return null;
+      .filter((it) => it && !isPlaceholderItem(it));
+    if (items.length === 0) {
+      return {
+        status: "empty",
+        suggestion:
+          typeof parsed.suggestion === "string"
+            ? parsed.suggestion.slice(0, 200)
+            : "",
+      };
+    }
     return {
-      items,
-      suggestion:
-        typeof parsed.suggestion === "string"
-          ? parsed.suggestion.slice(0, 200)
-          : "",
+      status: "ok",
+      result: {
+        items,
+        suggestion:
+          typeof parsed.suggestion === "string"
+            ? parsed.suggestion.slice(0, 200)
+            : "",
+      },
     };
   }
 
   // Legacy single-object shape → one-item list
   if (parsed.food_name && parsed.calories != null) {
     const item = validateAndCorrectMacros(parsed);
-    if (!item) return null;
+    if (!item || isPlaceholderItem(item)) return { status: "empty", suggestion: "" };
     return {
-      items: [item],
-      suggestion: parsed.suggestion || "",
+      status: "ok",
+      result: {
+        items: [item],
+        suggestion: typeof parsed.suggestion === "string" ? parsed.suggestion : "",
+      },
     };
   }
-  return null;
+  return { status: "invalid" };
 }
 
-function emptyItemsFallback(reason) {
-  return {
-    items: [
-      {
-        food_name: "Unknown food",
-        serving: "",
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0,
-        saturated_fat: 0,
-        trans_fat: 0,
-        polyunsaturated_fat: 0,
-        monounsaturated_fat: 0,
-      },
-    ],
-    suggestion:
-      reason || "Could not analyze the image. Please try a clearer photo.",
-  };
+function normalizeItems(raw) {
+  const outcome = visionOutcome(raw);
+  return outcome.status === "ok" ? outcome.result : null;
 }
 
 // VISION PROVIDERS
@@ -729,8 +878,11 @@ async function analyzeWithGeminiVision(base64Data, mimeType, modelName) {
   } catch (err) {
     // Older models reject thinkingConfig with INVALID_ARGUMENT — retry once
     // without it instead of burning the whole provider.
-    const msg = String(err?.message || err);
-    if (!thinkingRejected.has(modelName) && (msg.includes("thinking") || msg.includes("INVALID_ARGUMENT") || msg.includes("unknown field") || msg.includes("Unexpected"))) {
+    const msg = String(err?.message || err).toLowerCase();
+    // Gemini reports thinkingConfig rejection as a bare
+    // "[400 Bad Request] Request contains an invalid argument." with no field
+    // name, so treat any 400 as worth one retry without the field.
+    if (!thinkingRejected.has(modelName) && (msg.includes("thinking") || msg.includes("invalid_argument") || msg.includes("invalid argument") || msg.includes("400") || msg.includes("unknown field") || msg.includes("unexpected"))) {
       devWarn(`[VITALIS IMAGE] ${modelName} rejected thinkingConfig — retrying without it`);
       thinkingRejected.add(modelName);
       result = await withTimeout(call(false), AI_VISION_TIMEOUT_MS, modelName);
@@ -752,16 +904,16 @@ async function analyzeWithGeminiVision(base64Data, mimeType, modelName) {
   return text;
 }
 
-// Chain-wide budget: stop trying further Gemini models once this much has
-// elapsed — the Groq fallback leg still runs after this with its own timeout.
-const VISION_CHAIN_BUDGET_MS = 60000;
-// Transient Gemini overload ("busy") windows recover in seconds: wait this
-// long and sweep the model list one more time before giving up.
-const VISION_BUSY_COOLDOWN_MS = 5000;
+// Chain-wide budget: Gemini gets the first 40s (three fast models), then the
+// Groq and OpenRouter legs split the remaining ~35s. Healthy providers answer
+// in 2–4s, so this only matters when a provider is hung or overloaded.
+const VISION_TOTAL_BUDGET_MS = Number.parseInt(process.env.AI_VISION_BUDGET_MS || "75000", 10) || 75000;
+const VISION_GEMINI_BUDGET_MS = Number.parseInt(process.env.AI_VISION_GEMINI_BUDGET_MS || "40000", 10) || 40000;
 
 // Groq vision fallback: chat.completions with a base64 data-URI image part.
-// JSON mode is safe here — FOOD_ANALYSIS_PROMPT explicitly asks for JSON.
-async function analyzeWithGroqVision(base64Data, mimeType, modelName) {
+// JSON mode is safe here — the prompt explicitly asks for JSON. Groq's free
+// tier caps input at 7k tokens/minute, so the compact prompt is mandatory.
+async function analyzeWithGroqVision(base64Data, mimeType, modelName, prompt = FOOD_ANALYSIS_PROMPT_COMPACT) {
   devLog(`[VITALIS IMAGE] Trying Groq ${modelName}...`);
   const completion = await withTimeout(
     getGroq().chat.completions.create({
@@ -770,7 +922,7 @@ async function analyzeWithGroqVision(base64Data, mimeType, modelName) {
         {
           role: "user",
           content: [
-            { type: "text", text: FOOD_ANALYSIS_PROMPT },
+            { type: "text", text: prompt },
             {
               type: "image_url",
               image_url: { url: `data:${mimeType};base64,${base64Data}` },
@@ -792,108 +944,171 @@ async function analyzeWithGroqVision(base64Data, mimeType, modelName) {
   return text;
 }
 
+// OpenRouter vision leg — last real attempt. Uses the full prompt: the free
+// models have a 1M-token context window, so the anchor list fits comfortably.
+async function analyzeWithOpenRouterVision(base64Data, mimeType, modelName, prompt = FOOD_ANALYSIS_PROMPT) {
+  devLog(`[VITALIS IMAGE] Trying OpenRouter ${modelName}...`);
+  const text = await callOpenRouter({
+    model: modelName,
+    prompt,
+    base64Data,
+    mimeType,
+    timeoutMs: AI_OPENROUTER_TIMEOUT_MS,
+    maxTokens: 4096,
+    json: true,
+  });
+  devLog(`[VITALIS IMAGE] OpenRouter ${modelName} raw:`, String(text).slice(0, 200));
+  return text;
+}
+
 // MAIN EXPORT
+// Returns a JSON string. Success → { items, suggestion }. Failure → a
+// machine-readable code so the controller/UI can tell "AI busy" apart from
+// "no food in the photo" instead of showing one generic error for both.
+function visionFailure(code, retryable, suggestion) {
+  return JSON.stringify({
+    success: false,
+    detected: false,
+    items: [],
+    code,
+    retryable: Boolean(retryable),
+    suggestion,
+  });
+}
+
 async function analyzeFoodImage(base64Data, mimeType = "image/jpeg") {
   // Normalize: callers may send a full data-URI or raw base64. Strip prefix
   // so vision payloads and cache keys are stable either way.
   const cleanBase64 = String(base64Data || "").includes(",")
     ? String(base64Data).split(",").pop()
     : String(base64Data || "");
-  const models = getVisionModels();
-  const chainDeadline = Date.now() + VISION_CHAIN_BUDGET_MS;
-  let seenRetryable = false;
-  let seenOther = false;
 
-  const tryModelRound = async () => {
-    for (let i = 0; i < models.length; i++) {
-      const modelName = models[i];
-      if (Date.now() > chainDeadline) {
-        devWarn("[VITALIS IMAGE] Chain time budget exhausted — skipping remaining providers");
-        break;
+  if (!cleanBase64) {
+    return visionFailure("INVALID_IMAGE", false, "That image could not be read. Try another photo.");
+  }
+  if (!aiConfigured()) {
+    return visionFailure("AI_NOT_CONFIGURED", false, "AI scanning is not configured. Enter the meal manually.");
+  }
+
+  const started = Date.now();
+  const totalDeadline = started + VISION_TOTAL_BUDGET_MS;
+  const geminiDeadline = started + VISION_GEMINI_BUDGET_MS;
+
+  let sawEmpty = false;
+  let emptySuggestion = "";
+  let sawInvalid = false;
+  let sawAuth = false;
+  let sawTransient = false;
+  let lastError = null;
+
+  // Each provider attempt is classified, never silently collapsed into an
+  // "Unknown food" success. A valid response with zero items is a real
+  // "no food" signal; a thrown error is not.
+  const attempt = async (label, call) => {
+    if (Date.now() >= totalDeadline) return null;
+    try {
+      const raw = await call();
+      const outcome = visionOutcome(raw);
+      if (outcome.status === "ok") {
+        devLog("[VITALIS IMAGE] ✅ Final result:", JSON.stringify(outcome.result).slice(0, 300));
+        return JSON.stringify(outcome.result);
       }
-      try {
-        const raw = await analyzeWithGeminiVision(
-          cleanBase64,
-          mimeType,
-          modelName,
-        );
-        const result = normalizeItems(raw);
-
-        if (!result || !result.items || result.items.length === 0) {
-          devWarn("[VITALIS IMAGE] Parse failed or absurd result rejected — trying next provider");
-          seenOther = true;
-          continue;
-        }
-
-        devLog(
-          "[VITALIS IMAGE] ✅ Final result:",
-          JSON.stringify(result).slice(0, 300),
-        );
-        return JSON.stringify(result);
-      } catch (err) {
-        if (isRetryableError(err)) {
-          devWarn(`[VITALIS IMAGE] ↻ ${modelName} busy — trying next provider…`);
-          seenRetryable = true;
-        } else {
-          devError("[VITALIS IMAGE] ❌ Provider failed:", err.message);
-          seenOther = true;
-        }
-        // Moving to the NEXT provider needs no exponential backoff — a fresh
-        // model isn't rate-limited by the previous one's 503. Short pause only.
-        await new Promise((r) =>
-          setTimeout(r, isRetryableError(err) ? 750 : 150),
-        );
+      if (outcome.status === "empty") {
+        sawEmpty = true;
+        if (outcome.suggestion) emptySuggestion = outcome.suggestion;
+        devLog(`[VITALIS IMAGE] ${label}: no food visible`);
+      } else {
+        sawInvalid = true;
+        devWarn(`[VITALIS IMAGE] ${label}: unparseable JSON — trying next provider`);
+      }
+    } catch (err) {
+      lastError = err;
+      if (isAuthError(err)) {
+        sawAuth = true;
+        devWarn(`[VITALIS IMAGE] ✕ ${label} auth rejected: ${String(err.message).slice(0, 140)}`);
+      } else if (isTokenLimitError(err)) {
+        sawInvalid = true;
+        devWarn(`[VITALIS IMAGE] ✕ ${label} prompt too large for provider limit`);
+      } else if (isRetryableError(err)) {
+        sawTransient = true;
+        devWarn(`[VITALIS IMAGE] ↻ ${label} busy — trying next provider…`);
+      } else {
+        sawInvalid = true;
+        devWarn(`[VITALIS IMAGE] ✕ ${label} failed: ${String(err.message).slice(0, 160)}`);
       }
     }
     return null;
   };
 
-  // Round 1 + a recovery round: only if EVERY failure was transient overload
-  // (429/503 "busy") and the chain still has budget. Permanent failures
-  // (parse, auth, 404) get no second pass — they'd fail identically.
-  let rawJson = await tryModelRound();
-  if (!rawJson && seenRetryable && !seenOther && Date.now() < chainDeadline - VISION_BUSY_COOLDOWN_MS) {
-    devLog("[VITALIS IMAGE] All providers busy — cooling down and retrying once…");
-    await new Promise((r) => setTimeout(r, VISION_BUSY_COOLDOWN_MS));
-    if (Date.now() < chainDeadline) rawJson = await tryModelRound();
-  }
-
-  // Groq fallback leg: an independent provider that rescans the photo when the
-  // whole Gemini chain is down/overloaded. Runs even if the chain deadline has
-  // lapsed — it's the last real attempt before the empty fallback, capped by
-  // AI_GROQ_VISION_TIMEOUT_MS per model.
-  if (!rawJson && process.env.GROQ_API_KEY) {
-    for (const groqModel of getGroqVisionModels()) {
-      try {
-        const raw = await analyzeWithGroqVision(cleanBase64, mimeType, groqModel);
-        const result = normalizeItems(raw);
-        if (result && result.items && result.items.length > 0) {
-          devLog(
-            "[VITALIS IMAGE] ✅ Final result (Groq):",
-            JSON.stringify(result).slice(0, 300),
-          );
-          rawJson = JSON.stringify(result);
-          break;
-        }
-        devWarn("[VITALIS IMAGE] Groq parse failed or rejected — no vision providers left");
-      } catch (err) {
-        devError("[VITALIS IMAGE] ❌ Groq vision failed:", err.message);
-      }
+  // Leg 1 — Gemini (verified flash-lite models).
+  if (process.env.GEMINI_API_KEY) {
+    for (const modelName of getVisionModels()) {
+      if (Date.now() >= geminiDeadline) break;
+      const json = await attempt(modelName, () =>
+        analyzeWithGeminiVision(cleanBase64, mimeType, modelName),
+      );
+      if (json) return json;
     }
   }
 
-  if (rawJson) return rawJson;
-
-  devError("[VITALIS IMAGE] All vision providers failed — returning fallback");
-  // Overload-only failure (all 503/429): tell the client to retry instead of
-  // the generic "clearer photo" hint. Shape unchanged (items + suggestion)
-  // plus a retryable flag, so existing UI keeps working.
-  if (seenRetryable && !seenOther) {
-    const fb = emptyItemsFallback("AI is busy right now (high demand). Please wait a moment and try again.");
-    fb.retryable = true;
-    return JSON.stringify(fb);
+  // Leg 2 — Groq vision (compact prompt so the 7k ITPM free tier fits).
+  if (process.env.GROQ_API_KEY) {
+    for (const groqModel of getGroqVisionModels()) {
+      if (Date.now() >= totalDeadline) break;
+      const json = await attempt(`Groq ${groqModel}`, () =>
+        analyzeWithGroqVision(cleanBase64, mimeType, groqModel),
+      );
+      if (json) return json;
+    }
   }
-  return JSON.stringify(emptyItemsFallback());
+
+  // Leg 3 — OpenRouter free vision models (last resort; never a paid model
+  // unless the operator explicitly configured one).
+  if (process.env.OPENROUTER_API_KEY) {
+    for (const orModel of getOpenRouterVisionModels()) {
+      if (Date.now() >= totalDeadline) break;
+      const json = await attempt(`OpenRouter ${orModel}`, () =>
+        analyzeWithOpenRouterVision(cleanBase64, mimeType, orModel),
+      );
+      if (json) return json;
+    }
+  }
+
+  // Every provider that answered said "no food" and none failed → that is a
+  // genuine empty photo, not an AI outage.
+  if (sawEmpty && !sawInvalid) {
+    return visionFailure(
+      "NO_FOOD_DETECTED",
+      false,
+      emptySuggestion ||
+        "No food was detected in this photo. Try a clearer, brighter shot or another angle.",
+    );
+  }
+  if (sawAuth) {
+    devError("[VITALIS IMAGE] Provider authentication failed — check the backend AI keys");
+    return visionFailure(
+      "AI_AUTH_ERROR",
+      false,
+      "AI is not configured correctly. Please enter the meal manually.",
+    );
+  }
+  if (sawTransient && !sawInvalid) {
+    return visionFailure(
+      "AI_RATE_LIMITED",
+      true,
+      "AI is busy right now (high demand). Please wait a moment and try again.",
+    );
+  }
+
+  devError(
+    "[VITALIS IMAGE] All vision providers failed",
+    lastError ? `— ${String(lastError.message).slice(0, 180)}` : "",
+  );
+  return visionFailure(
+    "AI_UNAVAILABLE",
+    true,
+    "The AI scan could not complete. Please retry, or enter the meal manually.",
+  );
 }
 
 // SECTION 3 — PLAN SUGGESTION
@@ -977,6 +1192,7 @@ module.exports = {
   AI_TEXT_TIMEOUT_MS,
   AI_VISION_TIMEOUT_MS,
   AI_GROQ_VISION_TIMEOUT_MS,
+  AI_OPENROUTER_TIMEOUT_MS,
   withTimeout,
   get genAI() {
     return getGenAI();
@@ -984,17 +1200,25 @@ module.exports = {
   get groq() {
     return getGroq();
   },
+  get openRouter() {
+    return getOpenRouter();
+  },
   aiConfigured,
   getTextModels,
   getVisionModels,
   getGroqVisionModels,
+  getGroqTextModel,
+  getOpenRouterVisionModels,
+  getOpenRouterTextModels,
   stripDataUriPrefix(base64) {
     const s = String(base64 || "");
     return s.includes(",") ? s.split(",").pop() : s;
   },
   callGeminiWithFallback,
+  callOpenRouter,
   analyzeFoodImage,
   normalizeItems,
+  visionOutcome,
   validateAndCorrectMacros,
   parseNutritionJSON,
   anchorExpected,
@@ -1002,6 +1226,8 @@ module.exports = {
   isMeatyFood,
   isMainDish,
   isRetryableError,
+  isTokenLimitError,
+  isAuthError,
   backoffSleep,
   suggestPlanForMeal,
   safeParseAI,

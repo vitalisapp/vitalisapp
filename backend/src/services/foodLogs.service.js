@@ -80,7 +80,7 @@ const inflightAnalyses = new Map();
 
 async function analyzeAndClamp(base64Image) {
   // analyzeFoodImage returns a JSON string (never throws for provider failures —
-  // it falls back to Unknown food; throws only on timeout/bug).
+  // it returns a coded failure object; throws only on timeout/bug).
   const raw = await analyzeFoodImage(base64Image);
 
   let parsed;
@@ -94,6 +94,20 @@ async function analyzeAndClamp(base64Image) {
       .match(/\{[\s\S]*\}/);
     if (!match) throw new Error("Could not parse AI response as JSON");
     parsed = JSON.parse(match[0]);
+  }
+
+  // Coded failure (AI busy / auth / no food): pass through untouched. It must
+  // never be clamped into an "Unknown food, 0 kcal" item — that turned every
+  // provider outage into a fake successful scan.
+  if (parsed && parsed.success === false) {
+    return {
+      success: false,
+      detected: false,
+      items: [],
+      code: String(parsed.code || "AI_UNAVAILABLE").slice(0, 40),
+      retryable: Boolean(parsed.retryable),
+      suggestion: String(parsed.suggestion || "").slice(0, 200),
+    };
   }
 
   // Final safety clamp — per item (supports legacy single-object shape)
@@ -126,11 +140,13 @@ async function analyzeAndClamp(base64Image) {
     const suggestion = typeof parsed.suggestion === "string" ? parsed.suggestion : "";
     parsed = { items: [clampItem(parsed)], suggestion };
   }
-  // Preserve the retryable flag from the overload fallback.
+  parsed.success = true;
+  parsed.detected = parsed.items.length > 0;
   return parsed;
 }
 
-// Returns { result, cached, joined }. Throws only on genuine AI failure.
+// Returns { result, cached, joined }. result.success === false means the AI
+// failed (not that the photo was empty) — callers must surface that honestly.
 async function analyzeImage(base64Image) {
   const cached = getCached(base64Image);
   if (cached) return { result: cached, cached: true, joined: false };
@@ -147,12 +163,10 @@ async function analyzeImage(base64Image) {
 
   const parsed = await shared;
 
-  const onlyUnknown =
-    Array.isArray(parsed.items) &&
-    parsed.items.length === 1 &&
-    parsed.items[0].food_name === "Unknown food" &&
-    Number(parsed.items[0].calories) === 0;
-  if (!onlyUnknown) setCache(base64Image, parsed);
+  // Only cache genuine detections: a transient outage must not poison retries.
+  if (parsed.success !== false && Array.isArray(parsed.items) && parsed.items.length > 0) {
+    setCache(base64Image, parsed);
+  }
 
   return { result: parsed, cached: false, joined };
 }
@@ -170,7 +184,11 @@ async function suggestPlan(userId, body) {
     Number(clientSoFar) >= 0 &&
     Number(clientSoFar) <= 100000;
 
-  const [[{ caloriesSoFar }], [plans], [gRows]] = await Promise.all([
+  // db.execute resolves [rows, fields]; the .then below unwraps to rows, so
+  // `plans` and `gRows` are ARRAYS of rows. Destructuring them as `[plans]`
+  // used to leave a single plan object, and plans.map() then threw — the
+  // 500 that made Macro Coach look broken.
+  const [[{ caloriesSoFar }], plans, gRows] = await Promise.all([
     clientValid
       ? Promise.resolve([[{ caloriesSoFar: Math.round(Number(clientSoFar)) }]])
       : db

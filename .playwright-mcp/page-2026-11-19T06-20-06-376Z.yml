@@ -1,0 +1,67 @@
+- generic [ref=e11]:
+  - button "← Back to Landing" [ref=e15]:
+    - generic [ref=e16]: ←
+    - text: Back to Landing
+  - generic [ref=e19]:
+    - generic [ref=e20]:
+      - img "Vitalis logo" [ref=e21]
+      - generic [ref=e22]: VITALIS
+    - generic [ref=e23]:
+      - generic [ref=e24]: Profile Setup
+      - generic [ref=e25]: 25%
+    - heading "CREATE ACCOUNT" [level=2] [ref=e28]
+    - paragraph [ref=e29]: Step 1 of onboarding — you can set your goal and body profile next (optional).
+    - generic [ref=e30]:
+      - generic [ref=e32]:
+        - generic [ref=e33]: Full Name *
+        - generic [ref=e34]:
+          - generic: person
+          - textbox "Full Name *" [ref=e35]:
+            - /placeholder: Your name
+      - generic [ref=e36]:
+        - paragraph [ref=e37]: Verify with
+        - group "Verification method" [ref=e38]:
+          - button "Email" [pressed] [ref=e39]:
+            - generic [aria-hidden] [ref=e40]: check_circle
+            - text: Email
+          - button "SMS" [ref=e41]:
+            - generic [aria-hidden] [ref=e42]: smartphone
+            - text: SMS
+      - generic [ref=e44]:
+        - generic [ref=e45]: Email Address *
+        - generic [ref=e46]:
+          - generic: mail
+          - textbox "Email Address *" [ref=e47]:
+            - /placeholder: athlete@vitalis.io
+      - generic [ref=e49]:
+        - generic [ref=e50]: Password *
+        - generic [ref=e51]:
+          - generic: lock
+          - textbox "Password *" [ref=e52]:
+            - /placeholder: Min. 8 characters
+          - button "Show password" [ref=e54] [cursor=pointer]:
+            - generic [ref=e55]: visibility
+      - generic [ref=e57]:
+        - generic [ref=e58]: Confirm Password *
+        - generic [ref=e59]:
+          - generic: lock_reset
+          - textbox "Confirm Password *" [ref=e60]:
+            - /placeholder: Repeat your password
+          - button "Show password" [ref=e62] [cursor=pointer]:
+            - generic [ref=e63]: visibility
+      - generic [ref=e64]:
+        - checkbox "I agree to the Terms of Use and Privacy Policy" [ref=e65] [cursor=pointer]
+        - generic [ref=e66] [cursor=pointer]:
+          - text: I agree to the
+          - button "Terms of Use" [ref=e67]
+          - text: and
+          - button "Privacy Policy" [ref=e68]
+      - button "Create Account →" [ref=e69] [cursor=pointer]:
+        - text: Create Account
+        - generic [ref=e70]: →
+    - generic [ref=e71]: or
+    - button "Sign up with Google" [ref=e75]
+    - generic [ref=e81]:
+      - text: Already have an account?
+      - link "Sign in" [ref=e82] [cursor=pointer]:
+        - /url: /login

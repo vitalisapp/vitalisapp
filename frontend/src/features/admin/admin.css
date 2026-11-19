@@ -8,6 +8,8 @@
 
 .adm {
   --adm-topbar: 64px;
+  /* Bar height + safe-area inset: everything that sits "below the topbar". */
+  --adm-topbar-offset: calc(var(--adm-topbar) + var(--safe-top));
   --adm-radius: 20px;
   --adm-radius-sm: 14px;
   --adm-gap: 18px;
@@ -174,7 +176,7 @@
   min-height: 100dvh;
   flex-direction: column;
   margin-left: 0;
-  padding-top: var(--adm-topbar);
+  padding-top: var(--adm-topbar-offset);
 }
 
 @media (min-width: 768px) {
@@ -188,13 +190,13 @@
 }
 
 .adm .adm-topbar-shell {
-  height: var(--adm-topbar);
-  padding-inline: 14px;
+  height: var(--adm-topbar-offset);
+  padding-inline: max(14px, var(--safe-left)) max(14px, var(--safe-right));
 }
 .adm .adm-topbar-offset { left: 0; }
 
 @media (min-width: 768px) {
-  .adm .adm-topbar-shell { padding-inline: 24px; }
+  .adm .adm-topbar-shell { padding-inline: 24px max(24px, var(--safe-right)); }
   .adm .adm-topbar-offset {
     left: var(--sidebar-w-expanded);
     transition-duration: var(--duration-sidebar);
@@ -274,6 +276,14 @@
     calc(48px + env(safe-area-inset-bottom, 0px));
 }
 .adm-content > * { min-width: 0; }
+/* Route-fade wrapper (AdminShell) must not change the page layout. */
+.adm-content > .v-page-enter {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: inherit;
+}
+.adm-content > .v-page-enter > * { min-width: 0; }
 
 /* Shared account pages (Profile, Preferences, Notifications, Help) are hosted
    by the console shell. The page keeps its member-app styling, but spacing is
@@ -293,7 +303,7 @@
   .adm-content {
     padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
   }
-  .adm .adm-topbar-shell { padding-inline: 12px; }
+  .adm .adm-topbar-shell { padding-inline: max(12px, var(--safe-left)) max(12px, var(--safe-right)); }
   .adm-topsearch { height: 38px; padding-left: 11px; }
   .adm-topsearch__kbd { display: none; }
 }
@@ -702,7 +712,7 @@
 }
 .adm-dash__rail {
   position: sticky;
-  top: calc(var(--adm-topbar) + 18px);
+  top: calc(var(--adm-topbar-offset) + 18px);
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -1601,6 +1611,11 @@
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
+/* Long values (emails) may shrink and wrap instead of pushing the row wider. */
+.adm-kv__v--wrap { flex-shrink: 1; min-width: 0; overflow-wrap: anywhere; text-align: right; }
+.adm-kv__link { color: var(--accent); text-decoration: none; }
+.adm-kv__link:hover { text-decoration: underline; }
+.adm-kv__v .adm-badge { vertical-align: middle; }
 
 .adm-mini-grid {
   display: grid;
@@ -1978,4 +1993,53 @@
   .adm-live i { animation: none; }
   .adm-skel-line,
   .adm-chart-skeleton { animation: none; }
+}
+
+/* Touch devices: 44px-tall segmented tabs/ranges (desktop/mouse unchanged). */
+@media (pointer: coarse) {
+  .adm-seg__btn { min-height: 44px; }
+}
+
+/* ── SMS (UniSMS) credits + verification chart ─────────────────────── */
+.adm-sms-credit {
+  --sms-tone: var(--accent);
+  --sms-tone-bg: var(--accent-bg);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--sms-tone) 28%, var(--border-light));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--sms-tone-bg) 55%, transparent);
+}
+.adm-sms-credit.is-ok { --sms-tone: var(--success); --sms-tone-bg: var(--success-bg); }
+.adm-sms-credit.is-low { --sms-tone: var(--warning); --sms-tone-bg: var(--warning-bg); }
+.adm-sms-credit.is-critical { --sms-tone: var(--error); --sms-tone-bg: var(--error-bg); }
+.adm-sms-credit.is-unknown { --sms-tone: var(--text-muted); --sms-tone-bg: var(--bg-hover); }
+.adm-sms-credit__icon {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 42px; height: 42px; border-radius: 12px;
+  background: var(--sms-tone-bg); color: var(--sms-tone);
+}
+.adm-sms-credit__main { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; }
+.adm-sms-credit__label { color: var(--text-muted); font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.adm-sms-credit__value { color: var(--text-primary); font-size: 28px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.adm-sms-credit__value.is-text { font-size: 18px; }
+.adm-sms-credit__bar { display: block; width: 100%; max-width: 260px; height: 5px; overflow: hidden; border-radius: 5px; background: var(--bg-hover); }
+.adm-sms-credit__bar > i { display: block; height: 100%; border-radius: inherit; background: var(--sms-tone); transition: width 0.4s ease; }
+.adm-sms-credit__note { color: var(--text-muted); font-size: 11px; line-height: 1.45; }
+.adm-sms-credit__side { display: flex; flex-shrink: 0; flex-direction: column; align-items: flex-end; gap: 6px; }
+.adm-sms-credit__meta { color: var(--text-muted); font-size: 10.5px; }
+.adm-sms-credit__meta b { color: var(--text-secondary); }
+.adm-sms-level {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--sms-tone-bg); color: var(--sms-tone);
+  font-size: 10.5px; font-weight: 800;
+}
+.adm-sms-level .material-symbols-outlined { font-size: 14px; }
+@media (max-width: 560px) {
+  .adm-sms-credit { flex-wrap: wrap; }
+  .adm-sms-credit__side { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
 }

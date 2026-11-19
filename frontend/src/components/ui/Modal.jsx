@@ -1,13 +1,16 @@
 import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from '../Icon.jsx';
+import { usePresence } from '../../hooks/usePresence.js';
+
+const EXIT_MS = 180;
 
 const SIZES = {
   sm: 'max-w-[360px]',
   md: 'max-w-[420px]',
   lg: 'max-w-[480px]',
   xl: 'max-w-[560px]',
-  full: 'max-w-[90vw] max-h-[90vh]',
+  full: 'max-w-[90vw]',
 };
 
 export default function Modal({
@@ -24,7 +27,15 @@ export default function Modal({
   hideClose = false,
   className = '',
   headerClassName = '',
+  onExited = undefined,
 }) {
+  // Stay mounted briefly after isOpen → false so the exit animation can play.
+  const { mounted, closing } = usePresence(isOpen, EXIT_MS);
+  const wasMountedRef = useRef(mounted);
+  useEffect(() => {
+    if (wasMountedRef.current && !mounted) onExited?.();
+    wasMountedRef.current = mounted;
+  }, [mounted, onExited]);
   const cardRef = useRef(null);
   const previousActiveRef = useRef(null);
   const titleId = useId();
@@ -75,17 +86,18 @@ export default function Modal({
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [isOpen, closeOnEsc, onClose]);
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
   const sizeClass = SIZES[size] || SIZES.md;
+  const motionState = closing ? ' is-closing' : '';
 
   return createPortal(
     <>
-      <style>{`@keyframes modalBackdropIn{from{opacity:0}to{opacity:1}}@keyframes modalCardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
       <div
-        className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-[2px]"
-        style={{ animation: 'modalBackdropIn 0.2s ease forwards', paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))', paddingTop: 'max(16px, env(safe-area-inset-top, 0px))' }}
+        className={`v-motion-backdrop${motionState} fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-[2px]`}
+        style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))', paddingTop: 'max(16px, env(safe-area-inset-top, 0px))' }}
         onMouseDown={(e) => {
+          if (closing) return;
           if (closeOnBackdrop && e.target === e.currentTarget) onClose?.();
         }}
         role="dialog"
@@ -95,8 +107,7 @@ export default function Modal({
         <div
           ref={cardRef}
           tabIndex={-1}
-          className={`bg-[var(--bg-elevated)] shadow-[var(--shadow-xl)] border border-[var(--border-medium)] w-full ${sizeClass} rounded-[var(--radius-xl)] overflow-hidden flex flex-col max-h-[90vh] outline-none ${className}`}
-          style={{ animation: 'modalCardIn 0.25s var(--ease-default) forwards' }}
+          className={`v-motion-dialog${motionState} bg-[var(--bg-elevated)] shadow-[var(--shadow-xl)] border border-[var(--border-medium)] w-full ${sizeClass} rounded-[var(--radius-xl)] overflow-hidden flex flex-col max-h-[min(90vh,100%)] supports-[height:100dvh]:max-h-[min(90dvh,100%)] outline-none ${className}`}
           onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >

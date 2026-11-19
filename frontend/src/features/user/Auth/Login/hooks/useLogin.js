@@ -124,6 +124,10 @@ export const useLogin = () => {
       // Unverified accounts must verify before signing in
       // (backend echoes the account email, but the submitted one is identical)
       if (err?.status === 403 && err?.code === 'NEEDS_VERIFICATION') {
+        if (err?.verificationMethod === 'sms') {
+          navigate('/verify-phone', { state: { email: trimmedEmail } });
+          return;
+        }
         navigate('/check-email', { state: { email: trimmedEmail } });
         return;
       }

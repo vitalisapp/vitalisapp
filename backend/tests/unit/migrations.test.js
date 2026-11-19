@@ -23,6 +23,7 @@ const EXPECTED = [
   '038_progress_module.sql', '039_admin_audit.sql', '040_admin_seed.sql',
   '041_goal_recalibration.sql', '042_progress_cadence.sql',
   '043_food_grams.sql', '044_food_density_cache.sql', '045_email_delivery.sql',
+  '046_phone_verifications.sql',
 ];
 
 describe('migrations per-table baseline', () => {

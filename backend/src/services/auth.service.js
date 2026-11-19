@@ -7,6 +7,7 @@ const UAParser = require("ua-parser-js");
 const { OAuth2Client } = require("google-auth-library");
 const { AppError } = require("../utils/errors");
 const { sendVerificationEmail, sendEmailChangedNotice } = require("./email.service");
+const { normalizePhMobile } = require("../utils/phone");
 const allergiesService = require("./allergies.service");
 const { trackingToken } = require('./emailDelivery.service');
 
@@ -37,6 +38,26 @@ function frontendUrl() {
 // ALLOW_DEV_LINKS=1 exposes links for local demo without SMTP (never in prod).
 const DEV_VERIFY_FALLBACK =
   process.env.ALLOW_DEV_LINKS === "1" && process.env.NODE_ENV !== "production";
+
+// NODE_ENV=development skips email verification entirely: signups are created
+// verified and get a session immediately, and any still-unverified account is
+// verified on its next sign-in. Every other value (production, test, unset)
+// keeps the full verify-by-link flow. Read per call so tests can toggle it.
+function skipEmailVerification() {
+  return String(process.env.NODE_ENV || "").toLowerCase() === "development";
+}
+
+// SMS_VERIFY_DEV=1 opts development into the real SMS flow (with UNISMS_MOCK=1
+// so nothing is actually sent). Without it, development keeps the zero-friction
+// auto-verify behaviour for both channels.
+function smsVerificationRequiredInDev() {
+  return process.env.SMS_VERIFY_DEV === "1";
+}
+
+async function markVerified(user) {
+  await db.execute("UPDATE users SET is_verified = 1 WHERE id = ?", [user.id]);
+  user.is_verified = 1;
+}
 
 // ─── MODULE 1: consent audit + account governance ───
 // Version stamp recorded with every acceptance — bump when the legal copy in
@@ -251,35 +272,84 @@ async function reactivateAccount({ email, password }) {
 // ─── REGISTER ───
 // Account creation only — fitness/goal data is collected later in onboarding
 // (see goals.service), so it is never client-supplied at signup.
-async function register({ name, email, password }) {
+//
+// verificationMethod: 'email' (default, unchanged) or 'sms'. With 'sms' the
+// phone is stored up front (unique) and the caller sends the code; no email
+// token is issued. Development still auto-verifies both channels.
+async function register({ name, email, password, phone, verificationMethod = 'email' }) {
   const [existing] = await db.execute("SELECT email FROM users WHERE email = ?", [email]);
   if (existing.length > 0) {
     throw new AppError("Email already registered in Vitalis labs.", 400, "EMAIL_EXISTS");
   }
 
+  const wantsSms = verificationMethod === "sms";
+  const normalizedPhone = wantsSms ? normalizePhMobile(phone) : "";
+  if (wantsSms && !normalizedPhone) {
+    throw new AppError(
+      "Enter a valid Philippine mobile number (09XXXXXXXXX or +639XXXXXXXXX).",
+      400,
+      "PHONE_INVALID",
+    );
+  }
+
   const salt = await bcrypt.genSalt(10);
   const hashedPw = await bcrypt.hash(password, salt);
+
+  const autoVerified = skipEmailVerification() && !(wantsSms && smsVerificationRequiredInDev());
 
   let insertResult;
   try {
     [insertResult] = await db.execute(
-      "INSERT INTO users (name, email, password, fitness_goal, is_online, is_verified, onboarding_completed, role, accepted_terms_at, accepted_terms_version) VALUES (?, ?, ?, ?, ?, 0, 0, ?, NOW(), ?)",
-      [name, email, hashedPw, "general fitness", 0, isSeedAdmin(email) ? "admin" : "member", CONSENT_VERSION],
+      "INSERT INTO users (name, email, phone, password, fitness_goal, is_online, is_verified, onboarding_completed, role, accepted_terms_at, accepted_terms_version) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, NOW(), ?)",
+      [name, email, normalizedPhone || null, hashedPw, "general fitness", autoVerified ? 1 : 0, autoVerified ? 1 : 0, isSeedAdmin(email) ? "admin" : "member", CONSENT_VERSION],
     );
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY") {
+      if (/uq_users_phone|phone/i.test(String(err.sqlMessage || err.message))) {
+        throw new AppError(
+          "That mobile number is already linked to another account.",
+          409,
+          "PHONE_TAKEN",
+        );
+      }
       throw new AppError("Email already registered in Vitalis labs.", 400, "EMAIL_EXISTS");
     }
     throw err;
   }
   const newUserId = insertResult.insertId;
 
-  // Password accounts require email confirmation in every environment.
+  // Password accounts require confirmation outside development.
   const [userRows] = await db.execute(
-    "SELECT id, name, email, fitness_goal, avatar_url, token_version, is_verified, onboarding_completed, role, status, accepted_terms_at, accepted_terms_version FROM users WHERE id = ?",
+    "SELECT id, name, email, phone, fitness_goal, avatar_url, token_version, is_verified, onboarding_completed, role, status, accepted_terms_at, accepted_terms_version FROM users WHERE id = ?",
     [newUserId],
   );
   const user = userRows[0];
+
+  if (autoVerified) {
+    return {
+      newUserId,
+      link: null,
+      emailed: false,
+      deliveryToken: null,
+      autoVerified: true,
+      verificationMethod: wantsSms ? "sms" : "email",
+      user,
+    };
+  }
+
+  // SMS: the controller sends the code right after this returns, so a provider
+  // outage cannot roll back an account that was otherwise created correctly.
+  if (wantsSms) {
+    return {
+      newUserId,
+      link: null,
+      emailed: false,
+      deliveryToken: null,
+      autoVerified: false,
+      verificationMethod: "sms",
+      user,
+    };
+  }
 
   // Email verification (link-based). Never block registration on SMTP.
   const { link } = await createVerificationToken(newUserId);
@@ -293,7 +363,15 @@ async function register({ name, email, password }) {
     console.error("Verification email failed:", mailErr.message);
   }
 
-  return { newUserId, link, emailed, deliveryToken, autoVerified: false, user };
+  return {
+    newUserId,
+    link,
+    emailed,
+    deliveryToken,
+    autoVerified: false,
+    verificationMethod: "email",
+    user,
+  };
 }
 
 // ─── LOGIN ───
@@ -339,10 +417,27 @@ async function login({ email, password }) {
     );
   }
 
+  if (!user.is_verified && skipEmailVerification()) {
+    await markVerified(user);
+  }
+
   if (!user.is_verified) {
-    throw new AppError("Verify your email before signing in.", 403, "NEEDS_VERIFICATION", {
-      email: user.email,
-    });
+    // Registration verification can be email or SMS — route the user to the
+    // matching screen instead of always saying "email". A stored phone marks an
+    // SMS signup, and it survives code expiry so the user can request a new one.
+    const [smsSignup] = await db.execute(
+      "SELECT 1 FROM users WHERE id = ? AND phone IS NOT NULL LIMIT 1",
+      [user.id],
+    );
+    const viaSms = smsSignup.length > 0;
+    throw new AppError(
+      viaSms
+        ? "Verify your phone number before signing in."
+        : "Verify your email before signing in.",
+      403,
+      "NEEDS_VERIFICATION",
+      { email: user.email, verificationMethod: viaSms ? "sms" : "email" },
+    );
   }
 
   await db.execute("UPDATE users SET is_online = 1 WHERE id = ?", [user.id]);
@@ -436,7 +531,11 @@ async function googleLogin(code) {
   }
 
   // Google authentication does not replace the app's email verification.
-  // Retrying Google sign-in must not verify a pending account or issue a session.
+  // Retrying Google sign-in must not verify a pending account or issue a session
+  // (except in development, where verification is skipped).
+  if (!user.is_verified && skipEmailVerification()) {
+    await markVerified(user);
+  }
   if (!user.is_verified) {
     const verification = await resendVerification(email);
     return { user, needsVerification: true, ...verification };
@@ -646,6 +745,7 @@ module.exports = {
   resolveFrontendUrl,
   frontendUrl,
   DEV_VERIFY_FALLBACK,
+  skipEmailVerification,
   createVerificationToken,
   checkRateLimit,
   recordFailedAttempt,

@@ -28,6 +28,8 @@ router.delete('/community/posts/:id', verifyUser, requireAdmin, writeLimiter(), 
 
 // 4. Activity & AI usage ledger.
 router.get('/ai-usage', verifyUser, requireAdmin, read, controller.getAiUsage);
+// SMS: live UniSMS credit balance + daily verification sends.
+router.get('/sms', verifyUser, requireAdmin, read, controller.getSms);
 
 // 5. Audit trail.
 router.get('/audit', verifyUser, requireAdmin, read, controller.getAudit);

@@ -24,6 +24,7 @@ const Preferences = lazy(() => import('../../features/user/Preferences/pages/Pre
 const HelpSupport = lazy(() => import('../../features/user/HelpSupport/pages/HelpSupport.jsx'));
 const ForgotPassword = lazy(() => import('../../features/user/Auth/ForgotPassword/pages/ForgotPassword.jsx'));
 const CheckEmail = lazy(() => import('../../features/user/Auth/VerifyEmail/pages/CheckEmail.jsx'));
+const VerifyPhone = lazy(() => import('../../features/user/Auth/VerifyEmail/pages/VerifyPhone.jsx'));
 const VerifyEmail = lazy(() => import('../../features/user/Auth/VerifyEmail/pages/VerifyEmail.jsx'));
 const NotFound = lazy(() => import('../../pages/NotFound/NotFound.jsx'));
 
@@ -102,6 +103,7 @@ export default function AppRoutes() {
         </Route>
 
         <Route path="/check-email" element={<CheckEmail />} />
+<Route path="/verify-phone" element={<VerifyPhone />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         {/* Legacy removed-module path — redirect to dashboard */}
         <Route path="/dashboard/virtual-clinic" element={<Navigate to="/dashboard" replace />} />

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRegister } from '../hooks/useRegister.js';
 import { TermsOfUseModal, PrivacyPolicyModal } from '../components/LegalModals.jsx';
+import NetworkNotice from '../../VerifyEmail/components/NetworkNotice.jsx';
+import { SMS_SENDER_ID } from '../../../../../app/config/env.js';
 
 const pwStrength = (pw) => {
   if (!pw) return null;
@@ -21,7 +23,7 @@ const VisibilityToggle = ({ visible, onToggle, label }) => (
     type="button"
     onClick={onToggle}
     aria-label={label}
-    className="text-white/40 hover:text-[var(--accent)] transition-colors bg-transparent border-none cursor-pointer leading-none p-1"
+    className="v-touch-target text-white/40 hover:text-[var(--accent)] transition-colors bg-transparent border-none cursor-pointer leading-none p-1"
   >
     <span className="material-symbols-outlined text-[20px]">{visible ? 'visibility_off' : 'visibility'}</span>
   </button>
@@ -69,6 +71,8 @@ const Register = () => {
     password: '',
     confirm:  '',
     agreed:   false,
+    verificationMethod: 'email',
+    phone:    '',
   });
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -78,8 +82,14 @@ const Register = () => {
   const navigate = useNavigate();
   const { loading, error, clearError, handleRegister, signupWithGoogle, googleEnabled } = useRegister();
 
-  const filledFields = [formData.name, formData.email, formData.password, formData.confirm].filter(Boolean).length;
-  const progressPct  = Math.round((filledFields / 4) * 100);
+  const filledFields = [formData.name, formData.email, formData.password, formData.confirm, formData.verificationMethod === 'sms' ? formData.phone : true].filter(Boolean).length;
+  const totalFields  = formData.verificationMethod === 'sms' ? 5 : 4;
+  const progressPct  = Math.round((filledFields / totalFields) * 100);
+
+  const setVerificationMethod = (method) => {
+    if (error) clearError();
+    setFormData((prev) => ({ ...prev, verificationMethod: method }));
+  };
 
   const mismatch = formData.confirm.length > 0 && formData.password !== formData.confirm;
   const strength = pwStrength(formData.password);
@@ -119,7 +129,7 @@ const Register = () => {
         </div>
 
         {/* ── Right glass card ── */}
-        <div className="flex items-center justify-center p-5 sm:p-[40px_32px] max-[960px]:p-[20px]">
+        <div className="flex items-center justify-center p-5 sm:p-[40px_32px] max-[960px]:px-[20px] max-[960px]:pb-[20px] max-[960px]:pt-[84px]">
           <div className="relative w-full max-w-[420px] bg-[#121210]/65 backdrop-blur-[32px] saturate-[140%] border border-[var(--accent)]/10 rounded-[20px] p-6 sm:p-10 shadow-[0_32px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)] overflow-hidden">
             <div className="scan-bar absolute left-0 right-0 top-0 h-[1px] rounded-t-[20px]" />
 
@@ -169,6 +179,36 @@ const Register = () => {
                 />
               </div>
 
+              {/* Verification method */}
+              <div className="mb-[18px]">
+                <p className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.25em] text-white/50">
+                  Verify with
+                </p>
+                <div role="group" aria-label="Verification method" className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'email', label: 'Email', icon: 'mail' },
+                    { value: 'sms', label: 'SMS', icon: 'smartphone' },
+                  ].map((option) => {
+                    const active = formData.verificationMethod === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        aria-pressed={active}
+                        disabled={loading}
+                        onClick={() => setVerificationMethod(option.value)}
+                        className={`flex items-center justify-center gap-1.5 rounded-xl border p-2.5 text-[11px] font-semibold uppercase tracking-widest transition-colors disabled:opacity-50 ${active ? 'border-[var(--accent)]/50 bg-[var(--accent)]/10 text-[var(--accent)]' : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10'}`}
+                      >
+                        <span aria-hidden="true" className="material-symbols-outlined text-[16px] leading-none">
+                          {active ? 'check_circle' : option.icon}
+                        </span>
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Email */}
               <div className="mb-[18px]">
                 <Field
@@ -186,6 +226,28 @@ const Register = () => {
                   setFocusedId={setFocused}
                 />
               </div>
+
+              {/* Phone (SMS verification) */}
+              {formData.verificationMethod === 'sms' && (
+                <div className="mb-[18px]">
+                  <Field
+                    id="register-phone"
+                    label="Mobile Number"
+                    icon="smartphone"
+                    type="tel"
+                    inputMode="tel"
+                    placeholder="09XXXXXXXXX"
+                    required
+                    disabled={loading}
+                    value={formData.phone}
+                    onChange={update('phone')}
+                    autoComplete="tel"
+                    focusedId={focused}
+                    setFocusedId={setFocused}
+                  />
+                  <NetworkNotice senderId={SMS_SENDER_ID} className="mt-2.5" />
+                </div>
+              )}
 
               {/* Password */}
               <div className="mb-[18px]">
@@ -303,7 +365,7 @@ const Register = () => {
 
             <div className="mt-7 text-center text-xs text-[#c4c9b0]/45">
               Already have an account?
-              <Link className="text-[var(--accent-dark)] font-semibold ml-1 hover:text-[var(--accent)] transition-colors" to="/login">Sign in</Link>
+              <Link className="v-touch-target text-[var(--accent-dark)] font-semibold ml-1 hover:text-[var(--accent)] transition-colors" to="/login">Sign in</Link>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { usePresence } from '../../hooks/usePresence.js';
 
 // ui/Dropdown — themed replacement for native <select>.
 // The browser's select popup can't be sized or styled (renders a giant
@@ -6,6 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 export default function Dropdown({ label, value, onChange, options = [], allLabel = 'All', className = '' }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
+  const { mounted, closing } = usePresence(open, 150);
   const selected = options.includes(value) ? value : '';
 
   useEffect(() => {
@@ -50,10 +52,10 @@ export default function Dropdown({ label, value, onChange, options = [], allLabe
           expand_more
         </span>
       </button>
-      {open && (
+      {mounted && (
         <div
           role="listbox"
-          className="absolute left-0 right-0 top-[calc(100%+6px)] z-[80] rounded-[var(--radius-md)] border border-[var(--border-medium)] glass-card shadow-[var(--shadow-lg)] overflow-hidden animate-page-in"
+          className={`absolute left-0 right-0 top-[calc(100%+6px)] z-[80] rounded-[var(--radius-md)] border border-[var(--border-medium)] glass-card shadow-[var(--shadow-lg)] overflow-hidden v-motion-menu v-motion-menu--left${closing ? ' is-closing' : ''}`}
         >
           <div className="max-h-56 overflow-y-auto py-1.5">
             {[{ v: '', label: allLabel }, ...options.map((o) => ({ v: o, label: o }))].map((o) => {

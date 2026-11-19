@@ -1463,6 +1463,27 @@
   font-size: 9.5px;
   line-height: 1.35;
 }
+.meal-tracker .mt-photo-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.meal-tracker .mt-photo-retry:hover {
+  text-decoration: underline;
+}
+.meal-tracker .mt-photo-retry-icon {
+  font-size: 13px;
+}
 .meal-tracker .mt-photo-preview-spinner {
   width: 18px;
   height: 18px;

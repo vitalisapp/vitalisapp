@@ -108,6 +108,15 @@ async function getAiUsage(req, res, next) {
   }
 }
 
+// GET /api/admin/sms?days= — UniSMS credit balance + daily verification sends.
+async function getSms(req, res, next) {
+  try {
+    res.json(await service.getSmsStats({ days: req.query.days }));
+  } catch (e) {
+    next(e);
+  }
+}
+
 // GET /api/admin/audit?limit=&offset= — audit trail (most recent first).
 async function getAudit(req, res, next) {
   try {
@@ -130,5 +139,6 @@ module.exports = {
   getCommunityPosts,
   deleteCommunityPost,
   getAiUsage,
+  getSms,
   getAudit,
 };

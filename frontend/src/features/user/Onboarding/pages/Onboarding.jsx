@@ -366,6 +366,9 @@ const Onboarding = () => {
   const canGo = canContinue();
   const hint = canGo || step >= 7 ? '' : stepHint();
   const progress = Math.round(((step + 1) / TOTAL_STEPS) * 100);
+  // Current phase for the compact tablet/phone strip (the side rail is hidden there).
+  const phaseIndex = Math.max(0, SETUP_PHASES.findIndex((p) => step >= p.start && step <= p.end));
+  const phase = SETUP_PHASES[phaseIndex];
 
   return (
     <main className="onboarding" aria-labelledby="onboarding-title">
@@ -432,6 +435,20 @@ const Onboarding = () => {
                 Set up later <Icon name="arrow_forward" />
               </button>
             )}
+          </div>
+
+          {/* Tablet/phone replacement for the side rail (hidden ≥1024px via CSS). */}
+          <div className="onb-phase-strip" aria-hidden="true">
+            <span className="onb-phase-strip__marker"><Icon name={phase.icon} /></span>
+            <span className="onb-phase-strip__copy">
+              <span className="onb-phase-strip__eyebrow">Phase {phaseIndex + 1} of {SETUP_PHASES.length}</span>
+              <span className="onb-phase-strip__title">{phase.title}</span>
+            </span>
+            <span className="onb-phase-strip__dots">
+              {SETUP_PHASES.map((p, i) => (
+                <span key={p.title} className={i < phaseIndex ? 'is-done' : i === phaseIndex ? 'is-active' : ''} />
+              ))}
+            </span>
           </div>
 
           <div className="onb-progress" role="progressbar" aria-label="Setup progress" aria-valuemin={0} aria-valuemax={TOTAL_STEPS} aria-valuenow={step + 1} aria-valuetext={`Step ${step + 1} of ${TOTAL_STEPS}: ${STEP_LABELS[step]}`}>

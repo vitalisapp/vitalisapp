@@ -1,5 +1,6 @@
 
 const db = require('../config/db');
+const { AppError } = require('../utils/errors');
 
 // Returns false when the user row does not exist, true once the profile is saved.
 async function updateProfile(userId, { fullName, contact, bio, avatar }) {
@@ -41,6 +42,8 @@ async function getProfile(userId) {
                 SELECT 
                     u.name     AS fullName,
                     u.email,
+                    u.phone,
+                    u.phone_verified_at,
                     p.contact,
                     p.bio,
                     p.avatar_url,
@@ -97,4 +100,23 @@ async function getProfile(userId) {
   return { ...rows[0], onboarding };
 }
 
-module.exports = { updateProfile, getProfile };
+// Save the user's own mobile number (users.phone, shared with SMS sign-up).
+// `phone` is already normalized (+639XXXXXXXXX) or null to clear it.
+// A changed number is not verified yet, so phone_verified_at is reset.
+// Returns { changed } or throws AppError PHONE_TAKEN for a duplicate.
+async function updatePhone(userId, phone) {
+  const [[current]] = await db.execute('SELECT phone FROM users WHERE id = ?', [userId]);
+  if (!current) return { changed: false };
+  if ((current.phone || null) === (phone || null)) return { changed: false };
+  try {
+    await db.execute('UPDATE users SET phone = ?, phone_verified_at = NULL WHERE id = ?', [phone, userId]);
+  } catch (err) {
+    if (err?.code === 'ER_DUP_ENTRY') {
+      throw new AppError('That mobile number is already linked to another account.', 409, 'PHONE_TAKEN');
+    }
+    throw err;
+  }
+  return { changed: true };
+}
+
+module.exports = { updateProfile, getProfile, updatePhone };

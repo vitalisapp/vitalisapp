@@ -10,16 +10,24 @@ import { useNotificationStream } from '../context/NotificationStream.jsx';
 import { getSettingsItems } from '../constants/nav.js';
 import { createPortal } from 'react-dom';
 import ThemeToggle from './ThemeToggle.jsx';
+import { usePresence } from '../hooks/usePresence.js';
 import FeedbackModal from './FeedbackModal.jsx';
+import { NotificationCard, NotificationEmpty } from '../features/user/Notifications/components/NotificationParts.jsx';
+import { groupByDay } from '../features/user/Notifications/notificationPresentation.js';
 
 // Single nav lives in Sidebar/BottomNav (constants/nav.js). Topbar keeps only notifications/settings/avatar.
 
 /* ══════════════════════════════════════════════════════════════
    NOTIFICATION OVERLAY
+   Desktop: dropdown anchored under the bell.
+   Mobile (<768px): bottom sheet in a portal (#notif-portal — the
+   Topbar outside-click handler relies on that id).
 ══════════════════════════════════════════════════════════════ */
-function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose }) {
-  const [filter, setFilter] = useState('recent');
+function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose, onViewAll, closing = false }) {
+  const closingCls = closing ? ' is-closing' : '';
+  const [filter, setFilter] = useState('all');
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+  const panelRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -28,12 +36,17 @@ function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // ESC to close + focus management for a11y
+  // ESC to close
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  // Move focus into the panel so keyboard users land in the list.
+  useEffect(() => {
+    panelRef.current?.focus({ preventScroll: true });
+  }, [isMobile]);
 
   useEffect(() => {
     if (isMobile) {
@@ -43,93 +56,77 @@ function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose
   }, [isMobile]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
-  const displayed = filter === 'recent' ? notifications.slice(0, 10) : notifications;
+  const displayed = filter === 'unread' ? notifications.filter(n => !n.is_read) : notifications;
+  const groups = groupByDay(displayed);
 
   const innerContent = (
     <>
-      <div className="flex items-center justify-between px-4 py-3 border-b border-(--border-light) bg-(--surface)">
-        <div className="flex items-center gap-2">
-          <Icon name="notifications" className="text-(--accent) text-[length:var(--fs-16)]" />
-          <span className="text-[length:var(--fs-13)] font-bold text-(--text-primary) tracking-tight">Notifications</span>
-          {unreadCount > 0 && (
-            <span className="text-[length:var(--fs-10)] font-black bg-(--accent) text-[var(--text-inverse)] px-1.5 py-0.5 rounded-full leading-none">
-              {unreadCount}
-            </span>
-          )}
+      {isMobile && <div className="vn-sheet-handle" aria-hidden="true" />}
+
+      <div className="vn-panel__head">
+        <div className="vn-panel__title-wrap">
+          <h2 className="vn-panel__title" id="vn-panel-title">Notifications</h2>
+          {unreadCount > 0 && <span className="vn-badge" aria-label={`${unreadCount} unread`}>{unreadCount}</span>}
         </div>
-        <div className="flex items-center gap-1.5">
-          <button onClick={onMarkAllRead} className="text-[length:var(--fs-11)] text-(--accent)/80 hover:text-(--accent) transition-colors bg-transparent border-none cursor-pointer font-medium whitespace-nowrap px-1">
+        <div className="vn-panel__actions">
+          <button type="button" className="vn-text-btn" onClick={onMarkAllRead} disabled={unreadCount === 0}>
+            <Icon name="done_all" weight={400} />
             Mark all read
           </button>
-          <button onClick={onClose} aria-label="Close notifications" className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg bg-(--bg-hover) hover:bg-(--bg-active) transition-colors border-none cursor-pointer">
-            <Icon name="close" className="text-(--text-muted) text-[length:var(--fs-14)]" />
+          <button type="button" onClick={onClose} aria-label="Close notifications" className="vn-icon-btn">
+            <Icon name="close" weight={400} />
           </button>
         </div>
       </div>
 
-      <div className="flex bg-(--bg-tertiary) border-b border-(--border-light)">
-        {['recent', 'all'].map(tab => (
-          <button
-            key={tab}
-            onClick={(e) => { e.stopPropagation(); setFilter(tab); }}
-            className={`flex-1 py-2.5 text-[length:var(--fs-12)] font-semibold transition-all border-none cursor-pointer
-              ${filter === tab ? 'text-(--accent) border-b-2 border-(--accent) bg-(--accent-bg)' : 'text-(--text-muted) hover:text-(--text-secondary) bg-transparent'}`}
-          >
-            {tab === 'recent' ? 'Recent' : `All (${notifications.length})`}
-          </button>
-        ))}
+      <div className="vn-panel__tabs">
+        <div className="vn-segment is-block" role="group" aria-label="Filter notifications">
+          {[
+            { key: 'all', label: 'All', n: notifications.length },
+            { key: 'unread', label: 'Unread', n: unreadCount },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              type="button"
+              aria-pressed={filter === tab.key}
+              onClick={(e) => { e.stopPropagation(); setFilter(tab.key); }}
+              className="vn-segment__btn"
+            >
+              {tab.label}
+              <span className="vn-count">{tab.n}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div
-        className="overflow-y-auto [&::-webkit-scrollbar]:hidden"
-        style={{
-          maxHeight: isMobile ? '55dvh' : '340px',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-        }}
-      >
+      <div className="vn-panel__body">
         {displayed.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <Icon name="notifications" className="text-[length:var(--fs-40)] text-(--text-disabled)" />
-            <p className="text-[length:var(--fs-12)] text-(--text-muted) m-0 font-medium">No notifications yet</p>
-          </div>
+          filter === 'unread' && notifications.length > 0 ? (
+            <NotificationEmpty compact icon="done_all" title="You're all caught up" message="No unread notifications right now." />
+          ) : (
+            <NotificationEmpty compact icon="notifications" title="No notifications yet" message="Log a workout, meal or sleep to get AI Coach insights here." />
+          )
         ) : (
-          displayed.map((notif) => (
-            <div
-              key={notif.id}
-              onClick={(e) => { e.stopPropagation(); if (!notif.is_read) onMarkRead(notif.id); }}
-              className={`flex items-start gap-3 px-4 py-3.5 border-b border-(--border-light) transition-all duration-150
-                ${notif.is_read ? 'bg-(--bg-card) cursor-default' : 'bg-(--accent-bg) active:bg-(--accent-border) hover:bg-(--accent-bg) cursor-pointer'}`}
-            >
-              <div className="mt-1.5 shrink-0">
-                {notif.is_read
-                  ? <div className="w-1.5 h-1.5 rounded-full bg-(--text-muted) border border-(--border-medium)" />
-                  : <div className="w-2 h-2 rounded-full bg-(--accent) shadow-[var(--shadow-sm)] animate-pulse" />
-                }
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-[length:var(--fs-12)] leading-relaxed m-0 wrap-break-word font-medium ${notif.is_read ? 'text-(--text-muted)' : 'text-(--text-secondary)'}`}>{notif.message}</p>
-                <p className={`text-[length:var(--fs-10)] mt-1 m-0 font-medium ${notif.is_read ? 'text-(--text-disabled)' : 'text-(--text-muted)'}`}>
-                  {new Date(notif.created_at).toLocaleString()}
-                </p>
-              </div>
-              {!notif.is_read
-                ? <span className="shrink-0 mt-1 text-[length:var(--fs-9)] font-black bg-(--accent)/20 text-(--accent) px-1.5 py-0.5 rounded-full whitespace-nowrap border border-(--accent-border)">NEW</span>
-                : <span className="shrink-0 mt-1 text-[length:var(--fs-9)] font-medium text-(--text-disabled) whitespace-nowrap">read</span>
-              }
-            </div>
+          groups.map(group => (
+            <section key={group.key} className="vn-group" aria-label={group.label}>
+              <h3 className="vn-group__head">{group.label}</h3>
+              <ul className="vn-list">
+                {group.items.map(notif => (
+                  <li key={notif.id}>
+                    <NotificationCard notification={notif} onMarkRead={onMarkRead} compact />
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))
         )}
       </div>
 
-      <div className="px-4 py-2.5 border-t border-(--border-light) bg-(--bg-tertiary) flex items-center justify-between">
-        <span className="text-[length:var(--fs-11)] font-medium">
-          {unreadCount > 0
-            ? <span className="text-(--accent)/70">{unreadCount} unread</span>
-            : <span className="text-(--text-disabled)">All caught up ✓</span>
-          }
-        </span>
-        <span className="text-[length:var(--fs-10)] text-(--text-disabled)">{notifications.length} total</span>
+      <div className="vn-panel__foot">
+        <button type="button" className="vn-view-all" onClick={onViewAll}>
+          View all notifications
+          <Icon name="arrow_forward" weight={400} />
+        </button>
       </div>
     </>
   );
@@ -138,14 +135,16 @@ function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose
     return createPortal(
       <div
         id="notif-portal"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Notifications"
-        style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}
+        className={`vn-sheet-backdrop${closingCls}`}
         onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
         <div
-          style={{ width: '100%', maxWidth: '400px', maxHeight: '80dvh', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-light)', overflow: 'hidden', boxShadow: 'var(--shadow-lg)' }}
+          ref={panelRef}
+          tabIndex={-1}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="vn-panel-title"
+          className={`vn-panel vn-panel--sheet${closingCls}`}
           onMouseDown={(e) => e.stopPropagation()}
         >
           {innerContent}
@@ -156,7 +155,13 @@ function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose
   }
 
   return (
-    <div role="dialog" aria-label="Notifications" className="absolute right-0 top-[calc(100%+10px)] w-95 max-w-[calc(100vw-2rem)] glass-card bg-(--bg-secondary) border border-(--border-medium) rounded-2xl shadow-(--shadow-lg) overflow-hidden z-9999">
+    <div
+      ref={panelRef}
+      tabIndex={-1}
+      role="dialog"
+      aria-labelledby="vn-panel-title"
+      className={`vn-panel vn-panel--dropdown${closingCls}`}
+    >
       {innerContent}
     </div>
   );
@@ -220,6 +225,10 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
   const [notifOpen,      setNotifOpen]      = useState(false);
   const [settingsOpen,   setSettingsOpen]   = useState(false);
   const [showFeedback,   setShowFeedback]   = useState(false);
+  // Keep overlays mounted briefly after closing so they can animate out.
+  const notifPresence    = usePresence(notifOpen, 180);
+  const settingsPresence = usePresence(settingsOpen, 150);
+  const [menuTop,        setMenuTop]        = useState(64);
 
   const settingsRef = useRef(null);
   const notifRef    = useRef(null);
@@ -343,7 +352,7 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
       {/* ── Topbar — frosted glass over scrolled content */}
       <header
         className={
-          'fixed top-0 right-0 h-[var(--topbar-h)] z-50 ' +
+          'fixed top-0 right-0 h-[calc(var(--topbar-h)+var(--safe-top))] z-50 ' +
           'glass-topbar ' +
           'border-b border-(--border-light) ' +
           'flex items-center justify-between px-3 sm:px-4 md:px-6 ' +
@@ -372,11 +381,15 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
         )}
 
         {/* ── Right ── */}
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 md:gap-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2 md:gap-3">
           {/* Notification Bell */}
           <div className="relative flex items-center justify-center" ref={notifRef}>
             <button
-              className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl cursor-pointer group bg-transparent border-none transition-all duration-200 hover:bg-(--bg-hover)"
+              type="button"
+              aria-label={notifCount > 0 ? `Notifications (${notifCount} unread)` : 'Notifications'}
+              aria-haspopup="dialog"
+              aria-expanded={notifOpen}
+              className="relative w-11 h-11 flex items-center justify-center rounded-xl cursor-pointer group bg-transparent border-none transition-all duration-200 hover:bg-(--bg-hover)"
               onClick={() => {
                 setNotifOpen(prev => !prev);
                 fetchNotifications();
@@ -384,22 +397,24 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
             >
               <Icon name="notifications" className={`text-[length:var(--fs-20)] sm:text-[length:var(--fs-21)] transition-colors ${notifOpen ? 'text-(--accent)' : 'text-(--text-muted) group-hover:text-(--accent)'}`} />
               {notifCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-(--accent) rounded-full border-[1.5px] border-(--bg-secondary) animate-pulse" />
+                <span className="vn-bell-badge" aria-hidden="true">{notifCount > 9 ? '9+' : notifCount}</span>
               )}
             </button>
-            {notifOpen && (
+            {notifPresence.mounted && (
               <NotificationOverlay
                 notifications={notifications}
                 onMarkRead={handleMarkRead}
                 onMarkAllRead={handleMarkAllRead}
                 onClose={() => setNotifOpen(false)}
+                closing={notifPresence.closing}
+                onViewAll={() => { setNotifOpen(false); navigate(`${accountBase}/notifications`); }}
               />
             )}
           </div>
 
           {/* Theme Toggle */}
-          <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10">
-            <ThemeToggle />
+          <div className="flex items-center justify-center w-11 h-11">
+            <ThemeToggle className="v-touch-target" />
           </div>
 
           {/* Avatar + account menu */}
@@ -408,7 +423,7 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
             aria-haspopup="menu"
             aria-expanded={settingsOpen}
             aria-label="Account menu"
-            className="flex items-center gap-2 sm:gap-2.5 ml-1 pl-2.5 border-l border-(--border-light) cursor-pointer transition-opacity relative z-999 bg-transparent border-t-0 border-r-0 border-b-0 text-left"
+            className="v-touch-target flex min-w-11 items-center gap-2 sm:gap-2.5 ml-1 pl-2.5 border-l border-(--border-light) cursor-pointer transition-opacity relative z-999 bg-transparent border-t-0 border-r-0 border-b-0 text-left"
             ref={settingsRef}
             onClick={(e) => {
               // Portal events bubble through the React tree: clicks on menu
@@ -419,6 +434,10 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
               if (/** @type {any} */ (e.target)?.closest?.('#account-portal')) return;
               e.stopPropagation();
               setNotifOpen(false);
+              // Anchor the portal menu to the real topbar bottom (64/72px bar
+              // + safe-area inset) instead of a hard-coded 64px.
+              const bar = e.currentTarget.closest('header');
+              if (bar) setMenuTop(Math.round(bar.getBoundingClientRect().bottom) + 6);
               setSettingsOpen(prev => !prev);
             }}
             onKeyDown={(e) => {
@@ -446,11 +465,11 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
               className="text-[length:var(--fs-16)] text-(--text-muted) hidden sm:block"
             />
 
-            {settingsOpen && createPortal(
+            {settingsPresence.mounted && createPortal(
               <div
                 id="account-portal"
-                className="fixed w-52.5 sm:w-55 glass-card bg-(--bg-secondary) border border-(--border-medium) rounded-2xl shadow-(--shadow-lg) overflow-hidden"
-                style={{ top: '64px', right: '12px', zIndex: 2000 }}
+                className={`v-motion-menu${settingsPresence.closing ? ' is-closing' : ''} fixed w-52.5 sm:w-55 glass-card bg-(--bg-secondary) border border-(--border-medium) rounded-2xl shadow-(--shadow-lg) overflow-x-hidden overflow-y-auto`}
+                style={{ top: `${menuTop}px`, right: 'max(12px, var(--safe-right))', maxHeight: `calc(100dvh - ${menuTop + 12}px)`, zIndex: 2000 }}
               >
                 <div className="flex items-center gap-3 px-4 py-3.5 border-b border-(--border-light) bg-(--surface)">
                   <div className="relative shrink-0">
@@ -475,7 +494,7 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
                     <button
                       key={label}
                       onClick={() => { action(); setSettingsOpen(false); }}
-                      className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[length:var(--fs-11)] sm:text-[length:var(--fs-12)] transition-colors duration-150 text-left cursor-pointer border-none bg-transparent ' + (accent ? 'text-(--accent) hover:bg-(--accent-bg)' : 'text-(--text-muted) hover:text-(--text-primary) hover:bg-(--bg-hover)')}
+                      className={'w-full flex items-center gap-2.5 px-3 py-2 pointer-coarse:min-h-11 rounded-lg text-[length:var(--fs-11)] sm:text-[length:var(--fs-12)] transition-colors duration-150 text-left cursor-pointer border-none bg-transparent ' + (accent ? 'text-(--accent) hover:bg-(--accent-bg)' : 'text-(--text-muted) hover:text-(--text-primary) hover:bg-(--bg-hover)')}
                     >
                       <Icon name={icon} className="text-[length:var(--fs-14)] sm:text-[length:var(--fs-15)]" />
                       {label}
@@ -484,13 +503,13 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
                   <div className="border-t border-(--border-light) mt-1 pt-1">
                     <button
                       onClick={() => { setShowFeedback(true); setSettingsOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[length:var(--fs-11)] sm:text-[length:var(--fs-12)] transition-colors duration-150 text-left cursor-pointer border-none bg-transparent text-(--text-muted) hover:text-(--text-primary) hover:bg-(--bg-hover)"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 pointer-coarse:min-h-11 rounded-lg text-[length:var(--fs-11)] sm:text-[length:var(--fs-12)] transition-colors duration-150 text-left cursor-pointer border-none bg-transparent text-(--text-muted) hover:text-(--text-primary) hover:bg-(--bg-hover)"
                     >
                       <Icon name="rate_review" className="text-[length:var(--fs-14)] sm:text-[length:var(--fs-15)]" /> Feedback
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[length:var(--fs-11)] sm:text-[length:var(--fs-12)] text-[var(--error)] hover:bg-[var(--error-bg)] transition-colors duration-150 cursor-pointer border-none bg-transparent"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 pointer-coarse:min-h-11 rounded-lg text-[length:var(--fs-11)] sm:text-[length:var(--fs-12)] text-[var(--error)] hover:bg-[var(--error-bg)] transition-colors duration-150 cursor-pointer border-none bg-transparent"
                     >
                       <Icon name="logout" className="text-[length:var(--fs-14)] sm:text-[length:var(--fs-15)]" /> Log out
                     </button>
