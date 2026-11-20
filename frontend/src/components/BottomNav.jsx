@@ -19,7 +19,7 @@ function normalize(items) {
 
 // Unified bottom nav — replaces MobileNav + MobileBottomNav
 // Main bar: Dashboard / Progress / Workout / Plans (always).
-// Plus (+) sheet: MealTracker / Jogging / Community / Messenger / Recovery
+// Plus (+) sheet: MealTracker / Jogging / Community / Messenger
 // (+ Manual Log entry when a log handler is provided).
 // `variant` / `items` props are kept for backward compat but no longer change the menu.
 // All handler/item props are optional — pages pass only what they need.
@@ -115,7 +115,6 @@ const BottomNav = ({
       ...values,
       steps: values.steps === '' ? '' : values.steps,
       minutes: values.minutes === '' ? '' : values.minutes,
-      water: values.water === '' ? '' : values.water,
     };
     try {
       if (typeof externalLog === 'function') externalLog(clean);
@@ -373,25 +372,6 @@ const BottomNav = ({
                     className="mt-1 w-full h-11 rounded-[12px] bg-[var(--input-bg)] border border-[var(--input-border)] px-3 text-[length:var(--fs-14)] outline-none focus:border-[var(--accent)]"
                   />
                 </div>
-              </div>
-              <div>
-                <label
-                  htmlFor="bn-water"
-                  className="text-[length:var(--fs-10)] font-bold uppercase tracking-widest text-[var(--text-muted)]"
-                >
-                  Water (ml)
-                </label>
-                <input
-                  id="bn-water"
-                  type="number"
-                  min="0"
-                  max="15000"
-                  step="1"
-                  placeholder="2500"
-                  value={formData.water}
-                  onChange={(e) => setFormData({ ...formData, water: e.target.value })}
-                  className="mt-1 w-full h-11 rounded-[12px] bg-[var(--input-bg)] border border-[var(--input-border)] px-3 text-[length:var(--fs-14)] outline-none focus:border-[var(--accent)]"
-                />
               </div>
               <button
                 type="submit"

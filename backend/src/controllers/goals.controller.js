@@ -6,7 +6,6 @@ const {
   SEXES,
   PACES,
   ACTIVITY_LEVELS,
-  LEVELS,
   enumField,
   numOrNull,
   validDob,
@@ -33,15 +32,8 @@ async function postUserId(req, res, next) {
       focus,
       activityLevel,
       activity_level,
-      sleepHours,
-      sleep_quality,
-      sleepQuality,
-      stressLevel,
-      stress_level,
       exerciseFreq,
       exercise_freq,
-      recoveryLevel,
-      recovery_level,
     } = req.body || {};
 
     const height = Number(heightCm ?? height_cm);
@@ -66,15 +58,11 @@ async function postUserId(req, res, next) {
       ),
       pace: enumField(pace, PACES),
       activity: enumField(activityLevel ?? activity_level, ACTIVITY_LEVELS),
-      sleepQ: enumField(sleepQuality ?? sleep_quality, LEVELS),
-      stress: enumField(stressLevel ?? stress_level, LEVELS),
-      recovery: enumField(recoveryLevel ?? recovery_level, LEVELS),
       target: numOrNull(targetWeightKg ?? target_weight_kg, {
         min: 10,
         max: 1000,
         name: 'targetWeightKg',
       }),
-      sleepH: numOrNull(sleepHours, { min: 0, max: 24, name: 'sleepHours' }),
       dob: validDob(dob),
     };
     for (const [k, f] of Object.entries(checks)) {
@@ -100,11 +88,7 @@ async function postUserId(req, res, next) {
       pace: checks.pace.value,
       focus: focusNorm,
       activity: checks.activity.value,
-      sleepH: checks.sleepH.value,
-      sleepQ: checks.sleepQ.value,
-      stress: checks.stress.value,
       exerciseFreq: exerciseFreqNorm,
-      recovery: checks.recovery.value,
     });
     res.status(201).json({ success: true, plan, goal: record });
   } catch (e) {

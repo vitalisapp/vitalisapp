@@ -1,16 +1,16 @@
 # Migrations — Vitalis (one table per file)
 
-44 canonical files: `001_users.sql` … `029_workout_logs.sql` + `030_seeds.sql` +
+45 canonical files: `001_users.sql` … `029_workout_logs.sql` + `030_seeds.sql` +
 `031_landing_visits.sql` + `032_personal_plans.sql` + `033_user_allergies.sql` +
 `034_workout_sets.sql` + `035_training_preferences.sql` +
 `036_account_governance.sql` + `037_meal_type_food_catalog.sql` +
 `038_progress_module.sql` + `039_admin_audit.sql` + `040_admin_seed.sql` +
 `041_goal_recalibration.sql` + `042_progress_cadence.sql` +
-`043_food_grams.sql` + `044_food_density_cache.sql`.
+`043_food_grams.sql` + `044_food_density_cache.sql` + … + `047_remove_sleep_recovery.sql`.
 Each table file is self-contained (`SET FOREIGN_KEY_CHECKS=0/1` + single
 `CREATE TABLE IF NOT EXISTS`). Seeds use `INSERT IGNORE`.
 Runner `src/db/migrate.js` applies pending `*.sql` in lexicographic order,
-tracked in `_migrations`. Next migration: `045_<slug>.sql`
+tracked in `_migrations`. Next migration: `048_<slug>.sql`
 (`npm run db:create -- <slug>`).
 
 ## History
@@ -68,6 +68,14 @@ tracked in `_migrations`. Next migration: `045_<slug>.sql`
   an AI per-100 g estimate cache keyed by normalized food name. Repeat dishes
   are instant and don't spend AI quota; values are validated/clamped in
   `src/utils/nutrition.js` before insert.
+
+- 2026-11-20: `047_remove_sleep_recovery.sql` — sleep, water and recovery
+  tracking removed: drops `sleep_logs` (sleep/recovery score/water) and
+  `daily_checkins` (recovery check-in behind the Readiness score), the
+  onboarding columns `fitness_goals.sleep_hours` / `sleep_quality` /
+  `stress_level` / `recovery_level`, and `ai_insight_cache.sleep_suggestion`
+  (dashboard AI insight is activity-only). Destructive; idempotent via
+  `DROP TABLE IF EXISTS` + one column per ALTER (runner ignores 1091).
 
 ## Rules
 

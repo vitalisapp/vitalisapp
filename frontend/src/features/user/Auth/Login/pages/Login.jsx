@@ -123,7 +123,7 @@ const Login = () => {
             SMARTER.
           </h1>
           <p className="v-hero-sub text-[13px] text-[#e5e2e1]/45 max-w-[320px] leading-relaxed font-light mt-1">
-            Manual training, nutrition, and recovery logging with AI insights from your own data.
+            Manual training, nutrition, and activity logging with AI insights from your own data.
           </p>
 
           <div className="v-hero-stats flex gap-8 mt-6 pt-6 border-t border-white/10">

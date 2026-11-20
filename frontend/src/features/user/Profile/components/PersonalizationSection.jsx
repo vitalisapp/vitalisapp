@@ -4,11 +4,8 @@ import Icon from '../../../../components/Icon.jsx';
 import Button from '../../../../components/ui/Button.jsx';
 import {
   ACTIVITY_LEVELS,
-  SLEEP_QUALITY,
-  STRESS_LEVELS,
   EXERCISE_FREQ,
   EXERCISE_FREQ_LABELS,
-  RECOVERY_LEVELS,
 } from '../../Onboarding/constants/goals.js';
 
 // Common allergens offered as toggle chips; "Something else?" adds free text.
@@ -49,44 +46,11 @@ const PillGroup = ({ label, hint, value, options, onChange }) => (
   </div>
 );
 
-// The three recovery-style questions share LOW / MODERATE / HIGH, so stacking
-// three identical pill groups reads as noise. A segmented card keeps them
-// compact and lets each row show a one-line consequence instead.
-const SegmentedRow = ({ icon, label, value, options, onChange }) => (
-  <div className="flex items-center gap-3 py-2.5">
-    <span className="w-9 h-9 rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] flex items-center justify-center shrink-0">
-      <Icon name={icon} className="text-[length:var(--fs-18)] text-[var(--accent)]" />
-    </span>
-    <span className="text-[length:var(--fs-13)] font-bold text-[var(--text-primary)] shrink-0 w-[86px] leading-tight">{label}</span>
-    <div className="flex-1 min-w-0 flex justify-end">
-      <div className="inline-flex bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-full p-1 gap-1">
-        {options.map((o) => (
-          <button
-            type="button"
-            key={o}
-            aria-pressed={value === o}
-            onClick={() => onChange(o)}
-            className={`px-3 h-8 rounded-full text-[length:var(--fs-11)] font-bold uppercase tracking-wider transition-colors ${
-              value === o ? 'bg-[var(--accent)] text-[var(--text-inverse)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-            }`}
-          >
-            {o === 'MODERATE' ? 'Mod' : o}
-          </button>
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
 export default function PersonalizationSection({ userId, onboarding, onSaved, showToast }) {
   const [allergies, setAllergies] = useState([]);
   const [customAllergy, setCustomAllergy] = useState('');
   const [activityLevel, setActivityLevel] = useState('');
-  const [sleepHours, setSleepHours] = useState('');
-  const [sleepQuality, setSleepQuality] = useState('');
-  const [stressLevel, setStressLevel] = useState('');
   const [exerciseFreq, setExerciseFreq] = useState('');
-  const [recoveryLevel, setRecoveryLevel] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -94,11 +58,7 @@ export default function PersonalizationSection({ userId, onboarding, onSaved, sh
   useEffect(() => {
     if (!onboarding) return;
     setActivityLevel(onboarding.activityLevel || '');
-    setSleepHours(onboarding.sleepHours != null ? String(onboarding.sleepHours) : '');
-    setSleepQuality(onboarding.sleepQuality || '');
-    setStressLevel(onboarding.stressLevel || '');
     setExerciseFreq(onboarding.exerciseFreq || '');
-    setRecoveryLevel(onboarding.recoveryLevel || '');
   }, [onboarding]);
 
   // Load saved allergies once. Best-effort: a failure just leaves the list empty.
@@ -125,20 +85,9 @@ export default function PersonalizationSection({ userId, onboarding, onSaved, sh
   // chips so users can undo a typo without clearing the whole set.
   const customAllergies = allergies.filter((a) => !ALLERGEN_PRESETS.includes(a));
 
-  const stepSleep = (delta) =>
-    setSleepHours((v) => {
-      const base = v === '' ? 7 : Number(v);
-      return String(Math.min(24, Math.max(0, base + delta)));
-    });
 
   const save = async () => {
     if (saving) return;
-    // sleepHours stays '' when untouched → sent as null (backend clears it).
-    const sh = sleepHours === '' ? null : Number(sleepHours);
-    if (sh != null && (!Number.isFinite(sh) || sh < 0 || sh > 24)) {
-      setError('Sleep hours must be between 0 and 24.');
-      return;
-    }
     setSaving(true);
     setError('');
     try {
@@ -153,11 +102,7 @@ export default function PersonalizationSection({ userId, onboarding, onSaved, sh
         method: 'PATCH',
         body: JSON.stringify({
           activityLevel,
-          sleepHours: sh,
-          sleepQuality,
-          stressLevel,
           exerciseFreq,
-          recoveryLevel,
         }),
       });
       onSaved?.(data?.goal);
@@ -271,35 +216,6 @@ export default function PersonalizationSection({ userId, onboarding, onSaved, sh
         </div>
       </div>
 
-      {/* Sleep hours — explicit stepper, icons via the shared Icon component */}
-      <div>
-        <FieldLabel hint="0–24h">Sleep Each Night</FieldLabel>
-        <div className="flex items-center gap-3 mt-2">
-          <button
-            type="button"
-            aria-label="Decrease sleep hours"
-            onClick={() => stepSleep(-0.5)}
-            className="w-12 h-12 rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] flex items-center justify-center shrink-0 text-[var(--text-primary)] active:scale-95 transition-transform"
-          >
-            <Icon name="remove" className="text-[length:var(--fs-20)]" />
-          </button>
-          <div className="flex-1 min-w-0 h-12 rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] flex items-center justify-center gap-1">
-            <span className="text-[length:var(--fs-18)] font-black tabular-nums text-[var(--text-primary)]">
-              {sleepHours === '' ? '—' : Number(sleepHours)}
-            </span>
-            <span className="text-[length:var(--fs-12)] font-bold text-[var(--text-muted)]">hrs</span>
-          </div>
-          <button
-            type="button"
-            aria-label="Increase sleep hours"
-            onClick={() => stepSleep(0.5)}
-            className="w-12 h-12 rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] flex items-center justify-center shrink-0 text-[var(--text-primary)] active:scale-95 transition-transform"
-          >
-            <Icon name="add" className="text-[length:var(--fs-20)]" />
-          </button>
-        </div>
-      </div>
-
       {/* Exercise Frequency */}
       <PillGroup
         label="Exercise Frequency"
@@ -308,23 +224,12 @@ export default function PersonalizationSection({ userId, onboarding, onSaved, sh
         options={EXERCISE_FREQ.map((k) => ({ key: k, label: EXERCISE_FREQ_LABELS[k] || k.replace(/_/g, ' ') }))}
       />
 
-      {/* Sleep quality / Stress / Recovery — one compact card, since all three
-          share LOW · MODERATE · HIGH and read better side by side */}
-      <div>
-        <FieldLabel hint="Used for readiness">Daily Feel</FieldLabel>
-        <div className="mt-2 glass-card border border-[var(--border-light)] rounded-2xl px-3 divide-y divide-[var(--border-light)]">
-          <SegmentedRow icon="bedtime" label="Sleep" value={sleepQuality} options={SLEEP_QUALITY} onChange={setSleepQuality} />
-          <SegmentedRow icon="bolt" label="Stress" value={stressLevel} options={STRESS_LEVELS} onChange={setStressLevel} />
-          <SegmentedRow icon="fitness_center" label="Recovery" value={recoveryLevel} options={RECOVERY_LEVELS} onChange={setRecoveryLevel} />
-        </div>
-      </div>
-
       <div className="pt-1">
         <Button type="button" onClick={save} loading={saving} fullWidth className="h-12">
           {saving ? 'Saving…' : 'Save Personalization'}
         </Button>
         <p className="text-[length:var(--fs-10)] text-[var(--text-disabled)] text-center mt-2.5 leading-relaxed">
-          Updating activity, sleep, stress or recovery recalculates your calorie targets and regenerates your workout plan.
+          Updating activity or exercise frequency recalculates your calorie targets and regenerates your workout plan.
         </p>
       </div>
     </div>

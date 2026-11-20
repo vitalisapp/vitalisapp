@@ -12,6 +12,7 @@ import { createPortal } from 'react-dom';
 import ThemeToggle from './ThemeToggle.jsx';
 import { usePresence } from '../hooks/usePresence.js';
 import FeedbackModal from './FeedbackModal.jsx';
+import LogoutConfirmDialog from './ui/LogoutConfirmDialog.jsx';
 import { NotificationCard, NotificationEmpty } from '../features/user/Notifications/components/NotificationParts.jsx';
 import { groupByDay } from '../features/user/Notifications/notificationPresentation.js';
 
@@ -104,7 +105,7 @@ function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose
           filter === 'unread' && notifications.length > 0 ? (
             <NotificationEmpty compact icon="done_all" title="You're all caught up" message="No unread notifications right now." />
           ) : (
-            <NotificationEmpty compact icon="notifications" title="No notifications yet" message="Log a workout, meal or sleep to get AI Coach insights here." />
+            <NotificationEmpty compact icon="notifications" title="No notifications yet" message="Log a workout or meal to get AI Coach insights here." />
           )
         ) : (
           groups.map(group => (
@@ -225,6 +226,7 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
   const [notifOpen,      setNotifOpen]      = useState(false);
   const [settingsOpen,   setSettingsOpen]   = useState(false);
   const [showFeedback,   setShowFeedback]   = useState(false);
+  const [logoutOpen,     setLogoutOpen]     = useState(false);
   // Keep overlays mounted briefly after closing so they can animate out.
   const notifPresence    = usePresence(notifOpen, 180);
   const settingsPresence = usePresence(settingsOpen, 150);
@@ -348,6 +350,13 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
       {showFeedback && (
         <FeedbackModal onClose={() => setShowFeedback(false)} />
       )}
+
+      <LogoutConfirmDialog
+        isOpen={logoutOpen}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={handleLogout}
+        admin={user?.role === 'admin'}
+      />
 
       {/* ── Topbar — frosted glass over scrolled content */}
       <header
@@ -508,7 +517,7 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
                       <Icon name="rate_review" className="text-[length:var(--fs-14)] sm:text-[length:var(--fs-15)]" /> Feedback
                     </button>
                     <button
-                      onClick={handleLogout}
+                      onClick={() => { setSettingsOpen(false); setLogoutOpen(true); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 pointer-coarse:min-h-11 rounded-lg text-[length:var(--fs-11)] sm:text-[length:var(--fs-12)] text-[var(--error)] hover:bg-[var(--error-bg)] transition-colors duration-150 cursor-pointer border-none bg-transparent"
                     >
                       <Icon name="logout" className="text-[length:var(--fs-14)] sm:text-[length:var(--fs-15)]" /> Log out

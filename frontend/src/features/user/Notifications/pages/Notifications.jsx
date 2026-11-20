@@ -110,7 +110,7 @@ const Notifications = ({ embedded = false }) => {
         <NotificationEmpty
           icon="notifications"
           title="No notifications yet"
-          message="Log activity, meals or sleep to trigger AI Coach insights. They'll show up here."
+          message="Log activity or meals to trigger AI Coach insights. They'll show up here."
         />
       );
     } else if (filter === 'unread' && cat === 'ALL') {

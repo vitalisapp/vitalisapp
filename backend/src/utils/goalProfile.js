@@ -1,7 +1,7 @@
 // Goal profile registry — the single "goal -> behaviour" contract.
 //
 // This is the brain behind goal-aware adaptation: nutrition targets, training
-// emphasis, recovery focus and the AI coaching directive for each of the 5
+// emphasis and the AI coaching directive for each of the 5
 // onboarding goals. Numeric values intentionally mirror the numbers already
 // used by utils/planEngine.js (macro splits) and the dashboard's workout goal
 // (workoutGoalMin) so nothing drifts. tests/unit/goalProfile.test.js asserts
@@ -23,7 +23,6 @@ const GOAL_PROFILES = {
     workoutGoalMin: 45,
     trainingEmphasis: 'Cardio + full-body circuits',
     nutritionNote: 'Calorie deficit — keep protein high to preserve muscle.',
-    recoveryEmphasis: 'Sleep 7h+ and hydration drive fat loss.',
     aiDirective:
       'Stay in a calorie deficit, protect muscle with high protein, and keep daily movement/steps up.',
     // nutrition math (mirrors planEngine)
@@ -39,7 +38,6 @@ const GOAL_PROFILES = {
     workoutGoalMin: 30,
     trainingEmphasis: 'Balanced strength + cardio',
     nutritionNote: 'Eat at maintenance — balanced macros, steady habits.',
-    recoveryEmphasis: 'Consistent sleep keeps weight stable.',
     aiDirective:
       'Hold calories around maintenance, keep protein adequate, and train consistently for body composition.',
     kcalDelta: 0,
@@ -54,9 +52,8 @@ const GOAL_PROFILES = {
     workoutGoalMin: 45,
     trainingEmphasis: 'Progressive strength training',
     nutritionNote: 'Small calorie surplus — eat regularly and hit protein.',
-    recoveryEmphasis: 'Rest days are when you grow — prioritize sleep.',
     aiDirective:
-      'Eat in a small calorie surplus, train with progressive overload, and keep protein and sleep high.',
+      'Eat in a small calorie surplus, train with progressive overload, and keep protein high.',
     kcalDelta: 250,
     proteinPerKg: 1.8,
   },
@@ -69,7 +66,6 @@ const GOAL_PROFILES = {
     workoutGoalMin: 60,
     trainingEmphasis: 'Hypertrophy + strength splits',
     nutritionNote: 'Slight surplus with high protein to build muscle.',
-    recoveryEmphasis: 'Muscle grows during recovery — sleep and rest matter.',
     aiDirective:
       'Train for hypertrophy/strength with progressive overload, eat a slight surplus and hit high protein.',
     kcalDelta: 200,
@@ -84,7 +80,6 @@ const GOAL_PROFILES = {
     workoutGoalMin: 60,
     trainingEmphasis: 'Endurance + conditioning',
     nutritionNote: 'Fuel performance — carbs around training, adequate protein.',
-    recoveryEmphasis: 'Recovery quality sets your performance ceiling.',
     aiDirective:
       'Build endurance and conditioning, fuel sessions with carbs, and protect recovery to perform.',
     kcalDelta: 100,

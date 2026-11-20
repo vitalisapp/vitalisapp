@@ -1,7 +1,6 @@
 // Dashboard — business logic + DB access.
 const db = require('../config/db');
 const { AppError } = require('../utils/errors');
-const { calcReadiness } = require('../utils/readiness');
 const { clientDateFromQuery } = require('../utils/clientDate');
 const { getStreakSummary } = require('./streaks.service');
 
@@ -11,7 +10,7 @@ const { getStreakSummary } = require('./streaks.service');
 async function getDashboard(userId, clientToday) {
   const today = clientDateFromQuery({ today: clientToday });
   // Independent selects run concurrently — ~3x faster than sequential awaits.
-  const [statsRes, userRes, sleepRes, waterRes, streakRes] = await Promise.all([
+  const [statsRes, userRes, streakRes] = await Promise.all([
     db.execute(
       `SELECT calories_burned, steps, workout_duration_mins
        FROM daily_stats 
@@ -24,61 +23,19 @@ async function getDashboard(userId, clientToday) {
        WHERE u.id = ?`,
       [userId]
     ),
-    db.execute(
-      `SELECT DATE_FORMAT(recorded_at, '%H:%i') AS label, AVG(sleep_duration) AS value
-       FROM sleep_logs
-       WHERE user_id = ? AND recorded_at >= CURDATE() AND recorded_at < CURDATE() + INTERVAL 1 DAY
-       GROUP BY label ORDER BY label ASC LIMIT 20`,
-      [userId]
-    ),
-    db.execute(
-      `SELECT COALESCE(SUM(water_intake_ml),0) AS water_ml, COALESCE(SUM(sleep_duration),0) AS sleep_h
-       FROM sleep_logs WHERE user_id = ? AND recorded_at >= CURDATE() AND recorded_at < CURDATE() + INTERVAL 1 DAY`,
-      [userId]
-    ),
-    // Engagement streak (workouts ∪ meals ∪ check-ins) rides the dashboard
+    // Engagement streak (workouts ∪ meals) rides the dashboard
     // payload — the Dashboard hook already fetches this endpoint, so the
     // streak section costs zero extra round-trips. Never fails the dashboard.
     getStreakSummary(userId, today).catch(() => null),
   ]);
   const [stats] = statsRes;
   const [user] = userRes;
-  const [sleepData] = sleepRes;
-  const [[waterRow]] = waterRes;
-
-  // Readiness v2 (utils/readiness): check-in driven when present,
-  // activity fallback otherwise, null when no data at all.
-  // Degrades gracefully on pre-014 databases (no daily_checkins table).
-  let checkins = [];
-  try {
-    [checkins] = await db.execute(
-        `SELECT sleep_hours, sleep_quality, stress_level, soreness_level, soreness_level AS soreness, energy_level
-         FROM daily_checkins WHERE user_id = ? AND checkin_date = CURDATE() LIMIT 1`,
-        [userId]
-    );
-  } catch (err) {
-    if (err.code !== 'ER_NO_SUCH_TABLE' && err.code !== 'ER_BAD_FIELD_ERROR') throw err;
-    console.warn('[dashboard] daily_checkins schema mismatch — run db:migrate (014/016)');
-  }
   const s = stats[0] || { calories_burned: 0, steps: 0, workout_duration_mins: 0 };
-  const r = calcReadiness({
-    checkin: checkins[0] || null,
-    sleepCount: (sleepData || []).length,
-    steps: s.steps || 0,
-    calories: s.calories_burned || 0,
-  });
 
   return {
-    stats:    { ...s, water_intake_ml: Number(waterRow?.water_ml || 0),
-                sleep_duration: Number(checkins[0]?.sleep_hours ?? waterRow?.sleep_h ?? 0),
-                sleep_quality: checkins[0]?.sleep_quality ?? null,
-                readiness: r.readiness, readinessSource: r.source,
-                readinessNote: r.recommendation },
+    stats:    s,
     profile:  user[0]   || { name: "Guest" },
-    checkin:  checkins[0] || null,
-    sleep_trend: sleepData || [],
     streak:   streakRes || null, // { current, longest, activeToday, ... } | null
-    hrv_data: sleepData || [] // deprecated alias, use sleep_trend
   };
 }
 
@@ -95,7 +52,7 @@ module.exports = { getDashboard, searchUsers };
 
 // ─── Week calendar (Module 7.5-ish dashboard addition) ────────────────
 // The dashboard week card: Monday–Sunday of the CURRENT week, each day with
-// lightweight markers (workout/meals/check-in) + totals. Future days are
+// lightweight markers (workout/meals) + totals. Future days are
 // flagged so the UI can disable them; the day sheet fetches full detail below.
 
 // String-based day math — avoids Date/timezone drift entirely (dates are
@@ -123,7 +80,7 @@ async function getWeekCalendar(userId, clientToday) {
   const monday = addDaysISO(today, -weekdayIndex(today));
   const sunday = addDaysISO(monday, 7);
 
-  const [workoutsRes, mealsRes, checkinsRes, statsRes] = await Promise.all([
+  const [workoutsRes, mealsRes, statsRes] = await Promise.all([
     db.execute(
       `SELECT DATE_FORMAT(start_time, '%Y-%m-%d') AS d,
               COUNT(*) AS sessions,
@@ -145,12 +102,6 @@ async function getWeekCalendar(userId, clientToday) {
       [userId, monday, sunday],
     ),
     db.execute(
-      `SELECT DATE_FORMAT(checkin_date, '%Y-%m-%d') AS d, energy_level, sleep_hours
-       FROM daily_checkins
-       WHERE user_id = ? AND checkin_date >= ? AND checkin_date < ?`,
-      [userId, monday, sunday],
-    ),
-    db.execute(
       `SELECT DATE_FORMAT(stat_date, '%Y-%m-%d') AS d, steps, calories_burned, workout_duration_mins
        FROM daily_stats
        WHERE user_id = ? AND stat_date >= ? AND stat_date < ?`,
@@ -160,7 +111,6 @@ async function getWeekCalendar(userId, clientToday) {
   const byDate = (rows) => new Map(rows.map((r) => [r.d, r]));
   const workoutMap = byDate(workoutsRes[0]);
   const mealMap = byDate(mealsRes[0]);
-  const checkinMap = byDate(checkinsRes[0]);
   const statsMap = byDate(statsRes[0]);
 
   const days = [];
@@ -168,7 +118,6 @@ async function getWeekCalendar(userId, clientToday) {
     const date = addDaysISO(monday, i);
     const wo = workoutMap.get(date);
     const fo = mealMap.get(date);
-    const ci = checkinMap.get(date);
     const st = statsMap.get(date);
     days.push({
       date,
@@ -180,9 +129,6 @@ async function getWeekCalendar(userId, clientToday) {
         reps: Number(wo?.reps || 0),
       },
       meals: { count: Number(fo?.count || 0), kcal: Math.round(Number(fo?.kcal || 0)) },
-      checkin: ci
-        ? { energy: ci.energy_level || null, sleepHours: Number(ci.sleep_hours) || 0 }
-        : null,
       steps: Number(st?.steps || 0),
     });
   }
@@ -215,7 +161,7 @@ async function getDaySnapshot(userId, dateStr) {
   }
   const next = addDaysISO(date, 1);
 
-  const [workouts, meals, checkins, stats, sleep, measurements, bmi] = await Promise.all([
+  const [workouts, meals, stats, measurements, bmi] = await Promise.all([
     db.execute(
       `SELECT workout_type, status, rep_count, start_time, duration_seconds, paused_seconds, difficulty_rating
        FROM workout_logs
@@ -232,21 +178,9 @@ async function getDaySnapshot(userId, dateStr) {
       [userId, date, next],
     ),
     db.execute(
-      `SELECT sleep_hours, sleep_quality, stress_level, soreness_level, energy_level
-       FROM daily_checkins WHERE user_id = ? AND checkin_date = ? LIMIT 1`,
-      [userId, date],
-    ),
-    db.execute(
       `SELECT steps, calories_burned, workout_duration_mins
        FROM daily_stats WHERE user_id = ? AND stat_date = ? LIMIT 1`,
       [userId, date],
-    ),
-    db.execute(
-      `SELECT COALESCE(SUM(sleep_duration), 0) AS hours,
-              COALESCE(SUM(water_intake_ml), 0) AS water_ml
-       FROM sleep_logs
-       WHERE user_id = ? AND recorded_at >= ? AND recorded_at < ?`,
-      [userId, date, next],
     ),
     db.execute(
       `SELECT weight_kg, body_fat_pct, chest_cm, waist_cm, hips_cm, arm_cm, thigh_cm, notes
@@ -303,15 +237,6 @@ async function getDaySnapshot(userId, dateStr) {
 
   const measurementRow = measurements[0]?.[0] || null;
   const bmiRow = bmi[0]?.[0] || null;
-  const checkinRow = checkins[0]?.[0] || null;
-  const sleepRow = sleep[0]?.[0] || {};
-  const statsRow = stats[0]?.[0] || {};
-  const readiness = calcReadiness({
-    checkin: checkinRow,
-    sleepCount: Number(sleepRow.hours || 0) > 0 ? 1 : 0,
-    steps: Number(statsRow.steps || 0),
-    calories: Number(statsRow.calories_burned || 0),
-  });
 
   return {
     date,
@@ -319,14 +244,6 @@ async function getDaySnapshot(userId, dateStr) {
     isFuture: date > todayRow.today,
     workouts: workoutRows,
     nutrition: { items: mealRows, totals: nutritionTotals },
-    recovery: {
-      checkin: checkinRow,
-      sleepHours: Number(checkinRow?.sleep_hours ?? sleepRow.hours ?? 0),
-      waterMl: Number(sleepRow.water_ml || 0),
-      readiness: readiness.readiness,
-      readinessNote: readiness.recommendation,
-      readinessSource: readiness.source,
-    },
     activity: {
       steps: Number(stats[0]?.[0]?.steps || 0),
       caloriesBurned: Number(stats[0]?.[0]?.calories_burned || 0),

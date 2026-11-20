@@ -124,7 +124,7 @@ const Register = () => {
             BUILD<br />YOUR<br /><span className="text-[var(--accent)]">ATHLETE</span><br />PROFILE.
           </h1>
           <p className="text-[13px] text-[#e5e2e1]/45 max-w-[320px] leading-[1.7] font-light mt-1">
-            Create your account, then optionally set your goal and body profile. Log training, nutrition, and recovery manually.
+            Create your account, then optionally set your goal and body profile. Log training, nutrition, and activity manually.
           </p>
         </div>
 

@@ -12,9 +12,9 @@ export const NAV_LINKS = [
 // reached with the carousel arrows. All four are real Vitalis modules.
 export const FEATURES = [
   {
-    icon: "bedtime",
-    title: "Sleep & recovery",
-    desc: "Log sleep, water, and daily check-ins. Your readiness score is built from the data you enter each morning.",
+    icon: "directions_run",
+    title: "GPS activity",
+    desc: "Record runs and walks with a GPS route, distance, and pace, then share them on the feed for kudos.",
   },
   {
     icon: "fitness_center",
@@ -24,7 +24,7 @@ export const FEATURES = [
   {
     icon: "query_stats",
     title: "Progress analytics",
-    desc: "Weight, BMI, and training-volume trends drawn live from the workouts, meals, and rest you have already logged.",
+    desc: "Weight, BMI, and training-volume trends drawn live from the workouts and meals you have already logged.",
     featured: true,
   },
   {
@@ -46,8 +46,8 @@ export const SERVICES = [
     to: "/dashboard/meal-tracker",
   },
   {
-    title: "Activity & sleep",
-    desc: "Capture GPS runs and daily rest, then see how both shape your readiness. Your timeline keeps every entry together.",
+    title: "Activity tracking",
+    desc: "Capture GPS runs and daily movement. Your timeline keeps every entry together.",
     img: "/landing/service-hydration.jpg",
     alt: "Athlete drinking water during a training session",
     tone: "grey",
@@ -157,7 +157,7 @@ export const FOOTER_INFO = {
     icon: "dashboard",
     title: "One calm home for your health.",
     description:
-      "Vitalis brings training, nutrition, recovery, and community into one connected timeline. Everything you see is built from what you log.",
+      "Vitalis brings training, nutrition, and community into one connected timeline. Everything you see is built from what you log.",
     points: ["Manual-first by design", "Free for everyone", "Installable on any device"],
     ctaLabel: "Explore the app",
     href: "#about",
@@ -167,8 +167,8 @@ export const FOOTER_INFO = {
     icon: "apps",
     title: "Four modules. One system.",
     description:
-      "Sleep, training, nutrition, and progress share the same daily record. Log once and every relevant screen updates with you.",
-    points: ["Sleep and recovery check-ins", "Structured training plans", "Nutrition and progress in one view"],
+      "Training, nutrition, activity, and progress share the same daily record. Log once and every relevant screen updates with you.",
+    points: ["GPS activity tracking", "Structured training plans", "Nutrition and progress in one view"],
     ctaLabel: "See the features",
     href: "#features",
   },
@@ -215,10 +215,10 @@ export const FOOTER_INFO = {
   Activity: {
     group: "Track",
     icon: "directions_run",
-    title: "Movement and rest, connected.",
+    title: "Every run, on the map.",
     description:
-      "Capture GPS runs, daily movement, water, and sleep. Vitalis turns those entries into a readiness score you can act on.",
-    points: ["GPS run tracking", "Sleep and hydration check-ins", "Readiness from your own data"],
+      "Capture GPS runs and daily movement. Routes, distance, and pace stay in one timeline.",
+    points: ["GPS run tracking", "Route, distance, and pace", "Kudos from the community"],
     ctaLabel: "Open activity",
     to: "/dashboard/activity-map",
   },

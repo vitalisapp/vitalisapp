@@ -7,6 +7,31 @@ import {
 } from '../components/AdminBits.jsx';
 import { useAdminToast } from '../hooks/useAdminToast.jsx';
 import { fmtNum, fmtWhen } from '../utils/format.js';
+import ExportMenu from '../components/ExportMenu.jsx';
+import { fetchAllRows } from '../utils/exportTable.js';
+
+const PLAN_EXPORT_COLUMNS = [
+  { header: 'ID', value: (p) => p.id, type: 'number', width: 8 },
+  { header: 'Title', value: (p) => p.title || p.name, width: 32 },
+  { header: 'Tag', value: (p) => p.tag, width: 14 },
+  { header: 'Difficulty', value: (p) => p.difficulty, width: 12 },
+  { header: 'Intensity', value: (p) => p.intensity, width: 12 },
+  { header: 'Duration (days)', value: (p) => p.duration_days, type: 'number', width: 15 },
+  { header: 'Content days', value: (p) => p.dayCount, type: 'number', width: 13 },
+  { header: 'Enrolled members', value: (p) => p.enrolled, type: 'number', width: 17 },
+];
+
+const POST_EXPORT_COLUMNS = [
+  { header: 'ID', value: (p) => p.id, type: 'number', width: 8 },
+  { header: 'Created', value: (p) => p.created_at, type: 'date', width: 18 },
+  { header: 'Author', value: (p) => p.author_name || p.display_name, width: 22 },
+  { header: 'Author email', value: (p) => p.author_email, width: 28 },
+  { header: 'Author role', value: (p) => p.author_role, width: 12 },
+  { header: 'Tag', value: (p) => p.tag, width: 14 },
+  { header: 'Post', value: (p) => p.text, width: 60 },
+  { header: 'Likes', value: (p) => p.likes, type: 'number', width: 8 },
+  { header: 'Comments', value: (p) => p.comments, type: 'number', width: 10 },
+];
 
 const PAGE_SIZE = 8;
 
@@ -56,6 +81,7 @@ export default function AdminContent() {
         title="Library &"
         accent="community."
         description="Plan catalog insight and live moderation of the public feed. Plan shells are read-only by design; posts can be removed with one audited action."
+        image="/admin/hero-content.jpg"
         chips={[
           { label: `${fmtNum(plans.data?.total || 0)} catalog plans`, icon: 'menu_book' },
           { label: `${fmtNum(posts.data?.total || 0)} posts`, icon: 'forum' },
@@ -81,7 +107,19 @@ export default function AdminContent() {
           title="Plan catalog"
           subtitle="Catalog plans and how many members are enrolled. Read-only — content is versioned in code/migrations."
           icon="auto_stories"
-          actions={<button type="button" className="adm-btn is-sm is-ghost" onClick={plans.reload}><Icon name="refresh" /> Refresh</button>}
+          actions={(
+            <>
+              <ExportMenu
+                columns={PLAN_EXPORT_COLUMNS}
+                fileName="vitalis-plans"
+                sheetName="Plans"
+                onToast={show}
+                disabled={!plans.data?.total}
+                getRows={() => fetchAllRows('/api/admin/plans')}
+              />
+              <button type="button" className="adm-btn is-sm is-ghost" onClick={plans.reload}><Icon name="refresh" /> Refresh</button>
+            </>
+          )}
           flush
         >
           {plans.loading && <TableSkeleton rows={6} />}
@@ -137,7 +175,19 @@ export default function AdminContent() {
           title="Community feed"
           subtitle="Newest posts first. Removing a post deletes its likes/comments by cascade and writes an audit row."
           icon="forum"
-          actions={<button type="button" className="adm-btn is-sm is-ghost" onClick={posts.reload}><Icon name="refresh" /> Refresh</button>}
+          actions={(
+            <>
+              <ExportMenu
+                columns={POST_EXPORT_COLUMNS}
+                fileName={tag ? `vitalis-posts-${tag}` : 'vitalis-posts'}
+                sheetName="Community posts"
+                onToast={show}
+                disabled={!posts.data?.total}
+                getRows={() => fetchAllRows('/api/admin/community/posts', { tag })}
+              />
+              <button type="button" className="adm-btn is-sm is-ghost" onClick={posts.reload}><Icon name="refresh" /> Refresh</button>
+            </>
+          )}
           flush
         >
           <form className="adm-toolbar" style={{ padding: '4px 20px 14px' }}

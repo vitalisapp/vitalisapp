@@ -37,25 +37,24 @@ async function postaiFitnessAnalysis(req,res,next){
         try {
             const result = await aiService.fitnessAnalysis(userId, stats);
 
-            if (result.kind === 'noSleep') {
+            if (result.kind === 'noData') {
                 return res.status(200).json({
                     insights: [
                         {
-                            id: `sleep-${Date.now()}`,
-                            message: `${result.firstName}, we don't have enough sleep data to generate an accurate analysis yet. Please log your sleep and water intake to unlock personalized insights.`,
-                            category: 'Rest Advisory',
+                            id: `activity-${Date.now()}`,
+                            message: `${result.firstName}, log a workout or your steps today to unlock a personalized insight.`,
+                            category: 'Performance Tip',
                             trend: 'stable'
                         }
                     ],
                     fromCache: false,
-                    warning: 'No valid sleep data found for this user.'
+                    warning: 'No activity logged yet for this user.'
                 });
             }
 
             if (result.kind === 'cached') {
                 return res.json({
                     insights: [
-                        { id: `sleep-${Date.now()}`,    ...result.sleepCached },
                         { id: `activity-${Date.now()}`, ...result.activityCached }
                     ],
                     fromCache: true
@@ -65,7 +64,7 @@ async function postaiFitnessAnalysis(req,res,next){
             if (result.kind === 'plainText') {
                 return res.status(200).json({
                     insights: [
-                        { id: `sleep-${Date.now()}`, message: String(result.rawStr).slice(0, 500), category: 'Rest Advisory', trend: 'stable' },
+                        { id: `activity-${Date.now()}`, message: String(result.rawStr).slice(0, 500), category: 'Performance Tip', trend: 'stable' },
                     ],
                     fromCache: false,
                     warning: 'AI returned plain text; showing raw insight.',
@@ -74,13 +73,12 @@ async function postaiFitnessAnalysis(req,res,next){
 
             res.json({
                 insights: [
-                    { id: `sleep-${Date.now()}`,    ...result.sleepSuggestion },
                     { id: `activity-${Date.now()}`, ...result.activitySuggestion }
                 ],
                 fromCache: false
             });
         } catch (err) {
-            // Message only: full error can embed sleep/activity rows.
+            // Message only: full error can embed activity rows.
             console.error("AI Logic Error:", err?.message);
             next(err);
         }

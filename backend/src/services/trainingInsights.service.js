@@ -4,11 +4,10 @@
 // Design constraints (from the manuscript):
 //   - The system NEVER auto-increases intensity. Upward suggestions require the
 //     user to click Apply (POST /api/plans/adjust-from-goal).
-//   - Downward / recovery-facing suggestions respect real capacity: low
+//   - Downward / rest-facing suggestions respect real capacity: low
 //     completion, high difficulty self-reports, skipped sessions.
 const db = require('../config/db');
 const { AppError } = require('../utils/errors');
-const { calcReadiness } = require('../utils/readiness');
 
 const LOOKBACK_DAYS = 28;
 
@@ -16,20 +15,7 @@ const LOOKBACK_DAYS = 28;
 // on one pooled connection (they're cheap — indexed on user_id + start_time).
 
 async function collectStats(userId) {
-  // Today's check-in (Module 8) — feeds readiness-aware tips. Pre-014
-  // databases (no daily_checkins) degrade to null instead of failing —
-  // `.catch` keeps the Promise.all from unravelling on the missing table.
-  const checkinQuery = db
-    .execute(
-      `SELECT sleep_hours, sleep_quality, stress_level, soreness_level, energy_level
-         FROM daily_checkins WHERE user_id = ? AND checkin_date = CURDATE() LIMIT 1`,
-      [userId]
-    )
-    .catch((e) => {
-      if (e?.code !== 'ER_NO_SUCH_TABLE' && e?.errno !== 1054) console.warn('[insights] checkin query failed:', e?.message);
-      return [[{ skip: true }]];
-    });
-  const [[statusRows], [durationRows], [ratingRows], [vol14], [volPrev14], [dayRows], [weeklyMins], [weekBucketRows], [checkinRows]] = await Promise.all([
+  const [[statusRows], [durationRows], [ratingRows], [vol14], [volPrev14], [dayRows], [weeklyMins], [weekBucketRows]] = await Promise.all([
     db.execute(
       `SELECT status, COUNT(*) AS n FROM workout_logs
         WHERE user_id = ? AND start_time >= NOW() - INTERVAL ? DAY
@@ -96,7 +82,6 @@ async function collectStats(userId) {
        GROUP BY yw ORDER BY yw DESC LIMIT 8`,
       [userId]
     ),
-    checkinQuery,
   ]);
 
   const status = Object.fromEntries(statusRows.map((r) => [r.status, Number(r.n)]));
@@ -154,13 +139,8 @@ async function collectStats(userId) {
     ? Math.round(((completed + paused + active) / totalSessions) * 100)
     : null;
 
-  // Readiness (Module 8) — check-in only. Activity fallbacks would rate
-  // lazy-but-healthy days as low readiness and nag falsely, so no check-in
-  // means no readiness signal at all.
-  const checkin = (checkinRows?.[0] && !checkinRows[0].skip) ? checkinRows[0] : null;
-  const readinessData = checkin ? calcReadiness({ checkin }) : null;
 
-  return { lookbackDays: LOOKBACK_DAYS, completed, cancelled, active, paused, totalSessions, completionRate, avgMinutes7d, avgRating, recentRatings, volumeLast14: volLast, volumePrev14: volPrev, streak, minutesThisWeek, weeklyMinsRecent, weeklyMinsPrior, weeklyMinsChangePct, readiness: readinessData?.readiness ?? null, readinessNote: readinessData?.recommendation ?? null };
+  return { lookbackDays: LOOKBACK_DAYS, completed, cancelled, active, paused, totalSessions, completionRate, avgMinutes7d, avgRating, recentRatings, volumeLast14: volLast, volumePrev14: volPrev, streak, minutesThisWeek, weeklyMinsRecent, weeklyMinsPrior, weeklyMinsChangePct };
 }
 
 /**
@@ -171,20 +151,6 @@ async function collectStats(userId) {
 function buildTips(stats) {
   const { completed, cancelled, totalSessions, completionRate, avgRating, recentRatings, volumeLast14, volumePrev14, streak, minutesThisWeek, weeklyMinsRecent, weeklyMinsPrior, weeklyMinsChangePct } = stats;
   const tips = [];
-
-  // 0) Readiness guard (Module 8) — today's check-in says the body is
-  //    degraded. Shown before everything else: the first recommendation is
-  //    rest or a shorter day, never a push. Upward steps via 'gentle' are
-  //    suppressed while readiness is low (also enforced by rule 4's
-  //    easy-rating requirement — a degraded day won't rate Easy).
-  if (stats.readiness != null && stats.readiness < 50) {
-    tips.push({
-      type: 'low_readiness',
-      action: 'shorter',
-      title: 'Low readiness today',
-      message: `Readiness ${stats.readiness}/100 — ${stats.readinessNote || 'recovery signals are degraded'}. Take a full rest day, or apply the shorter-session adaptation instead of a full push.`,
-    });
-  }
 
   const ratedRecent = recentRatings.length >= 2;
   const hardStreak = ratedRecent && recentRatings.slice(0, 3).every((r) => r >= 4);
@@ -204,7 +170,7 @@ function buildTips(stats) {
       action: 'shorter',
       title: 'Consider shorter sessions',
       message:
-        'Hard sessions back-to-back can overreach. Fit your plan days to 20–30 minutes and prioritise sleep and a rest day between sessions.',
+        'Hard sessions back-to-back can overreach. Fit your plan days to 20–30 minutes and keep a rest day between sessions.',
     });
   }
 

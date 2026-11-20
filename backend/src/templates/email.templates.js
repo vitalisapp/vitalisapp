@@ -234,7 +234,6 @@ function welcomeEmail({ name } = {}) {
   const features = [
     "AI-powered meal analysis",
     "Camera workout tracking",
-    "Sleep &amp; recovery monitoring",
     "Vitalis AI health insights",
     "Activity map &amp; run analysis",
   ]
@@ -245,11 +244,11 @@ function welcomeEmail({ name } = {}) {
     .join("");
   const body = `
     ${renderHeading(`Welcome, ${safeName}!`)}
-    ${renderParagraph("Your Vitalis account is ready. Start tracking your nutrition, workouts, sleep, and recovery — all in one place.")}
+    ${renderParagraph("Your Vitalis account is ready. Start tracking your nutrition and workouts — all in one place.")}
     ${renderPanel(
       `<p style="margin:0 0 12px;font-family:${BRAND.fontSans};font-size:13px;font-weight:700;color:${BRAND.accent};">What you can do</p>${features}`,
     )}
-    ${renderMutedNote("Fuel your performance. Every rep, meal, and night of sleep counts.")}`;
+    ${renderMutedNote("Fuel your performance. Every rep and every meal counts.")}`;
   return {
     subject: "Welcome to Vitalis Performance OS",
     html: renderLayout({

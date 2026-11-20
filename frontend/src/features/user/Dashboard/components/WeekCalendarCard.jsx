@@ -1,7 +1,7 @@
 // WeekCalendarCard — the dashboard's week date-switcher.
 // Monday–Sunday of the CURRENT week. Clicking a past day (or today) switches
 // the WHOLE dashboard to that day's logged data; future days are disabled.
-// Markers show what was logged: workout (accent) / meals (warm) / check-in (cool).
+// Markers show what was logged: workout (accent) / meals (warm).
 // Data: GET /api/dashboard/week-calendar (req.user scoped).
 import { useEffect, useRef, useState } from 'react';
 import Icon from '../../../../components/Icon.jsx';
@@ -55,7 +55,7 @@ export default function WeekCalendarCard({
   }, [refreshKey]);
 
   const days = week?.days || [];
-  const hasAny = days.some((d) => d.workouts.sessions > 0 || d.meals.count > 0 || d.checkin);
+  const hasAny = days.some((d) => d.workouts.sessions > 0 || d.meals.count > 0);
   const viewingPast = Boolean(selectedDate);
 
   return (
@@ -90,7 +90,6 @@ export default function WeekCalendarCard({
                 const markers = [];
                 if (d.workouts.sessions > 0) markers.push('workout');
                 if (d.meals.count > 0) markers.push('meals');
-                if (d.checkin) markers.push('check-in');
                 const selected = selectedDate ? d.date === selectedDate : d.isToday;
                 return (
                   <button
@@ -109,7 +108,6 @@ export default function WeekCalendarCard({
                     <span className="vd-cal-dots" aria-hidden="true">
                       <span className={`vd-cal-dot${markers.includes('workout') ? ' is-workout' : ''}`} />
                       <span className={`vd-cal-dot${markers.includes('meals') ? ' is-meals' : ''}`} />
-                      <span className={`vd-cal-dot${markers.includes('check-in') ? ' is-checkin' : ''}`} />
                     </span>
                   </button>
                 );
@@ -139,7 +137,6 @@ export default function WeekCalendarCard({
               <span className="vd-cal-legend" aria-hidden="true">
                 <span className="vd-cal-legend-item"><i className="vd-cal-dot is-workout" /> Workout</span>
                 <span className="vd-cal-legend-item"><i className="vd-cal-dot is-meals" /> Meals</span>
-                <span className="vd-cal-legend-item"><i className="vd-cal-dot is-checkin" /> Check-in</span>
               </span>
             )}
           </div>

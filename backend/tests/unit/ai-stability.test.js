@@ -3,7 +3,6 @@ const assert = require('node:assert/strict');
 
 const gemini = require('../../src/config/gemini');
 const { generatePlan, calcBmi } = require('../../src/utils/planEngine');
-const { calcReadiness } = require('../../src/utils/readiness');
 
 describe('ai model config (stabilize MVP)', () => {
   it('leads with the verified fast Gemini models, not the hanging 3.x flagships', () => {
@@ -195,7 +194,7 @@ describe('food cache hashing is prefix-stable', () => {
   });
 });
 
-describe('planEngine + readiness pure logic', () => {
+describe('planEngine pure logic', () => {
   it('BMI + floor guards (female 1200 / male 1500)', () => {
     assert.equal(calcBmi(70, 175), 22.9);
     const f = generatePlan({ weightKg: 40, heightCm: 150, dob: '2000-01-01', sex: 'female', activityLevel: 'SEDENTARY', goalType: 'LOSE_WEIGHT', pace: 'FASTER' });
@@ -203,15 +202,4 @@ describe('planEngine + readiness pure logic', () => {
     assert.ok(f.proteinG > 0 && f.carbsG >= 0 && f.fatG > 0);
   });
 
-  it('readiness null with no data, 0-100 with checkin', () => {
-    const empty = calcReadiness({});
-    assert.equal(empty.readiness, null);
-    assert.equal(empty.hasData, false);
-    const r = calcReadiness({
-      checkin: { sleep_hours: 8, sleep_quality: 'HIGH', stress_level: 'LOW', soreness: 'LOW', energy_level: 'HIGH' },
-      steps: 5000, calories: 300, sleepCount: 1,
-    });
-    assert.ok(r.readiness >= 0 && r.readiness <= 100);
-    assert.equal(r.source, 'checkin');
-  });
 });

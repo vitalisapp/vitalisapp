@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import Icon from './Icon.jsx';
 import { NAV_ITEMS, SIDEBAR_BOTTOM_NAV } from '../constants/nav.js';
 import FeedbackModal from './FeedbackModal.jsx';
+import LogoutConfirmDialog from './ui/LogoutConfirmDialog.jsx';
 import { safeSet } from '../lib/storage.js';
 import { useAuth } from '../hooks/useAuth.jsx';
 import './Sidebar.css';
@@ -68,6 +69,7 @@ const Sidebar = ({ onClick = undefined, collapsed = false, onToggle = undefined 
   const location = useLocation();
   const { user } = useAuth();
   const [showFeedback, setShowFeedback] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const [tooltip, setTooltip] = useState(null);
   // Onboarding unfinished (e.g. the user skipped the wizard) → nudge dot on Profile.
   const needsOnboarding = user?.onboardingCompleted === false;
@@ -214,12 +216,18 @@ const Sidebar = ({ onClick = undefined, collapsed = false, onToggle = undefined 
             label="Log out"
             danger
             collapsed={collapsed}
-            onClick={onClick}
+            onClick={() => setLogoutOpen(true)}
             showTooltip={showTooltip}
             hideTooltip={() => setTooltip(null)}
           />
         </div>
       </aside>
+
+      <LogoutConfirmDialog
+        isOpen={logoutOpen}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={onClick}
+      />
     </>
   );
 };

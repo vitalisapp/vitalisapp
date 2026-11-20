@@ -35,6 +35,7 @@ export default function AdminAudit() {
         title="Audit"
         accent="trail."
         description="Chronological record of every mutating admin action. Written fail-soft by the backend so a missing audit table never blocks moderation — but the trail is the source of truth."
+        image="/admin/hero-audit.jpg"
         chips={[
           { label: `${fmtNum(total)} recorded actions`, icon: 'history_edu' },
           { label: 'Immutable append-only', icon: 'lock' },

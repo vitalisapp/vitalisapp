@@ -52,11 +52,7 @@ function toRecord(row) {
     bmi: row.bmi != null ? Number(row.bmi) : null,
     dob: row.dob,
     sex: row.sex,
-    sleepHours: row.sleep_hours != null ? Number(row.sleep_hours) : null,
-    sleepQuality: row.sleep_quality,
-    stressLevel: row.stress_level,
     exerciseFreq: row.exercise_freq,
-    recoveryLevel: row.recovery_level,
     dailyKcal: row.daily_kcal != null ? Number(row.daily_kcal) : null,
     proteinG: row.protein_g != null ? Number(row.protein_g) : null,
     carbsG: row.carbs_g != null ? Number(row.carbs_g) : null,
@@ -78,11 +74,7 @@ function carriedBody(prev, overrides) {
     pace: prev.pace,
     focus: prev.focus,
     activityLevel: prev.activity_level,
-    sleepHours: prev.sleep_hours,
-    sleepQuality: prev.sleep_quality,
-    stressLevel: prev.stress_level,
     exerciseFreq: prev.exercise_freq,
-    recoveryLevel: prev.recovery_level,
     ...(overrides || {}),
   };
 }
@@ -114,9 +106,9 @@ async function createGoal(userId, fields) {
     [result] = await conn.execute(
       `INSERT INTO fitness_goals
          (user_id, dob, sex, height_cm, weight_kg, bmi, goal_type, target_weight_kg,
-          pace, focus, activity_level, sleep_hours, sleep_quality, stress_level,
-          exercise_freq, recovery_level, daily_kcal, protein_g, carbs_g, fat_g, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
+          pace, focus, activity_level, exercise_freq,
+          daily_kcal, protein_g, carbs_g, fat_g, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
       [
         userId,
         fields.dob,
@@ -129,11 +121,7 @@ async function createGoal(userId, fields) {
         fields.pace,
         fields.focus,
         fields.activity,
-        fields.sleepH,
-        fields.sleepQ,
-        fields.stress,
         fields.exerciseFreq,
-        fields.recovery,
         plan.dailyKcal,
         plan.proteinG,
         plan.carbsG,

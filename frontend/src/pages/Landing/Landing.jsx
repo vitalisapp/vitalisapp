@@ -449,9 +449,9 @@ const Landing = () => {
                 </Reveal>
                 <Reveal delay={0.06}>
                   <p className="nn-lede">
-                    Training, nutrition, and recovery in one place. Vitalis turns the
-                    workouts, meals, sleep, and runs you log into clear readiness
-                    scores, trends, and plans — free and manual-first.
+                    Training, nutrition, and activity in one place. Vitalis turns the
+                    workouts, meals, and runs you log into clear trends and plans —
+                    free and manual-first.
                   </p>
                 </Reveal>
                 <Reveal delay={0.1}>
@@ -633,7 +633,7 @@ const Landing = () => {
               </Reveal>
               <Reveal delay={0.06}>
                 <p className="nn-lede">
-                  Nutrition, movement, sleep, and recovery are treated as one
+                  Nutrition, movement, and training are treated as one
                   routine. Every screen is built around the data you actually log,
                   not a generic dashboard.
                 </p>
@@ -766,7 +766,7 @@ const Landing = () => {
               <Brand />
               <p>
                 A student-built fitness companion for training, nutrition, and
-                recovery. Every insight traces back to something you logged.
+                activity. Every insight traces back to something you logged.
               </p>
             </div>
 

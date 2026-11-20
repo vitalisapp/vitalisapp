@@ -64,7 +64,7 @@ async function getProfile(userId) {
     const [gRows] = await db.execute(
       `SELECT goal_type, target_weight_kg, pace, focus, activity_level,
                         height_cm, weight_kg, bmi, dob, sex,
-                        sleep_hours, sleep_quality, stress_level, exercise_freq, recovery_level,
+                        exercise_freq,
                         daily_kcal, protein_g, carbs_g, fat_g, status, created_at
                  FROM fitness_goals WHERE user_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1`,
       [userId]
@@ -82,11 +82,7 @@ async function getProfile(userId) {
         bmi: g.bmi != null ? Number(g.bmi) : null,
         dob: g.dob,
         sex: g.sex,
-        sleepHours: g.sleep_hours != null ? Number(g.sleep_hours) : null,
-        sleepQuality: g.sleep_quality,
-        stressLevel: g.stress_level,
         exerciseFreq: g.exercise_freq,
-        recoveryLevel: g.recovery_level,
         dailyKcal: g.daily_kcal != null ? Number(g.daily_kcal) : null,
         proteinG: g.protein_g != null ? Number(g.protein_g) : null,
         carbsG: g.carbs_g != null ? Number(g.carbs_g) : null,

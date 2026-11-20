@@ -8,8 +8,7 @@ import { useDashboardData }  from '../hooks/useDashboardData.js';
 import { useActiveGoal } from '../../Onboarding/hooks/useActiveGoal.js';
 import { useTodayMeals } from '../hooks/useTodayMeals.js';
 import { useSidebarCollapsed } from '../../../../hooks/useSidebarCollapsed.js';
-import { goalLabel, humanizeOption } from '../../Onboarding/constants/goals.js';
-import CheckInModal from '../components/CheckInModal.jsx';
+import { goalLabel } from '../../Onboarding/constants/goals.js';
 import QuickLog from '../components/QuickLog.jsx';
 import GoalDetailSheet from '../components/GoalDetailSheet.jsx';
 import { apiFetch, apiGet } from '../../../../lib/apiClient.js';
@@ -24,7 +23,6 @@ import {
   StatCard,
   MacroFocusCard,
   WorkoutProgressCard,
-  RecoveryCard,
   MotivationCard,
   ThisWeekCard,
   RecentWorkoutsCard,
@@ -59,7 +57,6 @@ const NUTRIENT_META = {
 
 const EMPTY_STATS = {
   steps: 0, calories_burned: 0, workout_duration_mins: 0,
-  sleep_duration: 0, readiness: null, readinessNote: '',
 };
 const EMPTY_MEALS = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
 
@@ -102,7 +99,6 @@ const Dashboard = () => {
   const handleLogout = async () => { await logout(); navigate('/login'); };
   useEffect(() => { if (!loading && !user) navigate('/login'); }, [loading, user, navigate]);
 
-  const [checkInOpen, setCheckInOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
   const [goalDetailOpen, setGoalDetailOpen] = useState(false);
   // null = live (today); ISO date = read-only past-day view.
@@ -111,11 +107,11 @@ const Dashboard = () => {
   const [calendarKey, setCalendarKey] = useState(0);
   const bumpCalendar = () => setCalendarKey((k) => k + 1);
   const [nutrientGoals, setNutrientGoals] = useState([]);
-  const { data, biometrics, workouts, dashboardError, loaded, setData, setBiometrics, setAuthOverride, mergeData, refresh: refreshDashboard, generateFitnessInsight } = useDashboardData(USER_ID);
+  const { data, workouts, dashboardError, loaded, setData, setAuthOverride, mergeData, refresh: refreshDashboard, generateFitnessInsight } = useDashboardData(USER_ID);
   const { goal, currentWeightKg, progressPct, refresh: refreshGoal } = useActiveGoal(USER_ID);
   const { meals, refreshMeals } = useTodayMeals(USER_ID);
   useEffect(() => { if (!user) return; setAuthOverride(user.name || null, user.avatar || null); }, [user, setAuthOverride]);
-  const { handleLogActivity } = useActivityLogger(USER_ID, { setData, setBiometrics, biometrics, mergeData, generateFitnessInsight });
+  const { handleLogActivity } = useActivityLogger(USER_ID, { setData, mergeData, generateFitnessInsight });
   const { data: dayView, error: dayViewError, loading: dayViewLoading, reload: reloadDayView } = useDaySnapshot(viewDate);
   const isPastView = Boolean(viewDate);
 
@@ -127,43 +123,18 @@ const Dashboard = () => {
       steps: dayView.activity.steps,
       calories_burned: dayView.activity.caloriesBurned,
       workout_duration_mins: dayView.activity.workoutMinutes,
-      sleep_duration: dayView.recovery.sleepHours,
-      readiness: dayView.recovery.readiness,
-      readinessNote: dayView.recovery.readinessNote || '',
-      sleep_quality: dayView.recovery.checkin?.sleep_quality || null,
     } : EMPTY_STATS)
     : liveStats;
   const viewMeals = isPastView ? (dayView ? dayView.nutrition.totals : EMPTY_MEALS) : meals;
-  const viewCheckin = isPastView ? (dayView?.recovery?.checkin || null) : (data.checkin || null);
 
   const steps = viewStats.steps || 0;
   // Real step target from Preferences (cached on save/load) — was hardcoded 10,000.
   const stepGoalTarget = Number(safeGet('vitalis:stepGoal', '10000')) || 10000;
   const caloriesBurned = viewStats.calories_burned || 0;
-  const sleepHours = Number(viewStats.sleep_duration) || 0;
-  const readiness = viewStats.readiness ?? null;
-  const readinessNote = viewStats.readinessNote || '';
-  const checkin = viewCheckin;
   const tKcal = goal?.dailyKcal ?? 1500;
   const foodKcal = viewMeals.kcal || 0;
   const remaining = Math.max(0, tKcal - foodKcal + caloriesBurned);
 
-  const onCheckInSaved = (savedCheckin) => {
-    if (savedCheckin) {
-      setData(prev => ({
-        ...prev,
-        checkin: savedCheckin,
-        stats: {
-          ...prev.stats,
-          sleep_duration: Number(savedCheckin.sleep_hours ?? 0),
-          sleep_quality: savedCheckin.sleep_quality ?? null,
-        },
-      }));
-    }
-    refreshDashboard();
-    refreshMeals();
-    bumpCalendar();
-  };
   // Refetch when returning from other pages (MealTracker, etc.)
   useEffect(() => {
     const onFocus = () => { refreshDashboard(); refreshMeals(); };
@@ -293,8 +264,8 @@ const Dashboard = () => {
   const weeklyTotal = weeklyDays.reduce((s, d) => s + d.minutes, 0);
   const weeklySessions = weeklyDays.reduce((s, d) => s + d.sessions, 0);
 
-  // Engagement streak — one server-computed source of truth (workouts, meals
-  // AND check-ins all keep it alive). No client-side approximation: if the
+  // Engagement streak — one server-computed source of truth (workouts and
+  // meals both keep it alive). No client-side approximation: if the
   // payload is missing, the section shows an honest unavailable state.
   const streak = data?.streak || null;
   const todayMealCount = Number(meals.count) || 0;
@@ -352,12 +323,6 @@ const Dashboard = () => {
       : []),
   ];
 
-  const recoveryRows = [
-    { label: 'Sleep', value: `${Number(checkin?.sleep_hours ?? sleepHours) || 0} h` },
-    { label: 'Quality', value: humanizeOption(checkin?.sleep_quality) || '—' },
-    { label: 'Energy', value: humanizeOption(checkin?.energy_level) || '—' },
-  ];
-
   const workoutProgressRows = [
     { label: isPastView ? 'Selected day' : 'Today', value: `${workoutMinToday}/${workoutGoalMin} min` },
     { label: 'Sessions', value: `${todayWorkouts.length}` },
@@ -407,10 +372,6 @@ const Dashboard = () => {
     if (key === 'meal') navigate('/dashboard/meal-tracker?manual=1');
     else if (key === 'workout') navigate('/dashboard/workouts');
     else if (key === 'activity') navigate('/dashboard/activity-map');
-    // Sleep quick-action opens the Daily Recovery check-in — it captures
-    // sleep duration/quality and keeps the Dashboard Sleep card updated.
-    else if (key === 'sleep') setCheckInOpen(true);
-    else if (key === 'checkin') setCheckInOpen(true);
   };
 
   if (loading) return null;
@@ -504,7 +465,7 @@ const Dashboard = () => {
               <p className="vd-intro-sub">{introCopy}</p>
               <div className="vd-intro-foot">
                 {!isPastView && (
-                  <QuickLog userId={USER_ID} onWeightLogged={refreshDashboard} onCheckIn={() => setCheckInOpen(true)} />
+                  <QuickLog userId={USER_ID} onWeightLogged={refreshDashboard} />
                 )}
                 <span className="vd-date"><LiveClock /></span>
                 <button type="button" className="vd-text-btn" onClick={refreshAll}>
@@ -534,11 +495,9 @@ const Dashboard = () => {
               readOnly={isPastView}
               workoutCount={isPastView ? 0 : todayWorkouts.length}
               mealCount={isPastView ? 0 : todayMealCount}
-              hasCheckin={isPastView ? false : Boolean(checkin)}
               onStartWorkout={() => navigate('/dashboard/workouts')}
               onLogMeal={() => navigate('/dashboard/meal-tracker?manual=1')}
               onViewMeals={() => navigate('/dashboard/meal-tracker')}
-              onCheckIn={() => setCheckInOpen(true)}
               onRetry={refreshAll}
             />
 
@@ -618,18 +577,6 @@ const Dashboard = () => {
                   footRight={`${todayWorkouts.length}`}
                   progress={workoutGoalMin ? (workoutMinToday / workoutGoalMin) * 100 : 0}
                 />
-                <StatCard
-                  icon="bedtime"
-                  label="Sleep"
-                  value={`${sleepHours}`}
-                  unit="h"
-                  note={isPastView
-                    ? (Number(goal?.sleepHours) ? `of ${Number(goal.sleepHours)} h goal` : 'logged that night')
-                    : (Number(goal?.sleepHours) ? `of ${Number(goal.sleepHours)} h goal` : 'logged last night')}
-                  footLeft="Quality"
-                  footRight={humanizeOption(checkin?.sleep_quality) || humanizeOption(viewStats?.sleep_quality) || '—'}
-                  progress={Number(goal?.sleepHours) ? (sleepHours / Number(goal.sleepHours)) * 100 : (sleepHours / 8) * 100}
-                />
                 <MacroFocusCard
                   macroPct={macroPct}
                   rows={macroRows}
@@ -646,14 +593,6 @@ const Dashboard = () => {
                   pct={workoutGoalMin ? (workoutMinToday / workoutGoalMin) * 100 : 0}
                   rows={workoutProgressRows}
                   onOpen={() => navigate('/dashboard/workouts')}
-                />
-                <RecoveryCard
-                  readiness={readiness}
-                  note={readinessNote}
-                  rows={recoveryRows}
-                  hasCheckIn={Boolean(checkin)}
-                  onCheckIn={() => setCheckInOpen(true)}
-                  readOnly={isPastView}
                 />
                 <MotivationCard onOpenWorkouts={() => navigate('/dashboard/workouts')} />
                 <ThisWeekCard
@@ -705,7 +644,6 @@ const Dashboard = () => {
           onUpdated={() => { refreshGoal(); refreshDashboard(); }}
         />
       )}
-      {checkInOpen && <CheckInModal userId={USER_ID} initial={checkin} onClose={() => setCheckInOpen(false)} onSaved={onCheckInSaved} />}
     </div>
   );
 };

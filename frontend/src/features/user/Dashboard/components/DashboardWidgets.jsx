@@ -297,8 +297,6 @@ const QUICK_ACTIONS = [
   { key: 'meal', label: 'Meal', icon: 'restaurant' },
   { key: 'workout', label: 'Workout', icon: 'fitness_center' },
   { key: 'activity', label: 'Activity', icon: 'directions_run' },
-  { key: 'sleep', label: 'Sleep', icon: 'bedtime' },
-  { key: 'checkin', label: 'Check-in', icon: 'fact_check' },
 ];
 
 export const QuickActions = ({ onAction = undefined }) => (
@@ -408,56 +406,6 @@ export const WorkoutProgressCard = ({ pct = 0, rows = [], onOpen = undefined }) 
         <div className="vd-mini-rows">
           {rows.map((row) => <MiniRow key={row.label} label={row.label} value={row.value} />)}
         </div>
-      </div>
-    </div>
-  );
-};
-
-export const RecoveryCard = ({ readiness = null, note = '', rows = [], hasCheckIn = false, onCheckIn = undefined, readOnly = false }) => {
-  const r = 54;
-  const len = Math.PI * r;
-  return (
-    <div className="vd-card vd-lower-card vd-recovery-card">
-      <CardHead
-        title="Recovery"
-        sub="Readiness from your check-in"
-        chip={{ label: hasCheckIn ? 'Checked in' : 'No check-in', accent: hasCheckIn }}
-      />
-
-      {readiness != null ? (
-        <>
-          <div className="vd-gauge">
-            <svg viewBox="0 0 132 76" aria-hidden="true">
-              <path d="M 12 66 A 54 54 0 0 1 120 66" fill="none" stroke="var(--bg-hover)" strokeWidth="10" strokeLinecap="round" />
-              <path
-                d="M 12 66 A 54 54 0 0 1 120 66" fill="none" stroke="var(--accent)" strokeWidth="10" strokeLinecap="round"
-                strokeDasharray={`${(len * clampPct(readiness)) / 100} ${len}`}
-              />
-            </svg>
-            <div className="vd-gauge-center">
-              <span className="vd-gauge-value">{readiness}<small>/100</small></span>
-              <span className="vd-gauge-label">Readiness</span>
-            </div>
-          </div>
-          <div className="vd-recovery-rows">
-            {rows.map((row) => <MiniRow key={row.label} label={row.label} value={row.value} />)}
-          </div>
-        </>
-      ) : (
-        <div className="vd-chart-empty" role="status">
-          <Icon name="monitor_heart" />
-          <span>Check in to see your readiness score.</span>
-        </div>
-      )}
-
-      {note && <p className="vd-ai-note">{note}</p>}
-
-      <div className="vd-recovery-cta">
-        {!readOnly && (
-          <button type="button" className="vd-btn" onClick={onCheckIn}>
-            {hasCheckIn ? 'Update check-in' : 'Daily check-in'}
-          </button>
-        )}
       </div>
     </div>
   );

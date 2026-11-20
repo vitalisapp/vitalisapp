@@ -31,8 +31,8 @@ export function TermsOfUseModal({ isOpen, onClose }) {
     >
       <UpdatedStamp />
       <Section title="1. What Vitalis is">
-        Vitalis is a student capstone fitness app for manually logging training, nutrition, sleep, and recovery. AI
-        coaching, macro estimates, and readiness scores are informational only — not medical advice, diagnosis, or treatment.
+        Vitalis is a student capstone fitness app for manually logging training, nutrition, and activity. AI
+        coaching and macro estimates are informational only — not medical advice, diagnosis, or treatment.
       </Section>
       <Section title="2. Your account">
         You must provide an accurate name and email, keep your password confidential, and be at least 13 years old
@@ -82,7 +82,7 @@ export function PrivacyPolicyModal({ isOpen, onClose }) {
       <UpdatedStamp />
       <Section title="1. Data we collect">
         Account data (name, email, password hash), profile data you enter (goals, body metrics), and content you log
-        (workouts, meals, sleep, feedback). Technical data: session cookies, device/session metadata for security.
+        (workouts, meals, activity, feedback). Technical data: session cookies, device/session metadata for security.
       </Section>
       <Section title="2. How we use it">
         To run your dashboard, plans, analytics, and AI features (meal analysis, coaching); to secure accounts

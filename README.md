@@ -1,12 +1,12 @@
 # Vitalis
 
 Fitness tracking with AI coaching — workout logging, nutrition and food scanning,
-sleep tracking, plans, community, messaging, and analytics in one monorepo.
+plans, community, messaging, and analytics in one monorepo.
 
 ## Features
 
 * Auth with email verification, password reset OTP, Google OAuth, session revocation
-* Dashboard, daily check-ins, goals, activity and workout logs
+* Dashboard, goals, activity and workout logs
 * Meal tracker with camera food scan and macro coaching
 * Camera workout with pose tracking and rep counting
 * Activity map with GPS routes, community posts, kudos, comments

@@ -1,5 +1,5 @@
 // Streak — engagement streak: a day counts when the user did ANY of
-// (workout logged · meal logged · recovery check-in). Computed fresh from
+// (workout logged · meal logged). Computed fresh from
 // day keys, so there is no stored counter to drift out of sync — mirrors the
 // week-calendar day-bucketing and the grace rule every existing client
 // walkback uses ("a streak ending yesterday still shows").
@@ -24,8 +24,7 @@ const weekdayIndex = (iso) => {
 };
 
 // Day-key query helper. Each source degrades to an empty set on old schemas
-// so a missing migration never takes the dashboard down (same policy as
-// getDashboard's daily_checkins guard).
+// so a missing migration never takes the dashboard down.
 async function dayKeys(userId, sql, params) {
   try {
     const [rows] = await db.execute(sql, params);
@@ -36,13 +35,13 @@ async function dayKeys(userId, sql, params) {
   }
 }
 
-// Computed on every dashboard request: one DB-clock read plus three indexed
+// Computed on every dashboard request: one DB-clock read plus two indexed
 // DISTINCT day queries is cheaper than a cache that can briefly disagree with
 // a just-committed log.
 async function getStreakSummary(userId, clientToday) {
   // "Today" follows the browser's local date when it says so (?today=…),
-  // falling back to DB-local CURDATE (the same day boundary daily_stats and
-  // readiness use) so old clients keep working. Without the client date the
+  // falling back to DB-local CURDATE (the same day boundary daily_stats
+  // uses) so old clients keep working. Without the client date the
   // server's timezone can disagree with the user's by a day around local
   // midnight — which lit the wrong tile in the streak week strip.
   const [[todayRow]] = await db.execute(
@@ -50,7 +49,7 @@ async function getStreakSummary(userId, clientToday) {
   );
   const today = clientDateFromQuery({ today: clientToday }) || todayRow.today;
 
-  const [workoutSet, mealSet, checkinSet] = await Promise.all([
+  const [workoutSet, mealSet] = await Promise.all([
     dayKeys(
       userId,
       `SELECT DISTINCT DATE_FORMAT(start_time, '%Y-%m-%d') AS d
@@ -66,21 +65,13 @@ async function getStreakSummary(userId, clientToday) {
        WHERE user_id = ? AND logged_at >= DATE_SUB(CURDATE(), INTERVAL ${LOOKBACK_DAYS} DAY)`,
       [userId],
     ),
-    dayKeys(
-      userId,
-      `SELECT DISTINCT DATE_FORMAT(checkin_date, '%Y-%m-%d') AS d
-       FROM daily_checkins
-       WHERE user_id = ? AND checkin_date >= DATE_SUB(CURDATE(), INTERVAL ${LOOKBACK_DAYS} DAY)`,
-      [userId],
-    ),
   ]);
 
-  const union = new Set([...workoutSet, ...mealSet, ...checkinSet]);
+  const union = new Set([...workoutSet, ...mealSet]);
   const sourcesFor = (date) => {
     const sources = [];
     if (workoutSet.has(date)) sources.push("workout");
     if (mealSet.has(date)) sources.push("meal");
-    if (checkinSet.has(date)) sources.push("checkin");
     return sources;
   };
 
@@ -146,7 +137,6 @@ async function getStreakSummary(userId, clientToday) {
     lastActiveDate: sorted.length ? sorted[sorted.length - 1] : null,
     workoutDays: workoutSet.size,
     mealDays: mealSet.size,
-    checkinDays: checkinSet.size,
     today,
     todaySources,
     weekStart: monday,

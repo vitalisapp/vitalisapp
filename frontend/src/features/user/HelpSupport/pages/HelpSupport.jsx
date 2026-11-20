@@ -9,12 +9,8 @@ import { useAuth } from '../../../../hooks/useAuth.jsx';
 // Real answers only — each one maps to an actual screen/flow in the app.
 const FAQS = [
   {
-    q: 'How do I log a workout, meal, or sleep?',
-    a: 'Tap the + button in the bottom bar for a manual entry. Camera workouts run from Training, meals (scan or manual) from Meal Tracker, and sleep from the Daily Recovery check-in on the Dashboard.',
-  },
-  {
-    q: 'Where do I see recovery and readiness?',
-    a: 'Open the Dashboard and tap Sleep (or Daily Recovery Check-In). All entries are manual for now — automatic wearable sync is not available yet.',
+    q: 'How do I log a workout or meal?',
+    a: 'Tap the + button in the bottom bar for a manual entry. Camera workouts run from Training, and meals (scan or manual) from Meal Tracker. All entries are manual for now — automatic wearable sync is not available yet.',
   },
   {
     q: 'What can the AI Coach do?',

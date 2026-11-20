@@ -33,12 +33,12 @@ async function safeActiveUserCount() {
 }
 
 // "Manual-first logging" stat — the share of user entries (workouts, activities,
-// sleep, check-ins, meals) that were typed by hand. The only assisted path is
+// meals) that were typed by hand. The only assisted path is
 // the AI food-photo scan, which persists the preview as a `data:` URI in
 // food_logs.image_url (manual saves use a hosted URL or NULL).
 // Returns 100 when nothing has been logged yet — no data to contradict it.
 async function safeManualLogPct() {
-  const totalTables = ['workout_logs', 'activity_logs', 'sleep_logs', 'daily_checkins', 'food_logs'];
+  const totalTables = ['workout_logs', 'activity_logs', 'food_logs'];
   let total = 0;
   for (const table of totalTables) total += await safeCount(table);
   if (total <= 0) return 100;
@@ -60,7 +60,7 @@ async function getLandingStats() {
     return cache.payload;
   }
 
-  const [athletes, activeUsers, plans, workouts, activities, meals, posts, checkins, visits, manualLogPct] = await Promise.all([
+  const [athletes, activeUsers, plans, workouts, activities, meals, posts, visits, manualLogPct] = await Promise.all([
     safeCount('users'),
     safeActiveUserCount(),
     safeCount('plans'),
@@ -68,7 +68,6 @@ async function getLandingStats() {
     safeCount('activity_logs'),
     safeCount('food_logs'),
     safeCount('community_posts'),
-    safeCount('daily_checkins'),
     safeCount('landing_visits'),
     safeManualLogPct(),
   ]);
@@ -92,7 +91,6 @@ async function getLandingStats() {
       activities,
       meals,
       posts,
-      checkins,
       visits,
       modules: MODULE_COUNT,
       manualLogPct,

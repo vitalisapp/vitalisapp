@@ -10,6 +10,32 @@ import {
 } from '../components/AdminBits.jsx';
 import { useAdminToast } from '../hooks/useAdminToast.jsx';
 import { fmtNum, fmtWhen, initials, verificationMeta } from '../utils/format.js';
+import ExportMenu from '../components/ExportMenu.jsx';
+import { fetchAllRows } from '../utils/exportTable.js';
+
+// +639059335613 -> "0905 933 5613"; anything else passes through.
+const exportPhone = (value) => {
+  const m = /^\+63(9\d{2})(\d{3})(\d{4})$/.exec(String(value || ''));
+  return m ? `0${m[1]} ${m[2]} ${m[3]}` : (value || null);
+};
+
+// Export columns — same data as the table plus verification + phone.
+const USER_EXPORT_COLUMNS = [
+  { header: 'ID', value: (u) => u.id, type: 'number', width: 8 },
+  { header: 'Name', value: (u) => u.name, width: 24 },
+  { header: 'Email', value: (u) => u.email, width: 30 },
+  // Local spaced format: keeps the leading 0 and stays text in Excel
+  // (a bare +639… would become 6.39E+11 or a formula).
+  { header: 'Phone', value: (u) => exportPhone(u.phone), width: 16 },
+  { header: 'Role', value: (u) => u.role, width: 10 },
+  { header: 'Status', value: (u) => u.status, width: 12 },
+  { header: 'Verified', value: (u) => Boolean(u.is_verified), width: 10 },
+  { header: 'Verification', value: (u) => verificationMeta(u).label, width: 22 },
+  { header: 'Phone verified at', value: (u) => u.phone_verified_at, type: 'date', width: 18 },
+  { header: 'Onboarding complete', value: (u) => Boolean(u.onboarding_completed), width: 20 },
+  { header: 'Terms accepted at', value: (u) => u.accepted_terms_at, type: 'date', width: 18 },
+  { header: 'Joined', value: (u) => u.created_at, type: 'date', width: 18 },
+];
 
 const PAGE_SIZE = 12;
 
@@ -67,6 +93,7 @@ export default function AdminUsers() {
         title="Member"
         accent="directory."
         description="Every account on Vitalis. Promote trustworthy members, deactivate abuse, force sign-outs and inspect activity before you act."
+        image="/admin/hero-members.jpg"
         chips={[
           { label: `${fmtNum(total)} matching accounts`, icon: 'group' },
           { label: 'Self-actions blocked', icon: 'lock' },
@@ -77,7 +104,19 @@ export default function AdminUsers() {
         title="Accounts"
         subtitle="Search by name or email. Mutating actions are recorded in the audit trail."
         icon="manage_accounts"
-        actions={<button type="button" className="adm-btn is-sm is-ghost" onClick={reload}><Icon name="refresh" /> Refresh</button>}
+        actions={(
+          <>
+            <ExportMenu
+              columns={USER_EXPORT_COLUMNS}
+              fileName="vitalis-users"
+              sheetName="Users"
+              onToast={show}
+              disabled={!total}
+              getRows={() => fetchAllRows('/api/admin/users', { q: query, role, status })}
+            />
+            <button type="button" className="adm-btn is-sm is-ghost" onClick={reload}><Icon name="refresh" /> Refresh</button>
+          </>
+        )}
         flush
       >
         <form className="adm-toolbar" style={{ padding: '4px 20px 14px' }} onSubmit={applySearch}>

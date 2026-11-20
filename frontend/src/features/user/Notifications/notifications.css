@@ -316,11 +316,16 @@ button.vn-card:focus-visible .vn-card__hint { opacity: 1; }
   gap: 10px;
   margin-bottom: 18px;
 }
-@media (min-width: 640px) {
-  .vn-toolbar { flex-direction: row; align-items: center; justify-content: space-between; }
-  .vn-toolbar .vn-chips { justify-content: flex-end; }
-}
+/* Status switch and category chips each get their own row: side by side they
+   collided, and right-aligned chips in a scroll box overflowed off the left
+   edge under the switch (unreachable). Phones: chips stay one swipeable row.
+   Wider screens: chips wrap so every filter is visible without scrolling. */
+.vn-toolbar .vn-segment { flex-shrink: 0; }
 .vn-toolbar .vn-chips { min-width: 0; }
+@media (min-width: 640px) {
+  .vn-toolbar { align-items: flex-start; }
+  .vn-toolbar .vn-chips { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+}
 
 /* ── Bell panel (desktop dropdown + mobile bottom sheet) ──────────── */
 .vn-panel {

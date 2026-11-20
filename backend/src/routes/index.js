@@ -2,7 +2,6 @@
 const authRoutes = require('./auth.routes');
 const messengerRoutes = require('./messenger.routes');
 const dashboardRoutes = require('./dashboard.routes');
-const sleepRoutes = require('./sleep.routes');
 const logsRoutes = require('./logs.routes');
 const plansRoutes = require('./plans.routes');
 const profileRoutes = require('./profile.routes');
@@ -19,7 +18,6 @@ const feedbackRoutes = require('./feedback.routes');
 const statsRoutes = require('./stats.routes');
 
 const goalsRoutes = require('./goals.routes');
-const checkinsRoutes = require('./checkins.routes');
 const nutrientGoalsRoutes = require('./nutrientGoals.routes');
 const communityRoutes = require('./community.routes');
 const settingsRoutes = require('./settings.routes');
@@ -34,7 +32,6 @@ const { requireMember } = require('../middleware/verifyUser');
 function mountRoutes(app) {
   app.use('/api/public', publicRoutes); // no-auth aggregates (landing page)
   app.use('/api/goals', goalsRoutes);
-  app.use('/api/checkins', checkinsRoutes);
   app.use('/api/nutrient-goals', nutrientGoalsRoutes);
   app.use('/api/community', requireMember, communityRoutes);
   app.use('/api/settings', settingsRoutes);
@@ -49,7 +46,6 @@ function mountRoutes(app) {
   app.use('/api/auth', authRoutes);
   app.use('/api', requireMember, messengerRoutes); // /contacts, /messages, /users/search, /friends
   app.use('/api', requireMember, dashboardRoutes); // /dashboard
-  app.use('/api/sleep', requireMember, sleepRoutes);
   app.use('/api/logs', requireMember, logsRoutes);
   app.use('/api/plans', requireMember, plansRoutes);
   app.use('/api/profile', profileRoutes);
@@ -89,14 +85,13 @@ function mountRoutes(app) {
         'GET  /api/public/* (landing aggregates, no auth)',
         'GET|POST /api/bmi',
         'GET  /api/dashboard/:userId | GET /api/dashboard/week-calendar (current Mon–Sun) | GET /api/dashboard/calendar/:date (read-only day snapshot)',
-        'GET|POST /api/sleep/*',
         'GET|POST /api/logs/*',
         'GET|POST|PUT|DELETE /api/plans/* (incl. POST /adjust-from-goal)',
         'GET|PUT /api/profile/*',
         'POST /api/analyze-pose | POST /api/ai/analysis | POST /api/ai/coach | GET /api/ai/history/:userId | GET /api/logs/latest/:userId | POST /api/ai/run-analysis | GET /api/ai/summary',
         'GET|POST|PUT|DELETE /api/food-logs/* (incl. POST /analyze-pic 10mb; GET /food-catalog?q= autocomplete; POST /estimate-density per-100 g AI density)',
         'GET|POST|PUT|DELETE /api/activity/*',
-        'GET|POST /api/goals/* | GET|POST /api/checkins/* | GET|PUT /api/nutrient-goals/*',
+        'GET|POST /api/goals/* | GET|PUT /api/nutrient-goals/*',
         'GET|POST|DELETE /api/community/*',
         'GET|PUT /api/settings',
         'GET|PUT /api/training-preferences (Module 5 recommendation inputs)',

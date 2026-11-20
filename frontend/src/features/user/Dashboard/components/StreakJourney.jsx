@@ -5,7 +5,7 @@ import Modal from '../../../../components/ui/Modal.jsx';
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DOW_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const MILESTONES = [3, 7, 14, 30, 60, 90];
-const SOURCE_LABEL = { workout: 'workout', meal: 'meal', checkin: 'check-in' };
+const SOURCE_LABEL = { workout: 'workout', meal: 'meal' };
 
 const parseISO = (iso) => {
   const [y, m, d] = iso.split('-').map(Number);
@@ -158,11 +158,9 @@ const StreakJourney = ({
   readOnly = false,
   workoutCount = 0,
   mealCount = 0,
-  hasCheckin = false,
   onStartWorkout = undefined,
   onLogMeal = undefined,
   onViewMeals = undefined,
-  onCheckIn = undefined,
   onRetry = undefined,
 }) => {
   const [successOpen, setSuccessOpen] = useState(false);
@@ -183,12 +181,10 @@ const StreakJourney = ({
     : [
       ...(workoutCount > 0 ? ['workout'] : []),
       ...(mealCount > 0 ? ['meal'] : []),
-      ...(hasCheckin ? ['checkin'] : []),
     ];
   const doneWorkout = todaySources.includes('workout');
   const doneMeal = todaySources.includes('meal');
-  const doneCheckin = todaySources.includes('checkin');
-  const doneCount = [doneWorkout, doneMeal, doneCheckin].filter(Boolean).length;
+  const doneCount = [doneWorkout, doneMeal].filter(Boolean).length;
 
   const week = Array.isArray(streak?.week) ? streak.week : [];
   const history = Array.isArray(streak?.history) ? streak.history : [];
@@ -275,9 +271,9 @@ const StreakJourney = ({
   const subline = readOnly
     ? 'This reflects today’s live streak — not the past day you are reviewing.'
     : current <= 0
-      ? 'Log a workout, a meal, or a recovery check-in. Any one starts the count.'
+      ? 'Log a workout or a meal. Either one starts the count.'
       : !activeToday
-        ? 'Any workout, meal, or check-in today keeps the flame going. There is still time.'
+        ? 'Any workout or meal today keeps the flame going. There is still time.'
         : current === 1
           ? 'The first day is the hardest. Come back tomorrow to build on it.'
           : 'Every small action counts. Return tomorrow to keep the momentum going.';
@@ -331,7 +327,7 @@ const StreakJourney = ({
 
           <p className="vd-streak-rule">
             <Icon name="info" />
-            Workouts, meals, and recovery check-ins each count once per day.
+            Workouts and meals each count once per day.
           </p>
         </div>
 
@@ -355,7 +351,7 @@ const StreakJourney = ({
             <span className={`vd-streak-mini-chip${doneCount > 0 && !readOnly ? ' is-success' : ''}`}>
               {readOnly
                 ? (activeToday ? 'Today counted' : 'Not counted today')
-                : `${doneCount}/3 done`}
+                : `${doneCount}/2 done`}
             </span>
           </div>
 
@@ -389,16 +385,6 @@ const StreakJourney = ({
                 done={doneMeal}
                 action={doneMeal ? 'View' : 'Log'}
                 onAction={doneMeal ? onViewMeals : onLogMeal}
-              />
-              <TodayRow
-                icon="monitor_heart"
-                label="Recovery check-in"
-                detail={doneCheckin
-                  ? 'Sleep, stress, and energy saved'
-                  : 'A 30-second read on how you feel'}
-                done={doneCheckin}
-                action={doneCheckin ? 'Update' : 'Check in'}
-                onAction={onCheckIn}
               />
             </ul>
           )}
@@ -487,7 +473,7 @@ const StreakJourney = ({
           </p>
           <h2 className="vd-streak-success-title">You showed up today.</h2>
           <p className="vd-streak-success-sub">
-            A workout, a meal, or a check-in — every small action counts. Come back tomorrow to keep the flame alive.
+            A workout or a meal — every small action counts. Come back tomorrow to keep the flame alive.
           </p>
 
           <div className="vd-streak-success-week">

@@ -3,28 +3,38 @@ import { fmtNum } from '../utils/format.js';
 
 /* ── Hero / header ─────────────────────────────────────────────────────── */
 
-export function PageHero({ eyebrow, title, accent, description, chips = [], actions = undefined }) {
+export function PageHero({
+  eyebrow, title, accent, description, chips = [], actions = undefined,
+  image = undefined, imageAlt = '',
+}) {
   return (
-    <header className="adm-hero">
-      <div className="adm-hero__copy">
-        {eyebrow && <span className="adm-eyebrow">{eyebrow}</span>}
-        <h1 className="adm-hero__title">
-          {title}
-          {accent ? <> <em>{accent}</em></> : null}
-        </h1>
-        {description && <p className="adm-hero__sub">{description}</p>}
-        {chips.length > 0 && (
-          <div className="adm-hero__meta">
-            {chips.map((chip) => (
-              <span key={chip.label || chip} className="adm-chip">
-                {chip.icon && <Icon name={chip.icon} />}
-                {chip.label || chip}
-              </span>
-            ))}
-          </div>
-        )}
+    <header className={`adm-hero${image ? ' has-media' : ''}`}>
+      <div className="adm-hero__body">
+        <div className="adm-hero__copy">
+          {eyebrow && <span className="adm-eyebrow">{eyebrow}</span>}
+          <h1 className="adm-hero__title">
+            {title}
+            {accent ? <> <em>{accent}</em></> : null}
+          </h1>
+          {description && <p className="adm-hero__sub">{description}</p>}
+          {chips.length > 0 && (
+            <div className="adm-hero__meta">
+              {chips.map((chip) => (
+                <span key={chip.label || chip} className="adm-chip">
+                  {chip.icon && <Icon name={chip.icon} />}
+                  {chip.label || chip}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        {actions && <div className="adm-hero__actions">{actions}</div>}
       </div>
-      {actions && <div className="adm-hero__actions">{actions}</div>}
+      {image && (
+        <div className="adm-hero__media" aria-hidden={imageAlt ? undefined : 'true'}>
+          <img src={image} alt={imageAlt} width={900} height={600} decoding="async" />
+        </div>
+      )}
     </header>
   );
 }

@@ -413,7 +413,7 @@
   color: var(--accent);
 }
 
-/* Shared segmented tabs used by Progress, Plans, Recovery and Activity. */
+/* Shared segmented tabs used by Progress, Plans and Activity. */
 .vapp .app-tabs {
   display: inline-flex;
   max-width: 100%;

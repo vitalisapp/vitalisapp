@@ -6,9 +6,8 @@ import Button from '../../../../components/ui/Button.jsx';
 import Spinner from '../../../../components/ui/Spinner.jsx';
 
 // MyFitnessPal-inspired quick log: one tap → the right logging surface.
-// Weight logs inline; check-in opens the dashboard modal via onCheckIn;
-// everything else deep-links to its module.
-const QuickLog = ({ userId, onWeightLogged, onCheckIn }) => {
+// Weight logs inline; everything else deep-links to its module.
+const QuickLog = ({ userId, onWeightLogged }) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [weight, setWeight] = useState('');
@@ -52,8 +51,6 @@ const QuickLog = ({ userId, onWeightLogged, onCheckIn }) => {
     { icon: 'monitor_weight', label: 'Log Weight', action: () => setMode('weight') },
     { icon: 'fitness_center', label: 'Log Workout', action: () => navigate('/dashboard/workouts') },
     { icon: 'directions_run', label: 'Start Activity', action: () => navigate('/dashboard/activity-map') },
-    // Sleep is logged through the Daily Recovery check-in (captures hours + quality).
-    { icon: 'fact_check', label: 'Daily Recovery Check-In', action: () => onCheckIn?.() },
   ];
 
   return (

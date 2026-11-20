@@ -8,7 +8,7 @@ import { apiFetch, apiPost } from '../../../../lib/apiClient.js';
 import { safeSet, safeSetJSON, safeGetJSON } from '../../../../lib/storage.js';
 import {
   GOAL_TYPES, ACTIVITY_LEVELS, PACES, FOCUSES,
-  SLEEP_QUALITY, STRESS_LEVELS, EXERCISE_FREQ, RECOVERY_LEVELS,
+  EXERCISE_FREQ,
   goalLabel, humanizeOption,
 } from '../constants/goals.js';
 import '../Onboarding.css';
@@ -44,14 +44,14 @@ const TITLES = [
   'A fresh start, made for you.',
 ];
 
-const STEP_LABELS = ['The basics', 'Your goal', 'The details', 'Daily activity', 'Training setup', 'Your wellbeing', 'Creating your plan', 'Ready to begin'];
+const STEP_LABELS = ['The basics', 'Your goal', 'The details', 'Daily activity', 'Training setup', 'Habits & diet', 'Creating your plan', 'Ready to begin'];
 const STEP_DESCRIPTIONS = [
   'A few details help us find the right starting point for your body.',
   'Choose your main focus. We’ll build your starting plan around it.',
   'Set a direction that feels right. You can adjust it as you go.',
   'Think about a typical week, including work, movement and exercise.',
   'Your space, your schedule, your pace. Every preference here is optional.',
-  'Help us understand your sleep, energy and recovery.',
+  'How often you train today, and anything you avoid eating.',
   'Turning your answers into your personal starting targets.',
   'Here’s your starting point. Your plan evolves as you build your routine.',
 ];
@@ -130,12 +130,8 @@ const Onboarding = () => {
   const [focus, setFocus] = useState('');
   // Step 5 — Activity
   const [activityLevel, setActivityLevel] = useState('');
-  // Step 6 — Lifestyle
-  const [sleepHours, setSleepHours] = useState('');
-  const [sleepQuality, setSleepQuality] = useState('MODERATE');
-  const [stressLevel, setStressLevel] = useState('MODERATE');
+  // Step 6 — Habits
   const [exerciseFreq, setExerciseFreq] = useState('1_2_DAYS');
-  const [recoveryLevel, setRecoveryLevel] = useState('MODERATE');
   // Step 5 — Training setup (Module 3): optional; saved into
   // training_preferences so the generated starter plan matches reality
   // (plan length, day-cycling schedule, exercise swaps).
@@ -256,10 +252,6 @@ const Onboarding = () => {
       case 3: return Boolean(activityLevel);
       // Training setup is optional — empty choices mean "use sensible defaults".
       case 4: return true;
-      case 5: {
-        const s = Number(sleepHours);
-        return sleepHours !== '' && Number.isFinite(s) && s > 0 && s <= 14;
-      }
       default: return true;
     }
   };
@@ -288,13 +280,6 @@ const Onboarding = () => {
         return '';
       }
       case 3: return activityLevel ? '' : 'Choose the level closest to your week.';
-      case 5: {
-        const s = Number(sleepHours);
-        if (sleepHours === '' || !Number.isFinite(s) || s <= 0 || s > 14) {
-          return 'Enter average sleep (0–14 hours).';
-        }
-        return '';
-      }
       default: return '';
     }
   };
@@ -309,8 +294,7 @@ const Onboarding = () => {
           dob, sex, heightCm: Number(heightCm), weightKg: Number(weightKg),
           goalType, targetWeightKg: targetWeight ? Number(targetWeight) : null,
           pace: pace || null, focus: focus || null, activityLevel,
-          sleepHours: Number(sleepHours),
-          sleepQuality, stressLevel, exerciseFreq, recoveryLevel,
+          exerciseFreq,
         });
         if (!data?.goal) throw new Error('Could not generate your plan.');
         // Module 3 — persist the training setup BEFORE the starter plan is
@@ -695,20 +679,12 @@ const Onboarding = () => {
                     </div>
                   )}
 
-                  {/* STEP 6 — Lifestyle baseline + optional allergies */}
+                  {/* STEP 6 — Exercise frequency + optional allergies */}
                   {step === 5 && (
                     <div className="onb-form">
-                      <div className="onb-field">
-                        <label className="onb-label" htmlFor="ob-sleep">Average sleep duration (hours)</label>
-                        <input id="ob-sleep" type="number" min="0" max="14" step="0.5" placeholder="7.5" value={sleepHours} onChange={(e) => setSleepHours(e.target.value)} className="onb-input" />
-                      </div>
-
                       <div className="onb-lifestyle-grid">
                         {/** @type {[string, string[], string, any][]} */ ([
-                          ['Typical sleep quality', SLEEP_QUALITY, sleepQuality, setSleepQuality],
-                          ['Typical stress level', STRESS_LEVELS, stressLevel, setStressLevel],
                           ['Current exercise frequency', EXERCISE_FREQ, exerciseFreq, setExerciseFreq],
-                          ['Typical recovery / energy', RECOVERY_LEVELS, recoveryLevel, setRecoveryLevel],
                         ]).map(([label, opts, val, set]) => (
                           <fieldset className="onb-fieldset" key={label}>
                             <legend className="onb-label">{label}</legend>
@@ -845,7 +821,7 @@ const Onboarding = () => {
                       </div>
 
                       <p className="onb-result__note">
-                        Initial estimates based on your info. Vitalis refines them as you log nutrition, activity, weight and recovery.
+                        Initial estimates based on your info. Vitalis refines them as you log nutrition, activity and weight.
                       </p>
                     </div>
                   )}

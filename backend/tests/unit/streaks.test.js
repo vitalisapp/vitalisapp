@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 
 const dbPath = require.resolve('../../src/config/db');
 
-let scenario = { today: '2026-10-24', workouts: [], meals: [], checkins: [] };
+let scenario = { today: '2026-10-24', workouts: [], meals: [] };
 
 const fakeDb = {
   execute: async (sql) => {
@@ -13,7 +13,6 @@ const fakeDb = {
     if (q.includes('AS today')) return [[{ today: scenario.today }], []];
     if (q.includes('FROM workout_logs')) return [scenario.workouts.map((d) => ({ d })), []];
     if (q.includes('FROM food_logs')) return [scenario.meals.map((d) => ({ d })), []];
-    if (q.includes('FROM daily_checkins')) return [scenario.checkins.map((d) => ({ d })), []];
     throw new Error(`Unexpected streak query: ${q}`);
   },
 };
@@ -27,8 +26,8 @@ require.cache[dbPath] = {
 
 const { getStreakSummary } = require('../../src/services/streaks.service');
 
-function setDays({ today = '2026-10-24', workouts = [], meals = [], checkins = [] }) {
-  scenario = { today, workouts, meals, checkins };
+function setDays({ today = '2026-10-24', workouts = [], meals = [] }) {
+  scenario = { today, workouts, meals };
 }
 
 beforeEach(() => setDays({}));
@@ -61,34 +60,33 @@ describe('streak summary', () => {
   it('counts today from any source and reports per-source detail', async () => {
     setDays({
       workouts: ['2026-10-24'],
-      meals: ['2026-10-24'],
-      checkins: ['2026-10-24', '2026-10-23'],
+      meals: ['2026-10-24', '2026-10-23'],
     });
 
     const streak = await getStreakSummary(2);
 
     assert.equal(streak.current, 2);
     assert.equal(streak.activeToday, true);
-    assert.deepEqual(streak.todaySources, ['workout', 'meal', 'checkin']);
+    assert.deepEqual(streak.todaySources, ['workout', 'meal']);
     assert.equal(streak.lastActiveDate, '2026-10-24');
 
     assert.equal(streak.week[5].active, true);
-    assert.deepEqual(streak.week[5].sources, ['workout', 'meal', 'checkin']);
+    assert.deepEqual(streak.week[5].sources, ['workout', 'meal']);
 
     const today = streak.history[streak.history.length - 1];
     assert.equal(today.date, '2026-10-24');
     assert.equal(today.active, true);
-    assert.equal(today.count, 3);
+    assert.equal(today.count, 2);
   });
 
   it('accepts a single source as a qualifying day', async () => {
-    setDays({ checkins: ['2026-10-24'] });
+    setDays({ meals: ['2026-10-24'] });
 
     const streak = await getStreakSummary(3);
 
     assert.equal(streak.current, 1);
     assert.equal(streak.activeToday, true);
-    assert.deepEqual(streak.todaySources, ['checkin']);
+    assert.deepEqual(streak.todaySources, ['meal']);
   });
 
   it('computes the longest run across gaps and ignores future rows', async () => {
@@ -122,8 +120,8 @@ describe('streak summary', () => {
 
   it('returns an oldest-first 90-day series ending today', async () => {
     setDays({
+      workouts: ['2026-10-23'],
       meals: ['2026-10-24', '2026-10-23'],
-      checkins: ['2026-10-23'],
     });
 
     const streak = await getStreakSummary(6);
@@ -132,7 +130,7 @@ describe('streak summary', () => {
     assert.equal(streak.history[0].date, '2026-07-27');
     assert.equal(streak.history[88].date, '2026-10-23');
     assert.equal(streak.history[88].count, 2);
-    assert.deepEqual(streak.history[88].sources, ['meal', 'checkin']);
+    assert.deepEqual(streak.history[88].sources, ['workout', 'meal']);
     assert.equal(streak.history[89].date, '2026-10-24');
     assert.equal(streak.history[89].active, true);
   });

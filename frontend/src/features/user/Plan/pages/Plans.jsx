@@ -8,6 +8,7 @@ import usePlans from '../hooks/usePlan.js';
 import { BRYL_CREDIT, frameUrl, getAllGuideExercises, guideFilterOptions, isHoldExercise, prescriptionForGuide, searchGuideExercises } from '../../CameraWorkout/constants/workoutGuide.js';
 import { apiGet } from '../../../../lib/apiClient.js';
 import Dropdown from '../../../../components/ui/Dropdown.jsx';
+import ConfirmDialog from '../../../../components/ui/ConfirmDialog.jsx';
 import {
   formatExerciseDetail,
   REST_ACTIVITY_TYPES,
@@ -1374,6 +1375,9 @@ const Plans = () => {
   const prefsCtl = useTrainingPrefs();
   const insightsCtl = useTrainingInsights();
   const [prefsOpen, setPrefsOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const openCreate = () => { setActionError(null); setActionOk(null); setEditingPlan(null); setSheetOpen(true); };
   const openEdit = (plan) => {
@@ -1466,10 +1470,29 @@ const Plans = () => {
     if (data?.planId) setActiveTab('my-plans');
   };
 
-  const handleDelete = async (plan) => {
+  const handleDelete = (plan) => {
     if (!plan || plan.is_owner !== 1) return;
-    if (!window.confirm(`Delete "${plan.title}"? This removes its days and progress.`)) return;
-    await removePersonal(plan.id);
+    setDeleteError('');
+    setDeleteTarget(plan);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const ok = await removePersonal(deleteTarget.id);
+      if (ok) setDeleteTarget(null);
+      else setDeleteError('Could not delete this plan. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const closeDelete = () => {
+    if (deleting) return;
+    setDeleteTarget(null);
+    setDeleteError('');
   };
 
   return (
@@ -1607,6 +1630,20 @@ const Plans = () => {
         onGenerate={autoFromGoal}
         initial={editingPlan}
         onSave={handleSaveEdit}
+      />
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={closeDelete}
+        onConfirm={confirmDelete}
+        title="Delete this plan?"
+        message={`“${deleteTarget?.title || 'This plan'}” and all of its days and progress will be permanently removed. This cannot be undone.`}
+        confirmLabel="Delete plan"
+        cancelLabel="Keep plan"
+        tone="danger"
+        icon="delete"
+        busy={deleting}
+        error={deleteError}
       />
 
       <style>{`

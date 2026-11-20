@@ -4,9 +4,8 @@ import { acquireSocket, releaseSocket, joinUserRoom } from '../../../../lib/sock
 import { localTodayIso } from '../lib/dashboardFormat.js';
 
 export const useDashboardData = (USER_ID) => {
-  const [data, setData]             = useState({ stats: {}, profile: {}, checkin: null });
+  const [data, setData]             = useState({ stats: {}, profile: {} });
   const [insights, setInsights]     = useState([]);
-  const [biometrics, setBiometrics] = useState([]);
   const [workouts, setWorkouts]     = useState([]);
   const [dashboardError, setDashboardError] = useState(null);
   const [loaded, setLoaded]         = useState(false);
@@ -14,14 +13,11 @@ export const useDashboardData = (USER_ID) => {
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   // Best-effort post-log AI refresh: never throws or blocks the UI.
-  const generateFitnessInsight = useCallback(async (_biometrics, newStats) => {
+  const generateFitnessInsight = useCallback(async (newStats) => {
     if (!USER_ID) return;
     try {
       const res = await apiPost('/api/ai/analysis', {
         stats: {
-          sleep_duration: Number(newStats?.sleep_duration) || 0,
-          sleep_quality: Number(newStats?.sleep_quality) || 0,
-          water_intake_ml: Number(newStats?.water_intake_ml) || 0,
           calories_burned: Number(newStats?.calories_burned) || 0,
           steps: Number(newStats?.steps) || 0,
           workout_duration_mins: Number(newStats?.workout_duration_mins) || 0,
@@ -71,27 +67,13 @@ export const useDashboardData = (USER_ID) => {
 
     const fetchDashboardData = async (isRetry = false) => {
       try {
-        // Sleep/workout 404s fall back to empty; dashboard errors still surface.
-        const [result, sleepData, bioData, workoutData] = await Promise.all([
+        // Workout 404s fall back to empty; dashboard errors still surface.
+        const [result, workoutData] = await Promise.all([
           trackFetch(`/api/dashboard/${USER_ID}?today=${localTodayIso()}`),
-          trackFetch(`/api/sleep/${USER_ID}/today`).catch(() => ({})),
-          trackFetch(`/api/sleep/${USER_ID}?range=D&metric=duration`).catch(() => []),
           trackFetch(`/api/workout-logs`).catch(() => ({ logs: [] })),
         ]);
 
-        setData(mergeData({
-          ...result,
-          stats: {
-            ...result.stats,
-            water_intake_ml: result.stats?.water_intake_ml ?? sleepData?.water_intake_ml ?? 0,
-            sleep_duration:  result.checkin?.sleep_hours ?? result.stats?.sleep_duration ?? sleepData?.sleep_duration ?? 0,
-            sleep_quality:   result.checkin?.sleep_quality ?? result.stats?.sleep_quality ?? (sleepData?.sleep_quality || null),
-          },
-        }));
-
-        if (Array.isArray(bioData) && bioData.length > 0) {
-          setBiometrics(bioData);
-        }
+        setData(mergeData(result));
 
         const logs = Array.isArray(workoutData?.logs) ? workoutData.logs : [];
         setWorkouts(logs);
@@ -128,21 +110,10 @@ export const useDashboardData = (USER_ID) => {
     fetchDashboardData();
     joinUserRoom(USER_ID);
 
-    const handleNewBiometric = (newPoint) => {
-      const normalised = {
-        label: newPoint.recorded_at
-          ? new Date(newPoint.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          : newPoint.label ?? '--:--',
-        value: newPoint.value ?? newPoint.sleep_duration ?? 0,
-      };
-      setBiometrics(prev => [...prev.slice(-19), normalised]);
-    };
-
     const handleNewInsight = (insight) => {
       setInsights(prev => [insight, ...prev].slice(0, 5));
     };
 
-    socket.on('new-biometric-data',   handleNewBiometric);
     // New event name; legacy 'new-clinical-insight' kept for backward compatibility.
     socket.on('new-fitness-insight',  handleNewInsight);
     socket.on('new-clinical-insight', handleNewInsight);
@@ -150,7 +121,6 @@ export const useDashboardData = (USER_ID) => {
     return () => {
       for (const c of [...controllers]) { try { c.abort(); } catch { /* noop */ } }
       controllers.clear();
-      socket.off('new-biometric-data',   handleNewBiometric);
       socket.off('new-fitness-insight',  handleNewInsight);
       socket.off('new-clinical-insight', handleNewInsight);
       releaseSocket();
@@ -160,13 +130,11 @@ export const useDashboardData = (USER_ID) => {
   return {
     data,
     insights,
-    biometrics,
     workouts,
     dashboardError,
     loaded,
     setData,
     setInsights,
-    setBiometrics,
     setAuthOverride,
     mergeData,
     refresh,

@@ -10,6 +10,7 @@ import { useAvatar } from '../hooks/useAvatar.js';
 import Toast from '../components/Toast.jsx';
 import Modal from '../../../../components/ui/Modal.jsx';
 import Button from '../../../../components/ui/Button.jsx';
+import LogoutConfirmDialog from '../../../../components/ui/LogoutConfirmDialog.jsx';
 import { useAuth } from '../../../../hooks/useAuth.jsx';
 import { DEFAULT_AVATARS } from '../utils/avatar.js';
 import { resolveAvatar, avatarSurface, getInitials, capitalizeName } from '../../../../lib/avatar.js';
@@ -88,9 +89,7 @@ const GoalSnapshotCard = ({ onboarding, onChangeGoal, onSetupPlan }) => {
           <p className="text-[length:var(--fs-11)] font-bold text-[var(--text-muted)] mt-1 tabular-nums">P {onboarding.proteinG ?? '—'}g · C {onboarding.carbsG ?? '—'}g · F {onboarding.fatG ?? '—'}g</p>
         </div>
       )}
-      <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-2 text-center [&>div]:min-w-0">
-        <div className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] px-3 py-2.5"><p className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Sleep</p><p className="text-[length:var(--fs-12)] font-bold mt-1 break-words">{onboarding.sleepHours != null ? `${onboarding.sleepHours}h` : '—'} · {humanize(onboarding.sleepQuality)}</p></div>
-        <div className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] px-3 py-2.5"><p className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Stress · Recovery</p><p className="text-[length:var(--fs-12)] font-bold mt-1 break-words">{humanize(onboarding.stressLevel)} · {humanize(onboarding.recoveryLevel)}</p></div>
+      <div className="grid grid-cols-1 gap-2 text-center [&>div]:min-w-0">
         <div className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] px-3 py-2.5"><p className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Exercise</p><p className="text-[length:var(--fs-12)] font-bold mt-1 break-words">{humanize(onboarding.exerciseFreq)}</p></div>
       </div>
       <button onClick={onChangeGoal} className="w-full py-2.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-bg)] text-[length:var(--fs-11)] font-bold text-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--text-inverse)] transition-colors">Change Goal</button>
@@ -442,21 +441,17 @@ const Profile = ({ embedded = false }) => {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [openSection, setOpenSection] = useState(null);
 
-  // MFP-style streak stat, cached with the profile so returning to the page
-  // does not refetch data that is only minutes old.
+  // Engagement streak (workouts + meals) — same number the Dashboard shows,
+  // cached with the profile so returning to the page does not refetch it.
   const { data: streakDays = 0 } = useQuery({
-    queryKey: ['profile-checkin-streak', USER_ID],
+    queryKey: ['profile-streak', USER_ID],
     enabled: !!USER_ID,
     staleTime: 1000 * 60 * 5,
     queryFn: async () => {
-      const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const d = await apiFetch(`/api/checkins/${USER_ID}/history?days=60`);
-      const days = new Set((d.history || []).map(h => String(h.checkin_date || h.check_date || '').slice(0, 10)));
-      const cur = new Date();
-      if (!days.has(dayKey(cur))) cur.setDate(cur.getDate() - 1); // today's check-in can still happen
-      let s = 0;
-      while (days.has(dayKey(cur))) { s++; cur.setDate(cur.getDate() - 1); }
-      return s;
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const data = await apiFetch(`/api/dashboard/${USER_ID}?today=${today}`);
+      return Number(data?.streak?.current) || 0;
     },
   });
 
@@ -465,6 +460,7 @@ const Profile = ({ embedded = false }) => {
   const [changeGoalOpen, setChangeGoalOpen] = useState(false);
   // Module 1 — soft account deactivation modal (Security → Danger Zone).
   const [deactivateOpen, setDeactivateOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const { logout } = useAuth();
   const [pendingGoalType, setPendingGoalType] = useState(null);
   const [metricsEditSignal, setMetricsEditSignal] = useState(0);
@@ -902,7 +898,7 @@ const Profile = ({ embedded = false }) => {
 
               {/* Personalization — edit the lifestyle + allergy answers given during onboarding */}
               <div className="pf-list-item">
-                <SectionRow icon="tune" title="Personalization" subtitle="Allergies, sleep & recovery" expanded={openSection === 'personalization'} onClick={() => toggle('personalization')} />
+                <SectionRow icon="tune" title="Personalization" subtitle="Allergies, activity & exercise" expanded={openSection === 'personalization'} onClick={() => toggle('personalization')} />
                 {openSection === 'personalization' && (
                   <div className="pf-row-panel">
                     <Suspense fallback={<div className="pf-panel-loading" role="status">Loading personalization…</div>}>
@@ -978,7 +974,7 @@ const Profile = ({ embedded = false }) => {
                 />
               </div>
               <div className="pf-list-item">
-                <SectionRow icon="logout" title="Log Out" subtitle="Sign out of this device" danger onClick={handleLogout} />
+                <SectionRow icon="logout" title="Log Out" subtitle="Sign out of this device" danger onClick={() => setLogoutOpen(true)} />
               </div>
               <div className="pf-list-item">
                 <SectionRow
@@ -995,6 +991,12 @@ const Profile = ({ embedded = false }) => {
       </div>
 
       <Suspense fallback={null}>
+        <LogoutConfirmDialog
+          isOpen={logoutOpen}
+          onClose={() => setLogoutOpen(false)}
+          onConfirm={handleLogout}
+          admin={embedded}
+        />
         {changePwOpen && (
           <ChangePasswordModal
             onClose={() => setChangePwOpen(false)}

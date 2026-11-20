@@ -34,6 +34,7 @@ export default function AdminAiUsage() {
         title="AI usage"
         accent="ledger."
         description="Daily call volume and the heaviest consumers across the selected window. Quota resets per UTC day in ai_daily_usage."
+        image="/admin/hero-ai.jpg"
         actions={(
           <div className="adm-seg" role="group" aria-label="Usage window">
             {WINDOWS.map((value) => (

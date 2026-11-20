@@ -24,10 +24,10 @@ const LogActivityModal = ({ isOpen, onClose, onSave }) => {
       setError(validationError);
       return;
     }
-    const { calories, steps, minutes, water } = values;
+    const { calories, steps, minutes } = values;
     setSaving(true);
     try {
-      await onSave({ calories, steps, minutes, water });
+      await onSave({ calories, steps, minutes });
       setFormData(EMPTY_ACTIVITY_FORM);
       onClose();
     } catch (err) {
@@ -92,17 +92,6 @@ const LogActivityModal = ({ isOpen, onClose, onSave }) => {
             onChange={(e) => setField('minutes', e.target.value)}
           />
         </div>
-        <Input
-          label="Water Intake (ml)"
-          type="number"
-          min="0"
-          max="15000"
-          step="1"
-          placeholder="e.g. 2500"
-          icon="water_drop"
-          value={formData.water}
-          onChange={(e) => setField('water', e.target.value)}
-        />
         <Button
           type="submit"
           variant="primary"

@@ -30,10 +30,7 @@ export const FOCUSES = {
   PERFORMANCE: ['ENDURANCE', 'STRENGTH', 'CONDITIONING', 'ATHLETIC'],
 };
 
-export const SLEEP_QUALITY = ['LOW', 'MODERATE', 'GOOD'];
-export const STRESS_LEVELS = ['LOW', 'MODERATE', 'HIGH'];
 export const EXERCISE_FREQ = ['NEVER', '1_2_DAYS', '3_5_DAYS', '6_7_DAYS'];
-export const RECOVERY_LEVELS = ['LOW', 'MODERATE', 'HIGH'];
 
 // Human labels for enum-style option values. Day ranges get en-dashes;
 // anything else falls back to underscore → space + sentence case.

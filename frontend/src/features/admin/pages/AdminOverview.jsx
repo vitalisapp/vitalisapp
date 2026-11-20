@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import Icon from '../../../components/Icon.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import { useAdminResource } from '../hooks/useAdminResource.js';
+import { useAdminToast } from '../hooks/useAdminToast.jsx';
+import ExportMenu from '../components/ExportMenu.jsx';
 import {
   Badge, Kpi, PageHero, Panel, StateBlock,
 } from '../components/AdminBits.jsx';
@@ -71,6 +73,44 @@ const buildCategories = (data) => {
   ];
 };
 
+// Flatten every figure shown on the page into export rows. Reuses
+// buildCategories so the spreadsheet stays in sync with the metric grid.
+const OVERVIEW_EXPORT_COLUMNS = [
+  { header: 'Section', value: (row) => row.section, width: 30 },
+  { header: 'Metric', value: (row) => row.metric, width: 34 },
+  { header: 'Value', value: (row) => row.value, type: 'number', width: 14 },
+];
+
+const buildOverviewRows = (data, { windowDays, windowCalls, peakCalls }) => {
+  if (!data) return [];
+  const rows = [];
+  const push = (section, metric, value) => rows.push({ section, metric, value });
+  const { users: u, ai } = data;
+
+  push('Key metrics', 'Total members', u.total);
+  push('Key metrics', 'New members in 7 days', u.newLast7d);
+  push('Key metrics', 'Active sessions (30d)', ai.activeSessions);
+  push('Key metrics', 'AI calls today', ai.callsToday);
+  push('Key metrics', 'AI calls lifetime', ai.totalCalls);
+  push('Key metrics', 'Community posts', data.content.communityPosts);
+
+  buildCategories(data).forEach((cat) => {
+    cat.metrics.forEach((metric) => {
+      push(cat.label, metric.suffix ? `${metric.label} (${metric.suffix.trim()})` : metric.label, metric.value);
+    });
+  });
+
+  push('Needs attention', 'Unverified emails', u.unverified);
+  push('Needs attention', 'Onboarding incomplete', u.onboardingIncomplete);
+  push('Needs attention', 'Deactivated accounts', u.deactivated);
+  push('Needs attention', 'New in 30 days', u.newLast30d);
+
+  push(`AI activity (last ${windowDays} days)`, 'Calls in window', windowCalls);
+  push(`AI activity (last ${windowDays} days)`, 'Peak calls in a day', peakCalls);
+
+  return rows;
+};
+
 const OverviewSkeleton = () => (
   <div className="adm-dash" aria-busy="true" aria-label="Loading platform overview">
     <div className="adm-dash__main">
@@ -133,6 +173,7 @@ const OverviewSkeleton = () => (
 
 export default function AdminOverview() {
   const { user } = useAuth();
+  const { show, node: toast } = useAdminToast();
   const [windowDays, setWindowDays] = useState(14);
   const [category, setCategory] = useState('members');
   const [selectedDate, setSelectedDate] = useState(null);
@@ -182,9 +223,18 @@ export default function AdminOverview() {
       title="Platform"
       accent="overview."
       description={`Welcome back, ${user?.name || 'Admin'}. Live platform health, access and content — the numbers below come straight from the database, and every admin action is audited.`}
+      image="/admin/hero-overview.jpg"
       actions={(
         <div className="adm-page-actions">
           <span className="adm-live"><i aria-hidden="true" /> Live data</span>
+          <ExportMenu
+            columns={OVERVIEW_EXPORT_COLUMNS}
+            fileName="vitalis-overview"
+            sheetName="Overview"
+            onToast={show}
+            disabled={!overview.data}
+            getRows={() => buildOverviewRows(overview.data, { windowDays, windowCalls, peakCalls })}
+          />
           <button type="button" className="adm-btn is-sm" onClick={refreshAll} disabled={overview.loading}>
             <Icon name="refresh" /> Refresh
           </button>
@@ -512,6 +562,7 @@ export default function AdminOverview() {
           </Panel>
         </aside>
       </div>
+      {toast}
     </>
   );
 }

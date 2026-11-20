@@ -408,6 +408,18 @@
   outline-offset: 2px;
 }
 
+/* Text fields always match :focus-visible when clicked, so the ring above
+   drew a boxy outline around every input. Fields show focus with their own
+   accent border / soft glow instead. Checkboxes, radios and buttons keep the
+   ring. High specificity on purpose: it also beats page-level
+   "input:focus-visible" outline rules. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):not([type="color"]):focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[contenteditable="true"]:focus-visible {
+  outline: none;
+}
+
 /* ── Textboxes: remove the harsh, offset browser outline everywhere ──────
    The global :focus-visible rule above is unlayered, so it used to beat
    Tailwind's `outline-none` utility (which lives in a lower-priority layer)

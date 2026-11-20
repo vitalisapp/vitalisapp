@@ -32,7 +32,7 @@ export const ACTIVE_NAV_KEY = 'vitalis:activeNav';
 
 // Mobile bottom bar — exactly what the phones show.
 // Main 4 (always visible): Dashboard, Progress, Workout, Plans.
-// Plus (+) sheet: MealTracker, Jogging, Community, Messenger, Recovery.
+// Plus (+) sheet: MealTracker, Jogging, Community, Messenger.
 export const MOBILE_MAIN_NAV = [
   { key: 'dashboard', label: 'Dashboard', icon: 'grid_view',     path: '/dashboard' },
   { key: 'progress',   label: 'Progress',   icon: 'history',       path: '/dashboard/logs' },

@@ -30,7 +30,7 @@ if (_jwt.startsWith('change-me') || _jwt.length < 32) {
   }
 }
 if (!process.env.TZ || process.env.TZ !== 'UTC') {
-  // aiQuota uses UTC_DATE() + daily_stats/readiness assume UTC day boundaries.
+  // aiQuota uses UTC_DATE() + daily_stats assume UTC day boundaries.
   // Warn only — never crash — so local XAMPP keeps working.
   console.warn(
     "[env] TZ is not UTC (got '" +

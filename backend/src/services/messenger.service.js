@@ -25,14 +25,16 @@ async function getMessagesBetween(userId, contactId, { limit, before, beforeVali
                  sent_at as sent_at_raw,
                  IF(sender_id = ?, 1, 0) as isMe
                  FROM messages 
-                 WHERE (sender_id = ? AND receiver_id = ?) 
-                    OR (sender_id = ? AND receiver_id = ?)`;
+                 WHERE ((sender_id = ? AND receiver_id = ?)
+                    OR (sender_id = ? AND receiver_id = ?))`;
   if (beforeValid) {
     sql += ` AND sent_at < ?`;
     params.push(before);
   }
-  sql += ` ORDER BY sent_at DESC LIMIT ?`;
-  params.push(Number(limit));
+  // mysql2 prepared statements reject a numeric LIMIT placeholder
+  // (ER_WRONG_ARGUMENTS), so the clamped integer is inlined instead.
+  const safeLimit = Math.min(100, Math.max(1, Math.trunc(Number(limit)) || 50));
+  sql += ` ORDER BY sent_at DESC LIMIT ${safeLimit}`;
   const [rowsDesc] = await db.execute(sql, params);
   return rowsDesc.reverse();
 }

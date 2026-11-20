@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import Icon from '../../../components/Icon.jsx';
+import LogoutConfirmDialog from '../../../components/ui/LogoutConfirmDialog.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import { initials } from '../utils/format.js';
 import '../../../components/Sidebar.css';
@@ -79,6 +80,7 @@ export default function AdminSidebar({ items, collapsed = false, onToggle = unde
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [tooltip, setTooltip] = useState(null);
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   useEffect(() => {
     if (!tooltip) return undefined;
@@ -197,10 +199,17 @@ export default function AdminSidebar({ items, collapsed = false, onToggle = unde
             collapsed={collapsed}
             showTooltip={showTooltip}
             hideTooltip={() => setTooltip(null)}
-            onClick={handleLogout}
+            onClick={() => setLogoutOpen(true)}
           />
         </div>
       </aside>
+
+      <LogoutConfirmDialog
+        isOpen={logoutOpen}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={handleLogout}
+        admin
+      />
     </>
   );
 }

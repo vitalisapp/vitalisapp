@@ -406,7 +406,7 @@ export const ProductTour = ({ open, onClose, onPrimary, isAuthenticated }) => {
       icon: "insights",
       kicker: "03 · Progress",
       title: "See the whole picture",
-      copy: "Readiness, trends, plans, and your complete timeline update from the data you already logged. No manual reports.",
+      copy: "Trends, plans, and your complete timeline update from the data you already logged. No manual reports.",
     },
   ];
   const active = steps[step];

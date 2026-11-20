@@ -23,7 +23,7 @@ const EXPECTED = [
   '038_progress_module.sql', '039_admin_audit.sql', '040_admin_seed.sql',
   '041_goal_recalibration.sql', '042_progress_cadence.sql',
   '043_food_grams.sql', '044_food_density_cache.sql', '045_email_delivery.sql',
-  '046_phone_verifications.sql',
+  '046_phone_verifications.sql', '047_remove_sleep_recovery.sql',
 ];
 
 describe('migrations per-table baseline', () => {
@@ -68,6 +68,17 @@ describe('migrations per-table baseline', () => {
     assert.match(read('001_users.sql'), /`token_version`/);
     assert.match(read('007_ai_daily_usage.sql'), /CREATE TABLE IF NOT EXISTS `ai_daily_usage`/);
     assert.match(read('005_activity_logs.sql'), /`is_gps`/);
+  });
+
+  it('047 drops sleep/recovery storage idempotently, one column per ALTER', () => {
+    const sql = read('047_remove_sleep_recovery.sql');
+    assert.match(sql, /DROP TABLE IF EXISTS `sleep_logs`/);
+    assert.match(sql, /DROP TABLE IF EXISTS `daily_checkins`/);
+    for (const col of ['sleep_hours', 'sleep_quality', 'stress_level', 'recovery_level']) {
+      assert.match(sql, new RegExp('ALTER TABLE `fitness_goals` DROP COLUMN `' + col + '`;'));
+    }
+    assert.match(sql, /ALTER TABLE `ai_insight_cache` DROP COLUMN `sleep_suggestion`;/);
+    assert.doesNotMatch(sql, /DROP COLUMN `exercise_freq`/);
   });
 
   it('seeds stay INSERT IGNORE (runner fails 1062 otherwise)', () => {
