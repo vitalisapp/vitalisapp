@@ -13,6 +13,9 @@ const analyzeUpload=makeUploader('food');
 const mealUpload=makeUploader('food');
 
 // Named image field. analyze-pic: "image". Manual meal save: "image" (optional).
+// Spam guard for writes: one shared per-user bucket for this router.
+const write = writeLimiter();
+
 router.post('/analyze-pic', verifyUser, analyzeUpload.single('image'), normalizeMulterError, aiLimiter(), aiQuota, controller.postanalyzePic);
 // Module 4 — catalog autocomplete. MUST stay ABOVE GET /:userId so the path
 // isn't swallowed as a userId param.
@@ -23,6 +26,6 @@ router.post('/estimate-density', verifyUser, aiLimiter(), aiQuota, controller.po
 router.post('/:userId/suggest-plan', verifyUser, requireOwner('userId'), aiLimiter(), aiQuota, controller.postUserIdSuggestPlan);
 router.post('/:userId', verifyUser, mealUpload.single('image'), normalizeMulterError, requireOwner('userId'), writeLimiter(), controller.postUserId);
 router.get('/:userId', verifyUser, requireOwner('userId'), controller.getUserId);
-router.delete('/:userId/:mealId', verifyUser, requireOwner('userId'), controller.deleteUserIdMealId);
+router.delete('/:userId/:mealId', verifyUser, write, requireOwner('userId'), controller.deleteUserIdMealId);
 
 module.exports=router;

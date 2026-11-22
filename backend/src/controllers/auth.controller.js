@@ -198,6 +198,7 @@ async function postregister(req, res, next) {
       // destroy the account — the user can request another code from the
       // verification screen.
       let smsDelivery = null;
+      let smsError = null;
       if (!autoVerified && verificationMethod === "sms") {
         try {
           smsDelivery = await phoneVerification.sendCode({ email, phone: user.phone });
@@ -205,6 +206,9 @@ async function postregister(req, res, next) {
           // Operational provider errors are reported on the verification
           // screen, not as a failed registration.
           console.error("SMS verification send failed:", smsErr.code || smsErr.message);
+          if (smsErr.isOperational || smsErr.name === "SmsError") {
+            smsError = { code: smsErr.code, message: smsErr.message };
+          }
         }
       }
 
@@ -243,6 +247,7 @@ async function postregister(req, res, next) {
         // Email signups: the welcome/verify email is sent in the background.
         deliveryStatus: autoVerified ? 'skipped' : verificationMethod === "sms" ? (smsDelivery ? 'accepted' : 'failed') : emailed ? 'queued' : 'failed',
       };
+      if (smsError) payload.deliveryError = smsError;
       if (smsDelivery) {
         payload.phoneMasked = smsDelivery.phoneMasked;
         payload.retryAfter = smsDelivery.retryAfter;

@@ -1,6 +1,14 @@
 // Central rate-limit presets (single-instance in-memory buckets).
 const rateLimit = require('express-rate-limit');
 
+// Bucket key: the signed-in user when verifyUser already ran, else the IP.
+// Per-user keys stop classmates on one campus Wi-Fi (one NAT IP) from
+// exhausting each other's limits; anonymous routes (login, register, OTP)
+// have no req.user and stay IP-keyed.
+function userOrIpKey(req) {
+  return req.user?.id ? `u:${req.user.id}` : `ip:${req.ip}`;
+}
+
 // Extra options (keyGenerator, skipSuccessfulRequests, …) pass through to
 // express-rate-limit for limiters that need a custom bucket key.
 function makeLimiter({ windowMs, limit, message, ...options }) {
@@ -10,6 +18,7 @@ function makeLimiter({ windowMs, limit, message, ...options }) {
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     message: { error: message },
+    keyGenerator: userOrIpKey,
     ...options,
   });
 }
@@ -26,4 +35,4 @@ const meLimiter = () => makeLimiter({ windowMs: 60 * 1000, limit: 300, message: 
 const loginLimiter = () => makeLimiter({ windowMs: 60 * 1000, limit: 10, message: 'Too many login attempts. Try again in a minute.' });
 const logoutLimiter = () => makeLimiter({ windowMs: 15 * 60 * 1000, limit: 60, message: 'Too many logout attempts. Try again later.' });
 
-module.exports = { makeLimiter, aiLimiter, coachLimiter, feedbackLimiter, settingsLimiter, writeLimiter, messageLimiter, meLimiter, loginLimiter, logoutLimiter };
+module.exports = { makeLimiter, userOrIpKey, aiLimiter, coachLimiter, feedbackLimiter, settingsLimiter, writeLimiter, messageLimiter, meLimiter, loginLimiter, logoutLimiter };

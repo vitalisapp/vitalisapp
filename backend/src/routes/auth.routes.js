@@ -54,7 +54,15 @@ router.post('/register', registerLimiter, validate(controller.registerSchema), c
 // second layer for backward compat (same 10/min budget).
 router.post('/login', loginLimiter(), controller.loginIpLimiter, validate(controller.loginSchema), controller.postlogin);
 router.post('/google-login', googleLoginLimiter, validate(controller.googleLoginSchema), controller.postgoogleLogin);
-router.post('/change-password', verifyUser, validate(controller.changePasswordSchema), controller.postchangePassword);
+// Guards the current-password check against brute force from a hijacked
+// session (and bcrypt CPU burn). Only failed attempts count.
+const changePasswordLimiter = makeLimiter({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  message: 'Too many password change attempts. Try again in 15 minutes.',
+  skipSuccessfulRequests: true,
+});
+router.post('/change-password', verifyUser, changePasswordLimiter, validate(controller.changePasswordSchema), controller.postchangePassword);
 router.post('/logout', logoutLimiter(), controller.postlogout);
 router.post('/send-verification', sendVerificationLimiter, controller.postsendVerification);
 

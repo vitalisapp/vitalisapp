@@ -7,6 +7,8 @@
 //
 // The secret key, the OTP and the full message never reach logs or responses.
 
+const { SUPPORTED_NETWORKS_MSG } = require('../utils/phone');
+
 const ENDPOINT = 'https://unismsapi.com/api/sms';
 const DEFAULT_SENDER_ID = 'Unisoft';
 const DEFAULT_TIMEOUT_MS = 10000;
@@ -166,13 +168,13 @@ async function sendSms({ to, content, metadata }) {
     const detail = providerDetail(body);
     if (isUnsupportedNetwork(detail)) {
       throw new SmsError(
-        'Your network is not supported by our SMS sender. Please use a Globe, TM, or DITO number.',
+        `This number's network (Smart, TNT, or Sun) can't receive our SMS codes. ${SUPPORTED_NETWORKS_MSG}`,
         'SMS_UNSUPPORTED_NETWORK',
         422,
       );
     }
     throw new SmsError(
-      'We could not send a code to that number. Check the number and try again.',
+      `We could not send a code to that number. Check the number and try again. ${SUPPORTED_NETWORKS_MSG}`,
       'SMS_REJECTED',
       422,
     );

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import { apiPost } from '../../../../../lib/apiClient.js';
 import { GOOGLE_CLIENT_ID } from '../../../../../app/config/env.js';
-import { isValidPhMobile } from '../../../../../lib/phone.js';
+import { isValidPhMobile, PHONE_INVALID_MSG } from '../../../../../lib/phone.js';
 import { useAuth } from '../../../../../hooks/useAuth.jsx';
 import { getAccessCode } from './useAccessInvite.js';
 
@@ -88,7 +88,7 @@ export const useRegister = () => {
     // Registration verification channel — email keeps the existing link flow.
     const verificationMethod = formData.verificationMethod === 'sms' ? 'sms' : 'email';
     if (verificationMethod === 'sms' && !isValidPhMobile(formData.phone)) {
-      setError('Enter a valid Philippine mobile number (09XXXXXXXXX or +639XXXXXXXXX).');
+      setError(PHONE_INVALID_MSG);
       return;
     }
     setLoading(true);
@@ -118,6 +118,7 @@ export const useRegister = () => {
               phoneMasked: data.phoneMasked,
               retryAfter: data.retryAfter,
               deliveryStatus: data.deliveryStatus,
+              deliveryError: data.deliveryError || null,
               smsMocked: data.smsMocked,
             },
           });

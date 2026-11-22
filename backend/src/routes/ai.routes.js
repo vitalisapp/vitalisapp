@@ -21,6 +21,13 @@ router.post('/ai/coach', verifyUser, aiRouteLimiter, aiQuota, controller.postaiC
 router.get('/ai/history/:userId', verifyUser, requireOwner('userId'), controller.getaiHistoryUserId);
 router.get('/logs/latest/:userId', verifyUser, requireOwner('userId'), controller.getlogsLatestUserId);
 router.post('/ai/run-analysis', verifyUser, aiRouteLimiter, aiQuota, controller.postaiRunAnalysis);
-router.get('/ai/summary', verifyUser, controller.getaiDailySummary);
+// Dashboard summary: cached, but a cache miss calls Gemini. Own bucket (no
+// aiQuota — cache hits must not burn the daily AI budget).
+const aiSummaryLimiter = makeLimiter({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  message: 'Too many summary refreshes. Try again in a few minutes.',
+});
+router.get('/ai/summary', verifyUser, aiSummaryLimiter, controller.getaiDailySummary);
 
 module.exports=router;

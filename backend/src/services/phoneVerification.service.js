@@ -15,7 +15,7 @@
 const crypto = require('crypto');
 const db = require('../config/db');
 const { AppError } = require('../utils/errors');
-const { normalizePhMobile, maskPhone } = require('../utils/phone');
+const { normalizePhMobile, maskPhone, PHONE_INVALID_MSG } = require('../utils/phone');
 const sms = require('./sms.service');
 
 const OTP_TTL_MS = 5 * 60 * 1000;
@@ -69,11 +69,7 @@ async function sendCode({ email, phone }) {
 
   const target = normalizePhMobile(phone || user.phone);
   if (!target) {
-    throw new AppError(
-      'Enter a valid Philippine mobile number (09XXXXXXXXX or +639XXXXXXXXX).',
-      400,
-      'PHONE_INVALID',
-    );
+    throw new AppError(PHONE_INVALID_MSG, 400, 'PHONE_INVALID');
   }
 
   const [taken] = await db.execute(

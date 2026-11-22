@@ -38,3 +38,27 @@ export function maskPhMobile(input) {
   const national = normalized.slice(3);
   return `${normalized.slice(0, 3)}${national.slice(0, 3)}***${national.slice(-4)}`;
 }
+
+// User-facing copy — mirror of backend/src/utils/phone.js.
+export const SUPPORTED_NETWORKS_MSG = 'Only Globe, TM, and DITO SIMs are supported.';
+export const PHONE_INVALID_MSG = `Enter a valid Philippine mobile number (09XXXXXXXXX or +639XXXXXXXXX). ${SUPPORTED_NETWORKS_MSG}`;
+
+// Server codes that mean "this number can't get our SMS — pick another one".
+export const PHONE_RETRY_CODES = new Set([
+  'PHONE_INVALID',
+  'PHONE_TAKEN',
+  'SMS_UNSUPPORTED_NETWORK',
+  'SMS_REJECTED',
+]);
+
+// Inline validation while typing: stays quiet until the input is clearly
+// wrong (bad characters, or a full-length number that still doesn't parse),
+// so the user isn't shouted at after the first digit.
+export function livePhoneError(input) {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+  if (/[^\d\s().+-]/.test(raw)) return PHONE_INVALID_MSG;
+  const digits = raw.replace(/\D/g, '');
+  if (digits.length < 10) return '';
+  return isValidPhMobile(raw) ? '' : PHONE_INVALID_MSG;
+}

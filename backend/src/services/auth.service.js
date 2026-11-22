@@ -8,7 +8,7 @@ const { OAuth2Client } = require("google-auth-library");
 const { AppError } = require("../utils/errors");
 const { sendVerificationEmail, sendEmailChangedNotice, sendWelcomeEmail } = require("./email.service");
 const { frontendUrl } = require("../utils/frontendUrl");
-const { normalizePhMobile } = require("../utils/phone");
+const { normalizePhMobile, PHONE_INVALID_MSG } = require("../utils/phone");
 const allergiesService = require("./allergies.service");
 const { trackingToken } = require('./emailDelivery.service');
 
@@ -324,11 +324,7 @@ async function register({ name, email, password, phone, verificationMethod = 'em
   const wantsSms = verificationMethod === "sms";
   const normalizedPhone = wantsSms ? normalizePhMobile(phone) : "";
   if (wantsSms && !normalizedPhone) {
-    throw new AppError(
-      "Enter a valid Philippine mobile number (09XXXXXXXXX or +639XXXXXXXXX).",
-      400,
-      "PHONE_INVALID",
-    );
+    throw new AppError(PHONE_INVALID_MSG, 400, "PHONE_INVALID");
   }
 
   const salt = await bcrypt.genSalt(10);
@@ -422,8 +418,15 @@ async function login({ email, password }) {
 
   const [users] = await db.execute(LOGIN_USER_SELECT, [email]);
   if (users.length === 0) {
+    // Explicit "not found" is a product decision: /register already reveals
+    // taken emails (EMAIL_EXISTS), so this leaks nothing new. Probing stays
+    // throttled by loginLimiter (10/min/IP) and the per-email attempt counter.
     recordFailedAttempt(email);
-    throw new AppError("Invalid credentials", 401, "INVALID_CREDENTIALS");
+    throw new AppError(
+      "User not found. No account uses this email — sign up to create one.",
+      404,
+      "USER_NOT_FOUND",
+    );
   }
 
   const user = users[0];

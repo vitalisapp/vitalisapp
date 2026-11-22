@@ -4,7 +4,7 @@ import { apiPost } from '../../../../../lib/apiClient.js';
 import { useAuth } from '../../../../../hooks/useAuth.jsx';
 import { postVerifyRoute } from '../utils/postVerifyRoute.js';
 import { SMS_SENDER_ID } from '../../../../../app/config/env.js';
-import { isValidPhMobile } from '../../../../../lib/phone.js';
+import { isValidPhMobile, livePhoneError, PHONE_INVALID_MSG, PHONE_RETRY_CODES } from '../../../../../lib/phone.js';
 import VerificationLayout from '../components/VerificationLayout.jsx';
 import NetworkNotice from '../components/NetworkNotice.jsx';
 import OtpInput from '../../../Profile/components/OtpInput.jsx';
@@ -24,14 +24,16 @@ const VerifyPhone = () => {
   const [phoneMasked, setPhoneMasked] = useState(location.state?.phoneMasked || '');
   const [code, setCode] = useState('');
   const [cooldown, setCooldown] = useState(Number(location.state?.retryAfter) || 0);
+  const firstSendFailed = location.state?.deliveryStatus === 'failed';
   const [error, setError] = useState(
-    location.state?.deliveryStatus === 'failed'
-      ? "We couldn't send the first code. Check the number and request a new one."
+    firstSendFailed
+      ? location.state?.deliveryError?.message
+        || "We couldn't send the first code. Check the number and request a new one."
       : '',
   );
   const [success, setSuccess] = useState('');
   const [busy, setBusy] = useState(false);
-  const [changingNumber, setChangingNumber] = useState(location.state?.deliveryStatus === 'failed');
+  const [changingNumber, setChangingNumber] = useState(firstSendFailed);
   const [phoneInput, setPhoneInput] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [mockMode, setMockMode] = useState(Boolean(location.state?.smsMocked) && !import.meta.env.PROD);
@@ -51,7 +53,7 @@ const VerifyPhone = () => {
       return;
     }
     if (changingNumber && !isValidPhMobile(phoneInput)) {
-      setPhoneError('Use 09XXXXXXXXX or +639XXXXXXXXX.');
+      setPhoneError(PHONE_INVALID_MSG);
       return;
     }
 
@@ -74,7 +76,9 @@ const VerifyPhone = () => {
     } catch (err) {
       setError(err.message || 'We could not send a code right now. Try again.');
       if (err?.details?.retryAfter) setCooldown(Number(err.details.retryAfter) || 0);
-      if (err?.code === 'PHONE_INVALID' || err?.code === 'PHONE_TAKEN') setChangingNumber(true);
+      // Bad format, number in use, or a network our sender can't reach:
+      // open the number form so the user can switch to a Globe/TM/DITO SIM.
+      if (PHONE_RETRY_CODES.has(err?.code)) setChangingNumber(true);
     } finally {
       setBusy(false);
     }
@@ -236,7 +240,7 @@ const VerifyPhone = () => {
             placeholder="09XXXXXXXXX"
             value={phoneInput}
             aria-invalid={phoneError ? true : undefined}
-            onChange={(event) => { setPhoneInput(event.target.value); if (phoneError) setPhoneError(''); }}
+            onChange={(event) => { setPhoneInput(event.target.value); setPhoneError(livePhoneError(event.target.value)); }}
             className={`w-full rounded-xl border bg-white/5 p-3 text-[16px] text-[#e5e2e1] outline-none transition-colors placeholder:text-white/20 ${phoneError ? 'border-red-500/60' : 'border-white/10 focus:border-[var(--accent)]/50'}`}
           />
           {phoneError && <p className="mt-1.5 px-1 text-[11px] text-red-400">{phoneError}</p>}

@@ -30,6 +30,7 @@ const EXPECTED = [
   '053_food_details.sql',
   '054_free_plans.sql',
   '055_dedupe_user_sessions.sql',
+  '056_plan_images.sql',
 ];
 
 describe('migrations per-table baseline', () => {

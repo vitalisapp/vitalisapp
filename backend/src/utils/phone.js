@@ -10,6 +10,11 @@
 
 const CANONICAL_RE = /^\+639\d{9}$/;
 
+// User-facing copy for the networks the UniSMS sender can reach. Keep in sync
+// with frontend/src/lib/phone.js and NetworkNotice.jsx.
+const SUPPORTED_NETWORKS_MSG = 'Only Globe, TM, and DITO SIMs are supported.';
+const PHONE_INVALID_MSG = `Enter a valid Philippine mobile number (09XXXXXXXXX or +639XXXXXXXXX). ${SUPPORTED_NETWORKS_MSG}`;
+
 function normalizePhMobile(input) {
   const raw = String(input || '').replace(/[\s().-]/g, '');
   if (!raw) return '';
@@ -36,4 +41,11 @@ function maskPhone(input) {
   return `${normalized.slice(0, 3)}${national.slice(0, 3)}***${national.slice(-4)}`;
 }
 
-module.exports = { normalizePhMobile, isValidPhMobile, maskPhone, CANONICAL_RE };
+module.exports = {
+  normalizePhMobile,
+  isValidPhMobile,
+  maskPhone,
+  CANONICAL_RE,
+  SUPPORTED_NETWORKS_MSG,
+  PHONE_INVALID_MSG,
+};

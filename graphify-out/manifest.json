@@ -300,9 +300,9 @@
     "semantic_hash": ""
   },
   "backend/src/controllers/auth.controller.js": {
-    "mtime": 1795311205.274961,
-    "seen": 1795311886.088627,
-    "ast_hash": "15f3f56cb212a241441b74adaa14155b",
+    "mtime": 1795317629.5804818,
+    "seen": 1795317790.769568,
+    "ast_hash": "61164633e8776b1817ab996b2a13efff",
     "semantic_hash": ""
   },
   "backend/src/controllers/bmi.controller.js": {
@@ -570,9 +570,9 @@
     "semantic_hash": ""
   },
   "backend/src/middleware/rateLimits.js": {
-    "mtime": 1793407707.8228867,
-    "seen": 1795221113.1620672,
-    "ast_hash": "0bda32473adf4dbf07a18275620cacb1",
+    "mtime": 1795317971.2383127,
+    "seen": 1795318360.655952,
+    "ast_hash": "09fdcc31dea5baf3ea584fb84abe83a4",
     "semantic_hash": ""
   },
   "backend/src/middleware/requestLogger.js": {
@@ -594,9 +594,9 @@
     "semantic_hash": ""
   },
   "backend/src/routes/activity.routes.js": {
-    "mtime": 1791956008.5667007,
-    "seen": 1795221113.1620786,
-    "ast_hash": "cea8a97676f4c63d83055ac32f447104",
+    "mtime": 1795317971.2465155,
+    "seen": 1795318360.656733,
+    "ast_hash": "9643c8967c74d6545093e4648511d147",
     "semantic_hash": ""
   },
   "backend/src/routes/admin.routes.js": {
@@ -606,21 +606,21 @@
     "semantic_hash": ""
   },
   "backend/src/routes/ai.routes.js": {
-    "mtime": 1792807150.9863462,
-    "seen": 1795221113.1620839,
-    "ast_hash": "55a85d275e0edae686c134c2afd8baf2",
+    "mtime": 1795317971.2439778,
+    "seen": 1795318360.6569834,
+    "ast_hash": "8bf2bb4be051de6f09631f6b6d178ad5",
     "semantic_hash": ""
   },
   "backend/src/routes/auth.routes.js": {
-    "mtime": 1795068151.0699456,
-    "seen": 1795221113.1620865,
-    "ast_hash": "16cbb53e1ed1a909bbdf7b404d366ce4",
+    "mtime": 1795317971.2403257,
+    "seen": 1795318360.656987,
+    "ast_hash": "f43f34d3e191b4185a238f30d6a9c3c3",
     "semantic_hash": ""
   },
   "backend/src/routes/bmi.routes.js": {
-    "mtime": 1795311205.3409963,
-    "seen": 1795311886.0924106,
-    "ast_hash": "1ab27cd93781257fc3fdddeb0e6597a2",
+    "mtime": 1795317971.249549,
+    "seen": 1795318360.6569903,
+    "ast_hash": "b4aae92479b2354d785a4d4d7e542225",
     "semantic_hash": ""
   },
   "backend/src/routes/coach.routes.js": {
@@ -630,9 +630,9 @@
     "semantic_hash": ""
   },
   "backend/src/routes/community.routes.js": {
-    "mtime": 1791956008.573848,
-    "seen": 1795221113.162095,
-    "ast_hash": "45d78aa2ba34ff59bb5af7676db3062f",
+    "mtime": 1795317980.242079,
+    "seen": 1795318360.657242,
+    "ast_hash": "aaf3e95f00a597ec8f2a7ae095f79f7b",
     "semantic_hash": ""
   },
   "backend/src/routes/dashboard.routes.js": {
@@ -648,9 +648,9 @@
     "semantic_hash": ""
   },
   "backend/src/routes/foodLogs.routes.js": {
-    "mtime": 1793407707.6870177,
-    "seen": 1795221113.162104,
-    "ast_hash": "de7767072f3b8a1239a1739300e44cb6",
+    "mtime": 1795317971.268767,
+    "seen": 1795318360.6580708,
+    "ast_hash": "ddfeaa1e987520f287fd763a761e5b65",
     "semantic_hash": ""
   },
   "backend/src/routes/forgotpassword.routes.js": {
@@ -660,9 +660,9 @@
     "semantic_hash": ""
   },
   "backend/src/routes/goals.routes.js": {
-    "mtime": 1792807150.99087,
-    "seen": 1795221113.1621091,
-    "ast_hash": "0ee7b01ec8c079001471bb47bce88fad",
+    "mtime": 1795317971.2548282,
+    "seen": 1795318360.6586971,
+    "ast_hash": "ff52d41b07d1948a04ddaf2636c88066",
     "semantic_hash": ""
   },
   "backend/src/routes/index.js": {
@@ -672,9 +672,9 @@
     "semantic_hash": ""
   },
   "backend/src/routes/logs.routes.js": {
-    "mtime": 1791956008.6280036,
-    "seen": 1795221113.1621141,
-    "ast_hash": "dad354f2a21cff956d15cc83da063cb1",
+    "mtime": 1795317971.258567,
+    "seen": 1795318360.6596124,
+    "ast_hash": "a3a1aa8fc48556c78d50209c17767a5d",
     "semantic_hash": ""
   },
   "backend/src/routes/messenger.routes.js": {
@@ -684,27 +684,27 @@
     "semantic_hash": ""
   },
   "backend/src/routes/notification.routes.js": {
-    "mtime": 1791956008.6308765,
-    "seen": 1795221113.1621177,
-    "ast_hash": "2b0eca90ea6ca155cd584d3616671f5d",
+    "mtime": 1795317971.2709992,
+    "seen": 1795318360.6605077,
+    "ast_hash": "ac374e359dd97bdec7c0ca4ca84ace2a",
     "semantic_hash": ""
   },
   "backend/src/routes/nutrientGoals.routes.js": {
-    "mtime": 1791956008.6308765,
-    "seen": 1795221113.1621194,
-    "ast_hash": "f6da8ca8b9272bb5494425cba96c0c6b",
+    "mtime": 1795317971.2616072,
+    "seen": 1795318360.6605153,
+    "ast_hash": "be9e3ec103cd151d4146005baeb2ac31",
     "semantic_hash": ""
   },
   "backend/src/routes/plans.routes.js": {
-    "mtime": 1795311205.3449996,
-    "seen": 1795311886.0940232,
-    "ast_hash": "18aa8a9d06aed0fe2dd219306dad45c2",
+    "mtime": 1795317971.2636297,
+    "seen": 1795318360.660522,
+    "ast_hash": "3994ec7428831c4364b0b196d27ad8fa",
     "semantic_hash": ""
   },
   "backend/src/routes/profile.routes.js": {
-    "mtime": 1791956008.6328845,
-    "seen": 1795221113.1621227,
-    "ast_hash": "93452725193db8cf51cc390294e85b01",
+    "mtime": 1795317971.265651,
+    "seen": 1795318360.6605268,
+    "ast_hash": "d4862219ecef2ad0265e8586460dc3bd",
     "semantic_hash": ""
   },
   "backend/src/routes/progress.routes.js": {
@@ -780,9 +780,9 @@
     "semantic_hash": ""
   },
   "backend/src/services/auth.service.js": {
-    "mtime": 1795311205.3866975,
-    "seen": 1795311886.0948086,
-    "ast_hash": "08d23524610ca6e8a8453b7bc36e36eb",
+    "mtime": 1795318276.6306107,
+    "seen": 1795318360.6675854,
+    "ast_hash": "894e09768e77e68b71295d2f7f84b104",
     "semantic_hash": ""
   },
   "backend/src/services/bmi.service.js": {
@@ -864,9 +864,9 @@
     "semantic_hash": ""
   },
   "backend/src/services/phoneVerification.service.js": {
-    "mtime": 1795068834.1898012,
-    "seen": 1795221113.1621833,
-    "ast_hash": "17a2b526f573d6bd53fca48506dd03f4",
+    "mtime": 1795317629.3882935,
+    "seen": 1795317790.8710835,
+    "ast_hash": "be224085424358c521445847b55c6358",
     "semantic_hash": ""
   },
   "backend/src/services/plans.service.js": {
@@ -906,9 +906,9 @@
     "semantic_hash": ""
   },
   "backend/src/services/sms.service.js": {
-    "mtime": 1795071907.009417,
-    "seen": 1795221113.1622038,
-    "ast_hash": "652414b21fca0489ca5c92c9129b5b67",
+    "mtime": 1795317639.961988,
+    "seen": 1795317790.877532,
+    "ast_hash": "9f85d4f38b207343b5e1036ccad245eb",
     "semantic_hash": ""
   },
   "backend/src/services/stats.service.js": {
@@ -1002,9 +1002,9 @@
     "semantic_hash": ""
   },
   "backend/src/utils/phone.js": {
-    "mtime": 1795068538.779627,
-    "seen": 1795221113.1622517,
-    "ast_hash": "2c59abcf06ed01e5d6c0bdfa700388d1",
+    "mtime": 1795317629.3336313,
+    "seen": 1795317790.9322846,
+    "ast_hash": "66e5572e3075a960258dbd47b8365668",
     "semantic_hash": ""
   },
   "backend/src/utils/planEngine.js": {
@@ -1050,9 +1050,9 @@
     "semantic_hash": ""
   },
   "backend/tests/integration/email-verification.test.js": {
-    "mtime": 1795311205.4442244,
-    "seen": 1795311886.0983908,
-    "ast_hash": "ec053a59169145ab9c69d3aaffa91103",
+    "mtime": 1795312821.5079362,
+    "seen": 1795317790.940011,
+    "ast_hash": "ec1961f08e321701e985d4a5d6ec93fc",
     "semantic_hash": ""
   },
   "backend/tests/integration/health.test.js": {
@@ -1104,9 +1104,9 @@
     "semantic_hash": ""
   },
   "backend/tests/unit/migrations.test.js": {
-    "mtime": 1795311205.462927,
-    "seen": 1795311886.099396,
-    "ast_hash": "ca163537bca10a6615c70be0f33be927",
+    "mtime": 1795318672.0698824,
+    "seen": 1795318715.3260543,
+    "ast_hash": "23cfddc8a14607efd7f3633fd39d1325",
     "semantic_hash": ""
   },
   "backend/tests/unit/nutrition.test.js": {
@@ -1692,9 +1692,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Auth/Login/hooks/useLogin.js": {
-    "mtime": 1795311205.8180678,
-    "seen": 1795311886.1060376,
-    "ast_hash": "9fff76a4b479c2d94f12e68de2476d5a",
+    "mtime": 1795312001.4842806,
+    "seen": 1795317791.0116022,
+    "ast_hash": "aa65f8d1d4b14d7cb77c1a9e89fd1541",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Auth/Login/pages/Login.jsx": {
@@ -1710,15 +1710,15 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Auth/Register/hooks/useRegister.js": {
-    "mtime": 1795311205.830141,
-    "seen": 1795311886.1060462,
-    "ast_hash": "c05821fcf14f186f4dab022aab09e48b",
+    "mtime": 1795317658.995396,
+    "seen": 1795317791.01309,
+    "ast_hash": "3687c3f06a8078341e2743ba37e090cd",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Auth/Register/pages/Register.jsx": {
-    "mtime": 1795311205.8540936,
-    "seen": 1795311886.1060483,
-    "ast_hash": "b7967dee7cd78e7ad75db6681b54ecfe",
+    "mtime": 1795317665.6340444,
+    "seen": 1795317791.0130975,
+    "ast_hash": "53e0aff94eb09a5844657497af84781e",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Auth/VerifyEmail/components/NetworkNotice.jsx": {
@@ -1740,15 +1740,15 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Auth/VerifyEmail/pages/VerifyEmail.jsx": {
-    "mtime": 1793408226.5917673,
-    "seen": 1795221113.162646,
-    "ast_hash": "6e4e5a8dff4fc5e90929a8dd4c92e8dc",
+    "mtime": 1795312666.2333615,
+    "seen": 1795317791.0146043,
+    "ast_hash": "af94a566cb2d52221e5e4e813023bf32",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Auth/VerifyEmail/pages/VerifyPhone.jsx": {
-    "mtime": 1795069027.5067115,
-    "seen": 1795221113.1626625,
-    "ast_hash": "39b11fd18a87b9425de60faf89f5d3ff",
+    "mtime": 1795317659.3278809,
+    "seen": 1795317791.0146117,
+    "ast_hash": "3f34d66317678723f9e5fa9f8272a8a4",
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/CameraOffPlaceholder.jsx": {
@@ -2406,9 +2406,9 @@
     "semantic_hash": ""
   },
   "frontend/src/lib/phone.js": {
-    "mtime": 1795068538.7786286,
-    "seen": 1795221113.1630259,
-    "ast_hash": "0356dcf3e883ad9b32fc709298b59f53",
+    "mtime": 1795317658.0548224,
+    "seen": 1795317791.080085,
+    "ast_hash": "a358d869b6aeb476edb602a4300aed0a",
     "semantic_hash": ""
   },
   "frontend/src/lib/pwaInstall.js": {
@@ -2544,9 +2544,9 @@
     "semantic_hash": ""
   },
   "backend/migrations/README.md": {
-    "mtime": 1795311205.2221332,
-    "seen": 1795311886.1139448,
-    "ast_hash": "214e1209135bcba8e7cc68031bd1917a",
+    "mtime": 1795318582.9708698,
+    "seen": 1795318715.4495714,
+    "ast_hash": "1418d296fc9bffa35f124bc768b12d20",
     "semantic_hash": ""
   },
   "backend/src/controllers/README.md": {
@@ -3090,9 +3090,9 @@
     "semantic_hash": ""
   },
   "backend/src/routes/reminder.routes.js": {
-    "mtime": 1795311205.3490021,
-    "seen": 1795311886.0941825,
-    "ast_hash": "8b4d14c7fbc218e1e79cf742537b661d",
+    "mtime": 1795317980.1087828,
+    "seen": 1795318360.6614382,
+    "ast_hash": "93fc1330052565864c719981e2721fac",
     "semantic_hash": ""
   },
   "backend/src/services/reminder.service.js": {
@@ -3165,138 +3165,6 @@
     "mtime": 1795311206.1714652,
     "seen": 1795311886.1130054,
     "ast_hash": "f466d5cfb1942aabe0c7d6e42fce7de8",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/gpt-image-2.5-sunburst_can_you_regenerate_the_20_cause_the_legs_looks_like_its_been_cut_of_regenerate_i-0.jpg": {
-    "mtime": 1795311205.5048256,
-    "seen": 1795311886.1278853,
-    "ast_hash": "476d942eded817cf156b19621e31e678",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/gpt-image-2_09_Lower_Body_Builder_Filename_lower-body-builder.png_writing_variant_standard_i-0.jpg": {
-    "mtime": 1795311205.511258,
-    "seen": 1795311886.1278884,
-    "ast_hash": "1ca24346daf38e1b348bd052055bedc3",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/gpt-image-2_10_Core_Control_Filename_core-control.png_writing_variant_standard_id_82010_Crea-0.jpg": {
-    "mtime": 1795311205.515261,
-    "seen": 1795311886.1278918,
-    "ast_hash": "495d1fb105b1feaecbff7328ac22de0c",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/gpt-image-2_15_Full_Body_Conditioning_Filename_full-body-conditioning.png_writing_variant_st-0.jpg": {
-    "mtime": 1795311205.5192716,
-    "seen": 1795311886.1278949,
-    "ast_hash": "e4f6f83130db011ee0d88a41b0b6eca5",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/gpt-image-2_16_Quick_Conditioning_Circuit_Filename_quick-conditioning-circuit.png_writing_va-0.jpg": {
-    "mtime": 1795311205.5308907,
-    "seen": 1795311886.127897,
-    "ast_hash": "63ebcf6f985c092c9884b347ac335fa6",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/gpt-image-2_19_Hip_Mobility_Practice_Filename_hip-mobility-practice.png_writing_variant_stan-0.jpg": {
-    "mtime": 1795311205.5354302,
-    "seen": 1795311886.127899,
-    "ast_hash": "b35b347484113bf1e2cce56db40c19a4",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_02_Iron_Forge_Protocol_Filename_iron-forge-protocol.png_Powerful_strength_traini-0.jpg": {
-    "mtime": 1795311205.5384667,
-    "seen": 1795311886.1279023,
-    "ast_hash": "f369e81dcebdd49d289450acc4c00fee",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_03_Fat_Loss_Sprint_Filename_fat-loss-sprint.png_writing_variant_standard_id_8200-0.jpg": {
-    "mtime": 1795311205.5425372,
-    "seen": 1795311886.1279044,
-    "ast_hash": "46a0814e851e700852003828a4084910",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_04_Cardio_Surge_Filename_cardio-surge.png_writing_variant_standard_id_82004_Crea-0.jpg": {
-    "mtime": 1795311205.546559,
-    "seen": 1795311886.1279068,
-    "ast_hash": "f6693f8f556a3c2135c058cade2c16db",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_05_Mobility_Reset_Filename_mobility-reset.png_writing_variant_standard_id_82005_-0 (1).jpg": {
-    "mtime": 1795311205.5505786,
-    "seen": 1795311886.1279094,
-    "ast_hash": "993ba8702fd67b0855f139cfd0ec9ac4",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_05_Mobility_Reset_Filename_mobility-reset.png_writing_variant_standard_id_82005_-0.jpg": {
-    "mtime": 1795311205.553602,
-    "seen": 1795311886.1279116,
-    "ast_hash": "993ba8702fd67b0855f139cfd0ec9ac4",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_06_Total_Flexibility_Flow_Filename_total-flexibility-flow.png_writing_variant_st-0.jpg": {
-    "mtime": 1795311205.5585327,
-    "seen": 1795311886.1279137,
-    "ast_hash": "e54015ab18ef618ccc3c7e2c5f070403",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_07_Bodyweight_Basics_Filename_bodyweight-basics.png_writing_variant_standard_id_-0.jpg": {
-    "mtime": 1795311205.5625672,
-    "seen": 1795311886.127916,
-    "ast_hash": "c39f0de9f1c30547c543a1f7a596f942",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_08_Upper_Body_Foundations_Filename_upper-body-foundations.png_writing_variant_st-0.jpg": {
-    "mtime": 1795311205.5674138,
-    "seen": 1795311886.127918,
-    "ast_hash": "f7c6435dc15f2e5b6ad94af007214571",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_11_Everyday_Strength_Circuit_Filename_everyday-strength-circuit.png_writing_vari-0.jpg": {
-    "mtime": 1795311205.5849342,
-    "seen": 1795311886.12792,
-    "ast_hash": "6ff7e9eac5fe9c4379e7cd50945256ac",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_12_Low_Impact_Cardio_Start_Filename_low-impact-cardio-start.png_writing_variant_-0.jpg": {
-    "mtime": 1795311205.5919397,
-    "seen": 1795311886.1279213,
-    "ast_hash": "a6a120ddc668ecd980222c1c8d7e920b",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_13_Cardio_Rhythm_Filename_cardio-rhythm.png_writing_variant_standard_id_82013_Cr-0.jpg": {
-    "mtime": 1795311205.5949357,
-    "seen": 1795311886.1279233,
-    "ast_hash": "85438b209773216fe0ba3491a27fa2c1",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_14_Steady_Movement_Habit_Filename_steady-movement-habit.png_writing_variant_stan-0.jpg": {
-    "mtime": 1795311205.601051,
-    "seen": 1795311886.1280997,
-    "ast_hash": "17557689b0bdd162b7a0bb46adc4ff99",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_17_Desk_Break_Mobility_Filename_desk-break-mobility.png_writing_variant_standard-0.jpg": {
-    "mtime": 1795311205.605107,
-    "seen": 1795311886.1281083,
-    "ast_hash": "ea79ed44cc57209ff8617b43d830ba3f",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_18_Gentle_Recovery_Week_Filename_gentle-recovery-week.png_writing_variant_standa-0.jpg": {
-    "mtime": 1795311205.6114829,
-    "seen": 1795311886.1281133,
-    "ast_hash": "6b1adf1f18caa0a6849bdb85319a2240",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_21_Athletic_Bodyweight_Prep_Filename_athletic-bodyweight-prep.png_writing_varian-0.jpg": {
-    "mtime": 1795311205.6150918,
-    "seen": 1795311886.1281173,
-    "ast_hash": "8ed0423bfaa579c5440642133cc1dcd3",
-    "semantic_hash": ""
-  },
-  "frontend/public/plans/lucid-origin_Filename_foundations-of-strength.png_Beginner-focused_controlled_bodyweight_squa-0.jpg": {
-    "mtime": 1795311205.6189947,
-    "seen": 1795311886.128121,
-    "ast_hash": "19883a075f25a36945f23c5c5228ebe8",
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/ExerciseBriefing.jsx": {
@@ -3461,10 +3329,142 @@
     "ast_hash": "09508d44d2332faf3c75b297d515a886",
     "semantic_hash": ""
   },
-  "vercel.json": {
+  "frontend/src/features/user/Auth/VerifyEmail/utils/postVerifyRoute.js": {
+    "mtime": 1795312666.2261708,
+    "seen": 1795317791.014619,
+    "ast_hash": "6f79fe5011daed75a677d08debe6efa1",
+    "semantic_hash": ""
+  },
+  "frontend/vercel.json": {
     "mtime": 1795311206.3491983,
-    "seen": 1795311886.1136312,
+    "seen": 1795317791.092374,
     "ast_hash": "7708fbf29b99cd92c2a778d60001c5ba",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/athletic-bodyweight-prep.jpg": {
+    "mtime": 1795311205.6150918,
+    "seen": 1795318715.467798,
+    "ast_hash": "8ed0423bfaa579c5440642133cc1dcd3",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/bodyweight-basics.jpg": {
+    "mtime": 1795311205.5625672,
+    "seen": 1795318715.4678047,
+    "ast_hash": "c39f0de9f1c30547c543a1f7a596f942",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/cardio-rhythm.jpg": {
+    "mtime": 1795311205.5949357,
+    "seen": 1795318715.4678097,
+    "ast_hash": "85438b209773216fe0ba3491a27fa2c1",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/cardio-surge.jpg": {
+    "mtime": 1795311205.546559,
+    "seen": 1795318715.4678152,
+    "ast_hash": "f6693f8f556a3c2135c058cade2c16db",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/core-control.jpg": {
+    "mtime": 1795311205.515261,
+    "seen": 1795318715.4678197,
+    "ast_hash": "495d1fb105b1feaecbff7328ac22de0c",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/desk-break-mobility.jpg": {
+    "mtime": 1795311205.605107,
+    "seen": 1795318715.4678247,
+    "ast_hash": "ea79ed44cc57209ff8617b43d830ba3f",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/evening-stretch-routine.jpg": {
+    "mtime": 1795311205.5048256,
+    "seen": 1795318715.4678288,
+    "ast_hash": "476d942eded817cf156b19621e31e678",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/everyday-strength-circuit.jpg": {
+    "mtime": 1795311205.5849342,
+    "seen": 1795318715.467833,
+    "ast_hash": "6ff7e9eac5fe9c4379e7cd50945256ac",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/fat-loss-sprint.jpg": {
+    "mtime": 1795311205.5425372,
+    "seen": 1795318715.467837,
+    "ast_hash": "46a0814e851e700852003828a4084910",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/foundations-of-strength.jpg": {
+    "mtime": 1795311205.6189947,
+    "seen": 1795318715.467842,
+    "ast_hash": "19883a075f25a36945f23c5c5228ebe8",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/full-body-conditioning.jpg": {
+    "mtime": 1795311205.5192716,
+    "seen": 1795318715.4678464,
+    "ast_hash": "e4f6f83130db011ee0d88a41b0b6eca5",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/gentle-recovery-week.jpg": {
+    "mtime": 1795311205.6114829,
+    "seen": 1795318715.4678504,
+    "ast_hash": "6b1adf1f18caa0a6849bdb85319a2240",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/hip-mobility-practice.jpg": {
+    "mtime": 1795311205.5354302,
+    "seen": 1795318715.4678543,
+    "ast_hash": "b35b347484113bf1e2cce56db40c19a4",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/iron-forge-protocol.jpg": {
+    "mtime": 1795311205.5384667,
+    "seen": 1795318715.4678588,
+    "ast_hash": "f369e81dcebdd49d289450acc4c00fee",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/low-impact-cardio-start.jpg": {
+    "mtime": 1795311205.5919397,
+    "seen": 1795318715.4678624,
+    "ast_hash": "a6a120ddc668ecd980222c1c8d7e920b",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/lower-body-builder.jpg": {
+    "mtime": 1795311205.511258,
+    "seen": 1795318715.4678662,
+    "ast_hash": "1ca24346daf38e1b348bd052055bedc3",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/mobility-reset.jpg": {
+    "mtime": 1795311205.553602,
+    "seen": 1795318715.4678702,
+    "ast_hash": "993ba8702fd67b0855f139cfd0ec9ac4",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/quick-conditioning-circuit.jpg": {
+    "mtime": 1795311205.5308907,
+    "seen": 1795318715.467874,
+    "ast_hash": "63ebcf6f985c092c9884b347ac335fa6",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/steady-movement-habit.jpg": {
+    "mtime": 1795311205.601051,
+    "seen": 1795318715.467878,
+    "ast_hash": "17557689b0bdd162b7a0bb46adc4ff99",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/total-flexibility-flow.jpg": {
+    "mtime": 1795311205.5585327,
+    "seen": 1795318715.467882,
+    "ast_hash": "e54015ab18ef618ccc3c7e2c5f070403",
+    "semantic_hash": ""
+  },
+  "frontend/public/plans/upper-body-foundations.jpg": {
+    "mtime": 1795311205.5674138,
+    "seen": 1795318715.467886,
+    "ast_hash": "f7c6435dc15f2e5b6ad94af007214571",
     "semantic_hash": ""
   },
   "backend/package-lock.json": {

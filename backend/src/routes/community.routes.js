@@ -1,5 +1,5 @@
 const express = require('express');
-const { makeLimiter } = require('../middleware/rateLimits');
+const { makeLimiter, writeLimiter } = require('../middleware/rateLimits');
 const router = express.Router();
 const verifyUser = require('../middleware/verifyUser');
 const { validate } = require('../middleware/validate');
@@ -24,12 +24,15 @@ const likeLimiter = makeLimiter({
   message: 'Too many likes. Try again later.',
 });
 
+// Spam guard for writes: one shared per-user bucket for this router.
+const write = writeLimiter();
+
 router.get('/', verifyUser, validate(c.paginationSchema, 'query'), c.list);
 router.post('/', verifyUser, createPostLimiter, validate(c.createPostSchema), c.create);
 router.post('/:id/like', verifyUser, likeLimiter, c.toggleLike);
 router.delete('/:id/like', verifyUser, likeLimiter, c.unlike);
 router.get('/:id/comments', verifyUser, c.listComments);
 router.post('/:id/comments', verifyUser, commentLimiter, validate(c.createCommentSchema), c.addComment);
-router.delete('/:id', verifyUser, c.remove);
+router.delete('/:id', verifyUser, write, c.remove);
 
 module.exports = router;

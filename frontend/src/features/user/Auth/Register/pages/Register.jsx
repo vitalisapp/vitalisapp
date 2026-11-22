@@ -5,6 +5,7 @@ import { useAccessInvite } from '../hooks/useAccessInvite.js';
 import { TermsOfUseModal, PrivacyPolicyModal } from '../components/LegalModals.jsx';
 import NetworkNotice from '../../VerifyEmail/components/NetworkNotice.jsx';
 import { SMS_SENDER_ID } from '../../../../../app/config/env.js';
+import { livePhoneError } from '../../../../../lib/phone.js';
 
 const pwStrength = (pw) => {
   if (!pw) return null;
@@ -261,6 +262,7 @@ const Register = () => {
                     disabled={loading}
                     value={formData.phone}
                     onChange={update('phone')}
+                    error={livePhoneError(formData.phone) || undefined}
                     autoComplete="tel"
                     focusedId={focused}
                     setFocusedId={setFocused}
