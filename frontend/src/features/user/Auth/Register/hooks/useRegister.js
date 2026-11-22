@@ -105,11 +105,35 @@ export const useRegister = () => {
         ...(getAccessCode() ? { accessCode: getAccessCode() } : {}),
       }, { skipAuthRedirect: true });
 
-      // Modern signup: the backend issues a session with every new account, so
-      // the user goes straight into the app — no detour through /login.
-      // Email/phone confirmation is a soft follow-up (welcome email link,
-      // texted code, and the in-app VerifyEmailBanner).
       if (!data.id) throw new Error('Registration response did not include a user ID.');
+
+      // Verification is required before the first sign-in: no session was
+      // issued, so send the user to the matching confirmation screen.
+      if (data.needsVerification) {
+        if (data.verificationMethod === 'sms') {
+          navigate('/verify-phone', {
+            replace: true,
+            state: {
+              email,
+              phoneMasked: data.phoneMasked,
+              retryAfter: data.retryAfter,
+              deliveryStatus: data.deliveryStatus,
+              smsMocked: data.smsMocked,
+            },
+          });
+        } else {
+          navigate('/check-email', {
+            replace: true,
+            state: {
+              email,
+              deliveryToken: data.deliveryToken,
+              deliveryStatus: data.deliveryStatus,
+              devLink: data.devVerificationLink || null,
+            },
+          });
+        }
+        return;
+      }
       const user = normalizeUser(data);
       setUser(user);
       if (!(await refreshAuth())) {

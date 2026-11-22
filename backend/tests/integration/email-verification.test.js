@@ -63,30 +63,27 @@ function response() {
 }
 const nextError = (err) => { throw err; };
 
-it('signs new users in immediately, sends one welcome email with the verify link, and lets unverified sessions through', async () => {
+it('requires verification: signup issues no session, sends one welcome email with the verify link, and login is refused until verified', async () => {
   queries = [];
   welcome = [];
   const res = response();
   await postregister({ body: { name: 'Test', email: 'test@example.com', password: 'password123', agreed: true }, headers: {} }, res, nextError);
   await flush();
   assert.equal(res.statusCode, 201);
-  assert.equal(res.cookieSet, true, 'signup must issue a session');
-  assert.equal(res.body.needsVerification, false);
+  assert.notEqual(res.cookieSet, true, 'unverified signup must not issue a session');
+  assert.equal(res.body.needsVerification, true);
+  assert.equal(res.body.verificationMethod, 'email');
   assert.equal(res.body.isVerified, false);
   assert.equal(welcome.length, 1);
   assert.equal(welcome[0].provider, 'email');
   assert.match(sentLink, /\/verify-email\?token=[a-f0-9]{64}$/);
   assert.equal(queries.some((sql) => sql.startsWith('UPDATE users SET is_verified')), false);
 
-  // Unverified accounts can sign in and use protected routes.
-  const { user: loggedIn } = await service.login({ email: 'test@example.com', password: 'password123' });
-  assert.equal(Boolean(loggedIn.is_verified), false);
-  const token = signSession(jwt, { id: 13, email: 'test@example.com', tv: 0 });
-  const req = { cookies: { [COOKIE_NAME]: token }, headers: {} };
-  let allowed = false;
-  await verifyUser(req, response(), (err) => { if (err) throw err; allowed = true; });
-  assert.equal(allowed, true);
-  assert.equal(req.user.is_verified, false);
+  // A correct password is not enough while the account is unverified.
+  await assert.rejects(
+    service.login({ email: 'test@example.com', password: 'password123' }),
+    (err) => err.code === 'NEEDS_VERIFICATION' && err.status === 403 && err.details?.verificationMethod === 'email',
+  );
 
   await service.verifyEmail(new URL(sentLink).searchParams.get('token'));
   assert.equal(verified, true);

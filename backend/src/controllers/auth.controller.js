@@ -208,11 +208,13 @@ async function postregister(req, res, next) {
         }
       }
 
-      // Modern signup: every new account is signed in immediately. Email/SMS
-      // confirmation is a soft follow-up (welcome email link / texted code),
-      // not a gate in front of the app.
-      setSessionCookie(res, user.id, user.email, req, user.token_version);
-      await service.logUserSession(req, user.id);
+      // Verification is a hard gate: only auto-verified accounts (development)
+      // get a session now. Everyone else must confirm the email link or the
+      // SMS code first, then sign in.
+      if (autoVerified) {
+        setSessionCookie(res, user.id, user.email, req, user.token_version);
+        await service.logUserSession(req, user.id);
+      }
 
       /** @type {{ success: boolean, message: string, id: number, name: string, email: string, avatar: string|null, goal: string, isVerified: boolean, onboardingCompleted: boolean, role: string, status: string, acceptedTermsAt: string|null, acceptedTermsVersion: number|null, needsVerification: boolean, verificationMethod: string, phoneMasked?: string, devVerificationLink?: string }} */
       const payload = {
@@ -220,8 +222,8 @@ async function postregister(req, res, next) {
         message: autoVerified
           ? "Account created. You're signed in."
           : verificationMethod === "sms"
-            ? "Account created. You're signed in — confirm your phone with the code we texted you."
-            : "Account created. You're signed in — check your inbox to confirm your email.",
+            ? "Account created. Enter the code we texted you to activate it."
+            : "Account created. Check your inbox and confirm your email to activate it.",
         // Same shape /login and /me return so AuthContext stays consistent.
         id: user.id,
         name: user.name,
@@ -234,8 +236,8 @@ async function postregister(req, res, next) {
         status: user.status,
         acceptedTermsAt: user.accepted_terms_at,
         acceptedTermsVersion: user.accepted_terms_version,
-        // Signed in regardless; isVerified tells the app to show the reminder.
-        needsVerification: false,
+        // true → no session was issued; the client opens the verify screen.
+        needsVerification: !autoVerified,
         verificationMethod: autoVerified ? null : verificationMethod,
         deliveryToken,
         // Email signups: the welcome/verify email is sent in the background.
@@ -297,6 +299,7 @@ async function postlogin(req, res, next) {
           body.code = "NEEDS_VERIFICATION";
           body.email = err.details?.email;
           body.verificationMethod = err.details?.verificationMethod;
+          body.details = { email: body.email, verificationMethod: body.verificationMethod };
         }
         if (err.code === "ACCOUNT_DEACTIVATED") {
           body.code = "ACCOUNT_DEACTIVATED";

@@ -410,7 +410,7 @@ async function register({ name, email, password, phone, verificationMethod = 'em
 
 // ─── LOGIN ───
 const LOGIN_USER_SELECT =
-  "SELECT id, name, email, password, fitness_goal, avatar_url, is_verified, onboarding_completed, is_online, token_version, status, role FROM users WHERE email = ?";
+  "SELECT id, name, email, phone, password, fitness_goal, avatar_url, is_verified, onboarding_completed, is_online, token_version, status, role FROM users WHERE email = ?";
 
 async function login({ email, password }) {
   const lockStatus = checkRateLimit(email);
@@ -455,8 +455,20 @@ async function login({ email, password }) {
     await markVerified(user);
   }
 
-  // Unverified accounts sign in normally (soft verification) — the session
-  // payload carries isVerified:false and the app shows a reminder banner.
+  // Hard verification gate: a correct password is not enough until the email
+  // link or SMS code has been confirmed. No session is issued here; the client
+  // sends the user to the matching verification screen.
+  if (!user.is_verified) {
+    const verificationMethod = user.phone ? "sms" : "email";
+    throw new AppError(
+      verificationMethod === "sms"
+        ? "Verify your phone number to sign in. Enter the code we texted you."
+        : "Verify your email to sign in. Check your inbox for the confirmation link.",
+      403,
+      "NEEDS_VERIFICATION",
+      { email: user.email, verificationMethod },
+    );
+  }
 
   await db.execute("UPDATE users SET is_online = 1 WHERE id = ?", [user.id]);
 

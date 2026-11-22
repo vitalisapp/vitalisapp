@@ -121,6 +121,13 @@ export const useLogin = () => {
       if (!(await confirmSession())) return;
       routeAfterAuth(user);
     } catch (err) {
+      // Unverified account: no session was issued — finish verification first.
+      if (err?.status === 403 && err?.code === 'NEEDS_VERIFICATION') {
+        const method = err?.details?.verificationMethod;
+        const state = { email: err?.details?.email || trimmedEmail, fromLogin: true };
+        navigate(method === 'sms' ? '/verify-phone' : '/check-email', { state });
+        return;
+      }
       // Module 1 — soft-deactivated accounts: surface the reactivate panel.
       if (err?.status === 403 && err?.code === 'ACCOUNT_DEACTIVATED') {
         setDeactivated({ email: trimmedEmail, password });

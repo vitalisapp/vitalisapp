@@ -186,14 +186,14 @@ const VerifyPhone = () => {
       {!verified && (
         <div className="mt-1 space-y-2 text-[12px] text-[#c4c9b0]/50">
           <p>
-            Didn&apos;t receive it?{' '}
+            {phoneMasked ? <>Didn&apos;t receive it?</> : 'Need a code?'}{' '}
             <button
               type="button"
               onClick={sendCode}
               disabled={busy || cooldown > 0}
               className="cursor-pointer border-none bg-transparent p-0 font-semibold text-[var(--accent-dark)] hover:text-[var(--accent)] disabled:opacity-50"
             >
-              {busy ? 'Sending…' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend Code'}
+              {busy ? 'Sending…' : cooldown > 0 ? `Resend in ${cooldown}s` : phoneMasked ? 'Resend Code' : 'Send Code'}
             </button>
           </p>
           <p>
