@@ -20,7 +20,7 @@ const formatActivityDate = (created_at) => {
   return `${date} · ${time}`;
 };
 
-const KudosButton = ({ active, count, onToggle }) => (
+const KudosButton = ({ active = undefined, count = undefined, onToggle = undefined }) => (
   <button
     onClick={onToggle}
     aria-pressed={active}
@@ -37,7 +37,7 @@ const KudosButton = ({ active, count, onToggle }) => (
 // (no extra Leaflet instances). Downsamples long GPS tracks to ≤120 points.
 const MAX_THUMB_POINTS = 120;
 
-const RouteThumbnail = ({ route }) => {
+const RouteThumbnail = ({ route = undefined }) => {
   const patternId = `am-grid-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const glowId = `am-glow-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const pts = parseRoutePoints(route);
@@ -120,14 +120,14 @@ const RouteThumbnail = ({ route }) => {
 };
 
 const ActivityCard = ({
-  activity,
-  formatTime,
-  userName,
-  kudosOn,
-  kudosCount,
-  onToggleKudos,
-  onShare,
-  onDelete,
+  activity = undefined,
+  formatTime = undefined,
+  userName = undefined,
+  kudosOn = undefined,
+  kudosCount = undefined,
+  onToggleKudos = undefined,
+  onShare = undefined,
+  onDelete = undefined,
 }) => {
   const calories = Number(activity.calories) || 0;
 
@@ -222,14 +222,14 @@ const HistorySkeleton = () => (
 );
 
 const HistoryTab = ({
-  history,
-  historyLoading,
-  historyError,
-  formatTime,
-  onRefresh,
-  onDelete,
-  onToggleKudos,
-  userName,
+  history = undefined,
+  historyLoading = undefined,
+  historyError = undefined,
+  formatTime = undefined,
+  onRefresh = undefined,
+  onDelete = undefined,
+  onToggleKudos = undefined,
+  userName = undefined,
 }) => {
   const handleShare = async (activity) => {
     try {

@@ -4,7 +4,7 @@ import { getPickerOptions, resolveWorkout, frameUrl } from "../constants/workout
 
 const PICKER_OPTIONS = getPickerOptions();
 
-export default function MobileWorkoutPills({ workoutType, onSelect, sheetOpen, onSheetClose, hideTrigger = false }) {
+export default function MobileWorkoutPills({ workoutType = undefined, onSelect = undefined, sheetOpen = undefined, onSheetClose = undefined, hideTrigger = false }) {
   const PAGE = 8;
   const [internalOpen, setInternalOpen] = useState(false);
   const controlled = sheetOpen !== undefined;

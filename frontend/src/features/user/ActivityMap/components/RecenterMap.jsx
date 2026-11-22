@@ -5,7 +5,7 @@ import { useMap } from "react-leaflet";
 //  · centres on the first valid fix exactly once (never a hardcoded spot),
 //  · follows the user while recording *and* following is on,
 //  · pauses following when the user pans, so the map never fights them.
-const RecenterMap = ({ lastPoint, isRecording, follow, onUserInteract }) => {
+const RecenterMap = ({ lastPoint = undefined, isRecording = undefined, follow = undefined, onUserInteract = undefined }) => {
   const map = useMap();
   const centeredRef = useRef(false);
 

@@ -1,5 +1,6 @@
 const service = require('../services/goals.service');
 const { validUserId } = require('../utils/ids');
+const { parseSecondaryGoals, parseExperience, checkTargetDate } = require('../utils/goalSetup');
 
 const {
   GOAL_TYPES,
@@ -9,6 +10,7 @@ const {
   enumField,
   numOrNull,
   validDob,
+  parseSleepHours,
   toRecord,
 } = service;
 
@@ -34,21 +36,30 @@ async function postUserId(req, res, next) {
       activity_level,
       exerciseFreq,
       exercise_freq,
+      sleepHours,
+      sleep_hours,
+      secondaryGoals,
+      secondary_goals,
+      targetDate,
+      target_date,
+      experienceLevel,
+      experience_level,
+      _carried: carried = {},
     } = req.body || {};
 
     const height = Number(heightCm ?? height_cm);
     const weight = Number(weightKg ?? weight_kg);
     if (!Number.isFinite(height) || !Number.isFinite(weight) || height <= 0 || weight <= 0) {
-      return res.status(400).json({ error: 'heightCm and weightKg must be positive numbers' });
+      return res.status(400).json({ error: 'Please enter your height (cm) and weight (kg) as numbers.' });
     }
     if (height < 50 || height > 300)
-      return res.status(400).json({ error: 'heightCm out of range (50–300)' });
+      return res.status(400).json({ error: 'Height must be between 50 and 300 cm. Check that you entered centimetres, not feet or metres.' });
     if (weight < 10 || weight > 1000)
-      return res.status(400).json({ error: 'weightKg out of range (10–1000)' });
+      return res.status(400).json({ error: 'Weight must be between 10 and 1000 kg. Check that you entered kilograms, not pounds.' });
     const goalRaw = goalType ?? goal_type;
     const goal = typeof goalRaw === 'string' ? goalRaw.trim().toUpperCase() : null;
     if (!goal || !GOAL_TYPES.includes(goal)) {
-      return res.status(400).json({ error: `goalType must be one of: ${GOAL_TYPES.join(', ')}` });
+      return res.status(400).json({ error: 'Please choose a fitness goal.', code: 'GOAL_REQUIRED' });
     }
 
     const checks = {
@@ -65,9 +76,39 @@ async function postUserId(req, res, next) {
       }),
       dob: validDob(dob),
     };
+    const LABELS = { sex: 'sex', pace: 'progress pace', activity: 'activity level', target: 'target weight' };
     for (const [k, f] of Object.entries(checks)) {
-      if (f.error) return res.status(400).json({ error: `${k}: ${f.error}` });
+      if (!f.error) continue;
+      // Age/DOB problems already carry a full plain-language explanation.
+      if (f.friendly) return res.status(400).json({ error: f.error, code: f.code });
+      const msg = k === 'target'
+        ? 'Target weight must be between 10 and 1000 kg.'
+        : `Please choose a valid ${LABELS[k] || k}.`;
+      return res.status(400).json({ error: msg, field: k });
     }
+    const sleepCheck = parseSleepHours(sleepHours ?? sleep_hours);
+    if (sleepCheck.error) return res.status(400).json({ error: sleepCheck.error, field: 'sleepHours' });
+    // Section 3: extra goals, experience, target date.
+    let extra = parseSecondaryGoals(secondaryGoals ?? secondary_goals, goal);
+    if (extra.error && carried.secondaryGoals) {
+      // Carried from the old goal and now conflicting: keep only the
+      // non-weight extras instead of blocking the goal change.
+      extra = parseSecondaryGoals(
+        (secondaryGoals ?? secondary_goals ?? []).filter((g) => g === 'BUILD_MUSCLE' || g === 'PERFORMANCE'),
+        goal
+      );
+    }
+    if (extra.error) return res.status(400).json({ error: extra.error, code: extra.code, field: 'secondaryGoals' });
+    const exp = parseExperience(experienceLevel ?? experience_level);
+    if (exp.error) return res.status(400).json({ error: exp.error, code: exp.code, field: 'experienceLevel' });
+    let dateCheck = checkTargetDate({
+      targetDate: targetDate ?? target_date,
+      weightKg: weight,
+      targetWeightKg: checks.target.value,
+    });
+    if (dateCheck.error && carried.targetDate) dateCheck = { value: null, feasibility: null };
+    if (dateCheck.error) return res.status(400).json({ error: dateCheck.error, code: dateCheck.code, field: 'targetDate' });
+
     const focusNorm =
       focus === undefined || focus === null || focus === ''
         ? null
@@ -89,8 +130,12 @@ async function postUserId(req, res, next) {
       focus: focusNorm,
       activity: checks.activity.value,
       exerciseFreq: exerciseFreqNorm,
+      sleepHours: sleepCheck.value,
+      secondaryGoals: extra.value || [],
+      targetDate: dateCheck.value || null,
+      experienceLevel: exp.value || null,
     });
-    res.status(201).json({ success: true, plan, goal: record });
+    res.status(201).json({ success: true, plan, goal: record, targetFeasibility: dateCheck.feasibility || null });
   } catch (e) {
     next(e);
   }
@@ -137,9 +182,9 @@ async function patchActiveUserId(req, res, next) {
   try {
     const userId = validUserId(req.params.userId);
     if (!userId) return res.status(400).json({ error: 'Invalid user id' });
-    const { dob, sex } = req.body || {};
-    if (dob === undefined && sex === undefined) {
-      return res.status(400).json({ error: 'Nothing to update. Provide dob and/or sex.' });
+    const { dob, sex, experienceLevel } = req.body || {};
+    if (dob === undefined && sex === undefined && experienceLevel === undefined) {
+      return res.status(400).json({ error: 'Nothing to update. Provide dob, sex or experienceLevel.' });
     }
     const prev = await service.getActiveGoalRow(userId);
     if (!prev) {
@@ -147,9 +192,19 @@ async function patchActiveUserId(req, res, next) {
         .status(404)
         .json({ error: 'No active goal. Complete onboarding first.', code: 'NO_ACTIVE_GOAL' });
     }
+    // Experience level does not change calories, so it is saved in place.
+    if (experienceLevel !== undefined) {
+      const exp = parseExperience(experienceLevel);
+      if (exp.error) return res.status(400).json({ error: exp.error, code: exp.code, field: 'experienceLevel' });
+      await service.updateExperience(prev.id, exp.value);
+      if (dob === undefined && sex === undefined) {
+        const row = await service.getActiveGoalRow(userId);
+        return res.json({ success: true, goal: toRecord(row) });
+      }
+    }
 
     const dobCheck = dob === undefined ? { value: prev.dob } : validDob(dob);
-    if (dobCheck.error) return res.status(400).json({ error: `dob: ${dobCheck.error}` });
+    if (dobCheck.error) return res.status(400).json({ error: dobCheck.error, code: dobCheck.code });
     const sexCheck =
       sex === undefined
         ? { value: prev.sex }

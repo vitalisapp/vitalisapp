@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Icon from "../../../../components/Icon.jsx";
-export default function StartStopButton({ isRecording, cameraOn, canStart = true, onPress }) {
+export default function StartStopButton({ isRecording = undefined, cameraOn = undefined, canStart = true, onPress = undefined }) {
   const [busy, setBusy] = useState(false);
   const handlePress = async (e) => {
     if (busy || !cameraOn) return;

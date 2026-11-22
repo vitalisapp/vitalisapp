@@ -6,7 +6,7 @@ const post = async (url, body) => apiPost(url, body, { skipAuthRedirect: true })
 
 const STEPS = ['Email', 'Verify', 'Reset'];
 
-const StepBar = ({ current }) => (
+const StepBar = ({ current = undefined }) => (
   <div className="flex items-center gap-2 mb-8">
     {STEPS.map((label, i) => {
       const done   = i < current;
@@ -38,7 +38,7 @@ const StepBar = ({ current }) => (
   </div>
 );
 
-const OtpInput = ({ value, onChange }) => {
+const OtpInput = ({ value = undefined, onChange = undefined }) => {
   const inputs = useRef([]);
   const digits = String(value || '').split('');
 
@@ -90,13 +90,13 @@ const OtpInput = ({ value, onChange }) => {
   );
 };
 
-const ErrorBox = ({ msg }) => (
+const ErrorBox = ({ msg = undefined }) => (
   <div className="bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-[10px] font-semibold tracking-[0.1em] uppercase py-2.5 px-3.5 mb-5 text-center">
     {msg}
   </div>
 );
 
-const SubmitBtn = ({ loading, label, disabled = false }) => (
+const SubmitBtn = ({ loading = undefined, label = undefined, disabled = false }) => (
   <button
     type="submit"
     disabled={loading || disabled}

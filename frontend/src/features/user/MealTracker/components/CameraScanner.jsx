@@ -4,7 +4,7 @@ import Icon from '../../../../components/Icon.jsx';
 // Live "Scan a Meal" camera: viewfinder + corner frame + capture.
 // Capture snapshots to canvas and hands a JPEG dataURL to the parent,
 // which feeds the existing AI analyze pipeline.
-export default function CameraScanner({ onCapture, onClose }) {
+export default function CameraScanner({ onCapture = undefined, onClose = undefined }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [error, setError] = useState('');

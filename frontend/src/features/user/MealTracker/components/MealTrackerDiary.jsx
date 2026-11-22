@@ -23,7 +23,7 @@ function loggedTime(value) {
   return parsed.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
-function MealThumbnail({ imageUrl, type }) {
+function MealThumbnail({ imageUrl = undefined, type = undefined }) {
   const [failed, setFailed] = useState(false);
   const meta = MEAL_META[type] || MEAL_META.Other;
 
@@ -46,7 +46,7 @@ function MealThumbnail({ imageUrl, type }) {
   );
 }
 
-function MealItem({ item, type, onDelete, deleting }) {
+function MealItem({ item = undefined, type = undefined, onDelete = undefined, deleting = undefined }) {
   const name = String(item.food_name || 'Meal').trim() || 'Meal';
   const time = loggedTime(item.logged_at);
   const serving = String(item.serving || '').trim();
@@ -80,6 +80,8 @@ function MealItem({ item, type, onDelete, deleting }) {
             <span>P {protein}g</span>
             <span>C {carbs}g</span>
             <span>F {fat}g</span>
+            {item.sugar != null && <span>Sugar {Math.round(Number(item.sugar) || 0)}g</span>}
+            {item.sodium != null && <span>Na {Math.round(Number(item.sodium) || 0)}mg</span>}
           </span>
         </div>
       </div>

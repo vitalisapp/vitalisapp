@@ -1,19 +1,23 @@
-import { useState } from "react";
-import Icon from "../../../../components/Icon.jsx";
+import { useId, useState } from "react";
+import Modal from "../../../../components/ui/Modal.jsx";
 import { apiPost } from "../../../../lib/apiClient.js";
 import { useToastStore } from "../../../../stores/toastStore.js";
+import "./addWorkout.css";
 
 // ── Manual workout entry (Module 5) ─────────────────────────────────────────
 // For sessions that don't use the camera tracker. Creates one completed
 // workout_logs row (total reps) plus set rows for the single session exercise.
-const TYPE_SUGGESTIONS = ['strength', 'push', 'pull', 'leg day', 'upper body', 'lower body', 'cardio', 'general'];
+//
+// Built on the shared <Modal>: it portals to <body> (so it always sits above
+// the topbar instead of being trapped in the page's stacking context), locks
+// scroll, traps focus, closes on Esc/backdrop and animates in/out.
+// Props are unchanged so callers (Progress page, Camera workout) keep working.
+const TYPE_SUGGESTIONS = ['Strength', 'Push', 'Pull', 'Leg day', 'Upper body', 'Lower body', 'Cardio', 'General'];
 
-// One exercise per entry: the session name is the exercise, sets/reps/weight
-// describe the whole session. Set rows are created for that single exercise so
-// history can show "3 sets × 12 reps · 1,440 kg volume" without extra rows.
 const MAX_SETS_PER_LOG = 99;
 const MAX_REPS_PER_SET = 1000;
 const MAX_WEIGHT_KG = 1000;
+const MAX_DURATION_MIN = 1440;
 
 function clampSets(value) {
   const n = Number(value);
@@ -44,37 +48,72 @@ function performedAtToIso(dateKey) {
   return new Date(Math.min(when.getTime(), Date.now())).toISOString();
 }
 
-export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' }) {
-  const [type,       setType]        = useState(initialTitle.trim() || 'Strength');
-  const [duration,   setDuration]    = useState(45);
-  const [performedAt,setPerformedAt] = useState(() => new Date().toLocaleDateString('en-CA'));
-  const [sets,       setSets]        = useState('');
-  const [reps,       setReps]        = useState('');
-  const [weight,     setWeight]      = useState('');
-  const [saving,     setSaving]      = useState(false);
-  const [error,      setError]       = useState(null);
+function Field({ id = undefined, label = undefined, hint = undefined, error = undefined, suffix = undefined, children = undefined }) {
+  return (
+    <div className="aw-field">
+      <label htmlFor={id} className="aw-label">{label}</label>
+      <div className={`aw-control${suffix ? ' has-suffix' : ''}${error ? ' is-invalid' : ''}`}>
+        {children}
+        {suffix && <span className="aw-suffix" aria-hidden="true">{suffix}</span>}
+      </div>
+      {error
+        ? <span className="aw-hint aw-hint--error" id={`${id}-msg`}>{error}</span>
+        : hint && <span className="aw-hint" id={`${id}-msg`}>{hint}</span>}
+    </div>
+  );
+}
 
-  const canSave = String(type).trim() !== ''
-    && Number(duration) >= 1;
+export default function AddWorkoutModal({ onClose = undefined, onSaved = undefined, initialTitle = '' }) {
+  const uid = useId();
+  const today = new Date().toLocaleDateString('en-CA');
+  const [open,        setOpen]        = useState(true);
+  const [type,        setType]        = useState(initialTitle.trim() || 'Strength');
+  const [duration,    setDuration]    = useState('45');
+  const [performedAt, setPerformedAt] = useState(today);
+  const [sets,        setSets]        = useState('');
+  const [reps,        setReps]        = useState('');
+  const [weight,      setWeight]      = useState('');
+  const [saving,      setSaving]      = useState(false);
+  const [error,       setError]       = useState(null);
 
-  const submit = async () => {
+  const nameError = String(type).trim() === '' ? 'Enter a workout name.' : null;
+  const durationNum = Number(duration);
+  const durationError = duration === '' || !Number.isFinite(durationNum) || durationNum < 1
+    ? 'Enter at least 1 minute.'
+    : durationNum > MAX_DURATION_MIN ? 'Maximum is 24 hours (1440 min).' : null;
+  const dateError = !performedAt ? 'Pick a date.' : performedAt > today ? 'Date can’t be in the future.' : null;
+  const canSave = !nameError && !durationError && !dateError;
+
+  // Live summary of the optional set details, e.g. "3 × 12 reps · 40 kg · 1,440 kg volume".
+  const setCount = sets === '' ? null : clampSets(sets);
+  const repsPerSet = reps === '' ? 0 : clampReps(reps);
+  const weightKg = weight === '' ? 0 : clampWeight(weight);
+  const summaryParts = [];
+  if (repsPerSet > 0) summaryParts.push(`${setCount ?? 1} × ${repsPerSet} reps`);
+  if (weightKg > 0) summaryParts.push(`${weightKg} kg`);
+  if (repsPerSet > 0 && weightKg > 0) {
+    summaryParts.push(`${Math.round((setCount ?? 1) * repsPerSet * weightKg).toLocaleString()} kg volume`);
+  }
+
+  const requestClose = () => { if (!saving) setOpen(false); };
+
+  const submit = async (e) => {
+    e?.preventDefault();
     if (!canSave || saving) return;
     setSaving(true);
     setError(null);
     try {
-      const setCount = clampSets(sets);
-      const repsPerSet = reps === '' ? 0 : clampReps(reps);
-      const weightKg = weight === '' ? 0 : clampWeight(weight);
+      const count = clampSets(sets);
       const workoutType = type.trim();
       const hasSetData = repsPerSet > 0 || weightKg > 0;
       const payload = {
         workout_type: workoutType,
-        duration_minutes: Math.round(Number(duration)),
+        duration_minutes: Math.round(durationNum),
         performed_at: performedAtToIso(performedAt),
-        rep_count: repsPerSet > 0 ? repsPerSet * setCount : 0,
+        rep_count: repsPerSet > 0 ? repsPerSet * count : 0,
         ...(hasSetData
           ? {
-              sets: Array.from({ length: setCount }, (_, i) => ({
+              sets: Array.from({ length: count }, (_, i) => ({
                 exercise_name: workoutType,
                 set_number: i + 1,
                 ...(repsPerSet > 0 ? { reps: repsPerSet } : {}),
@@ -86,121 +125,138 @@ export default function AddWorkoutModal({ onClose, onSaved, initialTitle = '' })
       const log = await apiPost('/api/workout-logs/manual', payload);
       useToastStore.getState().addToast('Workout logged', 'success');
       onSaved?.(log);
-      onClose?.();
-    } catch (e) {
-      setError(e.message || 'Could not save workout');
+      setOpen(false);
+    } catch (err) {
+      setError(err.message || 'Could not save workout. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
+  const formId = `${uid}-form`;
+
   return (
-    <div
-      className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center p-4 overflow-y-auto"
-      style={{ background: 'var(--bg-overlay)', backdropFilter: 'blur(6px)' }}
-      role="dialog" aria-modal="true" aria-label="Log a workout"
-      tabIndex={-1}
-      onKeyDown={(e) => { if (e.key === 'Escape' && !saving) onClose?.(); }}
-    >
-      <div className="w-full max-w-lg my-auto glass-card border border-[var(--border-light)] rounded-3xl p-5 sm:p-7 max-h-[90dvh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)] block">Manual entry</span>
-            <h3 className="text-lg font-black tracking-tight text-[var(--text-primary)]">Log a workout</h3>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={saving}
-            aria-label="Close"
-            className="w-10 h-10 rounded-full bg-[var(--bg-hover)] hover:bg-[var(--bg-active)] flex items-center justify-center transition-colors"
-          >
-            <Icon name="close" className="text-[var(--text-muted)]" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <label className="col-span-2 sm:col-span-4 flex flex-col gap-1.5">
-            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Session name</span>
-            <input
-              list="wt-types"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              maxLength={100}
-              className="h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-border)]"
-            />
-            <datalist id="wt-types">
-              {TYPE_SUGGESTIONS.map((t) => <option key={t} value={t} />)}
-            </datalist>
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Duration (mins)</span>
-            <input
-              type="number" min="1" max="1440" step="1"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              className="h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-sm font-bold tabular-nums text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-border)]"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Sets</span>
-            <input
-              type="number" min="1" max={MAX_SETS_PER_LOG} step="1" placeholder="e.g. 3"
-              value={sets}
-              onChange={(e) => setSets(e.target.value)}
-              className="h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-sm font-bold tabular-nums text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[var(--accent-border)]"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Reps</span>
-            <input
-              type="number" min="0" max={MAX_REPS_PER_SET} step="1" placeholder="e.g. 12"
-              value={reps}
-              onChange={(e) => setReps(e.target.value)}
-              className="h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-sm font-bold tabular-nums text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[var(--accent-border)]"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Weight (kg)</span>
-            <input
-              type="number" min="0" max={MAX_WEIGHT_KG} step="0.5" placeholder="e.g. 40"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              className="h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-sm font-bold tabular-nums text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[var(--accent-border)]"
-            />
-          </label>
-          <label className="col-span-2 sm:col-span-4 flex flex-col gap-1.5">
-            <span className="text-[length:var(--fs-9)] font-black uppercase tracking-widest text-[var(--text-muted)]">Date performed</span>
-            <input
-              type="date" max={new Date().toLocaleDateString('en-CA')}
-              value={performedAt}
-              onChange={(e) => setPerformedAt(e.target.value)}
-              className="h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-border)]"
-            />
-          </label>
-        </div>
-
-        {error && (
-          <p className="mt-3 text-[length:var(--fs-11)] font-bold text-[var(--error)]" role="alert">⚠ {error}</p>
-        )}
-
-        <div className="mt-5 flex gap-3">
-          <button
-            onClick={onClose}
-            disabled={saving}
-            className="flex-1 py-3.5 min-h-[52px] rounded-xl font-bold text-sm border transition-all"
-            style={{ borderColor: 'var(--border-medium)', color: 'var(--text-muted)' }}
-          >
+    <Modal
+      isOpen={open}
+      onClose={requestClose}
+      onExited={onClose}
+      title="Log a workout"
+      subtitle="Add a session you did without the camera."
+      size="lg"
+      closeOnBackdrop={!saving}
+      closeOnEsc={!saving}
+      footer={(
+        <div className="aw-footer">
+          <button type="button" className="aw-btn aw-btn--ghost" onClick={requestClose} disabled={saving}>
             Cancel
           </button>
-          <button
-            onClick={submit}
-            disabled={!canSave || saving}
-            className="flex-1 py-3.5 rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] text-[length:var(--fs-15)] font-bold hover:bg-[var(--accent-hover)] active:scale-[0.99] transition-all min-h-[52px] disabled:opacity-50"
-          >
+          <button type="submit" form={formId} className="aw-btn aw-btn--primary" disabled={!canSave || saving}>
             {saving ? 'Saving…' : 'Save workout'}
           </button>
         </div>
-      </div>
-    </div>
+      )}
+    >
+      <form id={formId} className="aw-form" onSubmit={submit} noValidate>
+        <Field id={`${uid}-name`} label="Workout name" error={nameError}>
+          <input
+            id={`${uid}-name`}
+            className="aw-input"
+            list={`${uid}-types`}
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            maxLength={100}
+            autoComplete="off"
+            aria-invalid={Boolean(nameError)}
+            aria-describedby={nameError ? `${uid}-name-msg` : undefined}
+          />
+          <datalist id={`${uid}-types`}>
+            {TYPE_SUGGESTIONS.map((t) => <option key={t} value={t} />)}
+          </datalist>
+        </Field>
+
+        <div className="aw-row aw-row--2">
+          <Field id={`${uid}-date`} label="Date" error={dateError}>
+            <input
+              id={`${uid}-date`}
+              className="aw-input"
+              type="date"
+              max={today}
+              value={performedAt}
+              onChange={(e) => setPerformedAt(e.target.value)}
+              aria-invalid={Boolean(dateError)}
+            />
+          </Field>
+          <Field id={`${uid}-duration`} label="Duration" suffix="min" error={durationError}>
+            <input
+              id={`${uid}-duration`}
+              className="aw-input"
+              type="number"
+              inputMode="numeric"
+              min="1"
+              max={MAX_DURATION_MIN}
+              step="1"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              aria-invalid={Boolean(durationError)}
+            />
+          </Field>
+        </div>
+
+        <fieldset className="aw-group">
+          <legend className="aw-group-title">
+            Sets &amp; reps <span>Optional</span>
+          </legend>
+          <div className="aw-row aw-row--3">
+            <Field id={`${uid}-sets`} label="Sets">
+              <input
+                id={`${uid}-sets`}
+                className="aw-input"
+                type="number"
+                inputMode="numeric"
+                min="1"
+                max={MAX_SETS_PER_LOG}
+                step="1"
+                placeholder="3"
+                value={sets}
+                onChange={(e) => setSets(e.target.value)}
+              />
+            </Field>
+            <Field id={`${uid}-reps`} label="Reps per set">
+              <input
+                id={`${uid}-reps`}
+                className="aw-input"
+                type="number"
+                inputMode="numeric"
+                min="0"
+                max={MAX_REPS_PER_SET}
+                step="1"
+                placeholder="12"
+                value={reps}
+                onChange={(e) => setReps(e.target.value)}
+              />
+            </Field>
+            <Field id={`${uid}-weight`} label="Weight" suffix="kg">
+              <input
+                id={`${uid}-weight`}
+                className="aw-input"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                max={MAX_WEIGHT_KG}
+                step="0.5"
+                placeholder="40"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+              />
+            </Field>
+          </div>
+          <p className="aw-summary" aria-live="polite">
+            {summaryParts.length ? summaryParts.join(' · ') : 'Leave empty if you only want to record time.'}
+          </p>
+        </fieldset>
+
+        {error && <p className="aw-error" role="alert">{error}</p>}
+      </form>
+    </Modal>
   );
 }

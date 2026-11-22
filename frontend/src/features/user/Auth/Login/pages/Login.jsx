@@ -109,12 +109,12 @@ const Login = () => {
         <span className="text-[14px] leading-none">←</span> Back to Landing
       </button>
 
-      <div className="relative z-10 m-auto grid w-full min-h-screen lg:grid-cols-[1fr_480px]">
+      <div className="relative z-10 mx-auto grid w-full max-w-[1180px] min-h-screen px-4 sm:px-8 lg:px-12 lg:gap-16 lg:grid-cols-[minmax(0,1fr)_400px]">
 
         {/* Left Hero Panel */}
-        <div className="hidden lg:flex flex-col justify-center p-14 gap-4">
+        <div className="hidden lg:flex flex-col justify-center py-14 gap-4">
           <span className="v-hero-eyebrow text-[11px] font-semibold tracking-[0.35em] uppercase text-[var(--accent)] opacity-80">
-            Vitalis Performance OS
+            AI-powered fitness &amp; nutrition
           </span>
           <h1 className="v-hero-h1 font-['Bebas_Neue'] text-[clamp(56px,6vw,88px)] leading-[0.95] tracking-wider">
             TRAIN<br />
@@ -139,7 +139,7 @@ const Login = () => {
         </div>
 
         {/* Right Glass Panel */}
-        <div className="flex items-center justify-center p-4 sm:p-8">
+        <div className="flex items-center justify-center py-6 sm:py-8">
           <div className="v-card relative w-full max-w-[400px] bg-[#121210]/65 backdrop-blur-[32px] saturate-[140%] border border-[var(--accent)]/10 rounded-[20px] p-6 sm:p-10 shadow-[0_32px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)]">
 
             <div className="vitalis-scan-bar" />
@@ -167,8 +167,8 @@ const Login = () => {
               <span className="font-['Bebas_Neue'] text-[22px] tracking-[0.12em]">VITALIS</span>
             </div>
 
-            <h2 className="v-card-title font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-1.5">ACCESS PORTAL</h2>
-            <p className="v-card-sub text-xs text-[#c4c9b0]/55 tracking-wide mb-8">Enter credentials to synchronize biometrics.</p>
+            <h2 className="v-card-title font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-1.5">WELCOME BACK</h2>
+            <p className="v-card-sub text-xs text-[#c4c9b0]/55 tracking-wide mb-8">Sign in to continue your training.</p>
 
             <form onSubmit={(e) => handleSubmit(e, { email, password })} className="space-y-5">
               {deactivated && (

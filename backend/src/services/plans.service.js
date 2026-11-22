@@ -2,6 +2,8 @@
 // call here, shape the response). All SQL lives in this file.
 const db = require('../config/db');
 const { AppError } = require('../utils/errors');
+const { recommendPlan } = require('../utils/workoutRecommender');
+const { ageOn } = require('../utils/age');
 
 // Bodyweight starter sets per plan focus (equipment: none).
 // Recovery days intentionally get zero exercises (tracker offers Mark Complete).
@@ -298,34 +300,114 @@ async function deletePersonalPlan(userId, planId) {
     await db.execute('DELETE FROM plans WHERE id = ?', [planId]);
 }
 
-// Auto-generate (or reuse) a 7-day starter plan from the active fitness goal.
-// Module 5: respects training_preferences when present — day length comes from
-// the saved session minutes and equipment/location are described in the plan
-// (starter exercises stay bodyweight-only; alternatives handle equipment).
-async function autoCreateFromGoal(userId) {
-    const [[goal]] = await db.execute(
-        `SELECT id, goal_type, daily_kcal, protein_g, carbs_g, fat_g, activity_level
-         FROM fitness_goals WHERE user_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1`,
-        [userId]
-    );
-    if (!goal) throw new AppError('No active goal — complete onboarding first', 404, 'NO_ACTIVE_GOAL');
+// ── Section 3: goal-based recommended plans ───────────────────────────────────
+// One generated plan per goal (primary + up to 2 extras). Each plan is built by
+// utils/workoutRecommender from the health assessment (BMI, age, activity),
+// experience level and training preferences (equipment, days, minutes,
+// exclusions). fitness_goals.source_plan_id marks the ACTIVE plan.
 
-    // Best-effort prefs — a missing/old schema must never block generation.
-    let prefs = null;
+const GOAL_KEYS = ['LOSE_WEIGHT', 'MAINTAIN_WEIGHT', 'GAIN_WEIGHT', 'BUILD_MUSCLE', 'PERFORMANCE'];
+
+function parseSecondary(raw) {
+    return String(raw || '').split(',').map((x) => x.trim()).filter((x) => GOAL_KEYS.includes(x)).slice(0, 2);
+}
+
+async function loadActiveGoal(userId) {
+    const full = `SELECT id, goal_type, secondary_goals, experience_level, dob, bmi, activity_level,
+                         daily_kcal, protein_g, carbs_g, fat_g, source_plan_id
+                    FROM fitness_goals WHERE user_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1`;
+    const basic = `SELECT id, goal_type, dob, bmi, activity_level, daily_kcal, protein_g, carbs_g, fat_g
+                     FROM fitness_goals WHERE user_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1`;
+    let rows;
     try {
-        const trainingPrefs = require('./trainingPrefs.service');
-        prefs = await trainingPrefs.get(userId);
-    } catch { prefs = null; }
-    const dayMins = prefs?.sessionDurationMins ?? null;
-    const equipNote = prefs && Array.isArray(prefs.equipment) && prefs.equipment.length > 0
-        ? ` · using your ${prefs.equipment.join(', ')}` : '';
+        [rows] = await db.execute(full, [userId]);
+    } catch (e) {
+        if (e && e.errno !== 1054) throw e;
+        [rows] = await db.execute(basic, [userId]); // pre-050 / pre-032
+    }
+    return rows && rows[0] ? rows[0] : null;
+}
 
-    const label = humanizeGoal(goal.goal_type);
+async function loadPrefs(userId) {
+    try {
+        return await require('./trainingPrefs.service').get(userId);
+    } catch {
+        return null; // missing/old schema never blocks generation
+    }
+}
+
+/** Pure: turn goal row + prefs into recommender input. */
+function recommenderInput(goal, prefs, goalType) {
+    let age = null;
+    try { age = goal.dob ? ageOn(goal.dob) : null; } catch { age = null; }
+    return {
+        goalType,
+        experience: goal.experience_level || undefined,
+        activityLevel: goal.activity_level,
+        bmi: goal.bmi != null ? Number(goal.bmi) : null,
+        age,
+        sessionMinutes: prefs?.sessionDurationMins ?? 30,
+        equipment: prefs?.equipment || [],
+        preferredDays: prefs?.preferredDays || [],
+        excludedCategories: prefs?.excludedCategories || [],
+        excludedExercises: prefs?.excludedExercises || [],
+        secondaryGoals: [goal.goal_type, ...parseSecondary(goal.secondary_goals)].filter((g) => g !== goalType),
+    };
+}
+
+// Replace a plan's days + exercises with a recommender schedule (in conn's tx).
+async function writeSchedule(conn, planId, schedule) {
+    await conn.execute('DELETE FROM plan_contents WHERE plan_id = ?', [planId]); // cascades exercises
+    for (const d of schedule) {
+        const [r] = await conn.execute(
+            `INSERT INTO plan_contents (plan_id, day_number, title, activity_type, description, duration_mins)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [planId, d.day_number, d.title, d.activity_type, d.description, d.duration_mins]
+        );
+        for (const ex of d.exercises) {
+            await conn.execute(
+                `INSERT INTO plan_exercises (plan_content_id, exercise_order, exercise_name, sets, reps, duration_seconds, rest_seconds, notes)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                [r.insertId, ex.exercise_order, ex.exercise_name, ex.sets, ex.reps, ex.duration_seconds, ex.rest_seconds, ex.notes]
+            );
+        }
+    }
+}
+
+async function saveGoalMeta(conn, planId, goalType, rationale) {
+    try {
+        await conn.execute('UPDATE plans SET goal_type = ?, rationale = ? WHERE id = ?', [goalType, JSON.stringify(rationale), planId]);
+    } catch (e) {
+        if (e && e.errno !== 1054) throw e; // pre-050: plan still works without the explanation
+    }
+}
+
+// Generate (or refresh) the recommended plan for ONE goal.
+// opts.goalType  — defaults to the primary goal; must be primary or an extra goal.
+// opts.regenerate — rebuild an existing plan's days from current inputs.
+// opts.makeActive — link it as the active plan (default: only for the primary
+//                   goal when there is no active plan yet, or the primary plan).
+async function autoCreateFromGoal(userId, opts = {}) {
+    const goal = await loadActiveGoal(userId);
+    if (!goal) throw new AppError('No active goal — complete onboarding first', 404, 'NO_ACTIVE_GOAL');
+    const goals = [goal.goal_type, ...parseSecondary(goal.secondary_goals)];
+    const goalType = opts.goalType || goal.goal_type;
+    if (!goals.includes(goalType)) {
+        throw new AppError('That goal is not one of your current goals.', 400, 'GOAL_NOT_SELECTED');
+    }
+    const isPrimary = goalType === goal.goal_type;
+    const prefs = await loadPrefs(userId);
+    const rec = recommendPlan(recommenderInput(goal, prefs, goalType));
+
+    const label = humanizeGoal(goalType);
     const title = `My ${label} Plan`;
-    const kcal = goal.daily_kcal != null ? `${Number(goal.daily_kcal).toLocaleString()} kcal/day` : 'balanced nutrition';
-    const macros = (goal.protein_g != null && goal.carbs_g != null && goal.fat_g != null)
-        ? ` (P${goal.protein_g}g C${goal.carbs_g}g F${goal.fat_g}g)` : '';
-    const tag = tagForGoal(goal.goal_type);
+    const tag = tagForGoal(goalType);
+    const nutrition = isPrimary && goal.daily_kcal != null
+        ? ` Nutrition target: ${Number(goal.daily_kcal).toLocaleString()} kcal/day${goal.protein_g != null ? `, ${goal.protein_g} g protein` : ''}.`
+        : '';
+    const description = `Recommended for your ${label} goal: ${rec.trainingDays} training days a week, ${rec.exercisesPerSession} exercises per session, ${rec.experience.toLowerCase()} level${rec.lowImpact ? ', low-impact' : ''}.${nutrition} Edit anytime.`.slice(0, 2000);
+    const intensity = { BEGINNER: 'Low', INTERMEDIATE: 'Moderate', ADVANCED: 'High' }[rec.experience] || 'Moderate';
+
     const conn = await db.getConnection();
     try {
         await conn.beginTransaction();
@@ -334,44 +416,80 @@ async function autoCreateFromGoal(userId) {
             [userId, title]
         );
         let planId;
-        let created = true;
+        let created = false;
+        let refreshed = false;
         if (existing) {
             planId = existing.id;
-            created = false;
-            try {
+            const [[hasDays]] = await conn.execute('SELECT COUNT(*) AS n FROM plan_contents WHERE plan_id = ?', [planId]);
+            if (opts.regenerate || !Number(hasDays?.n)) {
+                await writeSchedule(conn, planId, rec.schedule);
                 await conn.execute(
-                    'UPDATE plans SET tag = ?, target_focus = ?, duration_days = 7 WHERE id = ?',
-                    [tag, tag === 'General' ? 'General' : tag, planId]
+                    'UPDATE plans SET tag = ?, target_focus = ?, intensity = ?, difficulty = ?, description = ?, duration_days = 7 WHERE id = ?',
+                    [tag, tag, intensity, intensity, description, planId]
                 );
-            } catch { /* pre-032 or no-op — still enroll below */ }
+                refreshed = true;
+            }
         } else {
             planId = await insertPersonalPlan(conn, userId, {
-                title,
-                tag,
-                intensity: 'Moderate',
-                targetFocus: tag,
-                durationDays: 7,
-                description: `Auto-generated from your ${label} goal — ${kcal}${macros}. 7-day starter: alternate training + recovery${dayMins ? ` · ${dayMins} min days` : ''}${equipNote}; edit anytime.`,
-                imageSeed: 'personal-goal',
-                dayMins,
+                title, tag, intensity, targetFocus: tag, durationDays: 7, description,
+                imageSeed: 'personal-goal', dayMins: prefs?.sessionDurationMins ?? null,
             });
+            await writeSchedule(conn, planId, rec.schedule);
+            created = true;
         }
+        if (created || refreshed) await saveGoalMeta(conn, planId, goalType, rec.rationale);
         await conn.execute(
             'INSERT IGNORE INTO user_plans (user_id, plan_id, enrolled_at) VALUES (?, ?, NOW())',
             [userId, planId]
         );
-        // Link back to goal when 032 has run; ignore when column missing.
-        try {
-            await conn.execute('UPDATE fitness_goals SET source_plan_id = ? WHERE id = ?', [planId, goal.id]);
-        } catch { /* pre-032 — non-fatal */ }
+        const makeActive = opts.makeActive ?? (isPrimary || !goal.source_plan_id);
+        if (makeActive) {
+            try {
+                await conn.execute('UPDATE fitness_goals SET source_plan_id = ? WHERE id = ?', [planId, goal.id]);
+            } catch { /* pre-032 — non-fatal */ }
+        }
         await conn.query('COMMIT');
-        return { planId, created };
+        return { planId, created, refreshed, goalType, active: Boolean(makeActive), rationale: rec.rationale };
     } catch (err) {
         try { await conn.query('ROLLBACK'); } catch { /* noop */ }
         throw err;
     } finally {
         try { conn.release(); } catch { /* noop */ }
     }
+}
+
+// Generate plans for the primary goal and every extra goal. The primary plan
+// becomes active. Used at the end of onboarding and after goal changes.
+async function generateForAllGoals(userId, { regenerate = false } = {}) {
+    const goal = await loadActiveGoal(userId);
+    if (!goal) throw new AppError('No active goal — complete onboarding first', 404, 'NO_ACTIVE_GOAL');
+    const results = [];
+    for (const g of parseSecondary(goal.secondary_goals)) {
+        results.push(await autoCreateFromGoal(userId, { goalType: g, regenerate, makeActive: false }));
+    }
+    // Primary last so it wins the active slot.
+    const primary = await autoCreateFromGoal(userId, { goalType: goal.goal_type, regenerate, makeActive: true });
+    return { planId: primary.planId, created: primary.created, plans: [primary, ...results] };
+}
+
+// Make one of the user's own plans the active plan for their goal.
+async function setActivePlan(userId, planId) {
+    const [[plan]] = await db.execute('SELECT id, owner_user_id, title FROM plans WHERE id = ? LIMIT 1', [planId]);
+    if (!plan) throw new AppError('Plan not found', 404, 'PLAN_NOT_FOUND');
+    const owns = plan.owner_user_id != null && String(plan.owner_user_id) === String(userId);
+    if (!owns) {
+        const [[enrolled]] = await db.execute('SELECT 1 AS ok FROM user_plans WHERE user_id = ? AND plan_id = ? LIMIT 1', [userId, planId]);
+        if (!enrolled) throw new AppError('Join this plan before making it active.', 403, 'NOT_ENROLLED');
+    }
+    const goal = await loadActiveGoal(userId);
+    if (!goal) throw new AppError('No active goal — complete onboarding first', 404, 'NO_ACTIVE_GOAL');
+    try {
+        await db.execute('UPDATE fitness_goals SET source_plan_id = ? WHERE id = ?', [planId, goal.id]);
+    } catch (e) {
+        if (e && e.errno === 1054) throw new AppError('Active plans need migration 032 — run npm run db:migrate', 503, 'NEEDS_MIGRATION_032');
+        throw e;
+    }
+    return { planId: plan.id, title: plan.title };
 }
 
 // ── Module 5: one-click adaptive adjustment ───────────────────────────────────
@@ -501,7 +619,41 @@ async function getGoalStatus(userId) {
             if (plan) linkedPlan = { id: plan.id, title: plan.title };
         } catch { linkedPlan = null; }
     }
-    return { goal, linkedPlan };
+    // Section 3: extra goals + one generated plan per goal (fail-soft pre-050).
+    goal.secondaryGoals = [];
+    let goalPlans = [];
+    try {
+        const [[extra]] = await db.execute('SELECT secondary_goals, target_date, experience_level FROM fitness_goals WHERE id = ? LIMIT 1', [goal.id]);
+        goal.secondaryGoals = parseSecondary(extra?.secondary_goals);
+        goal.targetDate = extra?.target_date ? toIsoDate(extra.target_date) : null;
+        goal.experienceLevel = extra?.experience_level || null;
+        const [plans] = await db.execute(
+            'SELECT id, title, goal_type, rationale FROM plans WHERE owner_user_id = ? AND goal_type IS NOT NULL ORDER BY id ASC',
+            [userId]
+        );
+        const wanted = [goal.goalType, ...goal.secondaryGoals];
+        goalPlans = wanted.map((gt) => {
+            const p = plans.filter((x) => x.goal_type === gt).pop();
+            return {
+                goalType: gt,
+                primary: gt === goal.goalType,
+                plan: p ? { id: p.id, title: p.title, active: p.id === goal.sourcePlanId, rationale: safeJsonArray(p.rationale) } : null,
+            };
+        });
+    } catch { /* pre-050 — goalPlans stays empty */ }
+    return { goal, linkedPlan, goalPlans };
+}
+
+function safeJsonArray(v) {
+    if (Array.isArray(v)) return v;
+    try { const x = JSON.parse(v); return Array.isArray(x) ? x : []; } catch { return []; }
+}
+
+function toIsoDate(v) {
+    if (v instanceof Date) {
+        return `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, '0')}-${String(v.getDate()).padStart(2, '0')}`;
+    }
+    return String(v).slice(0, 10);
 }
 
 module.exports = {
@@ -518,6 +670,10 @@ module.exports = {
     updatePersonalPlan,
     deletePersonalPlan,
     autoCreateFromGoal,
+    generateForAllGoals,
+    setActivePlan,
+    recommenderInput,
+    parseSecondary,
     getGoalStatus,
     adjustLinkedPlan,
 };

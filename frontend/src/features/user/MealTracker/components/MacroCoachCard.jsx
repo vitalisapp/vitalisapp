@@ -9,7 +9,7 @@ import { goalLabel } from '../../Onboarding/constants/goals.js';
 // Macro Coach — lives inside Nutrition, powered by actual logged data vs goal targets.
 // "View Suggestions" calls the AI suggest-plan endpoint for the latest meal and
 // shows the recommended training plan + reasoning (master plan §5 Macro Coach).
-const MacroCoachCard = ({ userId, lastMeal }) => {
+const MacroCoachCard = ({ userId = undefined, lastMeal = undefined }) => {
   const { goal } = useActiveGoal(userId);
   const { meals } = useTodayMeals(userId);
   const [suggestion, setSuggestion] = useState(null);

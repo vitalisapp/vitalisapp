@@ -97,3 +97,23 @@ describe("groupByDay", () => {
     assert.deepEqual(groupByDay(undefined, NOW), []);
   });
 });
+
+describe("task notification colors", () => {
+  it("gives every task category its own hue, kept on success", () => {
+    const fg = (category) => getNotificationMeta({ category, type: "success" }).tone.fg;
+    assert.equal(fg("TRAINING"), "var(--notif-training)");
+    assert.equal(fg("ACTIVITY"), "var(--notif-activity)");
+    assert.equal(fg("NUTRITION"), "var(--success)");
+    assert.equal(fg("PROGRESS"), "var(--notif-progress)");
+    assert.equal(fg("GOAL"), "var(--notif-goal)");
+    const all = ["TRAINING", "ACTIVITY", "NUTRITION", "PROGRESS", "GOAL", "SOCIAL", "SYSTEM"].map(fg);
+    assert.equal(new Set(all).size, all.length, "no two categories share a color");
+    assert.ok(!all.includes("var(--notif-warning)") && !all.includes("var(--error)"), "yellow/red reserved for problems");
+  });
+
+  it("warnings are always yellow, whatever the category", () => {
+    for (const category of ["TRAINING", "ACTIVITY", "PROGRESS", "SYSTEM"]) {
+      assert.equal(getNotificationMeta({ category, type: "warning" }).tone.fg, "var(--notif-warning)");
+    }
+  });
+});

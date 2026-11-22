@@ -1,19 +1,25 @@
 export const MAIN_NAV = [
-  { key: 'dashboard',   label: 'Dashboard',  icon: 'dashboard',       path: '/dashboard' },
+  { key: 'dashboard',   label: 'Dashboard',  icon: 'dashboard',       path: '/dashboard',              group: 'overview' },
 
-  { key: 'nutrition',   label: 'Nutrition',  icon: 'restaurant',      path: '/dashboard/meal-tracker' },
-  { key: 'training',    label: 'Training',   icon: 'exercise',        path: '/dashboard/workouts' },
+  { key: 'nutrition',   label: 'Nutrition',  icon: 'restaurant',      path: '/dashboard/meal-tracker', group: 'fitness' },
+  { key: 'training',    label: 'Training',   icon: 'exercise',        path: '/dashboard/workouts',     group: 'fitness' },
   // Plans sits with Training (plan programs drive workouts) — kept reachable per master plan.
-  { key: 'plans',       label: 'Plans',      icon: 'book',            path: '/dashboard/plans' },
-  { key: 'activity',    label: 'Activity',   icon: 'directions_run',  path: '/dashboard/activity-map' },
-  { key: 'progress',    label: 'Progress',   icon: 'history',         path: '/dashboard/logs' },
-  // Messenger — real conversations only (the old AI contact was removed).
-  { key: 'messenger',   label: 'Messenger', icon: 'forum',             path: '/dashboard/messenger' },
-  { key: 'community',   label: 'Community',  icon: 'groups',          path: '/dashboard/community' },
+  { key: 'plans',       label: 'Plans',      icon: 'book',            path: '/dashboard/plans',        group: 'fitness' },
+  { key: 'activity',    label: 'Activity',   icon: 'directions_run',  path: '/dashboard/activity-map', group: 'fitness' },
+  { key: 'progress',    label: 'Progress',   icon: 'history',         path: '/dashboard/logs',         group: 'fitness' },
+  // Community hub: Feed + Messages (/dashboard/community/messages) on one page.
+  { key: 'community',   label: 'Community',  icon: 'groups',          path: '/dashboard/community',    group: 'social' },
+];
+
+// Sidebar section headings, in display order. Items keep MAIN_NAV order.
+export const NAV_GROUPS = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'fitness',  label: 'Fitness' },
+  { key: 'social',   label: 'Social' },
 ];
 
 // Desktop nav — single source. Sidebar.jsx consumes NAV_ITEMS.
-const toNavEntry = ({ key, label, icon, path }) => ({ key, icon, label, name: label, path });
+const toNavEntry = ({ key, label, icon, path, group }) => ({ key, icon, label, name: label, path, group });
 export const NAV_ITEMS = MAIN_NAV.map(toNavEntry);
 
 export const getSettingsItems = (navigate, basePath = '/dashboard') => [
@@ -32,7 +38,7 @@ export const ACTIVE_NAV_KEY = 'vitalis:activeNav';
 
 // Mobile bottom bar — exactly what the phones show.
 // Main 4 (always visible): Dashboard, Progress, Workout, Plans.
-// Plus (+) sheet: MealTracker, Jogging, Community, Messenger.
+// Plus (+) sheet: MealTracker, Jogging, Community (Feed + Messages).
 export const MOBILE_MAIN_NAV = [
   { key: 'dashboard', label: 'Dashboard', icon: 'grid_view',     path: '/dashboard' },
   { key: 'progress',   label: 'Progress',   icon: 'history',       path: '/dashboard/logs' },
@@ -44,5 +50,4 @@ export const MOBILE_MORE_NAV = [
   { key: 'mealtracker', label: 'Meal Tracker', icon: 'restaurant',      path: '/dashboard/meal-tracker' },
   { key: 'jogging',     label: 'Activity',     icon: 'directions_run',  path: '/dashboard/activity-map' },
   { key: 'community',   label: 'Community',    icon: 'groups',          path: '/dashboard/community' },
-  { key: 'messenger',   label: 'Messenger',    icon: 'forum',           path: '/dashboard/messenger' },
 ];

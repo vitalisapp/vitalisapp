@@ -2,6 +2,7 @@
 // days, session length, location). Pure logic + DB; controller stays thin.
 const db = require('../config/db');
 const { AppError } = require('../utils/errors');
+const { EXCLUSION_KEYS } = require('../utils/workoutRecommender');
 
 // Canonical equipment catalog — must match the frontend picker exactly. The
 // catalog's own equipment labels (workoutGuide) use lowercase names like
@@ -68,7 +69,7 @@ function validateInput(body) {
   if (body?.session_duration_mins !== undefined && body?.session_duration_mins !== null && body?.session_duration_mins !== '') {
     duration = Number(body.session_duration_mins);
     if (!Number.isInteger(duration) || duration < MIN_SESSION_MINS || duration > MAX_SESSION_MINS) {
-      throw new AppError(`session_duration_mins must be an integer ${MIN_SESSION_MINS}–${MAX_SESSION_MINS}`, 400, 'INVALID_DURATION');
+      throw new AppError(`Session length must be between ${MIN_SESSION_MINS} and ${MAX_SESSION_MINS} minutes.`, 400, 'INVALID_DURATION');
     }
   }
 
@@ -77,44 +78,123 @@ function validateInput(body) {
     location = String(body.workout_location).trim().slice(0, 50) || null;
   }
 
-  return { equipment, preferred_days: preferredDays, session_duration_mins: duration, workout_location: location };
+  // Exclusions are optional on PUT: undefined means keep what is saved, so
+  // older clients that only send equipment/days never wipe them.
+  const excludedCategories = body?.excluded_categories === undefined
+    ? undefined
+    : cleanStringList(body.excluded_categories, 10).filter((k) => EXCLUSION_KEYS.includes(k));
+  const excludedExercises = body?.excluded_exercises === undefined
+    ? undefined
+    : cleanStringList(body.excluded_exercises, 60);
+
+  return {
+    equipment,
+    preferred_days: preferredDays,
+    session_duration_mins: duration,
+    workout_location: location,
+    excluded_categories: excludedCategories,
+    excluded_exercises: excludedExercises,
+  };
+}
+
+function cleanStringList(raw, max) {
+  const out = [];
+  for (const v of Array.isArray(raw) ? raw : []) {
+    if (typeof v !== 'string') continue;
+    const t = v.trim().slice(0, 80);
+    if (t && !out.includes(t)) out.push(t);
+    if (out.length >= max) break;
+  }
+  return out;
 }
 
 /** Upsert (PK is user_id). Returns the saved row as plain JSON. */
 async function save(userId, body) {
   const prefs = validateInput(body);
-  await db.execute(
-    `INSERT INTO training_preferences (user_id, equipment, preferred_days, session_duration_mins, workout_location)
-       VALUES (?, CAST(? AS JSON), CAST(? AS JSON), ?, ?)
-     ON DUPLICATE KEY UPDATE
-       equipment = VALUES(equipment),
-       preferred_days = VALUES(preferred_days),
-       session_duration_mins = VALUES(session_duration_mins),
-       workout_location = VALUES(workout_location)`,
-    [
-      userId,
-      JSON.stringify(prefs.equipment),
-      JSON.stringify(prefs.preferred_days),
-      prefs.session_duration_mins,
-      prefs.workout_location,
-    ]
-  );
+  const current = (prefs.excluded_categories === undefined || prefs.excluded_exercises === undefined)
+    ? await get(userId).catch(() => null)
+    : null;
+  const exclCats = prefs.excluded_categories ?? current?.excludedCategories ?? [];
+  const exclEx = prefs.excluded_exercises ?? current?.excludedExercises ?? [];
+  const baseParams = [
+    userId,
+    JSON.stringify(prefs.equipment),
+    JSON.stringify(prefs.preferred_days),
+    prefs.session_duration_mins,
+    prefs.workout_location,
+  ];
+  try {
+    await db.execute(
+      `INSERT INTO training_preferences (user_id, equipment, preferred_days, session_duration_mins, workout_location, excluded_categories, excluded_exercises)
+         VALUES (?, CAST(? AS JSON), CAST(? AS JSON), ?, ?, CAST(? AS JSON), CAST(? AS JSON))
+       ON DUPLICATE KEY UPDATE
+         equipment = VALUES(equipment),
+         preferred_days = VALUES(preferred_days),
+         session_duration_mins = VALUES(session_duration_mins),
+         workout_location = VALUES(workout_location),
+         excluded_categories = VALUES(excluded_categories),
+         excluded_exercises = VALUES(excluded_exercises)`,
+      [...baseParams, JSON.stringify(exclCats), JSON.stringify(exclEx)]
+    );
+  } catch (err) {
+    // Pre-050 database: save the original fields only.
+    if (err.errno !== 1054 && err.code !== 'ER_BAD_FIELD_ERROR') throw err;
+    await db.execute(
+      `INSERT INTO training_preferences (user_id, equipment, preferred_days, session_duration_mins, workout_location)
+         VALUES (?, CAST(? AS JSON), CAST(? AS JSON), ?, ?)
+       ON DUPLICATE KEY UPDATE
+         equipment = VALUES(equipment),
+         preferred_days = VALUES(preferred_days),
+         session_duration_mins = VALUES(session_duration_mins),
+         workout_location = VALUES(workout_location)`,
+      baseParams
+    );
+  }
   return get(userId);
+}
+
+/** Add or remove one exercise from the do-not-recommend list. */
+async function setExerciseExcluded(userId, name, excluded) {
+  const clean = String(name || '').trim().slice(0, 80);
+  if (!clean) throw new AppError('Choose an exercise.', 400, 'EXERCISE_REQUIRED');
+  const current = await get(userId);
+  const list = (current?.excludedExercises || []).filter((n) => n.toLowerCase() !== clean.toLowerCase());
+  if (excluded) list.push(clean);
+  return save(userId, {
+    equipment: current?.equipment || [],
+    preferred_days: current?.preferredDays || [],
+    session_duration_mins: current?.sessionDurationMins ?? null,
+    workout_location: current?.workoutLocation ?? null,
+    excluded_categories: current?.excludedCategories || [],
+    excluded_exercises: list.slice(-60),
+  });
 }
 
 /** Returns null when the user hasn't set preferences yet. */
 async function get(userId) {
-  const [[row]] = await db.execute(
-    `SELECT equipment, preferred_days, session_duration_mins, workout_location, updated_at
-       FROM training_preferences WHERE user_id = ? LIMIT 1`,
-    [userId]
-  );
+  let row;
+  try {
+    [[row]] = await db.execute(
+      `SELECT equipment, preferred_days, session_duration_mins, workout_location, excluded_categories, excluded_exercises, updated_at
+         FROM training_preferences WHERE user_id = ? LIMIT 1`,
+      [userId]
+    );
+  } catch (err) {
+    if (err.errno !== 1054 && err.code !== 'ER_BAD_FIELD_ERROR') throw err;
+    [[row]] = await db.execute(
+      `SELECT equipment, preferred_days, session_duration_mins, workout_location, updated_at
+         FROM training_preferences WHERE user_id = ? LIMIT 1`,
+      [userId]
+    );
+  }
   if (!row) return null;
   return {
     equipment: safeParse(row.equipment),
     preferredDays: safeParse(row.preferred_days),
     sessionDurationMins: row.session_duration_mins != null ? Number(row.session_duration_mins) : null,
     workoutLocation: row.workout_location,
+    excludedCategories: safeParse(row.excluded_categories),
+    excludedExercises: safeParse(row.excluded_exercises),
     updatedAt: row.updated_at,
   };
 }
@@ -141,4 +221,5 @@ module.exports = {
   validateInput,
   save,
   get,
+  setExerciseExcluded,
 };

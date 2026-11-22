@@ -6,7 +6,7 @@ import {
   Badge, ConfirmDialog, PageHero, Panel, Pager, StateBlock, TableSkeleton,
 } from '../components/AdminBits.jsx';
 import { useAdminToast } from '../hooks/useAdminToast.jsx';
-import { fmtNum, fmtWhen } from '../utils/format.js';
+import { fmtNum, fmtWhen, initials } from '../utils/format.js';
 import ExportMenu from '../components/ExportMenu.jsx';
 import { fetchAllRows } from '../utils/exportTable.js';
 
@@ -234,7 +234,7 @@ export default function AdminContent() {
                     <tr key={post.id}>
                       <td>
                         <div className="adm-person">
-                          <span className="adm-avatar">{String(post.display_name || post.author_name || '?').slice(0, 2).toUpperCase()}</span>
+                          <span className="adm-avatar">{initials(post.display_name || post.author_name)}</span>
                           <span className="adm-person__copy">
                             <span className="adm-person__name">{post.display_name || post.author_name}</span>
                             <span className="adm-person__mail">{post.author_email}</span>

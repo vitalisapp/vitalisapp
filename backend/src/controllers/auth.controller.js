@@ -7,6 +7,7 @@ const service = require("../services/auth.service");
 const emailService = require("../services/email.service");
 const phoneVerification = require("../services/phoneVerification.service");
 const notificationController = require("./notification.controller");
+const accessGroups = require("../services/accessGroups.service");
 
 const { normEmail, DEV_VERIFY_FALLBACK } = service;
 
@@ -23,6 +24,21 @@ function setSessionCookie(res, userId, email, req, tv = 0) {
     );
   }
   return token;
+}
+
+// In-app security notice when a genuinely new device signs in. Best-effort and
+// fire-and-forget: it must never delay or fail the login response. Skipped for
+// the account's very first device (that is not a surprise sign-in).
+function notifyNewDevice(userId, session) {
+  if (!session?.isNewDevice || !(session.priorSessions > 0)) return;
+  notificationController
+    .notifyUser(userId, {
+      message: `New sign-in from ${session.deviceLabel}. If this wasn't you, review your devices in Profile → Devices & Sessions.`,
+      type: "warning",
+      category: "SYSTEM",
+      source: "auth",
+    })
+    .catch(() => {});
 }
 
 // IP-based brute-force guard (primary) — per-email Map in the service is layer 2.
@@ -46,6 +62,8 @@ const registerSchema = z.object({
   // Only required when verificationMethod === 'sms'; validated in the service
   // so both formats (09XXXXXXXXX / +639XXXXXXXXX) are accepted.
   phone: z.string().trim().max(24).optional(),
+  // Optional admin access-QR code (?g=CODE). Unknown/expired codes are ignored.
+  accessCode: z.string().trim().max(16).optional(),
 });
 
 const smsOtpSchema = z.object({
@@ -66,6 +84,7 @@ const loginSchema = z.object({
 
 const googleLoginSchema = z.object({
   code: z.string().trim().min(1, "Google auth code is required").max(4096),
+  accessCode: z.string().trim().max(16).optional(),
 });
 
 const changePasswordSchema = z.object({
@@ -172,6 +191,9 @@ async function postregister(req, res, next) {
         verificationMethod: req.body?.verificationMethod || "email",
       });
 
+      // Admin access QR: tag the new account with its group (fail-soft).
+      if (req.body?.accessCode) await accessGroups.tagUser(user.id, req.body.accessCode);
+
       // SMS branch: send the 6-digit code now. A provider outage must not
       // destroy the account — the user can request another code from the
       // verification screen.
@@ -186,14 +208,11 @@ async function postregister(req, res, next) {
         }
       }
 
-      if (autoVerified) {
-        // Development: verification skipped — sign the new user straight in.
-        setSessionCookie(res, user.id, user.email, req, user.token_version);
-        await service.logUserSession(req, user.id);
-      } else {
-        // Registration does not grant a session. Confirm email, then sign in.
-        res.clearCookie(COOKIE_NAME, getClearCookieOptions(req));
-      }
+      // Modern signup: every new account is signed in immediately. Email/SMS
+      // confirmation is a soft follow-up (welcome email link / texted code),
+      // not a gate in front of the app.
+      setSessionCookie(res, user.id, user.email, req, user.token_version);
+      await service.logUserSession(req, user.id);
 
       /** @type {{ success: boolean, message: string, id: number, name: string, email: string, avatar: string|null, goal: string, isVerified: boolean, onboardingCompleted: boolean, role: string, status: string, acceptedTermsAt: string|null, acceptedTermsVersion: number|null, needsVerification: boolean, verificationMethod: string, phoneMasked?: string, devVerificationLink?: string }} */
       const payload = {
@@ -201,8 +220,8 @@ async function postregister(req, res, next) {
         message: autoVerified
           ? "Account created. You're signed in."
           : verificationMethod === "sms"
-            ? "Account created. Enter the 6-digit code we sent to your phone."
-            : "Account created. Check your inbox to verify your email before signing in.",
+            ? "Account created. You're signed in — confirm your phone with the code we texted you."
+            : "Account created. You're signed in — check your inbox to confirm your email.",
         // Same shape /login and /me return so AuthContext stays consistent.
         id: user.id,
         name: user.name,
@@ -215,10 +234,12 @@ async function postregister(req, res, next) {
         status: user.status,
         acceptedTermsAt: user.accepted_terms_at,
         acceptedTermsVersion: user.accepted_terms_version,
-        needsVerification: !autoVerified,
+        // Signed in regardless; isVerified tells the app to show the reminder.
+        needsVerification: false,
         verificationMethod: autoVerified ? null : verificationMethod,
         deliveryToken,
-        deliveryStatus: autoVerified ? 'skipped' : verificationMethod === "sms" ? (smsDelivery ? 'accepted' : 'failed') : emailed ? 'accepted' : 'failed',
+        // Email signups: the welcome/verify email is sent in the background.
+        deliveryStatus: autoVerified ? 'skipped' : verificationMethod === "sms" ? (smsDelivery ? 'accepted' : 'failed') : emailed ? 'queued' : 'failed',
       };
       if (smsDelivery) {
         payload.phoneMasked = smsDelivery.phoneMasked;
@@ -226,7 +247,7 @@ async function postregister(req, res, next) {
         payload.expiresIn = smsDelivery.expiresIn;
         payload.smsMocked = smsDelivery.mocked;
       }
-      if (payload.needsVerification && verificationMethod === "email" && !emailed && DEV_VERIFY_FALLBACK) {
+      if (!autoVerified && verificationMethod === "email" && DEV_VERIFY_FALLBACK) {
         payload.devVerificationLink = link;
       }
       res.status(201).json(payload);
@@ -249,7 +270,8 @@ async function postlogin(req, res, next) {
       const { user, latestAvatar } = await service.login({ email, password });
 
       setSessionCookie(res, user.id, user.email, req, user.token_version);
-      await service.logUserSession(req, user.id);
+      const session = await service.logUserSession(req, user.id);
+      notifyNewDevice(user.id, session);
 
       res.json({
         id: user.id,
@@ -297,24 +319,13 @@ async function postgoogleLogin(req, res, next) {
     }
 
     try {
-      const { user, latestAvatar, needsVerification, link, emailed, deliveryToken } = await service.googleLogin(code);
-
-      if (needsVerification) {
-        res.clearCookie(COOKIE_NAME, getClearCookieOptions(req));
-        const payload = {
-          needsVerification: true,
-          isVerified: false,
-          email: user.email,
-          message: "Check your inbox to verify your email before signing in with Google.",
-          deliveryToken,
-          deliveryStatus: emailed ? "accepted" : "failed",
-        };
-        if (!emailed && DEV_VERIFY_FALLBACK) payload.devVerificationLink = link;
-        return res.json(payload);
-      }
+      const { user, latestAvatar, isNewUser } = await service.googleLogin(code);
+      // Only brand-new Google accounts join an access group.
+      if (isNewUser && req.body?.accessCode) await accessGroups.tagUser(user.id, req.body.accessCode);
 
       setSessionCookie(res, user.id, user.email, req, user.token_version);
-      await service.logUserSession(req, user.id);
+      const session = await service.logUserSession(req, user.id);
+      notifyNewDevice(user.id, session);
 
       res.json({
         id: user.id,
@@ -324,6 +335,9 @@ async function postgoogleLogin(req, res, next) {
         goal: user.fitness_goal,
         isVerified: Boolean(user.is_verified),
         onboardingCompleted: Boolean(user.onboarding_completed),
+        role: user.role,
+        status: user.status,
+        isNewUser: Boolean(isNewUser),
       });
     } catch (err) {
       // Known provider states keep their specific message; anything else is

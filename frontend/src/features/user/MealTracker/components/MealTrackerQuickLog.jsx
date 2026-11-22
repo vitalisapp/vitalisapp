@@ -1,6 +1,7 @@
 import Icon from '../../../../components/Icon.jsx';
 import Spinner from '../../../../components/ui/Spinner.jsx';
 import CatalogNameField from './CatalogNameField.jsx';
+import FoodInfoCard from './FoodInfoCard.jsx';
 import { normalizeGrams, toInputValue } from '../../../../lib/nutrition.js';
 
 const MEAL_TYPES = [
@@ -14,9 +15,9 @@ const MEAL_TYPES = [
 const WEIGHT_CHIPS = [50, 100, 150, 200, 250];
 
 function MealInput({
-  label,
-  value,
-  onChange,
+  label = undefined,
+  value = undefined,
+  onChange = undefined,
   placeholder = '0',
   inputMode = 'numeric',
   suffix = undefined,
@@ -97,7 +98,7 @@ export function QuickLogCard({
                 : hasResult
                   ? 'Photo ready'
                   : noFood
-                    ? 'No food detected'
+                    ? 'This isn’t food'
                     : failed
                       ? 'AI scan unavailable'
                       : 'Scan didn\u2019t complete'}
@@ -111,6 +112,16 @@ export function QuickLogCard({
                     ? scanError.message
                     : 'No items were detected. Try again — clearer, brighter photo or another angle.'}
             </p>
+            {noFood && onClear && (
+              <button
+                type="button"
+                className="mt-photo-retry"
+                onClick={onClear}
+              >
+                <Icon name="photo_camera" className="mt-photo-retry-icon" />
+                Scan a different photo
+              </button>
+            )}
             {failed && scanError?.retryable && onRetry && (
               <button
                 type="button"
@@ -182,8 +193,8 @@ export function QuickLogCard({
 }
 
 export function ManualMealForm({
-  form,
-  setForm,
+  form = undefined,
+  setForm = undefined,
   error = '',
   densityError = '',
   onClose = undefined,
@@ -275,6 +286,16 @@ export function ManualMealForm({
                 }))
           }
         />
+
+        {form.food && (
+          <FoodInfoCard
+            food={form.food}
+            portion={grams && form.per100 ? {
+              calories: form.calories, protein: form.protein, carbs: form.carbs, fat: form.fat,
+              sugar: form.sugar, sodium: form.sodium,
+            } : null}
+          />
+        )}
 
         <div className="mt-weight-block">
           <label className="mt-field mt-weight-field" htmlFor="meal-weight-input">

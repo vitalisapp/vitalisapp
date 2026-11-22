@@ -794,9 +794,35 @@ function isPlaceholderItem(item) {
   );
 }
 
+// Short, safe description of a non-food photo ("a person's face") for the
+// user-facing message. Model text is untrusted: strip markup/controls, cap it.
+function cleanSubject(value) {
+  const s = String(value || "")
+    .replace(/[\u0000-\u001f<>{}"`]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[.!?]+$/, "")
+    .slice(0, 60);
+  return /[a-z]/i.test(s) ? s : "";
+}
+
+// User-facing copy for a rejected (non-food) photo.
+function notFoodMessage(subject) {
+  return subject
+    ? `This doesn't look like food — it looks like ${subject}. Please scan a meal, snack, or drink.`
+    : "This doesn't look like food. Please scan a meal, snack, or drink.";
+}
+
 function visionOutcome(raw) {
   const parsed = parseNutritionJSON(raw);
   if (!parsed) return { status: "invalid" };
+
+  // Explicit food gate from the prompt: the model said the photo is not food
+  // (face, selfie, object…). Wins over any items it may also have listed.
+  if (parsed.not_food === true || parsed.not_food === "true") {
+    const subject = cleanSubject(parsed.subject);
+    return { status: "empty", notFood: true, subject, suggestion: notFoodMessage(subject) };
+  }
 
   if (Array.isArray(parsed.items)) {
     const items = parsed.items
@@ -996,6 +1022,7 @@ async function analyzeFoodImage(base64Data, mimeType = "image/jpeg") {
 
   let sawEmpty = false;
   let emptySuggestion = "";
+  let sawNotFood = false;
   let sawInvalid = false;
   let sawAuth = false;
   let sawTransient = false;
@@ -1015,7 +1042,12 @@ async function analyzeFoodImage(base64Data, mimeType = "image/jpeg") {
       }
       if (outcome.status === "empty") {
         sawEmpty = true;
-        if (outcome.suggestion) emptySuggestion = outcome.suggestion;
+        if (outcome.notFood) {
+          sawNotFood = true;
+          emptySuggestion = outcome.suggestion;
+        } else if (outcome.suggestion && !sawNotFood) {
+          emptySuggestion = outcome.suggestion;
+        }
         devLog(`[VITALIS IMAGE] ${label}: no food visible`);
       } else {
         sawInvalid = true;
@@ -1074,14 +1106,16 @@ async function analyzeFoodImage(base64Data, mimeType = "image/jpeg") {
     }
   }
 
-  // Every provider that answered said "no food" and none failed → that is a
-  // genuine empty photo, not an AI outage.
-  if (sawEmpty && !sawInvalid) {
+  // A provider that answered said "no food" (or "not food") and none found
+  // any → a genuine non-food / empty photo, not an AI outage. An explicit
+  // not-food verdict also outranks another provider's unparseable output.
+  if (sawNotFood || (sawEmpty && !sawInvalid)) {
     return visionFailure(
       "NO_FOOD_DETECTED",
       false,
-      emptySuggestion ||
-        "No food was detected in this photo. Try a clearer, brighter shot or another angle.",
+      sawNotFood
+        ? emptySuggestion
+        : notFoodMessage(""),
     );
   }
   if (sawAuth) {

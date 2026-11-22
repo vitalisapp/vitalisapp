@@ -143,6 +143,7 @@ async function postUserId(req, res, next) {
       trans_fat,
       polyunsaturated_fat,
       monounsaturated_fat,
+      sugar,
       image_url,
     } = req.body || {};
 
@@ -170,6 +171,8 @@ async function postUserId(req, res, next) {
       ["trans_fat", trans_fat],
       ["polyunsaturated_fat", polyunsaturated_fat],
       ["monounsaturated_fat", monounsaturated_fat],
+      ["sugar", sugar],
+      ["sodium", req.body?.sodium],
     ]) {
       if (
         v !== undefined &&
@@ -289,8 +292,17 @@ async function postEstimateDensity(req, res, next) {
 // meal form. Thin: q + limit straight to the service.
 async function getFoodCatalog(req, res, next) {
   try {
-    const rows = await service.searchFoodCatalog(req.query?.q, req.query?.limit);
-    res.json({ items: rows });
+    const goalType = await service.activeGoalType(req.user?.id);
+    const rows = await service.searchFoodCatalog(req.query?.q, req.query?.limit, {
+      category: req.query?.category,
+      goalType,
+    });
+    const { CATEGORIES } = require("../utils/foodTraits");
+    res.json({
+      items: rows,
+      goalType,
+      categories: Object.entries(CATEGORIES).map(([key, c]) => ({ key, ...c })),
+    });
   } catch (e) {
     next(e);
   }

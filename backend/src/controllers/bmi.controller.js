@@ -1,5 +1,6 @@
 // BMI — thin controller. Logic + DB live in services/bmi.service.js.
 const bmiService = require('../services/bmi.service');
+const { MIN_AGE, MAX_AGE } = require('../utils/age');
 
 const VALID_GENDERS = ['male', 'female', 'other'];
 
@@ -15,22 +16,31 @@ async function postUserId(req,res,next){
         const w = Number(weight_kg);
         const h = Number(height_cm);
         if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
-            return res.status(400).json({ error: 'weight_kg and height_cm must be positive numbers' });
+            return res.status(400).json({ error: 'Please enter your weight (kg) and height (cm) as numbers.' });
         }
-        if (h < 50 || h > 300) return res.status(400).json({ error: 'height_cm out of range (50–300)' });
-        if (w < 10 || w > 1000) return res.status(400).json({ error: 'weight_kg out of range (10–1000)' });
+        if (h < 50 || h > 300) return res.status(400).json({ error: 'Height must be between 50 and 300 cm. Check that you entered centimetres, not feet or metres.' });
+        if (w < 10 || w > 1000) return res.status(400).json({ error: 'Weight must be between 10 and 1000 kg. Check that you entered kilograms, not pounds.' });
     
         const bmi = bmiService.computeBmi(w, h);
-        if (!Number.isFinite(bmi)) return res.status(400).json({ error: 'Could not compute BMI from given values' });
+        if (!Number.isFinite(bmi)) return res.status(400).json({ error: 'We could not calculate a BMI from those values. Please check your height and weight.' });
 
         const ageNum = age == null || age === '' ? null : Number(age);
-        if (ageNum !== null && (!Number.isInteger(ageNum) || ageNum < 5 || ageNum > 120)) {
-          return res.status(400).json({ error: 'age must be an integer 5–120' });
+        if (ageNum !== null && !Number.isInteger(ageNum)) {
+          return res.status(400).json({ error: 'Please enter your age as a whole number of years.' });
+        }
+        if (ageNum !== null && ageNum < MIN_AGE) {
+          return res.status(400).json({
+            error: `Vitalis is for users aged ${MIN_AGE} and up, because its calorie targets and workout plans are designed for teens and adults. If you entered the wrong age, please correct it.`,
+            code: 'AGE_TOO_YOUNG',
+          });
+        }
+        if (ageNum !== null && ageNum > MAX_AGE) {
+          return res.status(400).json({ error: `An age of ${ageNum} looks like a typo. Please check it.`, code: 'AGE_TOO_OLD' });
         }
         const genderNorm = gender == null || gender === '' ? null
           : String(gender).trim().toLowerCase();
         if (genderNorm !== null && !VALID_GENDERS.includes(genderNorm)) {
-          return res.status(400).json({ error: `gender must be one of: ${VALID_GENDERS.join(', ')}` });
+          return res.status(400).json({ error: 'Please choose Male, Female or Other for sex.' });
         }
     
         try {
@@ -67,4 +77,15 @@ async function getUserId(req,res,next){
   }catch(e){ next(e); }
 }
 
-module.exports = { postUserId, getUserId };
+// GET /api/bmi/:userId/yearly
+async function getYearly(req, res, next) {
+  try {
+    const userId = Number(req.params.userId);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+    res.json(await bmiService.yearlySummary(userId));
+  } catch (e) { next(e); }
+}
+
+module.exports = { postUserId, getUserId, getYearly };

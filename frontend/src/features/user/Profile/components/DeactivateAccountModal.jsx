@@ -6,7 +6,7 @@ import { apiFetch } from '../../../../lib/apiClient.js';
 // Module 1 — soft account deactivation (Profile → Security → Danger Zone).
 // Password-confirmed; the server revokes every session and keeps all data.
 // Reactivation is one click at the next sign-in.
-export default function DeactivateAccountModal({ onClose, onDeactivated }) {
+export default function DeactivateAccountModal({ onClose = undefined, onDeactivated = undefined }) {
   const [password, setPassword]     = useState('');
   const [confirmed, setConfirmed]   = useState(false);
   const [error,     setError]       = useState('');

@@ -11,7 +11,7 @@ const labelCls = 'text-[length:var(--fs-10)] font-bold uppercase tracking-widest
 // Create/edit sheet for user-owned plans. Pure presentational: all API lives in usePlan.
 // Create mode: initial == null (duration + generate visible). Edit mode: initial = plan
 // (duration hidden — length stays fixed so days/progress keep matching).
-export default function PersonalPlanSheet({ open, onClose, acting, error, onCreate, onGenerate, initial, onSave }) {
+export default function PersonalPlanSheet({ open = undefined, onClose = undefined, acting = undefined, error = undefined, onCreate = undefined, onGenerate = undefined, initial = undefined, onSave = undefined }) {
   const isEdit = Boolean(initial?.id);
   const [title, setTitle] = useState(initial?.title || '');
   const [tag, setTag] = useState(initial?.tag || 'General');

@@ -32,7 +32,7 @@ async function downloadTextFile(url, filename) {
   }, 0);
 }
 
-export default function ExportTab({ userId }) {
+export default function ExportTab({ userId = undefined }) {
   const [busy,   setBusy]   = useState(null); // 'csv' | 'diary'
   const [error,  setError]  = useState('');
   const [done,   setDone]   = useState('');

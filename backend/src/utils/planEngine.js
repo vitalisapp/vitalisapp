@@ -1,3 +1,5 @@
+const { classifyBmi } = require('./health');
+
 const ACTIVITY_FACTORS = {
   SEDENTARY: 1.2,
   LIGHTLY_ACTIVE: 1.375,
@@ -23,12 +25,9 @@ function calcBmi(weightKg, heightCm) {
   return Number((w / (h * h)).toFixed(1));
 }
 
+// WHO international adult classification (single source: utils/health.js).
 function bmiCategory(bmi) {
-  if (bmi == null) return 'Unknown';
-  if (bmi < 18.5) return 'Underweight';
-  if (bmi < 25) return 'Healthy range';
-  if (bmi < 30) return 'Overweight';
-  return 'Obese';
+  return classifyBmi(bmi)?.label || 'Unknown';
 }
 
 function ageFromDob(dob) {
@@ -61,6 +60,13 @@ function calcBmr({ weightKg, heightCm, age, sex }) {
  */
 function generatePlan(input = {}) {
   const { weightKg, heightCm, dob, sex, activityLevel, goalType, pace } = input;
+  const extras = Array.isArray(input.secondaryGoals) ? input.secondaryGoals : [];
+  // Recomposition: losing fat while building muscle (either order). Calories
+  // sit at a gentle deficit (≤300 kcal) or maintenance, protein goes high so
+  // the body has material to build muscle while fat comes off.
+  const recomposition =
+    (goalType === 'LOSE_WEIGHT' && extras.includes('BUILD_MUSCLE')) ||
+    (goalType === 'BUILD_MUSCLE' && extras.includes('LOSE_WEIGHT'));
   const bmi = calcBmi(weightKg, heightCm);
   const age = ageFromDob(dob);
   const bmr = calcBmr({ weightKg, heightCm, age, sex });
@@ -90,6 +96,9 @@ function generatePlan(input = {}) {
     } else {
       dailyKcal = tdee; // MAINTAIN_WEIGHT
     }
+    if (recomposition) {
+      dailyKcal = goalType === 'LOSE_WEIGHT' ? Math.max(dailyKcal, tdee - 300) : tdee;
+    }
     const floor = sex === 'female' ? 1200 : 1500;
     dailyKcal = Math.max(dailyKcal, floor);
   }
@@ -98,7 +107,8 @@ function generatePlan(input = {}) {
     carbsG = null,
     fatG = null;
   if (dailyKcal && weightKg) {
-    proteinG = Math.round((PROTEIN_PER_KG[goalType] || 1.6) * Number(weightKg));
+    const perKg = recomposition ? 2.2 : PROTEIN_PER_KG[goalType] || 1.6;
+    proteinG = Math.round(perKg * Number(weightKg));
     fatG = Math.round((dailyKcal * 0.25) / 9);
     carbsG = Math.max(0, Math.round((dailyKcal - proteinG * 4 - fatG * 9) / 4));
   }
@@ -113,6 +123,7 @@ function generatePlan(input = {}) {
     proteinG,
     carbsG,
     fatG,
+    recomposition,
   };
 }
 

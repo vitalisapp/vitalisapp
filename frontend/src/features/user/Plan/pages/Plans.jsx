@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { BottomNav } from '../../../../components/index.js';
 import AppShell from '../../../../components/AppShell.jsx';
@@ -6,7 +6,7 @@ import PageHeader from '../../../../components/app/PageHeader.jsx';
 import Icon from '../../../../components/Icon.jsx';
 import usePlans from '../hooks/usePlan.js';
 import { BRYL_CREDIT, frameUrl, getAllGuideExercises, guideFilterOptions, isHoldExercise, prescriptionForGuide, searchGuideExercises } from '../../CameraWorkout/constants/workoutGuide.js';
-import { apiGet } from '../../../../lib/apiClient.js';
+import { apiGet, apiPatch, apiPost } from '../../../../lib/apiClient.js';
 import Dropdown from '../../../../components/ui/Dropdown.jsx';
 import ConfirmDialog from '../../../../components/ui/ConfirmDialog.jsx';
 import {
@@ -18,13 +18,16 @@ import {
   CATEGORIES,
   TABS,
 } from '../utils/planFormat.js';
-import { PlanCover, FilterPill, PlanCard, TabBar } from '../components/PlanWidgets.jsx';
+import { PlanCover, FilterPill, PlanCard, PlanActions, TabBar } from '../components/PlanWidgets.jsx';
 import PersonalPlanSheet from '../components/PersonalPlanSheet.jsx';
 import TrainingPrefsSheet from '../components/TrainingPrefsSheet.jsx';
 import AdaptiveTipsCard from '../components/AdaptiveTipsCard.jsx';
+import GoalPlansPanel from '../components/GoalPlansPanel.jsx';
+import ExerciseGuideModal from '../components/ExerciseGuideModal.jsx';
 import { useTrainingPrefs, useTrainingInsights } from '../hooks/useTrainingPrefs.js';
 import { muscleFor, summarizeMuscles, suggestAlternatives } from '../utils/exerciseMatch.js';
 import { fitDayToMinutes } from '../utils/sessionFit.js';
+import '../plans.css';
 
 
 const ExerciseLibrary = () => {
@@ -161,48 +164,190 @@ const ExerciseLibrary = () => {
 };
 
 // ── WORKOUT HISTORY: completed camera sessions (spec T) ──
-const WorkoutHistory = () => {
+// Display helpers only — the data is the unchanged GET /api/workout-logs list.
+const prettyExercise = (type) => {
+  const s = String(type || 'Workout').replace(/[_-]+/g, ' ').trim();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
+const formatDuration = (seconds) => {
+  const s = Math.max(0, Math.round(Number(seconds) || 0));
+  if (s === 0) return null;
+  if (s < 60) return `${s}s`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  return `${h}h${m % 60 ? ` ${m % 60}m` : ''}`;
+};
+
+const historyDayKey = (value) => {
+  const d = value ? new Date(value) : null;
+  return d && !Number.isNaN(d.getTime()) ? d.toDateString() : 'unknown';
+};
+
+const historyDayLabel = (key) => {
+  if (key === 'unknown') return 'Undated';
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (key === today.toDateString()) return 'Today';
+  if (key === yesterday.toDateString()) return 'Yesterday';
+  const d = new Date(key);
+  return d.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    ...(d.getFullYear() !== today.getFullYear() ? { year: 'numeric' } : {}),
+  });
+};
+
+const STATUS_LABEL = {
+  completed: 'Completed',
+  in_progress: 'In progress',
+  paused: 'Paused',
+  abandoned: 'Ended early',
+  cancelled: 'Cancelled',
+};
+
+const WorkoutHistory = ({ onBrowse = undefined }) => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await apiGet('/api/workout-logs');
-        setLogs(Array.isArray(data.logs) ? data.logs : []);
-      } catch { /* empty state */ }
-      finally { setLoading(false); }
-    })();
+  const [error, setError] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const data = await apiGet('/api/workout-logs');
+      setLogs(Array.isArray(data.logs) ? data.logs : []);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const summary = useMemo(() => ({
+    sessions: logs.length,
+    reps: logs.reduce((sum, l) => sum + (Number(l.rep_count) || 0), 0),
+    seconds: logs.reduce((sum, l) => sum + (Number(l.duration_seconds) || 0), 0),
+  }), [logs]);
+
+  // Group by calendar day, newest first (API order is preserved).
+  const days = useMemo(() => {
+    const groups = [];
+    const index = new Map();
+    for (const log of logs) {
+      const key = historyDayKey(log.start_time);
+      if (!index.has(key)) {
+        const g = { key, label: historyDayLabel(key), logs: [] };
+        index.set(key, g);
+        groups.push(g);
+      }
+      index.get(key).logs.push(log);
+    }
+    return groups;
+  }, [logs]);
+
   if (loading) {
-    return <p className="py-10 text-center text-xs uppercase tracking-widest animate-pulse" style={{ color: 'var(--text-muted)' }}>Loading history...</p>;
-  }
-  if (logs.length === 0) {
     return (
-      <div className="py-14 text-center">
-        <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>No workouts yet</p>
-        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Start a camera workout or pick an exercise from the Library.</p>
+      <div className="wh" aria-busy="true" aria-label="Loading workout history">
+        <div className="wh-stats">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="wh-stat">
+              <span className="wh-skel" style={{ width: 64, height: 10 }} />
+              <span className="wh-skel" style={{ width: 48, height: 20, marginTop: 10 }} />
+            </div>
+          ))}
+        </div>
+        <div className="wh-list">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="wh-row">
+              <span className="wh-skel" style={{ width: 40, height: 40, borderRadius: 12 }} />
+              <span style={{ flex: 1, display: 'grid', gap: 8 }}>
+                <span className="wh-skel" style={{ width: '40%', height: 12 }} />
+                <span className="wh-skel" style={{ width: '26%', height: 10 }} />
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="wh-empty">
+        <span className="wh-empty-icon"><Icon name="cloud_off" /></span>
+        <p className="wh-empty-title">Couldn’t load your history</p>
+        <p className="wh-empty-sub">Check your connection and try again.</p>
+        <button type="button" className="wh-btn" onClick={load}>Try again</button>
+      </div>
+    );
+  }
+
+  if (logs.length === 0) {
+    return (
+      <div className="wh-empty">
+        <span className="wh-empty-icon"><Icon name="history" /></span>
+        <p className="wh-empty-title">No workouts yet</p>
+        <p className="wh-empty-sub">Start a camera workout or pick an exercise from the Library.</p>
+        {onBrowse && <button type="button" className="wh-btn" onClick={onBrowse}>Browse library</button>}
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-2">
-      <p className="text-[length:var(--fs-10)] font-black uppercase tracking-[0.25em] text-[var(--text-muted)] mb-1">
-        Workout History <span className="ml-1 px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)] tabular-nums">{logs.length}</span>
-      </p>
-      {logs.map(log => (
-        <div key={log.id} className="flex items-center justify-between rounded-xl p-3 border glass-card"
-          style={{ borderColor: 'var(--border-light)' }}>
-          <div>
-            <p className="text-sm font-bold capitalize" style={{ color: 'var(--text-primary)' }}>{String(log.workout_type || '').replace(/_/g, ' ')}</p>
-            <p className="text-[length:var(--fs-11)]" style={{ color: 'var(--text-muted)' }}>
-              {log.start_time ? new Date(log.start_time).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '—'}
-              {log.duration_seconds ? ` · ${Math.round(log.duration_seconds / 60)} min` : ''}
-              {' · '}{log.status}
-              {log.difficulty_rating ? ` · felt ${log.difficulty_rating}/5` : ''}
-            </p>
-          </div>
-          <span className="text-sm font-black" style={{ color: 'var(--accent)' }}>{log.rep_count ?? 0} reps</span>
-        </div>
+    <div className="wh">
+      <div className="wh-head">
+        <h2 className="wh-title">Workout history</h2>
+        <span className="wh-sub">
+          {logs.length >= 50 ? 'Latest 50 sessions' : `${logs.length} ${logs.length === 1 ? 'session' : 'sessions'}`}
+        </span>
+      </div>
+
+      <dl className="wh-stats">
+        <div className="wh-stat"><dt>Sessions</dt><dd>{summary.sessions}</dd></div>
+        <div className="wh-stat"><dt>Total reps</dt><dd>{summary.reps.toLocaleString()}</dd></div>
+        <div className="wh-stat"><dt>Active time</dt><dd>{formatDuration(summary.seconds) || '0 min'}</dd></div>
+      </dl>
+
+      {days.map((day) => (
+        <section key={day.key} className="wh-day" aria-label={day.label}>
+          <h3 className="wh-day-label">{day.label}</h3>
+          <ul className="wh-list">
+            {day.logs.map((log) => {
+              const reps = Number(log.rep_count) || 0;
+              const duration = formatDuration(log.duration_seconds);
+              const status = String(log.status || '').toLowerCase();
+              const started = log.start_time ? new Date(log.start_time) : null;
+              const time = started && !Number.isNaN(started.getTime())
+                ? started.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+                : null;
+              const meta = [time, duration, log.difficulty_rating ? `Felt ${log.difficulty_rating}/5` : null].filter(Boolean);
+              return (
+                <li key={log.id} className="wh-row">
+                  <span className="wh-icon" aria-hidden="true"><Icon name="exercise" /></span>
+                  <div className="wh-main">
+                    <p className="wh-name">{prettyExercise(log.workout_type)}</p>
+                    <p className="wh-meta">
+                      {meta.length ? meta.join(' · ') : '—'}
+                      {status && status !== 'completed' && (
+                        <span className="wh-status">{STATUS_LABEL[status] || status.replace(/_/g, ' ')}</span>
+                      )}
+                    </p>
+                  </div>
+                  <span className={`wh-reps${reps === 0 ? ' is-zero' : ''}`}>
+                    <span className="wh-reps-value">{reps}</span>
+                    <span className="wh-reps-unit">{reps === 1 ? 'rep' : 'reps'}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       ))}
     </div>
   );
@@ -212,110 +357,93 @@ const WorkoutHistory = () => {
 
 
 // PLAN DETAIL OVERLAY COMPONENT
-const PlanDetailOverlay = ({ plan, onClose, onStart }) => {
+const PlanDetailOverlay = ({ plan = undefined, onClose = undefined, onStart = undefined }) => {
   if (!plan) return null;
+  const enrolled = plan.is_enrolled === 1;
+  const pct = Math.max(0, Math.min(100, Number(plan.progress_pct) || 0));
+  // VITALIS has no payments: every plan is free (legacy seeded prices are ignored).
+  const price = 'Free';
+
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center sm:p-4 md:p-6 overflow-y-auto"
-      style={{ background: 'var(--bg-overlay)', backdropFilter: 'blur(8px)' }}
+      className="p-sheet-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${plan.title} details`}
       onClick={onClose}
     >
-      <div
-        className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl sm:my-auto max-h-[92vh] max-h-[92dvh] flex flex-col"
-        style={{
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-medium)',
-          animation: 'slideUp 0.3s cubic-bezier(0.4,0,0.2,1)',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* drag pill for mobile sheet */}
-        <div className="sm:hidden flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--border-medium)' }} />
-        </div>
-        <div className="overflow-y-auto flex-1">
-          <div className="aspect-[16/7] relative overflow-hidden flex-shrink-0">
-            <PlanCover seed={plan.image_seed} title={plan.title} opacity={0.3} />
-            <div
-              className="absolute inset-0"
-              style={{ background: 'linear-gradient(to top, var(--bg-secondary) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)' }}
+      <div className="p-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="p-sheet-scroll">
+          <div className="p-sheet-cover">
+            <PlanCover
+              seed={plan.image_seed}
+              title={plan.title}
+              tag={plan.tag}
+              src={plan.image_url}
             />
-            <div className="absolute bottom-3 sm:bottom-4 left-4 sm:left-6 flex gap-2">
-              <span
-                className="px-2 py-0.5 rounded text-[length:var(--fs-9)] font-black tracking-widest uppercase"
-                style={{ background: 'var(--accent)', color: 'var(--text-inverse)' }}
-              >
-                {plan.tag}
-              </span>
-              <span
-                className="px-2 py-0.5 rounded text-[length:var(--fs-9)] font-bold tracking-widest uppercase"
-                style={{ background: 'var(--bg-hover)', backdropFilter: 'blur(4px)', color: 'var(--text-secondary)' }}
-              >
-                {plan.intensity}
-              </span>
+            <div className="p-cover-badges">
+              {plan.tag ? <span className="p-badge p-badge--tag">{plan.tag}</span> : null}
+              {enrolled ? <span className="p-badge p-badge--accent">Enrolled</span> : null}
+              {plan.is_owner === 1 ? <span className="p-badge">Mine</span> : null}
             </div>
             <button
+              type="button"
               onClick={onClose}
               aria-label="Close plan details"
-              className="absolute top-3 sm:top-4 right-3 sm:right-4 w-11 h-11 rounded-full flex items-center justify-center transition-colors"
-              style={{ background: 'rgba(0,0,0,0.45)', color: 'var(--text-muted)' }}
+              className="p-sheet-close"
             >
               <Icon name="close" className="text-[length:var(--fs-18)]" />
             </button>
           </div>
-          <div className="p-4 sm:p-6 lg:p-8 max-w-[420px] sm:max-w-xl mx-auto w-full">
-            <h2 className="text-xl sm:text-2xl font-black mb-1" style={{ color: 'var(--text-primary)' }}>{plan.title}</h2>
-            <p className="text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6" style={{ color: 'var(--text-muted)' }}>{plan.description}</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4 sm:mb-6 text-center">
-              {[
-                { label: 'Duration',  value: plan.duration,      sub: 'program', icon: 'schedule' },
-                { label: 'Level', value: plan.intensity,     sub: 'intensity', icon: 'bolt' },
-                { label: 'Focus',     value: (plan.target_focus || '').split(' ')[0] || 'Full', sub: 'body', icon: 'track_changes' },
-                { label: 'Equipment', value: 'None', sub: 'needed', icon: 'block' },
-              ].map(stat => (
-                <div
-                  key={stat.label}
-                  className="rounded-2xl p-2.5 text-center border"
-                  style={{ background: 'var(--bg-hover)', borderColor: 'var(--border-light)' }}
-                >
-                  <p className="text-[length:var(--fs-9)] uppercase font-bold" style={{ color: 'var(--text-muted)' }}>{stat.label}</p>
-                  <p className="text-[length:var(--fs-13)] font-black" style={{ color: 'var(--text-primary)' }}>{stat.value}</p>
-                  <p className="text-[length:var(--fs-9)]" style={{ color: 'var(--text-muted)' }}>{stat.sub}</p>
+
+          <div className="p-sheet-body">
+            <p className="p-sheet-eyebrow">
+              {plan.intensity ? `${plan.intensity} level` : 'Workout plan'}
+            </p>
+            <h2 className="p-sheet-title">{plan.title}</h2>
+            {plan.description ? <p className="p-sheet-desc">{plan.description}</p> : null}
+
+            <div className="p-sheet-stats">
+              <div className="p-sheet-stat">
+                <p className="p-sheet-stat-label">Duration</p>
+                <p className="p-sheet-stat-value">{plan.duration || '—'}</p>
+              </div>
+              <div className="p-sheet-stat">
+                <p className="p-sheet-stat-label">Level</p>
+                <p className="p-sheet-stat-value">{plan.intensity || '—'}</p>
+              </div>
+              <div className="p-sheet-stat">
+                <p className="p-sheet-stat-label">Focus</p>
+                <p className="p-sheet-stat-value" title={plan.target_focus || ''}>
+                  {plan.target_focus || '—'}
+                </p>
+              </div>
+            </div>
+
+            {enrolled && pct > 0 ? (
+              <div className="p-sheet-progress">
+                <div className="p-sheet-progress-head">
+                  <span>Your progress</span>
+                  <strong>{pct}%</strong>
                 </div>
-              ))}
-            </div>
-            <div
-              className="rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border"
-              style={{ background: 'var(--accent-bg)', borderColor: 'var(--accent-border)' }}
-            >
-              <p className="text-[length:var(--fs-10)] sm:text-[length:var(--fs-11)] font-black uppercase tracking-widest mb-1.5 sm:mb-2" style={{ color: 'var(--accent)' }}>
-                What this plan does
-              </p>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                This structured {plan.duration} program targets{' '}
-                <strong style={{ color: 'var(--text-primary)' }}>{plan.target_focus}</strong> with daily progressive
-                sessions. Each day builds on the last — follow the protocol, complete every task, and unlock the next day.
-              </p>
-            </div>
-            <div className="flex items-center justify-between mb-4 sm:mb-5 px-1">
-              <span className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
-                {plan.price === 0 || plan.price === '0.00' ? 'Free' : `$${plan.price}`}
+                <div className="p-progress-track">
+                  <div className="p-progress-fill" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            ) : null}
+
+            <div className="p-sheet-price">
+              <span className="p-sheet-price-value">{price}</span>
+              <span className="p-sheet-price-note">
+                {enrolled
+                  ? 'Already in your plans'
+                  : 'Free to start'}
               </span>
-              {plan.price > 0 && plan.is_enrolled !== 1 && (
-                <span className="text-xs font-bold px-2 py-1 rounded-full" style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>
-                  One-time purchase
-                </span>
-              )}
             </div>
-            <button
-              onClick={onStart}
-              className="w-full py-3.5 pl-5 pr-2 rounded-full font-bold text-sm flex items-center justify-between active:scale-[0.98] transition-all duration-200"
-              style={{ background: 'var(--text-primary)', color: 'var(--bg-primary)' }}
-            >
-              <span>{plan.is_enrolled === 1 ? 'Open Plan Tracker' : 'Start Workout'}</span>
-              <span className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-                <span className="material-symbols-outlined text-[length:var(--fs-20)]">play_arrow</span>
-              </span>
+
+            <button type="button" onClick={onStart} className="p-sheet-cta">
+              <Icon name="play_arrow" className="text-[length:var(--fs-18)]" fill={1} />
+              {enrolled ? 'Open plan tracker' : 'Start this plan'}
             </button>
           </div>
         </div>
@@ -347,12 +475,16 @@ function mapPlanSchedule(content, preferredDays) {
 }
 
 // DAY TRACKER COMPONENT
-const DayTracker = ({ plan, content, progress, onClose, onCompleteDay, prefs }) => {
+const DayTracker = ({ plan = undefined, content = undefined, progress = undefined, onClose = undefined, onCompleteDay = undefined, prefs = undefined, onToggleExclude = undefined, startDay = null, startFit = null }) => {
+  const [guideName, setGuideName] = useState(null);
+  const excludedNames = prefs?.excludedExercises || [];
   const navigate = useNavigate();
   const completedDays = progress.filter(p => p.is_completed).map(p => p.day_number);
   const totalDays     = content.length;
   const currentDay    = content.find(d => !completedDays.includes(d.day_number)) || content[0];
-  const [activeDay,  setActiveDay]  = useState(currentDay?.day_number || 1);
+  const [activeDay,  setActiveDay]  = useState(
+    (startDay && content.some((d) => d.day_number === startDay)) ? startDay : (currentDay?.day_number || 1)
+  );
   const [completing, setCompleting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const activeDayData = content.find(d => d.day_number === activeDay);
@@ -383,7 +515,9 @@ const DayTracker = ({ plan, content, progress, onClose, onCompleteDay, prefs }) 
 
   useEffect(() => {
     // Reset per-day fit choice; auto-apply the saved session minutes once.
-    setLocalFit(sessionMins && Number(activeDayData?.duration_mins ?? 0) > sessionMins ? sessionMins : 0);
+    // Section 4: a coach "lighter week" cap wins for the day it was opened on.
+    const budget = startFit && activeDayData?.day_number === startDay ? startFit : sessionMins;
+    setLocalFit(budget && Number(activeDayData?.duration_mins ?? 0) > budget ? budget : 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDayData?.day_number, activeDayData?.duration_mins]);
 
@@ -688,7 +822,7 @@ const DayTracker = ({ plan, content, progress, onClose, onCompleteDay, prefs }) 
                 })()}
               </div>
 
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black mb-3 sm:mb-4 leading-tight" style={{ color: 'var(--text-primary)' }}>
+              <h1 className="text-xl sm:text-2xl font-black mb-3 sm:mb-4 leading-tight" style={{ color: 'var(--text-primary)' }}>
                 {activeDayData.title}
               </h1>
               <p className="text-sm leading-relaxed mb-6 sm:mb-8" style={{ color: 'var(--text-muted)' }}>
@@ -802,6 +936,16 @@ const DayTracker = ({ plan, content, progress, onClose, onCompleteDay, prefs }) 
                           </p>
                           <p className="text-[length:var(--fs-10)] sm:text-[length:var(--fs-11)] truncate" style={{ color: 'var(--text-muted)' }}>{formatExerciseDetail(ex)}</p>
                         </div>
+                        {/* Section 3 — written instructions + "don't recommend" */}
+                        <button
+                          onClick={() => setGuideName(ex.name)}
+                          title={`How to do ${ex.name}`}
+                          aria-label={`How to do ${ex.name}`}
+                          className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center cursor-pointer transition-all hover:bg-[var(--bg-active)]"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
+                          <Icon name="menu_book" className="text-[length:var(--fs-16)]" />
+                        </button>
                         {/* Module 5 — equipment-compatible alternatives (user's gear) */}
                         <button
                           onClick={() => setAltExName(ex.name)}
@@ -895,6 +1039,12 @@ const DayTracker = ({ plan, content, progress, onClose, onCompleteDay, prefs }) 
       </div>
 
       {/* Module 5 — alternatives sheet: same muscle, user-compatible equipment */}
+      <ExerciseGuideModal
+        name={guideName}
+        onClose={() => setGuideName(null)}
+        excluded={Boolean(guideName) && excludedNames.some((n) => n.toLowerCase() === String(guideName).toLowerCase())}
+        onToggleExclude={onToggleExclude}
+      />
       {altExName && (
         <div
           className="fixed inset-0 z-[130] flex items-end sm:items-center justify-center p-4 overflow-y-auto"
@@ -960,73 +1110,66 @@ const DayTracker = ({ plan, content, progress, onClose, onCompleteDay, prefs }) 
 // MY PLANS TAB — real user data: enrolled templates + owned personal plans
 const humanizeGoalType = (t) => String(t || 'Fitness').toLowerCase().split('_').map((w) => w.slice(0, 1).toUpperCase() + w.slice(1)).join(' ');
 
-const GoalLinkBanner = ({ goalStatus, plans, onContinue, onGenerate, generating }) => {
+const GoalLinkBanner = ({ goalStatus = undefined, plans = undefined, onContinue = undefined, onGenerate = undefined, generating = undefined }) => {
   const { goal, linkedPlan } = goalStatus || {};
   if (!goal) return null;
   const label = humanizeGoalType(goal.goalType);
   const kcal = goal.dailyKcal != null ? `${Number(goal.dailyKcal).toLocaleString()} kcal/day` : null;
   const linked = linkedPlan ? plans.find((p) => String(p.id) === String(linkedPlan.id)) : null;
+
   if (linkedPlan && linked) {
     return (
-      <div className="mb-4 sm:mb-6 rounded-2xl border p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:px-4 sm:py-3 sm:gap-3" style={{ background: 'var(--accent-bg)', borderColor: 'var(--accent-border)' }}>
-        <p className="text-[length:var(--fs-12)] font-bold flex-1 leading-relaxed break-words" style={{ color: 'var(--text-primary)' }}>
-          Training for {label}{kcal ? ` · ${kcal}` : ''} — linked plan: {linked.title}
+      <div className="p-banner p-banner--accent">
+        <p className="p-banner-text">
+          Training for <strong>{label}</strong>{kcal ? ` · ${kcal}` : ''} — linked plan: <strong>{linked.title}</strong>
         </p>
-        <button
-          onClick={() => onContinue(linked)}
-          className="h-11 min-h-[44px] px-4 rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] text-[length:var(--fs-11)] font-bold uppercase tracking-widest w-full sm:w-auto active:scale-95 transition-all"
-        >
+        <button type="button" onClick={() => onContinue(linked)} className="p-banner-btn p-banner-btn--accent">
           Open plan
         </button>
       </div>
     );
   }
+
   return (
-    <div className="mb-4 sm:mb-6 rounded-2xl border p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:px-4 sm:py-3 sm:gap-3" style={{ background: 'var(--bg-tertiary)', borderColor: 'var(--border-light)' }}>
-      <p className="text-[length:var(--fs-12)] font-bold flex-1 leading-relaxed break-words" style={{ color: 'var(--text-primary)' }}>
+    <div className="p-banner">
+      <p className="p-banner-text">
         Your {label} goal{kcal ? ` (${kcal})` : ''} has no training plan yet
         {linkedPlan ? ' — its plan was deleted' : ''}.
       </p>
-      <button
-        onClick={onGenerate}
-        disabled={generating}
-        className="h-11 min-h-[44px] px-4 rounded-xl border border-[var(--border-medium)] text-[length:var(--fs-11)] font-bold uppercase tracking-widest w-full sm:w-auto disabled:opacity-40"
-        style={{ color: 'var(--text-primary)' }}
-      >
+      <button type="button" onClick={onGenerate} disabled={generating} className="p-banner-btn">
         {generating ? 'Generating…' : 'Generate from my goal'}
       </button>
     </div>
   );
 };
 
-const MyPlans = ({ plans, goalStatus, onOpen, onContinue, onCreateClick, onGenerate, onDelete, onEdit, generating, prefs, onOpenPrefs }) => {
+const MyPlans = ({ plans = undefined, goalStatus = undefined, onOpen = undefined, onContinue = undefined, onCreateClick = undefined, onGenerate = undefined, onDelete = undefined, onEdit = undefined, generating = undefined, prefs = undefined, onOpenPrefs = undefined, onGenerateGoal = undefined, onActivate = undefined }) => {
   const enrolled = plans.filter(p => p.is_enrolled === 1 || p.is_owner === 1);
   if (enrolled.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 sm:py-28 gap-4 text-center" style={{ animation: 'fadeIn 0.3s ease' }}>
-        <div
-          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center mb-2 border"
-          style={{ background: 'var(--accent-bg)', borderColor: 'var(--accent-border)' }}
-        >
-          <Icon name="fitness_center" className="text-[length:var(--fs-28)] sm:text-[length:var(--fs-36)]" style={{ color: 'var(--accent)' }} fill={1} />
-        </div>
-        <h3 className="text-lg sm:text-xl font-black" style={{ color: 'var(--text-primary)' }}>No plans yet</h3>
-        <p className="text-sm max-w-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-          Create your own plan, generate one from your goal, or head to{' '}
-          <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Explore</span> to enroll in a blueprint.
+      <div className="p-empty" style={{ animation: 'fadeIn 0.3s ease' }}>
+        <span className="p-empty-icon">
+          <Icon name="fitness_center" fill={1} />
+        </span>
+        <h3 className="p-empty-title">No plans yet</h3>
+        <p className="p-empty-text">
+          Create your own plan, generate one from your goal, or explore a blueprint to enroll.
         </p>
-        <div className="flex flex-wrap justify-center gap-2 mt-2">
+        <div className="p-empty-actions">
           <button
+            type="button"
             onClick={onCreateClick}
-            className="h-10 px-5 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[length:var(--fs-12)] font-bold hover:brightness-110 active:scale-95 transition-all"
+            className="p-btn"
+            style={{ width: 'auto', padding: '0 16px' }}
           >
             Create personal plan
           </button>
           <button
+            type="button"
             onClick={onGenerate}
             disabled={generating}
-            className="h-10 px-5 rounded-full border border-[var(--border-medium)] text-[length:var(--fs-12)] font-bold disabled:opacity-40"
-            style={{ color: 'var(--text-primary)' }}
+            className="p-btn p-btn--ghost"
+            style={{ width: 'auto', padding: '0 16px' }}
           >
             {generating ? 'Generating…' : 'Generate from my goal'}
           </button>
@@ -1036,319 +1179,297 @@ const MyPlans = ({ plans, goalStatus, onOpen, onContinue, onCreateClick, onGener
   }
   return (
     <div style={{ animation: 'fadeIn 0.3s ease' }}>
-      <GoalLinkBanner goalStatus={goalStatus} plans={plans} onContinue={onContinue} onGenerate={onGenerate} generating={generating} />
+      {goalStatus?.goalPlans?.length > 0 ? (
+        <GoalPlansPanel goalStatus={goalStatus} plans={plans} onOpen={onContinue} onGenerate={onGenerateGoal} onActivate={onActivate} busy={generating} />
+      ) : (
+        <GoalLinkBanner goalStatus={goalStatus} plans={plans} onContinue={onContinue} onGenerate={onGenerate} generating={generating} />
+      )}
       {/* Module 5 — training preferences: schedule + duration + alternatives inputs. */}
-      <div
-        className="mb-4 rounded-2xl border px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center"
-        style={{ background: 'var(--bg-tertiary)', borderColor: 'var(--border-light)' }}
-      >
-        <p className="text-[length:var(--fs-11)] font-bold flex-1 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+      <div className="p-banner">
+        <p className="p-banner-text">
           {prefs && (prefs.equipment?.length || prefs.preferredDays?.length || prefs.sessionDurationMins)
             ? prefs.equipment?.length > 0
-              ? prefs.equipment.join(' · ')
+              ? `${prefs.equipment.join(' · ')} · `
               : 'Bodyweight · '
             : 'No training preferences yet — '}
           {prefs && prefs.equipment?.length ? `${prefs.preferredDays?.length ?? 0} day${(prefs.preferredDays?.length ?? 0) !== 1 ? 's' : ''}/week · ` : ''}
           {prefs?.sessionDurationMins ? `${prefs.sessionDurationMins} min sessions · ` : ''}
           {prefs && (prefs.equipment?.length || prefs.sessionDurationMins) ? 'used for scheduling, alternatives & plan fit.' : 'recommendations use them to fit your time and equipment.'}
         </p>
-        <button
-          onClick={onOpenPrefs}
-          className="h-10 shrink-0 px-4 rounded-xl border text-[length:var(--fs-10)] font-black uppercase tracking-widest transition-all hover:border-[var(--accent-border)]"
-          style={{ borderColor: 'var(--border-medium)', color: 'var(--text-primary)', background: 'var(--bg-hover)' }}
-        >
-          {prefs && prefs.sessionDurationMins ? 'Edit' : 'Set preferences'}
+        <button type="button" onClick={onOpenPrefs} className="p-banner-btn">
+          {prefs && prefs.sessionDurationMins ? 'Edit preferences' : 'Set preferences'}
         </button>
       </div>
       {(() => {
-        const active      = enrolled[0];
-        const progressPct = active.progress_pct ?? 0;
+        const active = enrolled[0];
+        const progressPct = Math.max(0, Math.min(100, Number(active.progress_pct) || 0));
+        const completedDays = Number(active.completed_days) || 0;
         const isLinked = goalStatus?.linkedPlan && String(active.id) === String(goalStatus.linkedPlan.id);
         return (
           <div
-            className="mb-6 sm:mb-10 rounded-2xl overflow-hidden border cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl group glass-panel"
-            style={{ borderColor: 'var(--accent-border)' }}
+            className="p-active"
+            role="button"
+            tabIndex={0}
+            aria-label={`Open plan: ${active.title}`}
             onClick={() => onOpen(active)}
+            onKeyDown={(e) => {
+              if (e.target !== e.currentTarget) return;
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onOpen(active);
+              }
+            }}
           >
-            <div className="relative overflow-hidden" style={{ background: 'var(--bg-card)' }}>
-              <div className="absolute inset-0">
-                <PlanCover seed={active.image_seed} title={active.title} className="group-hover:scale-105 transition-transform duration-700" opacity={0.2} />
-              </div>
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{ background: 'linear-gradient(to right, var(--bg-card) 30%, transparent 100%)' }}
+            <div className="p-active-cover">
+              <PlanCover
+                seed={active.image_seed}
+                title={active.title}
+                tag={active.tag}
+                src={active.image_url}
               />
-              <div className="relative flex flex-col min-[560px]:flex-row min-[560px]:items-center gap-3 px-4 sm:px-8 py-4 sm:py-6">
-                <div className="flex-1 min-w-0">
-                  <span className="text-[length:var(--fs-9)] sm:text-[length:var(--fs-10)] font-black tracking-widest uppercase" style={{ color: 'var(--accent)' }}>
-                    Currently Active{isLinked ? ' · Goal-linked' : active.is_owner === 1 ? ' · Yours' : ''}
-                  </span>
-                  <h2 className="text-[length:var(--fs-17)] leading-snug sm:text-2xl font-black mt-0.5 mb-2 break-words line-clamp-2" style={{ color: 'var(--text-primary)' }}>
-                    {active.title}
-                  </h2>
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="flex-1 h-2 sm:h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border-medium)' }}>
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{ width: `${progressPct}%`, background: 'var(--accent)' }}
-                      />
-                    </div>
-                    <span className="text-xs font-black tabular-nums shrink-0" style={{ color: 'var(--accent)' }}>
-                      {progressPct}%
-                    </span>
-                  </div>
+            </div>
+            <div className="p-active-body">
+              <p className="p-active-eyebrow">
+                Active plan{isLinked ? ' · Goal-linked' : active.is_owner === 1 ? ' · Yours' : ''}
+              </p>
+              <h2 className="p-active-title">{active.title}</h2>
+              <p className="p-active-meta">
+                {active.duration}
+                {active.intensity ? ` · ${active.intensity}` : ''}
+                {completedDays > 0 ? ` · ${completedDays} day${completedDays !== 1 ? 's' : ''} done` : ''}
+              </p>
+              <div className="p-progress" aria-label={`${progressPct}% complete`}>
+                <div className="p-progress-track">
+                  <div className="p-progress-fill" style={{ width: `${progressPct}%` }} />
                 </div>
-                <div className="grid grid-cols-2 gap-2 shrink-0 w-full min-[560px]:w-auto min-[560px]:flex min-[560px]:items-center">
-                  <button
-                    onClick={e => { e.stopPropagation(); onContinue(active); }}
-                    className="col-span-2 min-[560px]:col-span-1 px-5 py-3 min-h-[48px] rounded-xl font-black text-xs sm:text-sm tracking-wide uppercase active:scale-95 transition-all"
-                    style={{ background: 'var(--accent)', color: 'var(--text-inverse)' }}
-                  >
-                    Continue →
-                  </button>
-                  {active.is_owner === 1 && (
-                    <button
-                      onClick={e => { e.stopPropagation(); onEdit?.(active); }}
-                      aria-label={`Edit plan: ${active.title}`}
-                      className="px-4 py-3 min-h-[48px] rounded-xl text-[length:var(--fs-11)] font-bold uppercase border"
-                      style={{ borderColor: 'var(--border-medium)', color: 'var(--text-primary)', background: 'var(--bg-primary)' }}
-                    >
-                      Edit
-                    </button>
-                  )}
-                  {active.is_owner === 1 && (
-                    <button
-                      onClick={e => { e.stopPropagation(); onDelete?.(active); }}
-                      aria-label={`Delete plan: ${active.title}`}
-                      className="px-4 py-3 min-h-[48px] rounded-xl text-[length:var(--fs-11)] font-bold uppercase border"
-                      style={{ borderColor: 'var(--border-medium)', color: 'var(--text-muted)', background: 'var(--bg-primary)' }}
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
+                <span className="p-progress-pct">{progressPct}%</span>
               </div>
+            </div>
+            <div className="p-active-actions" onClick={(e) => e.stopPropagation()}>
+              <button type="button" className="p-btn" onClick={() => onContinue(active)}>
+                Continue
+              </button>
+              {active.is_owner === 1 ? (
+                <PlanActions plan={active} onEdit={onEdit} onDelete={onDelete} />
+              ) : null}
             </div>
           </div>
         );
       })()}
       {enrolled.length > 1 && (
-        <>
-          <p className="text-[length:var(--fs-10)] sm:text-[length:var(--fs-11)] font-black uppercase tracking-widest mb-3 sm:mb-4" style={{ color: 'var(--text-muted)' }}>
-            All Enrolled Plans
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
+        <section className="p-section" style={{ marginTop: 0 }}>
+          <div className="p-head">
+            <h3 className="p-head-title">All enrolled plans</h3>
+            <span className="p-count">{enrolled.length}</span>
+          </div>
+          <div className="p-grid">
             {enrolled.slice(1).map((plan, i) => (
-              <div key={plan.id} className="min-w-0 h-full">
+              <div key={plan.id} style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 <PlanCard
-                  plan={plan} onOpen={onOpen} onEnroll={() => {}} onContinue={onContinue}
-                  style={{ animation: `slideUp 0.3s ease ${i * 0.06}s both` }}
+                  plan={plan}
+                  onOpen={onOpen}
+                  onEnroll={() => {}}
+                  onContinue={onContinue}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  style={{ flex: 1, animation: `slideUp 0.3s ease ${i * 0.06}s both` }}
                 />
-                {plan.is_owner === 1 && (
-                  <span className="mt-1.5 flex gap-3">
-                    <button
-                      onClick={() => onEdit?.(plan)}
-                      aria-label={`Edit plan: ${plan.title}`}
-                      className="text-[length:var(--fs-11)] font-bold uppercase tracking-widest hover:underline"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => onDelete?.(plan)}
-                      aria-label={`Delete plan: ${plan.title}`}
-                      className="text-[length:var(--fs-11)] font-bold uppercase tracking-widest hover:underline"
-                      style={{ color: 'var(--text-muted)' }}
-                    >
-                      Delete mine
-                    </button>
-                  </span>
-                )}
               </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+};
+
+// DISCOVERY — search, categories, filters and the plan grid
+const ContinueTrainingCard = ({ plan = undefined, onContinue = undefined }) => {
+  const pct = Math.max(0, Math.min(100, Number(plan.progress_pct) || 0));
+  const completedDays = Number(plan.completed_days) || 0;
+
+  return (
+    <div className="p-continue">
+      <div className="p-continue-cover">
+        <PlanCover
+          seed={plan.image_seed}
+          title={plan.title}
+          tag={plan.tag}
+          src={plan.image_url}
+        />
+      </div>
+      <div className="p-continue-body">
+        <p className="p-continue-eyebrow">
+          <Icon name="play_circle" fill={1} />
+          Continue training
+        </p>
+        <p className="p-continue-title" title={plan.title}>{plan.title}</p>
+        <p className="p-continue-meta">
+          {plan.duration}
+          {plan.intensity ? ` · ${plan.intensity}` : ''}
+          {completedDays > 0 ? ` · ${completedDays} day${completedDays !== 1 ? 's' : ''} done` : ''}
+        </p>
+        {pct > 0 ? (
+          <div className="p-progress" aria-label={`${pct}% complete`}>
+            <div className="p-progress-track">
+              <div className="p-progress-fill" style={{ width: `${pct}%` }} />
+            </div>
+            <span className="p-progress-pct">{pct}%</span>
+          </div>
+        ) : null}
+      </div>
+      <button type="button" className="p-continue-cta" onClick={() => onContinue(plan)}>
+        Continue
+        <Icon name="arrow_forward" className="text-[length:var(--fs-16)]" />
+      </button>
+    </div>
+  );
+};
+
+const Explore = ({ plans = undefined, onOpen = undefined, onEnroll = undefined, onContinue = undefined }) => {
+  const [query, setQuery] = useState('');
+  const [intensity, setIntensity] = useState('All');
+  const [focus, setFocus] = useState('All');
+  const [duration, setDuration] = useState('All');
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const filtered = useMemo(() => plans.filter((p) => {
+    const q = query.trim().toLowerCase();
+    return (
+      (!q || p.title?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q) || p.tag?.toLowerCase().includes(q)) &&
+      (!activeCategory || p.tag === activeCategory) &&
+      (intensity === 'All' || p.intensity === intensity) &&
+      (focus === 'All' || p.target_focus?.toLowerCase().includes(focus.toLowerCase())) &&
+      (duration === 'All' || p.duration === duration)
+    );
+  }), [plans, query, activeCategory, intensity, focus, duration]);
+
+  const clearAll = () => {
+    setQuery('');
+    setIntensity('All');
+    setFocus('All');
+    setDuration('All');
+    setActiveCategory(null);
+  };
+  const advancedCount = [intensity, focus, duration].filter((v) => v !== 'All').length;
+  const hasFilters = Boolean(query) || Boolean(activeCategory) || advancedCount > 0;
+  const activePlan = plans.find((p) => p.is_enrolled === 1);
+
+  if (plans.length === 0) {
+    return (
+      <div className="p-empty" style={{ animation: 'fadeIn 0.3s ease' }}>
+        <span className="p-empty-icon"><Icon name="fitness_center" /></span>
+        <p className="p-empty-title">No plans available yet</p>
+        <p className="p-empty-text">New programs will appear here as soon as they are published.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ animation: 'fadeIn 0.3s ease' }}>
+      <div className="p-toolbar">
+        <div className="p-search">
+          <Icon name="search" className="p-search-icon" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search workout plans"
+            aria-label="Search workout plans"
+          />
+          {query ? (
+            <button type="button" className="p-search-clear" aria-label="Clear search" onClick={() => setQuery('')}>
+              <Icon name="close" className="text-[length:var(--fs-16)]" />
+            </button>
+          ) : null}
+        </div>
+
+        <div className="p-chips" role="group" aria-label="Plan categories">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.label}
+              type="button"
+              className="p-chip"
+              aria-pressed={activeCategory === cat.tag}
+              onClick={() => setActiveCategory(cat.tag)}
+            >
+              <Icon name={cat.icon} fill={activeCategory === cat.tag ? 1 : 0} />
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          className="p-filters-toggle"
+          aria-expanded={filtersOpen}
+          onClick={() => setFiltersOpen((v) => !v)}
+        >
+          <Icon name="tune" className="text-[length:var(--fs-16)]" />
+          {filtersOpen ? 'Hide filters' : 'Filters'}
+          {advancedCount > 0 ? <span className="p-tab-count">{advancedCount}</span> : null}
+        </button>
+
+        {filtersOpen ? (
+          <div className="p-filters">
+            {[
+              { label: 'Intensity', opts: INTENSITY_OPTIONS, active: intensity, set: setIntensity },
+              { label: 'Focus area', opts: FOCUS_OPTIONS, active: focus, set: setFocus },
+              { label: 'Duration', opts: DURATION_OPTIONS, active: duration, set: setDuration },
+            ].map(({ label, opts, active, set }) => (
+              <div key={label}>
+                <p className="p-filter-label">{label}</p>
+                <FilterPill options={opts} active={active} onSelect={set} />
+              </div>
+            ))}
+            <div className="flex items-center justify-between gap-3">
+              <span className="p-count">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
+              {hasFilters ? (
+                <button type="button" className="p-text-btn" onClick={clearAll}>
+                  Clear all
+                </button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      {activePlan ? <ContinueTrainingCard plan={activePlan} onContinue={onContinue} /> : null}
+
+      {filtered.length === 0 ? (
+        <div className="p-empty">
+          <span className="p-empty-icon"><Icon name="search_off" /></span>
+          <p className="p-empty-title">No plans match your search</p>
+          <p className="p-empty-text">Try another category, or clear the filters to see every plan.</p>
+          <div className="p-empty-actions">
+            <button type="button" className="p-banner-btn" onClick={clearAll}>Clear filters</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="p-head">
+            <div>
+              <h3 className="p-head-title">Workout plans</h3>
+              <p className="p-head-sub">Programs built around your training focus.</p>
+            </div>
+            <span className="p-count">
+              {filtered.length} plan{filtered.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="p-grid">
+            {filtered.map((plan, i) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                onOpen={onOpen}
+                onEnroll={onEnroll}
+                onContinue={onContinue}
+                style={{ animation: `slideUp 0.3s ease ${Math.min(i, 8) * 0.04}s both` }}
+              />
             ))}
           </div>
         </>
-      )}
-    </div>
-  );
-};
-
-// FIND PLANS TAB WITH FILTERS
-
-
-const FindPlan = ({ plans, onOpen, onEnroll, onContinue }) => {
-  const [query,     setQuery]     = useState('');
-  const [intensity, setIntensity] = useState('All');
-  const [focus,     setFocus]     = useState('All');
-  const [duration,  setDuration]  = useState('All');
-
-  const filtered = useMemo(() => plans.filter(p => {
-    const q = query.toLowerCase();
-    return (
-      (!q || p.title?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q) || p.tag?.toLowerCase().includes(q)) &&
-      (intensity === 'All' || p.intensity === intensity) &&
-      (focus     === 'All' || p.target_focus?.toLowerCase().includes(focus.toLowerCase())) &&
-      (duration  === 'All' || p.duration === duration)
-    );
-  }), [plans, query, intensity, focus, duration]);
-
-  const clearAll = () => { setQuery(''); setIntensity('All'); setFocus('All'); setDuration('All'); };
-  const hasFilters = query || intensity !== 'All' || focus !== 'All' || duration !== 'All';
-
-  return (
-    <div style={{ animation: 'fadeIn 0.3s ease' }}>
-      <div className="relative mb-4 sm:mb-6">
-        <Icon name="search" className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-[length:var(--fs-18)] sm:text-[length:var(--fs-20)]" style={{ color: 'var(--text-muted)' }} />
-        <input
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Search blueprints..."
-          className="w-full rounded-xl pl-10 sm:pl-12 pr-4 py-3 sm:py-3.5 text-sm outline-none border border-[var(--border-medium)] bg-[var(--bg-tertiary)] text-[var(--text-primary)] transition-all"
-        />
-        {query && (
-          <button
-            onClick={() => setQuery('')}
-            className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 transition-colors"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            <Icon name="close" className="text-[length:var(--fs-18)]" />
-          </button>
-        )}
-      </div>
-      <div className="rounded-xl p-3 sm:p-5 mb-6 sm:mb-8 space-y-3 sm:space-y-4 border glass-card" style={{ borderColor: 'var(--border-light)' }}>
-        {[
-          { label: 'Intensity', opts: INTENSITY_OPTIONS, active: intensity, set: setIntensity },
-          { label: 'Focus Area', opts: FOCUS_OPTIONS,    active: focus,     set: setFocus     },
-          { label: 'Duration',  opts: DURATION_OPTIONS,  active: duration,  set: setDuration  },
-        ].map(({ label, opts, active, set }) => (
-          <div key={label}>
-            <p className="text-[length:var(--fs-9)] sm:text-[length:var(--fs-10)] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>{label}</p>
-            <FilterPill options={opts} active={active} onSelect={set} />
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center justify-between mb-4 sm:mb-5">
-        <p className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>
-          <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{filtered.length}</span>{' '}
-          blueprint{filtered.length !== 1 ? 's' : ''} found
-        </p>
-        {hasFilters && (
-          <button onClick={clearAll} className="text-[length:var(--fs-10)] sm:text-[length:var(--fs-11)] font-bold uppercase tracking-widest hover:underline" style={{ color: 'var(--accent)' }}>
-            Clear All
-          </button>
-        )}
-      </div>
-      {filtered.length === 0 ? (
-        <div className="flex flex-col items-center py-16 sm:py-20 gap-3 text-center">
-          <Icon name="search_off" className="text-[length:var(--fs-40)] sm:text-[length:var(--fs-48)]" style={{ color: 'var(--border-medium)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No blueprints match your filters.</p>
-          <button onClick={clearAll} className="text-sm font-bold hover:underline" style={{ color: 'var(--accent)' }}>
-            Reset Filters
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
-          {filtered.map((plan, i) => (
-            <PlanCard
-              key={plan.id} plan={plan} onOpen={onOpen} onEnroll={onEnroll} onContinue={onContinue}
-              style={{ animation: `slideUp 0.3s ease ${i * 0.05}s both` }}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-
-
-const Explore = ({ plans, onOpen, onEnroll, onContinue }) => {
-  const [activeCategory, setActiveCategory] = useState(null);
-  const featured  = plans.slice(0, 2);
-  const displayed = activeCategory ? plans.filter(p => p.tag === activeCategory) : plans;
-
-  return (
-    <div style={{ animation: 'fadeIn 0.3s ease' }}>
-      {featured.length > 0 && (
-        <div className="mb-6 sm:mb-10">
-          <p className="text-[length:var(--fs-10)] sm:text-[length:var(--fs-11)] font-black uppercase tracking-widest mb-3 sm:mb-4" style={{ color: 'var(--text-muted)' }}>
-            Featured Blueprints
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
-            {featured.map((plan, i) => (
-              <div
-                key={plan.id}
-                role="button"
-                tabIndex={0}
-                aria-label={`Open plan: ${plan.title}`}
-                className="relative overflow-hidden rounded-2xl cursor-pointer group border transition-all duration-500"
-                style={{ borderColor: 'var(--border-light)', animation: `slideUp 0.4s ease ${i * 0.1}s both` }}
-                onClick={() => onOpen(plan)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(plan); } }}
-              >
-                <div className="aspect-[16/10] sm:aspect-[21/9] overflow-hidden">
-                  <PlanCover seed={plan.image_seed} title={plan.title} className="group-hover:scale-105 transition-transform duration-700" opacity={0.3} />
-                </div>
-                <div
-                  className="absolute inset-0"
-                  style={{ background: 'linear-gradient(to top, var(--bg-card) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)' }}
-                />
-                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 min-w-0">
-                  <div className="flex gap-2 mb-1.5 sm:mb-2">
-                    <span className="px-2 py-0.5 rounded text-[length:var(--fs-9)] font-black tracking-widest uppercase" style={{ background: 'var(--accent)', color: 'var(--text-inverse)' }}>
-                      {plan.tag}
-                    </span>
-                    <span className="px-2 py-0.5 rounded text-[length:var(--fs-9)] font-bold tracking-widest uppercase" style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)', backdropFilter: 'blur(4px)' }}>
-                      {plan.intensity}
-                    </span>
-                  </div>
-                  <h3 className="text-base sm:text-xl font-black" style={{ color: 'var(--text-primary)' }}>{plan.title}</h3>
-                  <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--text-muted)' }}>{plan.description}</p>
-                </div>
-                {plan.is_enrolled === 1 && (
-                  <div
-                    className="absolute top-3 sm:top-4 right-3 sm:right-4 px-2 py-1 rounded text-[length:var(--fs-9)] font-black tracking-widest uppercase"
-                    style={{ background: 'var(--accent)', color: 'var(--text-inverse)' }}
-                  >
-                    Owned
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 mb-6 sm:mb-8" style={{ scrollbarWidth: 'none' }}>
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.label}
-            onClick={() => setActiveCategory(cat.tag)}
-            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[length:var(--fs-10)] sm:text-xs font-bold uppercase tracking-widest flex-shrink-0 transition-all border"
-            style={{
-              background:  activeCategory === cat.tag ? 'var(--accent)'     : 'var(--bg-tertiary)',
-              color:       activeCategory === cat.tag ? 'var(--text-inverse)'           : 'var(--text-muted)',
-              borderColor: activeCategory === cat.tag ? 'var(--accent)'     : 'var(--border-light)',
-            }}
-          >
-            <Icon name={cat.icon} className="text-[length:var(--fs-14)] sm:text-[length:var(--fs-16)]" fill={activeCategory === cat.tag ? 1 : 0} />
-            {cat.label}
-          </button>
-        ))}
-      </div>
-      {displayed.length === 0 ? (
-        <div className="flex flex-col items-center py-16 sm:py-20 gap-3 text-center">
-          <Icon name="category" className="text-[length:var(--fs-40)] sm:text-[length:var(--fs-48)]" style={{ color: 'var(--border-medium)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No blueprints in this category yet.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
-          {displayed.map((plan, i) => (
-            <PlanCard
-              key={plan.id} plan={plan} onOpen={onOpen} onEnroll={onEnroll} onContinue={onContinue}
-              style={{ animation: `slideUp 0.3s ease ${i * 0.05}s both` }}
-            />
-          ))}
-        </div>
       )}
     </div>
   );
@@ -1360,14 +1481,16 @@ const Explore = ({ plans, onOpen, onEnroll, onContinue }) => {
 const Plans = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState(
-    searchParams.get('tab') || 'explore'
-  );
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(() => {
+    const requested = searchParams.get('tab');
+    return TABS.some((tab) => tab.id === requested) ? requested : 'explore';
+  });
 
   const {
-    loading, authError, actionError, actionOk, acting, reload, trainingPlans, enrolledCount, goalStatus,
+    userId, loading, authError, actionError, actionOk, acting, reload, trainingPlans, enrolledCount, goalStatus,
     detailPlan, trackerPlan, trackerContent, trackerProgress,
-    setDetailPlan, setActionError, setActionOk, handleEnroll, createPersonal, updatePersonal, autoFromGoal, removePersonal, startTracker, handleCompleteDay, closeTracker,
+    setDetailPlan, setActionError, setActionOk, handleEnroll, createPersonal, updatePersonal, autoFromGoal, activatePlan, removePersonal, startTracker: loadTracker, handleCompleteDay, closeTracker,
   } = usePlans();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
@@ -1388,11 +1511,20 @@ const Plans = () => {
 
   // Module 5 — save training preferences, then surface server feedback via the
   // page's normal action banner (same pattern as create/edit).
-  const handleSavePrefs = async (body) => {
+  const handleSavePrefs = async (body, opts = {}) => {
     try {
       const saved = await prefsCtl.save(body);
+      // Section 3: experience lives on the goal (saved in place, no new goal).
+      if (opts.experience && opts.experience !== goalStatus?.goal?.experienceLevel && userId) {
+        try { await apiPatch(`/api/goals/active/${userId}`, { experienceLevel: opts.experience }); } catch { /* prefs still saved */ }
+      }
       setActionError(null);
-      setActionOk('Training preferences saved — recommendations now respect your equipment, days and session length.');
+      if (opts.rebuild && goalStatus?.goal) {
+        await autoFromGoal({ all: true, regenerate: true });
+      } else {
+        await reload();
+        setActionOk('Training preferences saved. Use "Rebuild" on your goal plans to apply them.');
+      }
       return saved ?? {};
     } catch (e) {
       setActionOk(null);
@@ -1425,49 +1557,91 @@ const Plans = () => {
   // Mount-only URL cleanup; reacting to searchParams identity would re-run on every navigation.
   useEffect(() => {
     if (searchParams.get('tab')) {
-      setSearchParams({}, { replace: true });
+      setSearchParams((params) => {
+        const next = new URLSearchParams(params);
+        next.delete('tab');
+        return next;
+      }, { replace: true });
     }
     if (searchParams.get('mine') === '1') {
       setActiveTab('my-plans');
-      setSearchParams({}, { replace: true });
+      setSearchParams((params) => {
+        const next = new URLSearchParams(params);
+        next.delete('mine');
+        next.delete('tab');
+        return next;
+      }, { replace: true });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // One-shot deep-link: openTracker navigation opens the tracker once. startTracker
-  // is intentionally excluded — it is re-created per render and would re-trigger this.
+  // Consume router state through the router, before refreshes can replay it.
+  const consumedTrackerEntry = useRef(null);
   useEffect(() => {
     const openTrackerId = location.state?.openTracker;
-    if (!openTrackerId || loading || trainingPlans.length === 0) return;
+    if (!openTrackerId || consumedTrackerEntry.current === location.key || loading || trainingPlans.length === 0) return;
     const plan = trainingPlans.find(p => String(p.id) === String(openTrackerId));
     if (plan) {
       setActiveTab('my-plans');
-      startTracker(plan);
-      window.history.replaceState({}, '');
+      consumedTrackerEntry.current = location.key;
+      setTrackerStart(null);
+      loadTracker(plan);
+      const nextState = { ...location.state };
+      delete nextState.openTracker;
+      navigate({ pathname: location.pathname, search: location.search, hash: location.hash }, { replace: true, state: nextState });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state?.openTracker, trainingPlans, loading]);
+  }, [location, trainingPlans, loading, loadTracker, navigate]);
 
   const requestedPlanId = searchParams.get('planId');
+  const requestedDay    = Number(searchParams.get('startDay')) || null;
+  const requestedFit    = Number(searchParams.get('fit')) || null;
+  const [trackerStart, setTrackerStart] = useState(null); // Section 4: coach Start -> day + minutes
+  const startTracker = (plan) => {
+    setTrackerStart(null);
+    loadTracker(plan);
+  };
   const autoOpenedRef   = useRef(false);
   useEffect(() => {
+    if (!requestedPlanId) {
+      autoOpenedRef.current = false;
+      return;
+    }
     if (!requestedPlanId || autoOpenedRef.current || loading) return;
     const match = trainingPlans.find(p => String(p.id) === String(requestedPlanId));
-    if (match) {
+    if (match && requestedDay) {
+      setTrackerStart({ day: requestedDay, fit: requestedFit });
+      loadTracker(match);
+      autoOpenedRef.current = true;
+      setSearchParams({}, { replace: true });
+    } else if (match) {
       setDetailPlan(match);
       autoOpenedRef.current = true;
       setSearchParams({}, { replace: true });
     }
-  }, [requestedPlanId, trainingPlans, loading, setDetailPlan, setSearchParams]);
+  }, [requestedPlanId, trainingPlans, loading, setDetailPlan, setSearchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleEnrollAndSwitch = async (planId) => {
     await handleEnroll(planId);
     setActiveTab('my-plans');
   };
 
-  const handleGenerateAndSwitch = async () => {
-    const data = await autoFromGoal();
+  const handleGenerateAndSwitch = async (body) => {
+    const data = await autoFromGoal(body);
     if (data?.planId) setActiveTab('my-plans');
+  };
+
+  // Section 3: add/remove one exercise from the "don't recommend" list.
+  const handleToggleExclude = async (name, excluded) => {
+    try {
+      await apiPost('/api/training-preferences/exclude-exercise', { name, excluded });
+      await prefsCtl.reload();
+      setActionError(null);
+      setActionOk(excluded
+        ? `${name} won't be recommended again. Rebuild your goal plans to swap it out.`
+        : `${name} can be recommended again.`);
+    } catch (e) {
+      setActionError(e?.message || 'Could not update your exercise list.');
+    }
   };
 
   const handleDelete = (plan) => {
@@ -1496,33 +1670,35 @@ const Plans = () => {
   };
 
   return (
-    <AppShell mobileTitle="Plans" bottomNav={<BottomNav variant="biometrics" />}>
-        <div className="min-w-0">
+    <AppShell mobileTitle="Plans" contentClassName="app-container plans-container" bottomNav={<BottomNav variant="biometrics" />}>
+        <div className="vplans min-w-0">
           <PageHeader
-            eyebrow="Training Store"
-            title={<>Performance <em>Blueprints</em></>}
-            description="Enroll in a program, build your own split, or open the exercise library."
+            className="plans-page-head"
+            eyebrow="Training plans"
+            title={<>Find your <em>fitness plan</em></>}
+            description="Discover programs built around your goal, equipment and schedule."
             actions={(
               <>
                 {enrolledCount > 0 && (
-                  <div className="flex items-center gap-2 rounded-full px-4 py-2.5 border" style={{ background: 'var(--accent-bg)', borderColor: 'var(--accent-border)' }}>
-                    <Icon name="trophy" className="text-[length:var(--fs-18)] shrink-0" style={{ color: 'var(--accent)' }} fill={1} />
-                    <span className="text-xs sm:text-sm font-bold whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
+                  <div className="flex items-center gap-2 rounded-full px-3.5 py-2 border" style={{ background: 'var(--accent-bg)', borderColor: 'var(--accent-border)' }}>
+                    <Icon name="trophy" className="text-[length:var(--fs-16)] shrink-0" style={{ color: 'var(--accent)' }} fill={1} />
+                    <span className="text-[12px] font-bold whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
                       {enrolledCount} plan{enrolledCount !== 1 ? 's' : ''} active
                     </span>
                   </div>
                 )}
                 {/* Module 5 — training preferences (equipment/days/minutes). */}
                 <button
+                  type="button"
                   onClick={() => setPrefsOpen(true)}
                   title="Training preferences — equipment, training days, session minutes"
-                  className="flex items-center gap-1.5 h-10 px-4 rounded-full border text-[length:var(--fs-11)] font-bold uppercase tracking-widest transition-all hover:border-[var(--accent-border)]"
+                  className="flex items-center gap-1.5 h-9 px-3.5 rounded-full border text-[11.5px] font-bold transition-all hover:border-[var(--accent-border)]"
                   style={{ background: 'var(--bg-hover)', borderColor: 'var(--border-light)', color: 'var(--text-muted)' }}
                 >
-                  <Icon name="tune" className="text-[length:var(--fs-16)]" />
+                  <Icon name="tune" className="text-[length:var(--fs-15)]" />
                   <span className="hidden sm:inline">Preferences</span>
                 </button>
-                <button onClick={openCreate} className="app-btn app-btn--primary">
+                <button type="button" onClick={openCreate} className="app-btn app-btn--primary">
                   + New plan
                 </button>
               </>
@@ -1532,24 +1708,40 @@ const Plans = () => {
           <TabBar active={activeTab} onChange={setActiveTab} enrolledCount={enrolledCount} />
 
           {actionError ? (
-            <p role="alert" className="mb-4 rounded-xl border border-[var(--border-medium)] bg-[var(--error-bg)] px-4 py-2.5 text-[length:var(--fs-12)] font-semibold text-[var(--error)]">{actionError}</p>
+            <p role="alert" className="p-alert p-alert--error">{actionError}</p>
           ) : null}
           {actionOk ? (
-            <p role="status" className="mb-4 rounded-xl border border-[var(--accent-border)] bg-[var(--accent-bg)] px-4 py-2.5 text-[length:var(--fs-12)] font-semibold" style={{ color: 'var(--accent)' }}>{actionOk}</p>
+            <p role="status" className="p-alert p-alert--ok">{actionOk}</p>
           ) : null}
 
           {loading ? (
-            <div className="py-16 sm:py-20 text-center animate-pulse text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-              Synchronizing Blueprints...
+            <div aria-busy="true" aria-label="Loading plans">
+              <div className="p-skeleton-grid">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div className="p-skel" key={i}>
+                    <div className="p-skel-cover" />
+                    <div className="p-skel-body">
+                      <div className="p-skel-line" style={{ width: '78%' }} />
+                      <div className="p-skel-line p-skel-line--sm" />
+                      <div className="p-skel-line" style={{ width: '88%' }} />
+                      <div className="p-skel-line p-skel-line--btn" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : authError ? (
-            <div className="flex flex-col items-center py-16 sm:py-20 gap-3 text-center" role="alert">
-              <Icon name="error" className="text-[length:var(--fs-36)] sm:text-[length:var(--fs-40)]" style={{ color: 'var(--error)' }} />
-              <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Couldn't load your blueprints</p>
-              <p className="text-xs max-w-sm" style={{ color: 'var(--text-muted)' }}>{authError}</p>
-              <button onClick={reload} className="mt-1 h-10 px-5 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[length:var(--fs-12)] font-bold hover:brightness-110 active:scale-95 transition-all">
-                Try again
-              </button>
+            <div className="p-empty" role="alert">
+              <span className="p-empty-icon" style={{ background: 'var(--error-bg)', color: 'var(--error)' }}>
+                <Icon name="error" />
+              </span>
+              <p className="p-empty-title">Couldn't load your plans</p>
+              <p className="p-empty-text">{authError}</p>
+              <div className="p-empty-actions">
+                <button type="button" onClick={reload} className="p-banner-btn p-banner-btn--accent">
+                  Try again
+                </button>
+              </div>
             </div>
           ) : (
             <>
@@ -1573,16 +1765,16 @@ const Plans = () => {
                     generating={acting}
                     prefs={prefsCtl.prefs}
                     onOpenPrefs={() => setPrefsOpen(true)}
+                    onGenerateGoal={handleGenerateAndSwitch}
+                    onActivate={activatePlan}
                   />
                 </>
               )}
-              {activeTab === 'find'     && <FindPlan plans={trainingPlans} onOpen={setDetailPlan} onEnroll={handleEnrollAndSwitch} onContinue={startTracker} />}
               {activeTab === 'explore'  && <Explore  plans={trainingPlans} onOpen={setDetailPlan} onEnroll={handleEnrollAndSwitch} onContinue={startTracker} />}
               {activeTab === 'library'  && <ExerciseLibrary />}
-              {activeTab === 'history'  && <WorkoutHistory />}
+              {activeTab === 'history'  && <WorkoutHistory onBrowse={() => setActiveTab('library')} />}
             </>
           )}
-        </div>
 
       {detailPlan && (
         <PlanDetailOverlay
@@ -1607,6 +1799,9 @@ const Plans = () => {
           onClose={closeTracker}
           onCompleteDay={handleCompleteDay}
           prefs={prefsCtl.prefs}
+          onToggleExclude={handleToggleExclude}
+          startDay={trackerStart?.day}
+          startFit={trackerStart?.fit}
         />
       )}
 
@@ -1616,6 +1811,7 @@ const Plans = () => {
         open={prefsOpen}
         preferences={prefsCtl.prefs}
         options={prefsCtl.options}
+        experience={goalStatus?.goal?.experienceLevel || null}
         onClose={() => setPrefsOpen(false)}
         onSave={handleSavePrefs}
       />
@@ -1649,10 +1845,11 @@ const Plans = () => {
       <style>{`
         @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
-        input::placeholder { color: var(--text-muted); opacity: 1; }
+        .vplans input::placeholder { color: var(--text-muted); opacity: 1; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
+      </div>
     </AppShell>
   );
 };

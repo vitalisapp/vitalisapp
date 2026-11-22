@@ -4,7 +4,7 @@ import { usePresence } from '../../hooks/usePresence.js';
 // ui/Dropdown — themed replacement for native <select>.
 // The browser's select popup can't be sized or styled (renders a giant
 // unthemed list); this popover stays anchored, capped, and scrollable.
-export default function Dropdown({ label, value, onChange, options = [], allLabel = 'All', className = '' }) {
+export default function Dropdown({ label = undefined, value = undefined, onChange = undefined, options = [], allLabel = 'All', className = '' }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
   const { mounted, closing } = usePresence(open, 150);

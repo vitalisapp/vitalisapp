@@ -26,6 +26,7 @@ const trainingInsightsRoutes = require('./trainingInsights.routes');
 const progressRoutes = require('./progress.routes');
 const adminRoutes = require('./admin.routes');
 const publicRoutes = require('./public.routes');
+const reminderRoutes = require('./reminder.routes');
 
 const { requireMember } = require('../middleware/verifyUser');
 
@@ -38,6 +39,8 @@ function mountRoutes(app) {
   // Module 5: training preferences (recommendation inputs) + rule-based insights.
   app.use('/api/training-preferences', requireMember, trainingPrefsRoutes);
   app.use('/api/training-insights', requireMember, trainingInsightsRoutes);
+  // Section 5: smart reminder settings (scheduler: src/jobs/reminderScheduler.js).
+  app.use('/api/reminders', requireMember, reminderRoutes);
   // Module 6: progress photos (Gemini-analyzed), body measurements, activity analytics, export.
   app.use('/api/progress', progressRoutes);
   // Module 7: admin panel (backend only) — every route requires role='admin'.
@@ -95,9 +98,10 @@ function mountRoutes(app) {
         'GET|POST|DELETE /api/community/*',
         'GET|PUT /api/settings',
         'GET|PUT /api/training-preferences (Module 5 recommendation inputs)',
+        'GET|PUT /api/reminders/prefs | POST /api/reminders/test (Section 5 smart reminders)',
         'GET  /api/training-insights (rule-based adaptive suggestions)',
-        'GET /api/progress/activity | GET /api/progress/overview?range=30d|90d|1y|all | GET|POST|DELETE /api/progress/photos[(/:id/image|/:id/analyze)] | POST /api/progress/compare | GET|POST|DELETE /api/progress/measurements | GET /api/progress/export.csv | GET /api/progress/diary.txt (Module 6)',
-        'GET /api/admin/overview | GET /api/admin/users[/:id] | POST /api/admin/users/:id/(role|status|signout) | DELETE /api/admin/users/:id | GET /api/admin/plans | GET|DELETE /api/admin/community/posts[/:id] | GET /api/admin/ai-usage | GET /api/admin/audit (Module 7, role=admin)',
+        'GET /api/progress/activity | GET /api/progress/overview?range=30d|90d|1y|all[&sample=1] | GET /api/progress/summary[?sample=1] | GET /api/progress/sample-history | GET|POST|DELETE /api/progress/photos[(/:id/image|/:id/analyze)] | POST /api/progress/compare | GET|POST|DELETE /api/progress/measurements | GET /api/progress/export.csv | GET /api/progress/diary.txt (Module 6)',
+        'GET /api/admin/overview | GET /api/admin/users[/:id] | GET /api/admin/monitoring | POST /api/admin/users/:id/(role|status|signout) | DELETE /api/admin/users/:id | GET /api/admin/plans | GET|DELETE /api/admin/community/posts[/:id] | GET /api/admin/ai-usage | GET /api/admin/audit (Module 7, role=admin)',
         'GET|POST /api/security/*',
         'GET|POST /api/notifications/*',
         'GET|POST /api/coach/*',

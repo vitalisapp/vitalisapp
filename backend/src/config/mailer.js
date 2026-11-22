@@ -15,7 +15,7 @@
 // if BREVO_* is absent but EMAIL_USER/EMAIL_PASS are set, we fall back to Gmail.
 //
 // This module only owns the transport. Message building lives in
-// services/email.service.js + templates/email.templates.js; the send helpers
+// services/email.service.js + src/emails/; the send helpers
 // are re-exported here (lazily) for backward compatibility.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -123,7 +123,7 @@ module.exports = {
   fromAddress,
   fromHeader,
   provider: settings.provider,
-  escapeHtml: require("../templates/email.templates").escapeHtml,
+  escapeHtml: require("../emails/utils/escapeHtml").escapeHtml,
   // Lazy re-exports (backward compat) — require inside the wrapper avoids the
   // mailer ↔ email.service cycle at module-load time.
   get sendMealSummaryEmail() {

@@ -32,6 +32,8 @@ import WorkoutFeedbackSheet from '../components/WorkoutFeedbackSheet.jsx';
 import AddWorkoutModal from '../../Log/components/AddWorkoutModal.jsx';
 // Pick a card -> ask HOW to train it: camera tracker or manual entry.
 import ExerciseChoiceModal from '../components/ExerciseChoiceModal.jsx';
+import ExerciseBriefing from '../components/ExerciseBriefing.jsx';
+import { COUNTER_GUIDES, partialHint } from '../constants/exerciseInstructions.js';
 
 // ── Minimum reps required to count a session as complete ─────────────────────
 const MIN_REPS_DEFAULT = 5;
@@ -42,7 +44,7 @@ const REST_ACTIVITY_TYPES = new Set(['Recovery', 'Mobility', 'Flexibility']);
 
 // ── Early-exit confirmation dialog ───────────────────────────────────────────
 // Receives plain values (not refs) so it never reads .current in JSX.
-function EarlyExitDialog({ mode, reps, holdSecs, minReps, minHoldSecs, elapsedMins, requiredMins, onConfirm, onCancel }) {
+function EarlyExitDialog({ mode = undefined, reps = undefined, holdSecs = undefined, minReps = undefined, minHoldSecs = undefined, elapsedMins = undefined, requiredMins = undefined, onConfirm = undefined, onCancel = undefined }) {
   const progressText = mode === 'hold'
     ? <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{Math.floor(holdSecs)}s held</span>
     : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{reps} rep{reps !== 1 ? 's' : ''}</span>;
@@ -101,7 +103,7 @@ function EarlyExitDialog({ mode, reps, holdSecs, minReps, minHoldSecs, elapsedMi
 }
 
 // ── Workout chooser: pick a real Bryl exercise first, camera opens after ───
-function WorkoutChooser({ query, onQuery, onPick, onBack }) {
+function WorkoutChooser({ query = undefined, onQuery = undefined, onPick = undefined, onBack = undefined }) {
   const [equipment, setEquipment] = useState('');
   const [muscle, setMuscle] = useState('');
   const [type, setType] = useState('');
@@ -338,6 +340,16 @@ const CameraWorkout = () => {
   const lastHoldCueRef = useRef(0);
   const wasHoldingRef = useRef(true);
   const WARN_COOLDOWN_MS = 4000;
+  const lastPartialRef = useRef(0);
+  useEffect(() => {
+    partialHandlerRef.current = (type) => {
+      const hint = partialHint(type);
+      if (!hint || Date.now() - lastPartialRef.current < WARN_COOLDOWN_MS) return;
+      lastPartialRef.current = Date.now();
+      setAiFeedback(hint);
+      if (voiceEnabled) speak(hint, 0.95, 1.0, false);
+    };
+  });
   // Target-reached fires the stop sequence once — without this the rep/hold
   // branch re-triggers every frame until the 800ms stop lands (double logs,
   // double notifications, double navigations).
@@ -357,7 +369,13 @@ const CameraWorkout = () => {
     ) ? prev : next);
   }, []);
 
-  const { repCount, repCountRef, countRep, resetReps, invalidateRep, addRep } = useRepCounter({ voiceEnabled });
+  // Section 7: a shallow rep (started but not deep enough) gets a spoken tip.
+  const partialHandlerRef = useRef(null);
+  const [briefingHiddenFor, setBriefingHiddenFor] = useState(null);
+  const { repCount, repCountRef, countRep, resetReps, invalidateRep, addRep } = useRepCounter({
+    voiceEnabled,
+    onPartialRep: (type) => partialHandlerRef.current?.(type),
+  });
   const { holdSecs, holdRef, updateHold, resetHold, setHoldTarget: setHoldGoal } = useHoldTimer({ voiceEnabled });
   const { aiFeedback, isAnalyzing, setAiFeedback, maybeAnalyze, cancelAnalysis } = useAICoach({ workoutType: resolved?.label ?? workoutType, voiceEnabled });
   const { startSession, pauseSession, resumeSession, endSession, sessionResult } = useWorkoutSession();
@@ -496,18 +514,9 @@ const CameraWorkout = () => {
         .catch(err => { if (import.meta.env.DEV) console.error('[fromPlan] day complete failed:', err); });
     }
 
-    // Notify only meaningful sessions — never "Finished with 0 reps."
-    const meaningful = workoutMode === 'hold' ? held > 0 : final > 0;
-    if (resolvedUserId && meaningful) {
-      apiPost('/api/notifications', {
-        user_id:  resolvedUserId,
-        message:  workoutMode === 'hold'
-          ? `Workout Complete — ${label}: held ${held}s`
-          : `Workout Complete — ${label}: ${final} ${final === 1 ? 'rep' : 'reps'}`,
-        type:     'success',
-        category: 'TRAINING',
-      }).catch(err => { if (import.meta.env.DEV) console.error('Notification failed:', err); });
-    }
+    // The "Workout complete" notification is created server-side when the
+    // session ends (workoutLogs.service → TRAINING), so it also covers manual
+    // logs and never doubles up here.
 
     setElapsedSecs(0);
     setIsRecording(false);
@@ -587,15 +596,21 @@ const CameraWorkout = () => {
       const cue = selfTracked
         ? 'Timer running. Use +1 rep to record each rep; sets advance automatically.'
         : resolved?.cue ?? '';
+      // Section 7: always repeat the camera setup when the session starts.
+      const setupGuide = COUNTER_GUIDES[counterType]?.setup;
+      const setupCue = workoutMode === 'hold' || !setupGuide
+        ? 'Place your phone about 2 meters away so your whole body is visible.'
+        : `Place your phone about ${setupGuide.distanceM === 2 ? '2' : '1.5'} meters away and stand ${setupGuide.view === 'side' ? 'sideways' : 'facing the camera'}.`;
       const goal = workoutMode === 'hold'
         ? `Hold for ${holdTarget} seconds.`
         : `Target ${setTarget} sets of ${repTarget} reps.`;
       const msg = fromPlan
         ? `Starting Day ${fromPlan.dayNumber}: ${fromPlan.dayTitle}. ${cue} ${goal}`
         : `Starting ${label}. ${cue} ${goal}`;
+      const fullMsg = `${msg} ${setupCue}`;
 
-      setAiFeedback(msg);
-      if (voiceEnabled) speak(msg, 0.95, 1.0);
+      setAiFeedback(fullMsg);
+      if (voiceEnabled) speak(fullMsg, 0.95, 1.0);
       setIsRecording(true);
 
     } else {
@@ -732,7 +747,7 @@ const CameraWorkout = () => {
       // Honest biometrics: symmetry is computed from real shoulder landmarks.
       // Alignment mirrors the same real postural signal (not random); rep speed
       // is not instrumented yet so velocity stays 0 until wired. Card header
-      // carries a Demo badge (see BioMetricsCard) — no fake precision.
+      // drives the form pill + alignment % (no fake precision).
       publishBiometrics({
         alignment: isVisible ? Math.round(symScore) : 0,
         velocity:  0,
@@ -918,7 +933,7 @@ const CameraWorkout = () => {
               sheetOpen={pickerOpen}
               onSheetClose={() => setPickerOpen(false)}
             />
-            <DesktopWorkoutSelector workoutType={workoutType ?? undefined} onSelect={handleWorkoutChange} />
+            <DesktopWorkoutSelector workoutType={workoutType ?? undefined} onSelect={handleWorkoutChange} isRecording={isRecording} paused={paused} cameraOn={cameraOn} />
           </>
         )}
 
@@ -939,6 +954,22 @@ const CameraWorkout = () => {
           />
         ) : (
         <>
+        {/* Section 7: instructions before starting (and a way to reopen them). */}
+        {!isRecording && resolved && (
+          <div className="px-[clamp(16px,3vw,32px)] max-w-7xl 2xl:max-w-[1400px] mx-auto w-full pt-3 sm:pt-4">
+            {briefingHiddenFor !== workoutType ? (
+              <ExerciseBriefing
+                workout={resolved}
+                onHide={() => setBriefingHiddenFor(workoutType)}
+                onReady={() => { setBriefingHiddenFor(workoutType); handleStartStop(); }}
+              />
+            ) : (
+              <button type="button" className="cw-brief-reopen" onClick={() => setBriefingHiddenFor(null)}>
+                <Icon name="menu_book" /> How to do {resolved.label} &amp; camera setup
+              </button>
+            )}
+          </div>
+        )}
         {/* Camera feed — upper position, above the rep card */}
         <div className="px-[clamp(16px,3vw,32px)] max-w-7xl 2xl:max-w-[1400px] mx-auto w-full pt-3 sm:pt-4">
           <div className="relative">

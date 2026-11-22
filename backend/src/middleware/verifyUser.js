@@ -31,7 +31,6 @@ const verifyUser = async (req, res, next) => {
 
   // Enforces token_version (logout/password change revokes cookies) + soft-
   // deactivation gate (Module 1: a deactivated account loses all routes).
-  // Email confirmation is required even for previously issued sessions.
   try {
     const db = require('../config/db');
     const [rows] = await db.execute(
@@ -51,9 +50,8 @@ const verifyUser = async (req, res, next) => {
       clearSessionCookie(req, res);
       return res.status(401).json({ error: 'Session revoked. Please sign in again.', code: 'SESSION_REVOKED' });
     }
-    if (!u.is_verified) {
-      return res.status(403).json({ error: 'Verify your email to continue.', code: 'NEEDS_VERIFICATION' });
-    }
+    // Soft verification: unverified accounts keep full access. is_verified is
+    // exposed on req.user so individual routes can opt into stricter checks.
     req.user = {
       id: u.id,
       email: u.email,

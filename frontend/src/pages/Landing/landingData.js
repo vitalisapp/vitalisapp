@@ -79,7 +79,7 @@ export const PLANS = [
     title: "NO CARD NEEDED",
     desc: "Create an account in under a minute with just your name and email.",
     label: "Always",
-    price: "$0",
+    price: "Free",
     to: "/register",
   },
   {

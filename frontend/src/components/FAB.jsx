@@ -3,7 +3,7 @@ import LogActivityModal from './LogActivityModal.jsx';
 
 // FAB — thin wrapper around LogActivityModal (unified log entry, no duplication)
 // Previously had 136 lines of duplicate form; now delegates to the single source.
-const FAB = ({ onSave }) => {
+const FAB = ({ onSave = undefined }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (

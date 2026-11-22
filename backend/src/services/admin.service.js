@@ -123,7 +123,15 @@ async function getOverview() {
             (SELECT COUNT(DISTINCT visit_date) FROM landing_visits) AS landingDays
      FROM DUAL`,
   );
+  // Section 11: member engagement summary (fail-soft — never break Overview).
+  let engagement = null;
+  try {
+    engagement = await require("./adminMonitoring.service").getEngagement();
+  } catch (e) {
+    if (process.env.NODE_ENV !== "production") console.warn("[admin.getOverview] engagement skipped:", e.message);
+  }
   return {
+    engagement,
     users: {
       total: Number(u.total), active: Number(u.active), deactivated: Number(u.deactivated),
       admins: Number(u.admins), unverified: Number(u.unverified),
@@ -167,6 +175,15 @@ async function listUsers({ q, role, status, limit = 30, offset = 0 } = {}) {
     params,
   );
   const records = rows.map(verificationInfo);
+  // Section 10: color status per member for the Users table dot. Fail-soft —
+  // the list must still load if a monitoring source table is missing.
+  try {
+    const { getStatusMap } = require("./adminMonitoring.service");
+    const map = await getStatusMap(records.filter((r) => r.role !== "admin").map((r) => r.id));
+    for (const r of records) r.activity = map[r.id] || null;
+  } catch (e) {
+    if (process.env.NODE_ENV !== "production") console.warn("[admin.listUsers] activity status skipped:", e.message);
+  }
   const [[countRow]] = await db.query(
     `SELECT COUNT(*) AS total FROM users u ${whereSql}`,
     params,
@@ -246,7 +263,15 @@ async function getUserDetail(adminId, userId) {
      FROM user_sessions WHERE user_id = ? ORDER BY created_at DESC LIMIT 5`,
     [userId],
   );
+  // Section 10/11: activity status + plain-language interpretation (members only).
+  let activity = null;
+  try {
+    activity = await require("./adminMonitoring.service").getUserActivity(userId);
+  } catch (e) {
+    if (process.env.NODE_ENV !== "production") console.warn("[admin.getUserDetail] activity skipped:", e.message);
+  }
   return {
+    activity,
     user: {
       ...verificationInfo(user),
       is_verified: Boolean(user.is_verified),

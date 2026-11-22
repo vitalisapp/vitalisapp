@@ -121,16 +121,6 @@ export const useLogin = () => {
       if (!(await confirmSession())) return;
       routeAfterAuth(user);
     } catch (err) {
-      // Unverified accounts must verify before signing in
-      // (backend echoes the account email, but the submitted one is identical)
-      if (err?.status === 403 && err?.code === 'NEEDS_VERIFICATION') {
-        if (err?.verificationMethod === 'sms') {
-          navigate('/verify-phone', { state: { email: trimmedEmail } });
-          return;
-        }
-        navigate('/check-email', { state: { email: trimmedEmail } });
-        return;
-      }
       // Module 1 — soft-deactivated accounts: surface the reactivate panel.
       if (err?.status === 403 && err?.code === 'ACCOUNT_DEACTIVATED') {
         setDeactivated({ email: trimmedEmail, password });
@@ -169,12 +159,6 @@ export const useLogin = () => {
     setLoading(true);
     try {
       const data = await apiPost('/api/auth/google-login', { code: codeResponse.code }, { skipAuthRedirect: true });
-
-      if (data.needsVerification) {
-        setUser(null);
-        navigate('/check-email', { state: { email: data.email, devLink: data.devVerificationLink, deliveryToken: data.deliveryToken, deliveryStatus: data.deliveryStatus } });
-        return;
-      }
 
       const user = normalizeUser(data);
       if (!user.id) throw new Error('Google login response did not include a user ID.');

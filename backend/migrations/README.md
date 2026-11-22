@@ -10,7 +10,7 @@
 Each table file is self-contained (`SET FOREIGN_KEY_CHECKS=0/1` + single
 `CREATE TABLE IF NOT EXISTS`). Seeds use `INSERT IGNORE`.
 Runner `src/db/migrate.js` applies pending `*.sql` in lexicographic order,
-tracked in `_migrations`. Next migration: `048_<slug>.sql`
+tracked in `_migrations`. Next migration: `056_<slug>.sql`
 (`npm run db:create -- <slug>`).
 
 ## History
@@ -76,9 +76,17 @@ tracked in `_migrations`. Next migration: `048_<slug>.sql`
   `stress_level` / `recovery_level`, and `ai_insight_cache.sleep_suggestion`
   (dashboard AI insight is activity-only). Destructive; idempotent via
   `DROP TABLE IF EXISTS` + one column per ALTER (runner ignores 1091).
+- 2026-11-21: `054_free_plans.sql` — Section 9: VITALIS has no payments, so
+  every plan price is zeroed (the applied 030 seed ships 19.99 / 9.99 / 4.99;
+  per the rules it is not edited — 054 runs after it on fresh databases too).
+  `price` column kept (default 0.00) for a stable API shape.
 
 ## Rules
 
 - Table files use `CREATE TABLE IF NOT EXISTS`; new migrations use plain `ALTER`.
 - Seeds must use `INSERT IGNORE` (runner does NOT ignore `1062`).
 - Never renumber files or edit an applied file — add a new numbered file.
+- After adding a migration, run `npm run db:sql` to regenerate the repo-root
+  `database.sql` (full schema + seed snapshot for phpMyAdmin import). It builds
+  a throwaway database from all migrations, exports it, then drops it — your
+  real `DB_NAME` database is never touched and no user data is exported.

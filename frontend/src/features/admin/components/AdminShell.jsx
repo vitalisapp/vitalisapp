@@ -9,11 +9,13 @@ import AdminBottomNav from './AdminBottomNav.jsx';
 import '../admin.css';
 
 const ADMIN_NAV = [
-  { to: '/admin', label: 'Overview', icon: 'space_dashboard', end: true, blurb: 'Platform at a glance' },
-  { to: '/admin/users', label: 'Users', icon: 'group', blurb: 'Accounts & access' },
-  { to: '/admin/content', label: 'Content', icon: 'library_books', blurb: 'Plans & community' },
-  { to: '/admin/ai-usage', label: 'AI Usage', icon: 'monitoring', blurb: 'Calls & quotas' },
-  { to: '/admin/audit', label: 'Audit Trail', icon: 'history_edu', blurb: 'Every admin action' },
+  { to: '/admin', label: 'Overview', icon: 'space_dashboard', end: true, blurb: 'Platform at a glance', group: 'console' },
+  { to: '/admin/users', label: 'Users', icon: 'group', blurb: 'Accounts & access', group: 'console' },
+  { to: '/admin/monitoring', label: 'Monitoring', icon: 'monitor_heart', blurb: 'Activity status & flags', group: 'console' },
+  { to: '/admin/content', label: 'Content', icon: 'library_books', blurb: 'Plans & community', group: 'content' },
+  { to: '/admin/ai-usage', label: 'AI Usage', icon: 'monitoring', blurb: 'Calls & quotas', group: 'content' },
+  { to: '/admin/access', label: 'Access QR', icon: 'qr_code_2', blurb: 'Group invites & links', group: 'security' },
+  { to: '/admin/audit', label: 'Audit Trail', icon: 'history_edu', blurb: 'Every admin action', group: 'security' },
 ];
 
 /**

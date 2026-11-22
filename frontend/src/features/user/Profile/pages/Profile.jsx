@@ -1,5 +1,8 @@
 // pages/Profile.jsx — redesigned to match reference image (dark + green header + 3 stats + accordion)
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { MIN_AGE, MAX_AGE } from '../../../../lib/age.js';
+import { classifyBmi } from '../../../../lib/bmi.js';
+import BmiInsight from '../../../../components/health/BmiInsight.jsx';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { BottomNav } from '../../../../components/index.js';
@@ -11,9 +14,10 @@ import Toast from '../components/Toast.jsx';
 import Modal from '../../../../components/ui/Modal.jsx';
 import Button from '../../../../components/ui/Button.jsx';
 import LogoutConfirmDialog from '../../../../components/ui/LogoutConfirmDialog.jsx';
+import ConfirmDialog from '../../../../components/ui/ConfirmDialog.jsx';
+import { LegalCenterModal } from '../../Auth/Register/components/LegalModals.jsx';
 import { useAuth } from '../../../../hooks/useAuth.jsx';
-import { DEFAULT_AVATARS } from '../utils/avatar.js';
-import { resolveAvatar, avatarSurface, getInitials, capitalizeName } from '../../../../lib/avatar.js';
+import { resolveAvatar, capitalizeName } from '../../../../lib/avatar.js';
 import { apiFetch } from '../../../../lib/apiClient.js';
 import { goalLabel, activityLabel, GOAL_TYPES } from '../../Onboarding/constants/goals.js';
 import '../profile.css';
@@ -33,12 +37,10 @@ const computeBMI = (heightCm, weightKg) => {
   const m = h / 100;
   return +(w / (m * m)).toFixed(1);
 };
+// BMI class comes from the shared WHO table (lib/bmi.js).
 const bmiCategory = (bmi) => {
-  if (bmi == null) return { label: '—', color: 'var(--text-disabled)' };
-  if (bmi < 18.5) return { label: 'Underweight', color: '#60a5fa' };
-  if (bmi < 25) return { label: 'Normal', color: 'var(--accent)' };
-  if (bmi < 30) return { label: 'Overweight', color: '#f59e0b' };
-  return { label: 'Obese', color: '#f87171' };
+  const c = classifyBmi(bmi);
+  return c ? { label: c.label, color: c.color } : { label: '—', color: 'var(--text-disabled)' };
 };
 const calcBMR = (weight, height, age, gender) => {
   if (!weight || !height || !age) return null;
@@ -46,7 +48,7 @@ const calcBMR = (weight, height, age, gender) => {
   if (gender === 'female') return Math.round(10 * w + 6.25 * h - 5 * a - 161);
   return Math.round(10 * w + 6.25 * h - 5 * a + 5);
 };
-const activityFactors = { Sedentary: 1.2, 'Lightly Active': 1.375, 'Moderately Active': 1.55, 'Very Active': 1.725, 'Extra Active': 1.9 };
+const activityFactors = { Sedentary: 1.2, 'Lightly Active': 1.375, 'Moderately Active': 1.55, 'Very Active': 1.725, 'Highly Active': 1.9 };
 
 // Humanize raw DB enums for display: "12_DAYS" → "12 days", "GRADUAL" → "Gradual".
 const humanize = (v) => {
@@ -57,7 +59,7 @@ const humanize = (v) => {
 
 // Goal snapshot card — the single home for onboarding goal details.
 // Rendered inside the "My Goals" section (not duplicated in Body Metrics).
-const GoalSnapshotCard = ({ onboarding, onChangeGoal, onSetupPlan }) => {
+const GoalSnapshotCard = ({ onboarding = undefined, onChangeGoal = undefined, onSetupPlan = undefined }) => {
   if (!onboarding) {
     return (
       <div className="text-center py-3 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] space-y-2">
@@ -80,6 +82,7 @@ const GoalSnapshotCard = ({ onboarding, onChangeGoal, onSetupPlan }) => {
           <p className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Activity</p>
           <p className="text-[length:var(--fs-13)] font-bold text-[var(--text-primary)] mt-1">{activityLabel(onboarding.activityLevel)}</p>
           {onboarding.pace && <p className="text-[length:var(--fs-11)] text-[var(--text-muted)] mt-0.5">{humanize(onboarding.pace)}</p>}
+          {onboarding.sleepHours != null && <p className="text-[length:var(--fs-11)] text-[var(--text-muted)] mt-0.5 tabular-nums">Sleep: ~{Number(onboarding.sleepHours)} h/night</p>}
         </div>
       </div>
       {onboarding.dailyKcal != null && (
@@ -97,7 +100,7 @@ const GoalSnapshotCard = ({ onboarding, onChangeGoal, onSetupPlan }) => {
   );
 };
 
-const BodyMetricsPanel = ({ USER_ID, initialWeight, initialHeight, onboarding, showToast, onMetricsSaved = undefined, onIdentitySaved = undefined, editSignal }) => {
+const BodyMetricsPanel = ({ USER_ID = undefined, initialWeight = undefined, initialHeight = undefined, onboarding = undefined, showToast = undefined, onMetricsSaved = undefined, onIdentitySaved = undefined, editSignal = undefined }) => {
   // Identity seed — age/gender as re-derived from the active goal (dob/sex).
   // Saved values are remembered so Save only persists REAL edits.
   const seedRef = useRef({ age: '', gender: '' });
@@ -159,6 +162,15 @@ const BodyMetricsPanel = ({ USER_ID, initialWeight, initialHeight, onboarding, s
 
   const handleSave = async () => {
     if (!weight || !height) { showToast?.('Enter weight and height', 'error'); return; }
+    if (age !== '' && age != null) {
+      const a = Number(age);
+      if (!Number.isInteger(a)) { showToast?.('Enter your age as a whole number of years.', 'error'); return; }
+      if (a < MIN_AGE) {
+        showToast?.(`Vitalis is for users aged ${MIN_AGE} and up, because its calorie targets and workout plans are designed for teens and adults. If you typed the wrong age, please correct it.`, 'error');
+        return;
+      }
+      if (a > MAX_AGE) { showToast?.(`An age of ${a} looks like a typo. Please check it.`, 'error'); return; }
+    }
     setIsSaving(true);
     let identityFailed = false;
     try {
@@ -217,7 +229,7 @@ const BodyMetricsPanel = ({ USER_ID, initialWeight, initialHeight, onboarding, s
         <div className="pf-metric-form">
           <div className="min-w-0"><label htmlFor="bm-weight" className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Weight (kg)</label><input id="bm-weight" type="number" min="30" max="300" step="0.1" value={weight} onChange={e=>setWeight(e.target.value)} placeholder="55.0" className="mt-1 w-full h-12 min-h-[44px] rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] px-3 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" /></div>
           <div className="min-w-0"><label htmlFor="bm-height" className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Height (cm)</label><input id="bm-height" type="number" min="50" max="300" step="0.5" value={height} onChange={e=>setHeight(e.target.value)} placeholder="185.0" className="mt-1 w-full h-12 min-h-[44px] rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] px-3 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" /></div>
-          <div className="min-w-0"><label htmlFor="bm-age" className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Age</label><input id="bm-age" type="number" min="5" max="120" value={age} onChange={e=>setAge(e.target.value)} placeholder="23" className="mt-1 w-full h-12 min-h-[44px] rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] px-3 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" /></div>
+          <div className="min-w-0"><label htmlFor="bm-age" className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Age</label><input id="bm-age" type="number" min={MIN_AGE} max={MAX_AGE} value={age} onChange={e=>setAge(e.target.value)} placeholder="23" className="mt-1 w-full h-12 min-h-[44px] rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] px-3 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" /></div>
           <div className="min-w-0"><label htmlFor="bm-gender" className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Gender</label><select id="bm-gender" value={gender} onChange={e=>setGender(e.target.value)} className="mt-1 w-full h-12 min-h-[44px] rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] px-3 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] text-[var(--text-primary)] outline-none"><option value="male">male</option><option value="female">female</option><option value="other">other</option></select></div>
           <div className="pf-form-span min-w-0"><label htmlFor="bm-activity" className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Activity Level</label><select id="bm-activity" value={activity} onChange={e=>setActivity(e.target.value)} className="mt-1 w-full h-12 min-h-[44px] rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] px-3 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] text-[var(--text-primary)] outline-none">{Object.keys(activityFactors).map(k=><option key={k} value={k}>{k}</option>)}</select></div>
           <div className="pf-metric-actions">
@@ -232,6 +244,7 @@ const BodyMetricsPanel = ({ USER_ID, initialWeight, initialHeight, onboarding, s
             <div className="pf-metric-tile"><p className="pf-metric-label">Height</p><p className="pf-metric-value">{parseFloat(height).toFixed(1)} <span>cm</span></p></div>
             <div className="pf-metric-tile is-accent"><p className="pf-metric-label">BMI</p><p className="pf-metric-value" style={{ color: bmiInfo.color }}>{bmi}</p><p className="pf-metric-note" style={{ color: bmiInfo.color }}>{bmiInfo.label}</p></div>
           </div>
+          <BmiInsight bmi={bmi} heightCm={height} weightKg={weight} className="mt-3" />
           <div className="pf-metric-divider" />
           <button onClick={()=>setExpanded(v=>!v)} className={`pf-metrics-toggle ${expanded ? 'is-expanded' : ''}`} aria-expanded={expanded}>View all metrics <span className="material-symbols-outlined">expand_more</span></button>
           {expanded && (
@@ -292,14 +305,14 @@ const BodyMetricsPanel = ({ USER_ID, initialWeight, initialHeight, onboarding, s
 
 // Single eyebrow recipe for every section header on this page:
 // 11px semibold uppercase, relaxed tracking — readable at small sizes.
-const Eyebrow = ({ children, className = '' }) => (
+const Eyebrow = ({ children = undefined, className = '' }) => (
   <p className={`text-[length:var(--fs-11)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] ${className}`}>{children}</p>
 );
 
 const GOAL_LABEL_SET = new Set(GOAL_TYPES.map((g) => g.label));
 const isGoalLikeBio = (v) => GOAL_LABEL_SET.has(String(v || '').trim());
 
-const GoalPicker = ({ value, disabled, onPick }) => {
+const GoalPicker = ({ value = undefined, disabled = undefined, onPick = undefined }) => {
   const [open, setOpen] = useState(false);
   const current = GOAL_TYPES.find((g) => g.key === value) || null;
   const isOpen = open && !disabled;
@@ -377,7 +390,7 @@ const GoalPicker = ({ value, disabled, onPick }) => {
   );
 };
 
-const SectionRow = ({ icon, title, subtitle, expanded = undefined, onClick, danger = undefined, rightIcon = undefined, attention = undefined }) => (
+const SectionRow = ({ icon = undefined, title = undefined, subtitle = undefined, expanded = undefined, onClick = undefined, danger = undefined, rightIcon = undefined, attention = undefined }) => (
   <button
     type="button"
     onClick={onClick}
@@ -400,7 +413,7 @@ const SectionRow = ({ icon, title, subtitle, expanded = undefined, onClick, dang
   </button>
 );
 
-const RailFact = ({ icon, label, value }) => (
+const RailFact = ({ icon = undefined, label = undefined, value = undefined }) => (
   <div className="pf-fact">
     <span className="pf-fact-icon">
       <span className="material-symbols-outlined">{icon}</span>
@@ -411,6 +424,28 @@ const RailFact = ({ icon, label, value }) => (
     </span>
   </div>
 );
+
+// Device session helpers — the API stores one row per device (device type +
+// browser + OS), refreshed on every login instead of duplicated.
+const sessionDeviceLabel = (s) => {
+  const label = [s.browser, s.os].filter((v) => v && v !== 'Unknown').join(' on ');
+  return label || 'Unknown device';
+};
+
+const sessionDeviceIcon = (s) => {
+  const type = String(s.device_type || '').toLowerCase();
+  return type === 'mobile' || type === 'tablet' ? 'smartphone' : 'computer';
+};
+
+const sessionLastActive = (value) => {
+  if (!value) return 'recently';
+  const d = new Date(String(value).replace(' ', 'T'));
+  if (Number.isNaN(d.getTime())) return 'recently';
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const sessionLocation = (s) =>
+  [s.city, s.country].filter((v) => v && v !== 'Unknown').join(', ');
 
 const Profile = ({ embedded = false }) => {
   const navigate = useNavigate();
@@ -423,8 +458,8 @@ const Profile = ({ embedded = false }) => {
     formData, onboarding, setOnboarding, avatarSrc,
     dob, setDob, sex, setSex,
     pendingIdentity, setPendingIdentity,
-    setToastVisible, setAvatarSrc, setPendingAvatar, setIsEditing,
-    handleInputChange, handleDiscard, confirmDiscard, cancelDiscard, showDiscardConfirm, handleSave, handleLogout,
+    setToastVisible, setIsEditing,
+    handleInputChange, handleDiscard, confirmDiscard, cancelDiscard, showDiscardConfirm, handleSave, saveAvatar, handleLogout,
     handleRevoke,
     showToast,
     phoneVerified,
@@ -432,13 +467,15 @@ const Profile = ({ embedded = false }) => {
 
   const {
     uploadPreview,
+    draftAvatar,
     fileInputRef,
-    handleSelectPreset,
     handleFileChange,
     handleRemoveAvatar,
-  } = useAvatar({ setAvatarSrc, setPendingAvatar });
+    clearDraft,
+  } = useAvatar();
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [avatarConfirmOpen, setAvatarConfirmOpen] = useState(false);
   const [openSection, setOpenSection] = useState(null);
 
   // Engagement streak (workouts + meals) — same number the Dashboard shows,
@@ -460,6 +497,7 @@ const Profile = ({ embedded = false }) => {
   const [changeGoalOpen, setChangeGoalOpen] = useState(false);
   // Module 1 — soft account deactivation modal (Security → Danger Zone).
   const [deactivateOpen, setDeactivateOpen] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const { logout } = useAuth();
   const [pendingGoalType, setPendingGoalType] = useState(null);
@@ -486,6 +524,21 @@ const Profile = ({ embedded = false }) => {
 
   const handleMasterDone = () => {
     setIsMasterEditing(false);
+  };
+
+  const handleConfirmAvatar = async () => {
+    if (!draftAvatar) return;
+    const nextAvatar = draftAvatar.type === 'upload' ? draftAvatar.value : null;
+    const saved = await saveAvatar(nextAvatar);
+    if (!saved) return;
+    clearDraft();
+    setAvatarConfirmOpen(false);
+    setPickerOpen(false);
+  };
+
+  const handleCancelAvatarDraft = () => {
+    clearDraft();
+    setAvatarConfirmOpen(false);
   };
 
   if (loading || isLoading) {
@@ -640,7 +693,7 @@ const Profile = ({ embedded = false }) => {
                   <button
                     type="button"
                     onClick={() => setPickerOpen(v => !v)}
-                    aria-label={pickerOpen ? 'Close avatar picker' : 'Change avatar'}
+                    aria-label={pickerOpen ? 'Close photo options' : 'Change photo'}
                     aria-expanded={pickerOpen}
                     className="pf-avatar-edit"
                   >
@@ -658,47 +711,31 @@ const Profile = ({ embedded = false }) => {
               {pickerOpen && (
                 <div className="pf-avatar-picker">
                   <div className="pf-picker-head">
-                    <Eyebrow>Choose avatar</Eyebrow>
-                    <button type="button" onClick={() => setPickerOpen(false)} className="pf-picker-close" aria-label="Close avatar choices">
+                    <Eyebrow>Profile photo</Eyebrow>
+                    <button type="button" onClick={() => setPickerOpen(false)} className="pf-picker-close" aria-label="Close photo options">
                       <span className="material-symbols-outlined" aria-hidden="true">close</span>
                     </button>
                   </div>
-                  <div className="pf-avatar-presets">
-                    {DEFAULT_AVATARS.map(av => {
-                      const isActive = avatarSrc === av.id;
-                      const surf = avatarSurface(av.seed);
-                      return (
-                        <button
-                          key={av.id}
-                          type="button"
-                          onClick={() => { handleSelectPreset(av.id); setIsEditing(true); }}
-                          className="pf-avatar-preset"
-                          style={{ background: surf.background, color: surf.color }}
-                          aria-label={`Use ${av.label} avatar`}
-                          aria-pressed={isActive}
-                        >
-                          {getInitials(av.label)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { handleFileChange(e); setIsEditing(true); }} />
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="pf-avatar-upload">Upload custom photo</button>
                   {uploadPreview && (
                     <div className="pf-upload-preview">
-                      <img src={uploadPreview} alt="Avatar preview" />
-                      <span>Custom photo ready</span>
+                      <img src={uploadPreview} alt="New profile photo preview" />
+                      <span>New photo ready — not saved yet</span>
                     </div>
                   )}
-                  {avatarSrc && (
-                    <button type="button" onClick={() => { handleRemoveAvatar(); setIsEditing(true); }} className="pf-avatar-remove">
+                  {draftAvatar?.type === 'remove' && (
+                    <p className="pf-avatar-draft-note">Your current photo will be removed when you save.</p>
+                  )}
+                  {avatar.kind === 'image' && draftAvatar?.type !== 'remove' && (
+                    <button type="button" onClick={handleRemoveAvatar} className="pf-avatar-remove">
                       Remove avatar
                     </button>
                   )}
-                  {isDirty && (
+                  {draftAvatar && (
                     <div className="pf-picker-actions">
-                      <button type="button" onClick={handleDiscard} className="pf-picker-discard">Discard</button>
-                      <button type="button" onClick={handleSave} disabled={isSaving} className="pf-picker-save">{isSaving ? 'Saving…' : 'Save'}</button>
+                      <button type="button" onClick={handleCancelAvatarDraft} className="pf-picker-discard">Cancel</button>
+                      <button type="button" onClick={() => setAvatarConfirmOpen(true)} className="pf-picker-save" disabled={isSaving}>Save photo</button>
                     </div>
                   )}
                 </div>
@@ -924,22 +961,31 @@ const Profile = ({ embedded = false }) => {
                       <p className="pf-sessions-empty">No active sessions found.</p>
                     ) : (
                       <div className="pf-sessions">
-                        {sessions.map(s => (
-                          <div key={s.id} className={`pf-session ${s.is_current ? 'is-current' : ''}`}>
-                            <span className="pf-session-icon" aria-hidden="true">
-                              <span className="material-symbols-outlined">{s.is_current ? 'smartphone' : 'computer'}</span>
-                            </span>
-                            <div className="pf-session-copy">
-                              <p className="pf-session-device">{[s.browser, s.os].filter(Boolean).join(' on ') || 'Unknown device'}</p>
-                              <p className="pf-session-meta">
-                                {[s.city, s.country].filter(Boolean).join(', ') || 'Unknown location'}{s.is_current ? ' · Active now' : ''}
-                              </p>
+                        {sessions.map(s => {
+                          const location = sessionLocation(s);
+                          return (
+                            <div key={s.id} className={`pf-session ${s.is_current ? 'is-current' : ''}`}>
+                              <span className="pf-session-icon" aria-hidden="true">
+                                <span className="material-symbols-outlined">{sessionDeviceIcon(s)}</span>
+                              </span>
+                              <div className="pf-session-copy">
+                                <p className="pf-session-device">
+                                  <span className={`pf-session-dot ${s.is_current ? 'is-active' : ''}`} aria-hidden="true" />
+                                  <span className="pf-session-device-name">{sessionDeviceLabel(s)}</span>
+                                  {/* is_current is a MySQL tinyint (0/1): coerce, or React renders "0". */}
+                                  {Boolean(s.is_current) && <span className="pf-session-active">Active</span>}
+                                </p>
+                                <p className="pf-session-meta">
+                                  {s.is_current ? 'Active now' : `Last active ${sessionLastActive(s.last_active)}`}
+                                  {location ? ` · ${location}` : ''}
+                                </p>
+                              </div>
+                              {!s.is_current && (
+                                <button type="button" onClick={() => handleRevoke(s.id)} className="pf-session-revoke">Revoke</button>
+                              )}
                             </div>
-                            {s.is_current
-                              ? <span className="pf-session-badge">Current</span>
-                              : <button type="button" onClick={() => handleRevoke(s.id)} className="pf-session-revoke">Revoke</button>}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -970,7 +1016,7 @@ const Profile = ({ embedded = false }) => {
                       ? `Accepted ${new Date(user.acceptedTermsAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}${user?.acceptedTermsVersion ? ` · v${user.acceptedTermsVersion}` : ''}`
                       : 'Consent not recorded'
                   }
-                  onClick={() => showToast('Consent recorded when you registered — Terms & Privacy stay viewable under the Register page.', 'info')}
+                  onClick={() => setLegalOpen(true)}
                 />
               </div>
               <div className="pf-list-item">
@@ -989,6 +1035,13 @@ const Profile = ({ embedded = false }) => {
           </section>
         </div>
       </div>
+
+      <LegalCenterModal
+        isOpen={legalOpen}
+        onClose={() => setLegalOpen(false)}
+        acceptedAt={user?.acceptedTermsAt}
+        acceptedVersion={user?.acceptedTermsVersion}
+      />
 
       <Suspense fallback={null}>
         <LogoutConfirmDialog
@@ -1051,6 +1104,34 @@ const Profile = ({ embedded = false }) => {
           />
         )}
       </Suspense>
+      <ConfirmDialog
+        isOpen={avatarConfirmOpen}
+        onClose={handleCancelAvatarDraft}
+        onConfirm={handleConfirmAvatar}
+        title={draftAvatar?.type === 'remove' ? 'Remove profile photo?' : 'Change profile photo?'}
+        message={draftAvatar?.type === 'remove'
+          ? 'Are you sure you want to remove your profile avatar? Your initials will be shown instead.'
+          : 'Are you sure you want to change your profile avatar to this?'}
+        confirmLabel="OK"
+        cancelLabel="Cancel"
+        tone={draftAvatar?.type === 'remove' ? 'danger' : 'primary'}
+        icon={draftAvatar?.type === 'remove' ? 'delete' : 'photo_camera'}
+        busy={isSaving}
+      >
+        <div className="pf-avatar-confirm">
+          <div className="pf-avatar-confirm-photo">
+            {draftAvatar?.type === 'upload'
+              ? <img src={draftAvatar.value} alt="New profile avatar preview" />
+              : <span style={{ background: avatar.surface.background, color: avatar.surface.color }}>{avatar.initials}</span>}
+          </div>
+          <p className="pf-avatar-confirm-note">
+            {draftAvatar?.type === 'remove'
+              ? 'Your initials will replace the current photo.'
+              : 'This will be your new profile photo.'}
+          </p>
+        </div>
+      </ConfirmDialog>
+
       <Modal
         isOpen={!!showDiscardConfirm}
         onClose={cancelDiscard}

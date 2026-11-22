@@ -5,7 +5,7 @@ import Icon from '../../../../components/Icon.jsx';
 
 // Explicit "back to me": auto-follow pauses once the user pans the map, so
 // this is the reliable way to snap the camera back to the current GPS fix.
-const RecenterButton = ({ userLocation, onRecenter }) => {
+const RecenterButton = ({ userLocation = undefined, onRecenter = undefined }) => {
   const map = useMap();
   const btnRef = useRef(null);
   const disabled = !userLocation;

@@ -17,7 +17,7 @@ const POSES = [
 
 const POSE_EMOJI = { front: '🧍', side: '🚶', back: '🚶‍♀️' };
 
-function RatingStars({ rating }) {
+function RatingStars({ rating = undefined }) {
   if (!rating) return null;
   return (
     <span className="text-[length:var(--fs-10)] font-black text-[var(--accent)] tabular-nums" title="Gemini photo-usability rating (1–5)">
@@ -26,7 +26,7 @@ function RatingStars({ rating }) {
   );
 }
 
-export default function ProgressPhotosTab({ userId }) {
+export default function ProgressPhotosTab({ userId = undefined }) {
   const [photos, setPhotos]     = useState(null);
   const [error,     setError]   = useState(null);
   const [pose,      setPose]    = useState('front');

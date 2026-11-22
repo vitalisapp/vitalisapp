@@ -5,6 +5,7 @@ import { apiPost } from '../../../../../lib/apiClient.js';
 import { GOOGLE_CLIENT_ID } from '../../../../../app/config/env.js';
 import { isValidPhMobile } from '../../../../../lib/phone.js';
 import { useAuth } from '../../../../../hooks/useAuth.jsx';
+import { getAccessCode } from './useAccessInvite.js';
 
 export const useRegister = () => {
   const [loading, setLoading] = useState(false);
@@ -47,7 +48,7 @@ export const useRegister = () => {
     acceptedTermsVersion: data.acceptedTermsVersion ?? null,
   });
 
-  // Used by verified Google signups.
+  // New accounts land on onboarding (goal setup), then the dashboard.
   const routeAfterRegister = (user) => {
     const pending = getSafeRedirect();
     if (pending && pending.startsWith('/') && !pending.startsWith('//')) {
@@ -101,36 +102,21 @@ export const useRegister = () => {
         agreed: true,
         verificationMethod,
         ...(verificationMethod === 'sms' ? { phone: String(formData.phone || '').trim() } : {}),
+        ...(getAccessCode() ? { accessCode: getAccessCode() } : {}),
       }, { skipAuthRedirect: true });
 
-      // Backend NODE_ENV=development skips verification and issues a session
-      // right away (needsVerification:false) — go straight to onboarding.
-      if (data.needsVerification === false && data.id) {
-        const user = normalizeUser(data);
-        setUser(user);
-        if (!(await refreshAuth())) {
-          setError(COOKIE_BLOCKED_MSG);
-          return;
-        }
-        routeAfterRegister(user);
+      // Modern signup: the backend issues a session with every new account, so
+      // the user goes straight into the app — no detour through /login.
+      // Email/phone confirmation is a soft follow-up (welcome email link,
+      // texted code, and the in-app VerifyEmailBanner).
+      if (!data.id) throw new Error('Registration response did not include a user ID.');
+      const user = normalizeUser(data);
+      setUser(user);
+      if (!(await refreshAuth())) {
+        setError(COOKIE_BLOCKED_MSG);
         return;
       }
-
-      setUser(null);
-      if (data.verificationMethod === 'sms') {
-        navigate('/verify-phone', {
-          state: {
-            email,
-            phoneMasked: data.phoneMasked,
-            retryAfter: data.retryAfter,
-            expiresIn: data.expiresIn,
-            deliveryStatus: data.deliveryStatus,
-            smsMocked: data.smsMocked,
-          },
-        });
-        return;
-      }
-      navigate('/check-email', { state: { email, devLink: data.devVerificationLink, deliveryToken: data.deliveryToken, deliveryStatus: data.deliveryStatus } });
+      routeAfterRegister(user);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -138,18 +124,17 @@ export const useRegister = () => {
     }
   };
 
-  // Google sign-up creates a pending account; app email verification is required
-  // before a subsequent Google sign-in can establish a session.
+  // Google sign-up: Google already verified the address, so the account is
+  // created verified and signed in on the spot.
   const handleGoogleSuccess = async (codeResponse) => {
     setError('');
     setLoading(true);
     try {
-      const data = await apiPost('/api/auth/google-login', { code: codeResponse.code }, { skipAuthRedirect: true });
-      if (data.needsVerification) {
-        setUser(null);
-        navigate('/check-email', { state: { email: data.email, devLink: data.devVerificationLink, deliveryToken: data.deliveryToken, deliveryStatus: data.deliveryStatus } });
-        return;
-      }
+      const accessCode = getAccessCode();
+      const data = await apiPost('/api/auth/google-login', {
+        code: codeResponse.code,
+        ...(accessCode ? { accessCode } : {}),
+      }, { skipAuthRedirect: true });
       const user = normalizeUser(data);
       if (!user.id) throw new Error('Google response did not include a user ID.');
       setUser(user);

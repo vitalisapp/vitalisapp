@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
  * Six-digit OTP input shared by the Profile forgot-password flow.
  * Keeps one accessible name per digit and supports paste/backspace movement.
  */
-export default function OtpInput({ value, onChange, labelledBy = undefined }) {
+export default function OtpInput({ value = undefined, onChange = undefined, labelledBy = undefined }) {
   const refs = useRef([]);
   const digits = String(value || '').replace(/\D/g, '').slice(0, 6).split('');
   while (digits.length < 6) digits.push('');

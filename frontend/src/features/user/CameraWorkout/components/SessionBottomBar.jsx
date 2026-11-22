@@ -5,7 +5,7 @@ import StartStopButton from "./StartStopButton.jsx";
 // full-width primary CTA. Pause freezes timer + rep counting; the video
 // and skeleton preview keep running.
 export default function SessionBottomBar({
-  isRecording, paused, cameraOn, onPauseToggle, onStartStop,
+  isRecording = undefined, paused = undefined, cameraOn = undefined, onPauseToggle = undefined, onStartStop = undefined,
 }) {
   return (
     <div className="flex items-center gap-3">

@@ -30,6 +30,7 @@ import {
 } from '../components/DashboardWidgets.jsx';
 import WeekCalendarCard from '../components/WeekCalendarCard.jsx';
 import StreakJourney from '../components/StreakJourney.jsx';
+import CoachCard from '../components/CoachCard.jsx';
 import { clampPct, minutesFromSeconds, workoutLabel, isToday } from '../lib/dashboardFormat.js';
 import '../dashboard.css';
 
@@ -486,6 +487,13 @@ const Dashboard = () => {
               eyebrow={isPastView ? 'Reviewing' : 'Today'}
               readOnly={isPastView}
             />
+
+            {!isPastView && (
+              <CoachCard
+                onOpenPlans={() => navigate('/dashboard/plans?mine=1')}
+                onStartWorkout={(planId, day, fit) => navigate(`/dashboard/plans?planId=${planId}&startDay=${day}${fit ? `&fit=${fit}` : ''}`)}
+              />
+            )}
 
             <StreakJourney
               userId={USER_ID}

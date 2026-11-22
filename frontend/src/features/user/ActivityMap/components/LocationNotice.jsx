@@ -21,7 +21,7 @@ const COPY = {
   },
 };
 
-const LocationNotice = ({ status, error, onRetry }) => {
+const LocationNotice = ({ status = undefined, error = undefined, onRetry = undefined }) => {
   const copy = COPY[status];
   if (!copy) return null;
 

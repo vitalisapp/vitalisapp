@@ -2,6 +2,7 @@
 // Module 5: pause/resume, structured set logging (workout_sets),
 // and post-workout self-reported feedback (difficulty_rating / session_notes).
 const db = require('../config/db');
+const tasks = require('../utils/taskNotifications');
 const { AppError } = require('../utils/errors');
 
 const VALID_END_STATUS = ['completed', 'cancelled'];
@@ -211,6 +212,9 @@ async function endWorkout(userId, logId, status, reps, sets) {
     );
     await conn.query('COMMIT');
     if (!updated) return { outcome: 'not_found' };
+    if (updated.status === 'completed') {
+      tasks.notifyTask(userId, { category: 'TRAINING', message: tasks.workoutMessage(updated) });
+    }
     return { outcome: 'ok', log: updated };
   } catch (err) {
     try { await conn.query('ROLLBACK'); } catch { /* noop */ }
@@ -320,6 +324,7 @@ async function createManualWorkout(userId, { workout_type, duration_minutes, rep
       [logId, userId]
     );
     await conn.query('COMMIT');
+    if (log) tasks.notifyTask(userId, { category: 'TRAINING', message: tasks.workoutMessage(log, { manual: true }) });
     return log;
   } catch (err) {
     try { await conn.query('ROLLBACK'); } catch { /* noop */ }
@@ -347,19 +352,9 @@ async function getWorkoutDetail(userId, logId) {
   return { ...log, sets };
 }
 
-/** List sessions. When with_summary, attach a per-exercise set rollup
- *  (best weight, total reps, set count) — powers the Log page history. */
-async function listWorkouts(userId, { with_sets = false } = {}) {
-  const [logs] = await db.execute(
-    `SELECT id, workout_type, rep_count, start_time, end_time, status,
-               duration_seconds, paused_seconds, difficulty_rating, session_notes
-          FROM workout_logs
-         WHERE user_id = ?
-         ORDER BY start_time DESC LIMIT 50`,
-    [userId]
-  );
-  if (!with_sets || logs.length === 0) return logs;
-
+/** Attach a per-log set rollup (set count, volume, best weight, exercises). */
+async function attachSetSummary(userId, logs) {
+  if (logs.length === 0) return logs;
   const ids = logs.map((l) => l.id);
   const placeholders = ids.map(() => '?').join(',');
   const [rows] = await db.execute(
@@ -388,7 +383,110 @@ async function listWorkouts(userId, { with_sets = false } = {}) {
   });
 }
 
+const LOG_COLUMNS = `id, workout_type, rep_count, start_time, end_time, status,
+               duration_seconds, paused_seconds, difficulty_rating, session_notes`;
+
+/** Legacy list: latest 50 sessions (Dashboard, Plans). Unchanged contract. */
+async function listWorkouts(userId, { with_sets = false } = {}) {
+  const [logs] = await db.execute(
+    `SELECT ${LOG_COLUMNS}
+          FROM workout_logs
+         WHERE user_id = ?
+         ORDER BY start_time DESC LIMIT 50`,
+    [userId]
+  );
+  return with_sets ? attachSetSummary(userId, logs) : logs;
+}
+
+// ── Paginated history (Progress page) ────────────────────────────────
+const PAGE_LIMIT_DEFAULT = 10;
+const PAGE_LIMIT_MAX = 50;
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_MONTH = /^\d{4}-\d{2}$/;
+
+/** Parse + clamp untrusted query params. Invalid values fall back to safe
+ *  defaults (never 500): page>=1, 1<=limit<=50, date must be a real day. */
+function parseHistoryQuery(query = {}) {
+  const page = Math.max(1, Number.parseInt(query.page, 10) || 1);
+  const rawLimit = Number.parseInt(query.limit, 10);
+  const limit = Math.min(PAGE_LIMIT_MAX, Math.max(1, Number.isFinite(rawLimit) ? rawLimit : PAGE_LIMIT_DEFAULT));
+  let date = null;
+  if (typeof query.date === 'string' && ISO_DAY.test(query.date)) {
+    const d = new Date(`${query.date}T00:00:00Z`);
+    if (!Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === query.date) date = query.date;
+  }
+  return { page, limit, date };
+}
+
+/** One page of sessions + totals for the whole filter (all pages).
+ *  page beyond the end is clamped to the last page. */
+async function listWorkoutsPage(userId, { page = 1, limit = PAGE_LIMIT_DEFAULT, date = null, with_sets = false } = {}) {
+  const where = ['user_id = ?'];
+  const params = [userId];
+  if (date) {
+    // Range (not DATE(start_time)=?) so the user_id/start_time index is used.
+    where.push('start_time >= ? AND start_time < DATE_ADD(?, INTERVAL 1 DAY)');
+    params.push(`${date} 00:00:00`, `${date} 00:00:00`);
+  }
+  const whereSql = where.join(' AND ');
+
+  const [[agg]] = await db.query(
+    `SELECT COUNT(*) AS total,
+            COALESCE(SUM(rep_count), 0) AS reps,
+            COALESCE(SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END), 0) AS completed
+       FROM workout_logs WHERE ${whereSql}`,
+    params
+  );
+  const total = Number(agg?.total) || 0;
+  const pageCount = Math.max(1, Math.ceil(total / limit));
+  const current = Math.min(page, pageCount);
+  const offset = (current - 1) * limit;
+
+  // db.query (not execute): some MySQL versions reject prepared LIMIT/OFFSET.
+  const [rows] = await db.query(
+    `SELECT ${LOG_COLUMNS}
+       FROM workout_logs
+      WHERE ${whereSql}
+      ORDER BY start_time DESC, id DESC
+      LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+  const logs = with_sets ? await attachSetSummary(userId, rows) : rows;
+
+  return {
+    logs,
+    page: current,
+    limit,
+    total,
+    pageCount,
+    date,
+    stats: { sessions: total, reps: Number(agg?.reps) || 0, completed: Number(agg?.completed) || 0 },
+  };
+}
+
+/** Days in a month that have at least one session (calendar dots). */
+async function listWorkoutDays(userId, month) {
+  const now = new Date();
+  const key = typeof month === 'string' && ISO_MONTH.test(month)
+    ? month
+    : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const [rows] = await db.query(
+    `SELECT DISTINCT DATE_FORMAT(start_time, '%Y-%m-%d') AS day
+       FROM workout_logs
+      WHERE user_id = ?
+        AND start_time >= ? AND start_time < DATE_ADD(?, INTERVAL 1 MONTH)
+      ORDER BY day ASC`,
+    [userId, `${key}-01 00:00:00`, `${key}-01 00:00:00`]
+  );
+  return { month: key, days: rows.map((r) => r.day) };
+}
+
 module.exports = {
+  PAGE_LIMIT_DEFAULT,
+  PAGE_LIMIT_MAX,
+  parseHistoryQuery,
+  listWorkoutsPage,
+  listWorkoutDays,
   VALID_END_STATUS,
   MAX_SETS,
   MAX_EXERCISES_PER_LOG,

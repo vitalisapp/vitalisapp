@@ -1,35 +1,60 @@
+import { useEffect, useRef, useState } from 'react';
 import Icon from '../../../../components/Icon.jsx';
-import { avatarGradient } from '../../../../lib/avatar.js';
 import { TABS } from '../utils/planFormat.js';
 
-export const PlanCover = ({ seed, title, className = '', opacity = 1 }) => (
-  <div
-    aria-hidden
-    className={`w-full h-full flex items-center justify-center ${className}`}
-    style={{ background: avatarGradient(seed || title), opacity }}
-  >
-    <span
-      className="font-black text-white/25 select-none"
-      style={{ fontSize: 'var(--fs-48)', fontFamily: 'var(--font-display)', lineHeight: 1 }}
-    >
-      {String(title || '?').slice(0, 1).toUpperCase()}
-    </span>
-  </div>
-);
+const TAG_ICON = {
+  Strength: 'fitness_center',
+  Hypertrophy: 'fitness_center',
+  'Fat Loss': 'local_fire_department',
+  Cardio: 'directions_run',
+  Recovery: 'spa',
+  Mobility: 'self_improvement',
+  Flexibility: 'self_improvement',
+  Performance: 'bolt',
+};
 
-export const FilterPill = ({ options, active, onSelect }) => (
-  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+/**
+ * Program artwork.
+ *
+ * Uses a real image when the plan carries an image URL; otherwise renders a
+ * brand-tinted cover built from theme tokens (no random hues, so the catalog
+ * stays inside the Vitalis palette in both light and dark mode).
+ */
+export const PlanCover = ({ seed = undefined, title = undefined, tag = undefined, src = undefined, className = '', opacity = 1 }) => {
+  const [broken, setBroken] = useState(false);
+  const showImage = Boolean(src) && !broken;
+
+  return (
+    <div className={`w-full h-full ${className}`.trim()} style={{ opacity }}>
+      {showImage ? (
+        <img
+          src={src}
+          alt=""
+          className="p-cover-img"
+          loading="lazy"
+          onError={() => setBroken(true)}
+        />
+      ) : (
+        <div className="p-cover-art" data-tag={tag || ''}>
+          <span className="p-cover-initial" aria-hidden="true">
+            {String(title || seed || '?').slice(0, 1).toUpperCase()}
+          </span>
+          <Icon name={TAG_ICON[tag] || 'fitness_center'} className="p-cover-icon" fill={1} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const FilterPill = ({ options = undefined, active = undefined, onSelect = undefined }) => (
+  <div className="flex flex-wrap gap-1.5">
     {options.map((opt) => (
       <button
         key={opt}
+        type="button"
         onClick={() => onSelect(opt)}
         aria-pressed={active === opt}
-        className="px-3 py-2 min-h-[36px] rounded-full text-[length:var(--fs-10)] sm:text-[length:var(--fs-11)] font-bold uppercase tracking-widest transition-all border active:scale-95 focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-        style={{
-          background: active === opt ? 'var(--accent)' : 'var(--bg-hover)',
-          color: active === opt ? 'var(--text-inverse)' : 'var(--text-muted)',
-          borderColor: active === opt ? 'var(--accent)' : 'var(--border-light)',
-        }}
+        className="p-pill"
       >
         {opt}
       </button>
@@ -37,157 +62,186 @@ export const FilterPill = ({ options, active, onSelect }) => (
   </div>
 );
 
-export const PlanCard = ({ plan, onOpen, onEnroll, onContinue, style = {} }) => (
-  <div
-    role="button"
-    tabIndex={0}
-    aria-label={`Open plan: ${plan.title}`}
-    className="group relative rounded-2xl overflow-hidden border flex flex-col h-full glass-card cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-[var(--accent-border)] focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-    style={{ borderColor: 'var(--border-light)', ...style }}
-    onClick={() => onOpen(plan)}
-    onKeyDown={(e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        onOpen(plan);
-      }
-    }}
-  >
-    <div className="aspect-[16/10] overflow-hidden relative shrink-0">
-      <PlanCover
-        seed={plan.image_seed}
-        title={plan.title}
-        className="group-hover:scale-105 transition-transform duration-700 opacity-40"
-      />
-      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-wrap gap-1.5 sm:gap-2 max-w-[calc(100%-24px)]">
-        <span
-          className="px-2 py-1 rounded-md text-[length:var(--fs-9)] sm:text-[length:var(--fs-10)] font-bold tracking-widest uppercase truncate max-w-[140px]"
-          style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', color: 'var(--accent)' }}
-        >
-          {plan.tag}
-        </span>
-        {plan.is_enrolled === 1 && (
-          <span
-            className="px-2 py-1 rounded-md text-[length:var(--fs-9)] sm:text-[length:var(--fs-10)] font-bold tracking-widest uppercase"
-            style={{ background: 'var(--accent)', color: 'var(--text-inverse)' }}
-          >
-            Owned
-          </span>
-        )}
-        {plan.is_owner === 1 && (
-          <span
-            className="px-2 py-1 rounded-md text-[length:var(--fs-9)] sm:text-[length:var(--fs-10)] font-bold tracking-widest uppercase"
-            style={{
-              background: 'var(--bg-hover)',
-              backdropFilter: 'blur(6px)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-medium)',
-            }}
-          >
-            Mine
-          </span>
-        )}
-      </div>
-    </div>
-    <div className="p-4 sm:p-5 flex-1 flex flex-col min-w-0">
-      <h3
-        className="text-base sm:text-lg font-bold mb-1 line-clamp-1 break-words"
-        style={{ color: 'var(--text-primary)' }}
-      >
-        {plan.title}
-      </h3>
-      <p className="text-xs sm:text-sm mb-4 line-clamp-2 leading-relaxed break-words" style={{ color: 'var(--text-muted)' }}>
-        {plan.description}
-      </p>
-      <div className="grid grid-cols-3 gap-2 mb-4 text-center">
-        {[
-          { label: 'Time', value: plan.duration },
-          { label: 'Strain', value: plan.intensity, colored: true },
-          { label: 'Focus', value: plan.target_focus },
-        ].map(({ label, value, colored }) => (
-          <div key={label} className="min-w-0">
-            <p className="text-[length:var(--fs-9)] sm:text-[length:var(--fs-10)] uppercase font-bold mb-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
-              {label}
-            </p>
-            <p
-              className="text-xs sm:text-sm font-semibold truncate"
-              title={String(value ?? '')}
-              style={{
-                color: colored ? (value === 'Extreme' ? 'var(--error)' : 'var(--accent)') : 'var(--text-primary)',
-              }}
-            >
-              {value}
-            </p>
-          </div>
-        ))}
-      </div>
-      <div
-        className="mt-auto pt-3 flex items-center justify-between gap-2 border-t"
-        style={{ borderColor: 'var(--border-light)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <span className="text-base sm:text-lg font-bold truncate" style={{ color: 'var(--text-primary)' }}>
-          {plan.price === 0 || plan.price === '0.00' ? 'Free' : `$${plan.price}`}
-        </span>
-        {plan.is_enrolled === 1 ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onContinue(plan);
-            }}
-            className="px-4 sm:px-5 py-2.5 min-h-[44px] rounded-xl font-bold text-xs sm:text-sm active:scale-95 transition-all shrink-0 focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-            style={{ background: 'var(--accent)', color: 'var(--text-inverse)' }}
-          >
-            Continue
-          </button>
-        ) : (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEnroll(plan.id);
-            }}
-            className="px-4 sm:px-5 py-2.5 min-h-[44px] rounded-xl font-bold text-xs sm:text-sm active:scale-95 transition-all shrink-0 focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-            style={{ background: 'var(--accent)', color: 'var(--text-inverse)' }}
-          >
-            Get Access
-          </button>
-        )}
-      </div>
-    </div>
-  </div>
-);
+export const PlanActions = ({ plan = undefined, onEdit = undefined, onDelete = undefined }) => {
+  const [open, setOpen] = useState(false);
+  const root = useRef(null);
+  const trigger = useRef(null);
 
-export const TabBar = ({ active, onChange, enrolledCount }) => (
-  <div
-    role="tablist"
-    aria-label="Plans sections"
-    className="flex gap-1 rounded-2xl p-1 w-full overflow-x-auto mb-6 sm:mb-10 border snap-x no-scrollbar"
-    style={{ background: 'var(--bg-tertiary)', borderColor: 'var(--border-light)', scrollbarWidth: 'none' }}
-  >
+  useEffect(() => {
+    if (!open) return;
+    const dismiss = (event) => {
+      if (!root.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', dismiss);
+    return () => document.removeEventListener('pointerdown', dismiss);
+  }, [open]);
+
+  return (
+    <div
+      ref={root}
+      className="p-actions"
+      onClick={(event) => event.stopPropagation()}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+      onKeyDown={(event) => {
+        event.stopPropagation();
+        if (event.key === 'Escape') {
+          setOpen(false);
+          trigger.current?.focus();
+        }
+      }}
+    >
+      <button
+        ref={trigger}
+        type="button"
+        className="p-actions-trigger"
+        aria-label={`Actions for ${plan.title}`}
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <Icon name="more_horiz" />
+      </button>
+      {open && (
+        <div className="p-actions-popup" role="group" aria-label="Plan actions">
+          <button type="button" onClick={() => { setOpen(false); onEdit(plan); }}>
+            <Icon name="edit" /> Edit
+          </button>
+          <button type="button" className="p-actions-delete" onClick={() => { setOpen(false); onDelete(plan); }}>
+            <Icon name="delete" /> Delete
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const PlanCard = ({ plan = undefined, onOpen = undefined, onEnroll = undefined, onContinue = undefined, onEdit = undefined, onDelete = undefined, style = {} }) => {
+  const enrolled = plan.is_enrolled === 1 || plan.is_owner === 1;
+  const pct = Math.max(0, Math.min(100, Number(plan.progress_pct) || 0));
+  // VITALIS has no payments: every plan is free (legacy seeded prices are ignored).
+  const price = 'Free';
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Open plan: ${plan.title}`}
+      className="p-card"
+      style={style}
+      onClick={() => onOpen(plan)}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen(plan);
+        }
+      }}
+    >
+      <div className="p-cover">
+        <PlanCover
+          seed={plan.image_seed}
+          title={plan.title}
+          tag={plan.tag}
+          src={plan.image_url}
+        />
+        <div className="p-cover-badges">
+          {plan.tag ? <span className="p-badge p-badge--tag">{plan.tag}</span> : null}
+          {plan.is_owner === 1 ? <span className="p-badge">Mine</span> : null}
+          {enrolled && plan.is_owner !== 1 ? (
+            <span className="p-badge p-badge--accent">Enrolled</span>
+          ) : null}
+        </div>
+        <div className="p-cover-badges p-cover-badges--end">
+          <span className="p-badge">{price}</span>
+        </div>
+      </div>
+
+      <div className="p-body">
+        {plan.is_owner === 1 && onEdit && onDelete ? (
+          <PlanActions plan={plan} onEdit={onEdit} onDelete={onDelete} />
+        ) : null}
+        <h3 className="p-title" title={plan.title}>{plan.title}</h3>
+        {plan.description ? (
+          <p className="p-desc" title={plan.description}>{plan.description}</p>
+        ) : null}
+
+        <div className="p-meta">
+          {plan.duration ? (
+            <span className="p-meta-item">
+              <Icon name="schedule" />
+              <span>{plan.duration}</span>
+            </span>
+          ) : null}
+          {plan.intensity ? (
+            <span className="p-meta-item p-meta-item--accent">
+              <Icon name="bolt" />
+              <span>{plan.intensity}</span>
+            </span>
+          ) : null}
+          {plan.target_focus ? (
+            <span className="p-meta-item">
+              <Icon name="track_changes" />
+              <span>{plan.target_focus}</span>
+            </span>
+          ) : null}
+        </div>
+
+        {enrolled && pct > 0 ? (
+          <div className="p-progress" aria-label={`${pct}% complete`}>
+            <div className="p-progress-track">
+              <div className="p-progress-fill" style={{ width: `${pct}%` }} />
+            </div>
+            <span className="p-progress-pct">{pct}%</span>
+          </div>
+        ) : null}
+
+        <div className="p-footer" onClick={(e) => e.stopPropagation()}>
+          {enrolled ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onContinue(plan);
+              }}
+              className="p-btn"
+            >
+              Continue training
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEnroll(plan.id);
+              }}
+              className="p-btn"
+            >
+              Get access
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const TabBar = ({ active = undefined, onChange = undefined, enrolledCount = undefined }) => (
+  <div role="tablist" aria-label="Plans sections" className="p-tabs">
     {TABS.map((tab) => (
       <button
         key={tab.id}
+        type="button"
         role="tab"
         aria-selected={active === tab.id}
         onClick={() => onChange(tab.id)}
-        className="flex items-center justify-center gap-1 px-2 py-2.5 min-h-[44px] rounded-xl text-[length:var(--fs-9)] sm:text-xs font-bold uppercase tracking-widest transition-all shrink-0 snap-start focus-visible:outline-2 focus-visible:outline-[var(--accent)] min-w-[104px] min-[480px]:min-w-[124px] sm:min-w-0 sm:flex-1"
-        style={{
-          background: active === tab.id ? 'var(--accent)' : 'transparent',
-          color: active === tab.id ? 'var(--text-inverse)' : 'var(--text-muted)',
-        }}
+        className="p-tab"
       >
-        <Icon name={tab.icon} className="text-[length:var(--fs-14)] sm:text-[length:var(--fs-16)] shrink-0" fill={active === tab.id ? 1 : 0} />
-        <span className="truncate">{tab.label}</span>
-        {tab.id === 'my-plans' && enrolledCount > 0 && (
-          <span
-            className="text-[length:var(--fs-9)] font-black px-1.5 py-0.5 rounded-full shrink-0 tabular-nums"
-            style={{
-              background: active === tab.id ? 'rgba(0,0,0,0.20)' : 'var(--accent-bg)',
-              color: active === tab.id ? 'var(--text-inverse)' : 'var(--accent)',
-            }}
-          >
-            {enrolledCount}
-          </span>
-        )}
+        <Icon name={tab.icon} fill={active === tab.id ? 1 : 0} />
+        <span className="p-tab-label">{tab.label}</span>
+        {tab.id === 'my-plans' && enrolledCount > 0 ? (
+          <span className="p-tab-count">{enrolledCount}</span>
+        ) : null}
       </button>
     ))}
   </div>

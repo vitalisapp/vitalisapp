@@ -6,7 +6,7 @@ import { NotificationProvider } from '../../context/NotificationSystem.jsx';
 import { NotificationStreamProvider } from '../../context/NotificationStream.jsx';
 import { queryClient } from '../../lib/queryClient.js';
 
-export function AppProviders({ children }) {
+export function AppProviders({ children = undefined }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

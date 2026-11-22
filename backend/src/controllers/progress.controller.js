@@ -13,10 +13,35 @@ async function getActivity(req, res, next) {
   }
 }
 
-// GET /api/progress/overview?range=30d|90d|1y|all — multi-metric chart series.
+const wantsSample = (req) => req.query.sample === "1" || req.query.sample === "true";
+
+// GET /api/progress/overview?range=30d|90d|1y|all[&sample=1] — multi-metric
+// chart series. sample=1 returns the in-memory demo dataset (never stored).
 async function getOverview(req, res, next) {
   try {
+    if (wantsSample(req)) return res.json(service.getSampleOverview(req.query.range));
     res.json(await service.getOverview(req.user.id, req.query.range));
+  } catch (e) {
+    next(e);
+  }
+}
+
+// GET /api/progress/summary[?sample=1] — rule-based progress interpretation
+// (last 7 vs previous 7 days, nutrition vs targets, weight trend, goal
+// timeline against the target completion date).
+async function getSummary(req, res, next) {
+  try {
+    res.json(await service.getSummary(req.user.id, { sample: wantsSample(req) }));
+  } catch (e) {
+    next(e);
+  }
+}
+
+// GET /api/progress/sample-history — demo workout sessions + meals + goal
+// with dummy dates, flagged sample:true. Read-only, generated per request.
+function getSampleHistory(req, res, next) {
+  try {
+    res.json(service.getSampleHistory());
   } catch (e) {
     next(e);
   }
@@ -140,7 +165,7 @@ async function deleteMeasurement(req, res, next) {
   }
 }
 
-// GET /api/progress/export.csv — text attachment (workouts + measurements + photos).
+// GET /api/progress/export.csv — report: summary + flags + workouts, meals, measurements, photos.
 async function getExport(req, res, next) {
   try {
     const csv = await service.buildExportCsv(req.user.id);
@@ -167,6 +192,8 @@ async function getDiary(req, res, next) {
 module.exports = {
   getActivity,
   getOverview,
+  getSummary,
+  getSampleHistory,
   getPhotos,
   postPhoto,
   getPhotoImage,

@@ -41,7 +41,7 @@ const createFinishIcon = () =>
   });
 
 // ─── Component ──────────────────────────────────────────────────────────────
-const RouteReplay = ({ fullPath }) => {
+const RouteReplay = ({ fullPath = undefined }) => {
   const [drawnPath, setDrawnPath] = useState([fullPath[0]]);
   const [isDone, setIsDone] = useState(false);
   const frameRef = useRef(null);

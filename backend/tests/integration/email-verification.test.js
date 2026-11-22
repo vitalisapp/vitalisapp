@@ -1,12 +1,14 @@
 const { it } = require('node:test');
 const assert = require('node:assert/strict');
 
-// Verification is enforced everywhere except NODE_ENV=development.
+// Soft verification: signup always signs in; verify links still work and are
+// skipped entirely in NODE_ENV=development.
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret-min-32-chars-0123456789ab';
 let queries = [];
 let verified = false;
 let sentLink;
+let welcome = [];
 const tokens = [];
 const user = () => ({ id: 13, email: 'test@example.com', password: 'hash', is_verified: Number(verified), token_version: 0, status: 'active' });
 function stub(path, exports) {
@@ -34,7 +36,15 @@ stub('../../src/config/db', {
   },
 });
 stub('bcryptjs', { genSalt: async () => 'salt', hash: async () => 'hash', compare: async () => true });
-stub('../../src/services/email.service', { sendVerificationEmail: async (_email, link) => { sentLink = link; }, sendEmailChangedNotice: async () => {} });
+stub('../../src/services/email.service', {
+  sendVerificationEmail: async (_email, link) => { sentLink = link; },
+  sendEmailChangedNotice: async () => {},
+  sendWelcomeEmail: async (email, name, options = {}) => {
+    welcome.push({ email, name, ...options });
+    if (options.verifyUrl) sentLink = options.verifyUrl;
+  },
+});
+const flush = () => new Promise((r) => setImmediate(r));
 const service = require('../../src/services/auth.service');
 const { postregister } = require('../../src/controllers/auth.controller');
 const verifyUser = require('../../src/middleware/verifyUser');
@@ -46,34 +56,40 @@ function response() {
     statusCode: 200,
     status(code) { this.statusCode = code; return this; },
     json(body) { this.body = body; return this; },
+    cookieSet: false,
     clearCookie() {},
-    cookie() { assert.fail('Unverified signup must not issue a session'); },
+    cookie() { this.cookieSet = true; },
   };
 }
 const nextError = (err) => { throw err; };
 
-it('requires email confirmation outside development, issues no signup session, and gates existing sessions', async () => {
+it('signs new users in immediately, sends one welcome email with the verify link, and lets unverified sessions through', async () => {
   queries = [];
+  welcome = [];
   const res = response();
   await postregister({ body: { name: 'Test', email: 'test@example.com', password: 'password123', agreed: true }, headers: {} }, res, nextError);
+  await flush();
   assert.equal(res.statusCode, 201);
-  assert.equal(res.body.needsVerification, true);
+  assert.equal(res.cookieSet, true, 'signup must issue a session');
+  assert.equal(res.body.needsVerification, false);
   assert.equal(res.body.isVerified, false);
+  assert.equal(welcome.length, 1);
+  assert.equal(welcome[0].provider, 'email');
   assert.match(sentLink, /\/verify-email\?token=[a-f0-9]{64}$/);
   assert.equal(queries.some((sql) => sql.startsWith('UPDATE users SET is_verified')), false);
-  await assert.rejects(service.login({ email: 'test@example.com', password: 'password123' }), { code: 'NEEDS_VERIFICATION' });
 
+  // Unverified accounts can sign in and use protected routes.
+  const { user: loggedIn } = await service.login({ email: 'test@example.com', password: 'password123' });
+  assert.equal(Boolean(loggedIn.is_verified), false);
   const token = signSession(jwt, { id: 13, email: 'test@example.com', tv: 0 });
   const req = { cookies: { [COOKIE_NAME]: token }, headers: {} };
-  const blocked = response();
-  await verifyUser(req, blocked, () => assert.fail('Unverified session passed'));
-  assert.equal(blocked.statusCode, 403);
-  assert.equal(blocked.body.code, 'NEEDS_VERIFICATION');
-
-  await service.verifyEmail(new URL(sentLink).searchParams.get('token'));
   let allowed = false;
   await verifyUser(req, response(), (err) => { if (err) throw err; allowed = true; });
   assert.equal(allowed, true);
+  assert.equal(req.user.is_verified, false);
+
+  await service.verifyEmail(new URL(sentLink).searchParams.get('token'));
+  assert.equal(verified, true);
 });
 
 it('keeps delayed links valid after resending and accepts repeat clicks', async () => {
@@ -114,13 +130,16 @@ it('skips verification in development: signup is verified, gets a session, and l
     verified = false;
     sentLink = undefined;
     queries = [];
-    let cookieSet = false;
-    const res = { ...response(), cookie() { cookieSet = true; } };
+    welcome = [];
+    const res = response();
     await postregister({ body: { name: 'Dev', email: 'test@example.com', password: 'password123', agreed: true }, headers: {} }, res, nextError);
+    await flush();
     assert.equal(res.statusCode, 201);
     assert.equal(res.body.needsVerification, false);
-    assert.equal(cookieSet, true);
+    assert.equal(res.cookieSet, true);
     assert.equal(sentLink, undefined);
+    assert.equal(welcome.length, 1, 'welcome email still sent in development');
+    assert.equal(welcome[0].verifyUrl, undefined);
     assert.equal(queries.some((sql) => sql.startsWith('INSERT INTO email_verifications')), false);
 
     // Pre-existing unverified account signs in without the check-email step.

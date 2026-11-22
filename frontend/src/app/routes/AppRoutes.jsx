@@ -18,7 +18,6 @@ const Profile = lazy(() => import('../../features/user/Profile/pages/Profile.jsx
 const ActivityMap = lazy(() => import('../../features/user/ActivityMap/pages/ActivityMap.jsx'));
 const Register = lazy(() => import('../../features/user/Auth/Register/pages/Register.jsx'));
 const Login = lazy(() => import('../../features/user/Auth/Login/pages/Login.jsx'));
-const VitalisMessenger = lazy(() => import('../../features/user/Social/pages/Social.jsx'));
 const Notifications = lazy(() => import('../../features/user/Notifications/pages/Notifications.jsx'));
 const Preferences = lazy(() => import('../../features/user/Preferences/pages/Preferences.jsx'));
 const HelpSupport = lazy(() => import('../../features/user/HelpSupport/pages/HelpSupport.jsx'));
@@ -33,9 +32,12 @@ const AdminRoute = lazy(() => import('../../features/admin/components/AdminRoute
 const AdminShell = lazy(() => import('../../features/admin/components/AdminShell.jsx'));
 const AdminOverview = lazy(() => import('../../features/admin/pages/AdminOverview.jsx'));
 const AdminUsers = lazy(() => import('../../features/admin/pages/AdminUsers.jsx'));
+const AdminMonitoring = lazy(() => import('../../features/admin/pages/AdminMonitoring.jsx'));
 const AdminContent = lazy(() => import('../../features/admin/pages/AdminContent.jsx'));
 const AdminAiUsage = lazy(() => import('../../features/admin/pages/AdminAiUsage.jsx'));
 const AdminAudit = lazy(() => import('../../features/admin/pages/AdminAudit.jsx'));
+const AdminAccess = lazy(() => import('../../features/admin/pages/AdminAccess.jsx'));
+const AccessRedirect = lazy(() => import('../../pages/Go/AccessRedirect.jsx'));
 
 const RouteFallback = () => (
   <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-[var(--bg-primary)]" role="status" aria-busy="true" aria-live="polite">
@@ -62,7 +64,7 @@ export default function AppRoutes() {
         {/* Member app — MemberRoute bounces admins back to their console. */}
         <Route path="/dashboard" element={<MemberRoute><Dashboard /></MemberRoute>} />
 
-        <Route path="/dashboard/messenger" element={<MemberRoute><VitalisMessenger /></MemberRoute>} />
+        <Route path="/dashboard/messenger" element={<Navigate to="/dashboard/community/messages" replace />} />
         <Route path="/dashboard/plans" element={<MemberRoute><Plans /></MemberRoute>} />
         <Route path="/dashboard/activity-map" element={<MemberRoute><ActivityMap /></MemberRoute>} />
                 <Route path="/dashboard/workouts" element={<MemberRoute><CameraWorkout /></MemberRoute>} />
@@ -70,6 +72,7 @@ export default function AppRoutes() {
         <Route path="/dashboard/logs" element={<MemberRoute><Log /></MemberRoute>} />
         <Route path="/dashboard/meal-tracker" element={<MemberRoute><NutritionTracker /></MemberRoute>} />
         <Route path="/dashboard/community" element={<MemberRoute><Community /></MemberRoute>} />
+        <Route path="/dashboard/community/messages" element={<MemberRoute><Community /></MemberRoute>} />
         <Route path="/dashboard/notifications" element={<MemberRoute><Notifications /></MemberRoute>} />
         <Route path="/dashboard/preferences" element={<MemberRoute><Preferences /></MemberRoute>} />
         <Route path="/dashboard/help-support" element={<MemberRoute><HelpSupport /></MemberRoute>} />
@@ -88,9 +91,11 @@ export default function AppRoutes() {
         >
           <Route index element={<AdminOverview />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="monitoring" element={<AdminMonitoring />} />
           <Route path="content" element={<AdminContent />} />
           <Route path="ai-usage" element={<AdminAiUsage />} />
           <Route path="audit" element={<AdminAudit />} />
+          <Route path="access" element={<AdminAccess />} />
 
           {/* Account pages are shared with the member app; the admin route
               renders the same component inside the console shell. */}
@@ -103,6 +108,8 @@ export default function AppRoutes() {
         </Route>
 
         <Route path="/check-email" element={<CheckEmail />} />
+        {/* Admin "Link QR" codes (e.g. Google Meet) — public, counts a scan then redirects. */}
+        <Route path="/go/:code" element={<AccessRedirect />} />
 <Route path="/verify-phone" element={<VerifyPhone />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         {/* Legacy removed-module path — redirect to dashboard */}

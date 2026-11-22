@@ -6,43 +6,24 @@ const crypto = require("crypto");
 const UAParser = require("ua-parser-js");
 const { OAuth2Client } = require("google-auth-library");
 const { AppError } = require("../utils/errors");
-const { sendVerificationEmail, sendEmailChangedNotice } = require("./email.service");
+const { sendVerificationEmail, sendEmailChangedNotice, sendWelcomeEmail } = require("./email.service");
+const { frontendUrl } = require("../utils/frontendUrl");
 const { normalizePhMobile } = require("../utils/phone");
 const allergiesService = require("./allergies.service");
 const { trackingToken } = require('./emailDelivery.service');
-
-// ─── FRONTEND URL ───
-function resolveFrontendUrl() {
-  const raw = (
-    process.env.FRONTEND_URL ||
-    (process.env.ALLOWED_ORIGINS || "").split(",")[0] ||
-    "http://localhost:5173"
-  ).trim();
-  try {
-    const u = new URL(raw);
-    if (!["http:", "https:"].includes(u.protocol)) throw new Error("bad proto");
-    if (process.env.NODE_ENV === "production" && u.protocol !== "https:") {
-      console.warn("[auth] FRONTEND_URL should be https in production:", raw);
-    }
-    return raw.replace(/\/$/, "");
-  } catch {
-    console.warn("[auth] Invalid FRONTEND_URL, falling back to http://localhost:5173:", raw);
-    return "http://localhost:5173";
-  }
-}
-// Resolved per email so tunnel URLs take effect without a code change.
-function frontendUrl() {
-  return resolveFrontendUrl();
-}
 
 // ALLOW_DEV_LINKS=1 exposes links for local demo without SMTP (never in prod).
 const DEV_VERIFY_FALLBACK =
   process.env.ALLOW_DEV_LINKS === "1" && process.env.NODE_ENV !== "production";
 
-// NODE_ENV=development skips email verification entirely: signups are created
-// verified and get a session immediately, and any still-unverified account is
-// verified on its next sign-in. Every other value (production, test, unset)
-// keeps the full verify-by-link flow. Read per call so tests can toggle it.
+// Soft verification: every new account is signed in straight away and an
+// unverified account can still sign in and use the app (the frontend shows a
+// "confirm your email" banner). Verification is required only for account
+// recovery confidence, not for access.
+//
+// NODE_ENV=development additionally skips sending the verify link: signups are
+// created verified, and any still-unverified account is verified on its next
+// sign-in. Read per call so tests can toggle it.
 function skipEmailVerification() {
   return String(process.env.NODE_ENV || "").toLowerCase() === "development";
 }
@@ -52,6 +33,14 @@ function skipEmailVerification() {
 // auto-verify behaviour for both channels.
 function smsVerificationRequiredInDev() {
   return process.env.SMS_VERIFY_DEV === "1";
+}
+
+// Welcome email for brand-new accounts. Fire-and-forget: a mail outage must
+// never fail or slow down account creation.
+function queueWelcomeEmail(email, name, options) {
+  Promise.resolve()
+    .then(() => sendWelcomeEmail(email, name, options))
+    .catch((err) => console.error("Welcome email failed:", err.message));
 }
 
 async function markVerified(user) {
@@ -165,8 +154,18 @@ function checkRateLimit(email) {
 }
 
 // ─── SESSION LOGGING ───
+// One row per device (device type + browser + OS). A repeat login refreshes
+// that row instead of inserting a duplicate, so the Profile "Devices &
+// Sessions" list and the admin session counts stay meaningful.
+//
+// IP is deliberately NOT part of the match: a phone switches between Wi-Fi and
+// mobile data, and that must not look like a brand-new device.
+//
+// Returns { isNewDevice, priorSessions, deviceLabel } so the controller can
+// raise an in-app security notice for a genuinely new device. Never throws.
 async function logUserSession(req, userId) {
   let conn;
+  let deviceLabel = "Unknown device";
   try {
     const parser = new UAParser(req.headers["user-agent"]);
     const result = parser.getResult();
@@ -174,6 +173,9 @@ async function logUserSession(req, userId) {
     const device = result.device.type || "Desktop";
     const browser = result.browser.name || "Unknown";
     const os = result.os.name || "Unknown";
+    deviceLabel =
+      [browser, os].filter((v) => v && v !== "Unknown").join(" on ") ||
+      "Unknown device";
 
     const ip =
       req.headers["x-forwarded-for"]?.split(",")[0] ||
@@ -186,20 +188,57 @@ async function logUserSession(req, userId) {
     // Transaction so concurrent logins can't leave two is_current=true rows.
     conn = await db.getConnection();
     await conn.beginTransaction();
-    await conn.execute("UPDATE user_sessions SET is_current = false WHERE user_id = ?", [userId]);
+
+    // Was the account already signed in anywhere before this request? A
+    // first-ever login must not send a "new device" warning.
+    const [[priorRow]] = await conn.execute(
+      "SELECT COUNT(*) AS prior FROM user_sessions WHERE user_id = ?",
+      [userId],
+    );
+    const priorSessions = Number(priorRow?.prior) || 0;
+
+    // `<=>` matches NULLs too, so older rows with missing UA fields still map
+    // to the same device instead of creating a duplicate.
+    const [existing] = await conn.execute(
+      `SELECT id FROM user_sessions
+        WHERE user_id = ? AND device <=> ? AND browser <=> ? AND os <=> ?
+        ORDER BY created_at DESC
+        LIMIT 1`,
+      [userId, device, browser, os],
+    );
 
     await conn.execute(
-      `INSERT INTO user_sessions
-       (user_id, device, browser, os, ip_address, location, is_current)
-       VALUES (?, ?, ?, ?, ?, ?, true)`,
-      [userId, device, browser, os, ip, location],
+      "UPDATE user_sessions SET is_current = false WHERE user_id = ?",
+      [userId],
     );
+
+    let isNewDevice = false;
+    if (existing.length) {
+      // Refresh the existing device row (created_at doubles as "last active").
+      await conn.execute(
+        `UPDATE user_sessions
+            SET ip_address = ?, location = ?, is_current = true, created_at = NOW()
+          WHERE id = ? AND user_id = ?`,
+        [ip, location, existing[0].id, userId],
+      );
+    } else {
+      await conn.execute(
+        `INSERT INTO user_sessions
+         (user_id, device, browser, os, ip_address, location, is_current)
+         VALUES (?, ?, ?, ?, ?, ?, true)`,
+        [userId, device, browser, os, ip, location],
+      );
+      isNewDevice = true;
+    }
+
     await conn.commit();
+    return { isNewDevice, priorSessions, deviceLabel };
   } catch (err) {
     try {
       await conn?.rollback();
     } catch (_) {}
     console.error("SESSION LOG ERROR:", err);
+    return { isNewDevice: false, priorSessions: 0, deviceLabel };
   } finally {
     try {
       conn?.release();
@@ -326,6 +365,7 @@ async function register({ name, email, password, phone, verificationMethod = 'em
   const user = userRows[0];
 
   if (autoVerified) {
+    queueWelcomeEmail(email, name, { provider: wantsSms ? "sms" : "email" });
     return {
       newUserId,
       link: null,
@@ -340,6 +380,7 @@ async function register({ name, email, password, phone, verificationMethod = 'em
   // SMS: the controller sends the code right after this returns, so a provider
   // outage cannot roll back an account that was otherwise created correctly.
   if (wantsSms) {
+    queueWelcomeEmail(email, name, { provider: "sms" });
     return {
       newUserId,
       link: null,
@@ -351,23 +392,16 @@ async function register({ name, email, password, phone, verificationMethod = 'em
     };
   }
 
-  // Email verification (link-based). Never block registration on SMTP.
+  // Email verification: the welcome email carries the verify link, so a new
+  // user gets one message instead of two. Never block registration on SMTP.
   const { link } = await createVerificationToken(newUserId);
-  let emailed = false;
-  let deliveryToken = null;
-  try {
-    const receipt = await sendVerificationEmail(email, link);
-    emailed = true;
-    deliveryToken = trackingToken(receipt?.messageId);
-  } catch (mailErr) {
-    console.error("Verification email failed:", mailErr.message);
-  }
+  queueWelcomeEmail(email, name, { provider: "email", verifyUrl: link });
 
   return {
     newUserId,
     link,
-    emailed,
-    deliveryToken,
+    emailed: true,
+    deliveryToken: null,
     autoVerified: false,
     verificationMethod: "email",
     user,
@@ -421,67 +455,17 @@ async function login({ email, password }) {
     await markVerified(user);
   }
 
-  if (!user.is_verified) {
-    // Registration verification can be email or SMS — route the user to the
-    // matching screen instead of always saying "email". A stored phone marks an
-    // SMS signup, and it survives code expiry so the user can request a new one.
-    const [smsSignup] = await db.execute(
-      "SELECT 1 FROM users WHERE id = ? AND phone IS NOT NULL LIMIT 1",
-      [user.id],
-    );
-    const viaSms = smsSignup.length > 0;
-    throw new AppError(
-      viaSms
-        ? "Verify your phone number before signing in."
-        : "Verify your email before signing in.",
-      403,
-      "NEEDS_VERIFICATION",
-      { email: user.email, verificationMethod: viaSms ? "sms" : "email" },
-    );
-  }
+  // Unverified accounts sign in normally (soft verification) — the session
+  // payload carries isVerified:false and the app shows a reminder banner.
 
   await db.execute("UPDATE users SET is_online = 1 WHERE id = ?", [user.id]);
 
   const [profileRows] = await db.execute("SELECT avatar_url FROM user_profiles WHERE user_id = ?", [
     user.id,
   ]);
-  let latestAvatar = profileRows[0]?.avatar_url || user.avatar_url || null;
-
-  // Provider photos (Google/Microsoft/etc.) are only released during their own
-  // OAuth sign-in — a typed email+password login can never fetch them. Gravatar
-  // is the one public per-email avatar registry, so probe it for accounts that
-  // have no stored avatar, and persist what it finds for every later session.
-  if (!latestAvatar) {
-    latestAvatar = await discoverGravatarAvatar(user.email, user.id);
-  }
+  const latestAvatar = profileRows[0]?.avatar_url || user.avatar_url || null;
 
   return { user, latestAvatar };
-}
-
-// Gravatar discovery for email logins. d=404 makes Gravatar answer 404 (not a
-// placeholder image) when the email has no registered avatar; only then is a
-// displayable URL written back. The UPDATE is guarded by avatar_url IS NULL so
-// a user-chosen avatar can never be overwritten by this best-effort probe.
-async function discoverGravatarAvatar(email, userId) {
-  try {
-    const hash = crypto
-      .createHash("md5")
-      .update(String(email || "").trim().toLowerCase())
-      .digest("hex");
-    const probe = `https://gravatar.com/avatar/${hash}?d=404&s=1`;
-    const res = await fetch(probe, { signal: AbortSignal.timeout(3000) });
-    if (!res.ok) return null;
-    const url = `https://gravatar.com/avatar/${hash}?d=mp&s=256`;
-    await db.execute(
-      "UPDATE users SET avatar_url = ? WHERE id = ? AND avatar_url IS NULL",
-      [url, userId],
-    );
-    return url;
-  } catch (err) {
-    // Network trouble must never block a login — initials fallback is fine.
-    console.warn("[auth] Gravatar probe skipped:", err.message);
-    return null;
-  }
 }
 
 // ─── GOOGLE LOGIN ───
@@ -497,7 +481,7 @@ async function googleLogin(code) {
   });
 
   const payload = ticket.getPayload();
-  const { name, picture } = payload;
+  const { name } = payload;
   const email = normEmail(payload.email);
   if (!email) {
     throw new AppError("Google account has no email", 401, "GOOGLE_AUTH_FAILED");
@@ -509,6 +493,7 @@ async function googleLogin(code) {
   const [users] = await db.execute(LOGIN_USER_SELECT, [email]);
 
   let user;
+  let isNewUser = false;
   if (users.length === 0) {
     // Password is a random bcrypt secret (never known, never used for login) —
     // recovery goes through the email-OTP forgot-password flow.
@@ -517,28 +502,25 @@ async function googleLogin(code) {
     const defaultGoal = "Unspecified (Google Auth)";
 
     const [insertResult] = await db.execute(
-      "INSERT INTO users (name, email, password, fitness_goal, is_online, avatar_url, is_verified, onboarding_completed, role, accepted_terms_at, accepted_terms_version) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, NOW(), ?)",
-      [name, email, randomHashedPw, defaultGoal, 0, picture, isSeedAdmin(email) ? "admin" : "member", CONSENT_VERSION],
+      "INSERT INTO users (name, email, password, fitness_goal, is_online, avatar_url, is_verified, onboarding_completed, role, accepted_terms_at, accepted_terms_version) VALUES (?, ?, ?, ?, ?, ?, 1, 0, ?, NOW(), ?)",
+      [name, email, randomHashedPw, defaultGoal, 0, null, isSeedAdmin(email) ? "admin" : "member", CONSENT_VERSION],
     );
 
     const [newUsers] = await db.execute(
-      "SELECT id, name, email, fitness_goal, avatar_url, is_verified, onboarding_completed, token_version FROM users WHERE id = ?",
+      "SELECT id, name, email, fitness_goal, avatar_url, is_verified, onboarding_completed, token_version, status, role FROM users WHERE id = ?",
       [insertResult.insertId],
     );
     user = newUsers[0];
+    isNewUser = true;
+    queueWelcomeEmail(email, name, { provider: "google" });
   } else {
     user = users[0];
   }
 
-  // Google authentication does not replace the app's email verification.
-  // Retrying Google sign-in must not verify a pending account or issue a session
-  // (except in development, where verification is skipped).
-  if (!user.is_verified && skipEmailVerification()) {
-    await markVerified(user);
-  }
+  // Google already proved ownership of this address (email_verified checked
+  // above), so a pending email-signup account is verified by a Google sign-in.
   if (!user.is_verified) {
-    const verification = await resendVerification(email);
-    return { user, needsVerification: true, ...verification };
+    await markVerified(user);
   }
 
   await db.execute("UPDATE users SET is_online = 1 WHERE id = ?", [user.id]);
@@ -547,17 +529,12 @@ async function googleLogin(code) {
     user.id,
   ]);
   const profileAvatar = profileRows[0]?.avatar_url || null;
-  // Existing accounts created via email signup used to miss the Google photo:
-  // the INSERT branch stored `picture`, but this branch only bumped online /
-  // verified flags. Store it whenever the user has no profile avatar of their
-  // own, so both login paths end up with a real image instead of initials.
-  if (!profileAvatar && picture && user.avatar_url !== picture) {
-    await db.execute("UPDATE users SET avatar_url = ? WHERE id = ?", [picture, user.id]);
-    user.avatar_url = picture;
-  }
-  const latestAvatar = profileAvatar || user.avatar_url || picture;
+  // Avatars are the user's own upload or, by default, a lettered circle. The
+  // Google account photo is deliberately NOT adopted (often Google's generic
+  // placeholder, and never something the user chose inside Vitalis).
+  const latestAvatar = profileAvatar || user.avatar_url || null;
 
-  return { user, latestAvatar };
+  return { user, latestAvatar, isNewUser };
 }
 
 // ─── CHANGE PASSWORD ───
@@ -742,7 +719,7 @@ async function getAllergies(userId) {
 module.exports = {
   // helpers
   normEmail,
-  resolveFrontendUrl,
+  resolveFrontendUrl: frontendUrl,
   frontendUrl,
   DEV_VERIFY_FALLBACK,
   skipEmailVerification,

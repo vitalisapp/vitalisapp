@@ -14,7 +14,7 @@ const LEVELS = [
   { value: 5, label: 'Very hard',  icon: 'battery_5_bar' },
 ];
 
-export default function WorkoutFeedbackSheet({ logId, onClose }) {
+export default function WorkoutFeedbackSheet({ logId = undefined, onClose = undefined }) {
   const [rating,   setRating]   = useState(null);
   const [notes,    setNotes]    = useState('');
   const [saving,   setSaving]   = useState(false);

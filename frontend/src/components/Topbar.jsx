@@ -24,7 +24,7 @@ import { groupByDay } from '../features/user/Notifications/notificationPresentat
    Mobile (<768px): bottom sheet in a portal (#notif-portal — the
    Topbar outside-click handler relies on that id).
 ══════════════════════════════════════════════════════════════ */
-function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose, onViewAll, closing = false }) {
+function NotificationOverlay({ notifications = undefined, onMarkRead = undefined, onMarkAllRead = undefined, onClose = undefined, onViewAll = undefined, closing = false }) {
   const closingCls = closing ? ' is-closing' : '';
   const [filter, setFilter] = useState('all');
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
@@ -71,7 +71,6 @@ function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose
         </div>
         <div className="vn-panel__actions">
           <button type="button" className="vn-text-btn" onClick={onMarkAllRead} disabled={unreadCount === 0}>
-            <Icon name="done_all" weight={400} />
             Mark all read
           </button>
           <button type="button" onClick={onClose} aria-label="Close notifications" className="vn-icon-btn">
@@ -81,7 +80,7 @@ function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose
       </div>
 
       <div className="vn-panel__tabs">
-        <div className="vn-segment is-block" role="group" aria-label="Filter notifications">
+        <div className="vn-tabs" role="group" aria-label="Filter notifications">
           {[
             { key: 'all', label: 'All', n: notifications.length },
             { key: 'unread', label: 'Unread', n: unreadCount },
@@ -91,7 +90,7 @@ function NotificationOverlay({ notifications, onMarkRead, onMarkAllRead, onClose
               type="button"
               aria-pressed={filter === tab.key}
               onClick={(e) => { e.stopPropagation(); setFilter(tab.key); }}
-              className="vn-segment__btn"
+              className="vn-tab"
             >
               {tab.label}
               <span className="vn-count">{tab.n}</span>

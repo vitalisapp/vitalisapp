@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiGet, apiPost, apiPatch, apiDelete } from '../../../../lib/apiClient.js';
 
 const usePlans = () => {
@@ -16,6 +16,8 @@ const usePlans = () => {
   const [trackerPlan,     setTrackerPlan]     = useState(null);
   const [trackerContent,  setTrackerContent]  = useState([]);
   const [trackerProgress, setTrackerProgress] = useState([]);
+  const trackerRequest = useRef(0);
+  useEffect(() => () => { trackerRequest.current += 1; }, []);
 
   // ── Auth: get current user via cookie session ──────────────────
   useEffect(() => {
@@ -66,7 +68,7 @@ const usePlans = () => {
     // Goal link is best-effort — plans still render when goals are unreachable.
     try {
       const gs = await apiGet(`/api/plans/goal-status/${userId}`);
-      setGoalStatus({ goal: gs?.goal || null, linkedPlan: gs?.linkedPlan || null });
+      setGoalStatus({ goal: gs?.goal || null, linkedPlan: gs?.linkedPlan || null, goalPlans: Array.isArray(gs?.goalPlans) ? gs.goalPlans : [] });
     } catch {
       setGoalStatus({ goal: null, linkedPlan: null });
     }
@@ -87,20 +89,25 @@ const usePlans = () => {
   };
 
   // ── Open the day tracker for a plan ───────────────────────────
-  const startTracker = async (plan) => {
+  const startTracker = useCallback(async (plan) => {
+    const request = ++trackerRequest.current;
     setDetailPlan(null);
+    setActionError(null);
     try {
       const [content, progress] = await Promise.all([
         apiGet(`/api/plans/content/${plan.id}`),
         apiGet(`/api/plans/progress/${userId}/${plan.id}`),
       ]);
+      if (request !== trackerRequest.current) return;
       setTrackerContent(content);
       setTrackerProgress(progress);
       setTrackerPlan(plan);
     } catch (err) {
+      if (request !== trackerRequest.current) return;
+      setActionError('Could not open this plan. Please try again.');
       if (import.meta.env.DEV) console.error('Tracker load error:', err);
     }
-  };
+  }, [userId]);
 
   // ── Mark a day complete (optimistic update) ────────────────────
   const handleCompleteDay = async (dayNumber) => {
@@ -163,15 +170,38 @@ const usePlans = () => {
   };
 
   // ── Generate a 7-day starter from the active onboarding goal ────
-  const autoFromGoal = async () => {
+  // body: { goalType, regenerate, all, makeActive } — all optional. Guard
+  // against being wired straight to onClick (a click event is not a body).
+  const autoFromGoal = async (body) => {
+    const payload = body && typeof body === 'object' && !('nativeEvent' in body) && !('target' in body) ? body : {};
     setActing(true); setActionError(null); setActionOk(null);
     try {
-      const data = await apiPost('/api/plans/auto-from-goal', {});
-      setActionOk(data?.created === false ? 'Your goal plan is already in My Plans.' : 'Goal plan created — find it in My Plans.');
+      const data = await apiPost('/api/plans/auto-from-goal', payload);
+      setActionOk(
+        payload.regenerate ? 'Your recommended plans were rebuilt with your latest settings.'
+          : data?.created === false ? 'Your goal plan is already in My Plans.'
+            : 'Recommended plan created — find it in My Plans.'
+      );
       await fetchMarketplace();
       return data;
     } catch (err) {
       setActionError(err?.message || 'Could not generate plan. Complete onboarding first.');
+      return null;
+    } finally {
+      setActing(false);
+    }
+  };
+
+  // ── Make a plan the active plan for the goal (Section 3)
+  const activatePlan = async (planId) => {
+    setActing(true); setActionError(null); setActionOk(null);
+    try {
+      const data = await apiPost(`/api/plans/${planId}/activate`, {});
+      setActionOk(`${data?.title || 'Plan'} is now your active plan.`);
+      await fetchMarketplace();
+      return data;
+    } catch (err) {
+      setActionError(err?.message || 'Could not switch your active plan.');
       return null;
     } finally {
       setActing(false);
@@ -196,6 +226,7 @@ const usePlans = () => {
 
   // ── Close tracker and refresh plans ───────────────────────────
   const closeTracker = () => {
+    trackerRequest.current += 1;
     setTrackerPlan(null);
     setTrackerContent([]);
     setTrackerProgress([]);
@@ -206,6 +237,7 @@ const usePlans = () => {
   const enrolledCount = trainingPlans.filter(p => p.is_enrolled === 1).length;
 
   return {
+    userId,
     loading,
     authChecked,
     authError,
@@ -227,6 +259,7 @@ const usePlans = () => {
     createPersonal,
     updatePersonal,
     autoFromGoal,
+    activatePlan,
     removePersonal,
     startTracker,
     handleCompleteDay,

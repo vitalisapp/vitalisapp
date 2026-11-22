@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Icon from "../../../../components/Icon.jsx";
+import { EXPERIENCE_LEVELS, EXCLUSION_CATEGORIES } from "../../../../lib/goalSetup.js";
 
 // ── Module 5 — Training Preferences editor ──────────────────────────────────
 //Self-reported inputs used by: day-cycling schedule (preferred days),
@@ -19,7 +20,7 @@ const EQUIPMENT_ICONS = {
 const LOCATIONS = ['Home', 'Gym', 'Outdoor', 'BFP Office', 'Other'];
 const MINS_PRESETS = [20, 30, 45, 60];
 
-export default function TrainingPrefsSheet({ open, preferences, options, onClose, onSave }) {
+export default function TrainingPrefsSheet({ open = undefined, preferences = undefined, options = undefined, onClose = undefined, onSave = undefined, experience: savedExperience = null }) {
   // Recreated per open (parent passes a remount key), so state initializers
   // read props directly — no effect-sync needed for the edit-vs-create flow.
   const savedMins = preferences?.sessionDurationMins ?? null;
@@ -32,6 +33,10 @@ export default function TrainingPrefsSheet({ open, preferences, options, onClose
     savedMins != null && !MINS_PRESETS.includes(Number(savedMins)) ? String(savedMins) : ''
   ));
   const [location,    setLocation]    = useState(() => preferences?.workoutLocation ?? '');
+  const [experience,  setExperience]  = useState(() => savedExperience || 'BEGINNER');
+  const [exclCats,    setExclCats]    = useState(() => preferences?.excludedCategories ?? []);
+  const [exclEx,      setExclEx]      = useState(() => preferences?.excludedExercises ?? []);
+  const [rebuild,     setRebuild]     = useState(true);
   const [err,         setErr]         = useState(null);
   const [busy,        setBusy]        = useState(false);
 
@@ -55,7 +60,9 @@ export default function TrainingPrefsSheet({ open, preferences, options, onClose
       preferred_days: days,
       session_duration_mins: resolvedMins,
       workout_location: location || undefined,
-    });
+      excluded_categories: exclCats,
+      excluded_exercises: exclEx,
+    }, { experience, rebuild });
     setBusy(false);
     if (ok !== null) onClose?.();
   };
@@ -79,7 +86,7 @@ export default function TrainingPrefsSheet({ open, preferences, options, onClose
       >
         <div className="flex items-center justify-between mb-5">
           <div>
-            <p className="text-[length:var(--fs-9)] font-black uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Module 5 · inputs</p>
+            <p className="text-[length:var(--fs-9)] font-black uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Personalize your plan</p>
             <h3 className="text-lg font-black" style={{ color: 'var(--text-primary)' }}>Training preferences</h3>
           </div>
           <button onClick={onClose} disabled={busy} aria-label="Close"
@@ -87,6 +94,27 @@ export default function TrainingPrefsSheet({ open, preferences, options, onClose
             <Icon name="close" className="text-[length:var(--fs-18)]" />
           </button>
         </div>
+
+        <p className="text-[length:var(--fs-9)] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Training experience</p>
+        <div className="grid grid-cols-3 gap-1.5 mb-1.5">
+          {EXPERIENCE_LEVELS.map((lv) => {
+            const active = experience === lv.key;
+            return (
+              <button key={lv.key} type="button" onClick={() => setExperience(lv.key)} aria-pressed={active}
+                className="h-10 rounded-xl text-[12px] font-bold border cursor-pointer transition-all"
+                style={{
+                  background: active ? 'var(--accent-bg)' : 'var(--bg-hover)',
+                  borderColor: active ? 'var(--accent-border)' : 'var(--border-light)',
+                  color: active ? 'var(--accent)' : 'var(--text-muted)',
+                }}>
+                {lv.label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[12px] leading-snug mb-5" style={{ color: 'var(--text-muted)' }}>
+          {EXPERIENCE_LEVELS.find((lv) => lv.key === experience)?.desc}
+        </p>
 
         <p className="text-[length:var(--fs-9)] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Available equipment (none is fine)</p>
         <div className="flex flex-wrap gap-2 mb-5">
@@ -170,6 +198,45 @@ export default function TrainingPrefsSheet({ open, preferences, options, onClose
             );
           })}
         </div>
+
+        <p className="text-[length:var(--fs-9)] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Exercises to avoid (optional)</p>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {EXCLUSION_CATEGORIES.map((c) => {
+            const active = exclCats.includes(c.key);
+            return (
+              <button key={c.key} type="button" title={c.desc} onClick={() => toggleIn(exclCats, setExclCats, c.key)} aria-pressed={active}
+                className="px-3 h-9 rounded-lg text-[12px] font-semibold border cursor-pointer transition-all"
+                style={{
+                  background: active ? 'var(--accent-bg)' : 'var(--bg-hover)',
+                  borderColor: active ? 'var(--accent-border)' : 'var(--border-light)',
+                  color: active ? 'var(--accent)' : 'var(--text-muted)',
+                }}>
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+        {exclEx.length > 0 && (
+          <>
+            <p className="text-[12px] mb-1.5" style={{ color: 'var(--text-muted)' }}>Exercises you marked "Don't recommend" (tap to allow again):</p>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {exclEx.map((name) => (
+                <button key={name} type="button" onClick={() => setExclEx(exclEx.filter((n) => n !== name))}
+                  aria-label={`Allow ${name} again`}
+                  className="flex items-center gap-1 pl-2.5 pr-1.5 h-8 rounded-lg text-[12px] font-medium border cursor-pointer"
+                  style={{ background: 'var(--bg-hover)', borderColor: 'var(--border-light)', color: 'var(--text-primary)' }}>
+                  {name}
+                  <Icon name="close" className="text-[14px]" />
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        <label className="flex items-start gap-2 mt-2 text-[12.5px] leading-snug cursor-pointer" style={{ color: 'var(--text-primary)' }}>
+          <input type="checkbox" checked={rebuild} onChange={(e) => setRebuild(e.target.checked)} className="mt-0.5 accent-[var(--accent)]" />
+          <span>Rebuild my recommended plans with these settings <span style={{ color: 'var(--text-muted)' }}>(your own custom plans are not changed)</span></span>
+        </label>
 
         {err && <p className="mt-2 text-[length:var(--fs-11)] font-bold" style={{ color: 'var(--error)' }} role="alert">⚠ {err}</p>}
 

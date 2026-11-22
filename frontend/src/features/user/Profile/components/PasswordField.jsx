@@ -7,10 +7,10 @@ import Icon from '../../../../components/Icon.jsx';
  * the others.
  */
 export default function PasswordField({
-  id,
-  label,
-  value,
-  onChange,
+  id = undefined,
+  label = undefined,
+  value = undefined,
+  onChange = undefined,
   autoComplete = 'new-password',
   placeholder = 'Enter password',
   helper = '',

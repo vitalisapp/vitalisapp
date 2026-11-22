@@ -94,7 +94,7 @@ const WeekStrip = ({ week = [], compact = false }) => {
   );
 };
 
-const TodayRow = ({ icon, label, detail, done, action, onAction }) => (
+const TodayRow = ({ icon = undefined, label = undefined, detail = undefined, done = undefined, action = undefined, onAction = undefined }) => (
   <li className={`vd-streak-action${done ? ' is-done' : ''}`}>
     <span className="vd-streak-action-icon" aria-hidden="true">
       <Icon name={done ? 'check' : icon} />

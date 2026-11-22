@@ -1,6 +1,6 @@
 import React from 'react';
 
-const RunAnalysisOverlay = ({ analysis, onClose }) => {
+const RunAnalysisOverlay = ({ analysis = undefined, onClose = undefined }) => {
   if (!analysis) return null;
 
   return (

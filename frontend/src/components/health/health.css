@@ -1,0 +1,176 @@
+/* Health interpretation UI (BMI insight, yearly BMI, sleep note, activity
+   detail). Compact and theme-token based so light and dark both work.
+   Prefix: vh- */
+.vh-bmi {
+  --vh-tone: var(--accent);
+  --vh-tone-bg: var(--accent-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  text-align: left;
+}
+.vh-bmi.is-info { --vh-tone: #60a5fa; --vh-tone-bg: color-mix(in srgb, #60a5fa 14%, transparent); }
+.vh-bmi.is-warn { --vh-tone: #f59e0b; --vh-tone-bg: color-mix(in srgb, #f59e0b 14%, transparent); }
+.vh-bmi.is-risk { --vh-tone: #f87171; --vh-tone-bg: color-mix(in srgb, #f87171 14%, transparent); }
+.vh-bmi.is-empty { flex-direction: row; align-items: center; color: var(--text-muted); font-size: 13px; }
+.vh-bmi.is-empty p { margin: 0; }
+.vh-bmi.is-compact { padding: 12px 14px; gap: 8px; }
+
+.vh-bmi__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.vh-bmi__eyebrow { margin: 0; font-size: 11.5px; font-weight: 500; color: var(--text-muted); }
+.vh-bmi__value {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 2px 0 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.vh-bmi.is-compact .vh-bmi__value { font-size: 20px; }
+.vh-bmi__badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--vh-tone-bg);
+  color: var(--vh-tone);
+  font-size: 12px;
+  font-weight: 600;
+}
+.vh-bmi__range-label { margin: 0; font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+
+.vh-bmi__scale {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14fr 26fr 20fr 40fr; /* 15–18.5–25–30–40 */
+  gap: 2px;
+  height: 6px;
+}
+.vh-bmi__seg { border-radius: 3px; opacity: 0.85; }
+.vh-bmi__seg.is-info { background: #60a5fa; }
+.vh-bmi__seg.is-good { background: var(--accent); }
+.vh-bmi__seg.is-warn { background: #f59e0b; }
+.vh-bmi__seg.is-risk { background: #f87171; }
+.vh-bmi__marker {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 3px solid var(--text-primary);
+  transform: translate(-50%, -50%);
+}
+.vh-bmi__ticks {
+  position: relative;
+  height: 12px;
+  margin-top: -4px;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+.vh-bmi__ticks span { position: absolute; transform: translateX(-50%); }
+.vh-bmi__ticks span:nth-child(1) { left: 14%; }
+.vh-bmi__ticks span:nth-child(2) { left: 40%; }
+.vh-bmi__ticks span:nth-child(3) { left: 60%; }
+
+.vh-bmi__meaning { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+.vh-bmi__fact {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.vh-bmi__fact .material-symbols-outlined { flex-shrink: 0; margin-top: 1px; font-size: 16px; color: var(--vh-tone); }
+.vh-bmi__fact strong { color: var(--text-primary); font-weight: 600; }
+.vh-bmi__note { margin: 0; font-size: 11px; line-height: 1.45; color: var(--text-muted); }
+
+/* ── Yearly BMI ─────────────────────────────────────────────────────── */
+.vh-yearly {
+  padding: 14px 16px;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+.vh-yearly.is-loading,
+.vh-yearly.is-error { font-size: 13px; color: var(--text-muted); }
+.vh-yearly.is-error { color: var(--error); }
+.vh-yearly__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.vh-yearly__head h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.vh-yearly__head p { margin: 2px 0 0; font-size: 12.5px; color: var(--text-muted); }
+.vh-yearly__last { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+.vh-yearly__due {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--warning-bg, color-mix(in srgb, #f59e0b 12%, transparent));
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.vh-yearly__due .material-symbols-outlined { flex-shrink: 0; font-size: 17px; color: var(--warning, #f59e0b); }
+.vh-yearly__list { margin: 0; padding: 0; list-style: none; }
+.vh-yearly__list li { display: flex; gap: 14px; padding: 10px 0; }
+.vh-yearly__list li + li { border-top: 1px solid var(--border-light); }
+.vh-yearly__year { display: flex; flex-direction: column; width: 64px; flex-shrink: 0; }
+.vh-yearly__year strong { font-size: 14px; font-weight: 600; }
+.vh-yearly__year span { font-size: 11px; color: var(--text-muted); }
+.vh-yearly__main { flex: 1; min-width: 0; }
+.vh-yearly__main p { margin: 3px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--text-secondary); }
+.vh-yearly__main .vh-yearly__sub { font-size: 11.5px; color: var(--text-muted); }
+.vh-yearly__nums { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.vh-yearly__bmi { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.vh-yearly__cat { font-size: 12px; font-weight: 500; }
+.vh-yearly__cat.is-good { color: var(--accent); }
+.vh-yearly__cat.is-info { color: #60a5fa; }
+.vh-yearly__cat.is-warn { color: #f59e0b; }
+.vh-yearly__cat.is-risk { color: #f87171; }
+.vh-yearly__delta { display: inline-flex; align-items: center; gap: 1px; font-size: 12px; color: var(--text-muted); }
+.vh-yearly__delta .material-symbols-outlined { font-size: 14px; }
+
+/* ── Sleep guidance note ────────────────────────────────────────────── */
+.vh-sleep-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.vh-sleep-note strong { color: var(--text-primary); font-weight: 600; }
+.vh-sleep-note .material-symbols-outlined { flex-shrink: 0; margin-top: 1px; font-size: 16px; }
+.vh-sleep-note.is-good .material-symbols-outlined { color: var(--accent); }
+.vh-sleep-note.is-warn .material-symbols-outlined { color: #f59e0b; }
+.vh-sleep-note.is-risk .material-symbols-outlined { color: #f87171; }
+
+/* ── Activity level detail ──────────────────────────────────────────── */
+.vh-activity-detail {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.vh-activity-detail strong { color: var(--text-primary); font-weight: 600; }
+.vh-activity-detail ul { margin: 4px 0 0; padding-left: 18px; }

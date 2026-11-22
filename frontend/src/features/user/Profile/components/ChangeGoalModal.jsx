@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch, apiPost } from '../../../../lib/apiClient.js';
 import Icon from '../../../../components/Icon.jsx';
 import { GOAL_TYPES, PACES, goalLabel } from '../../Onboarding/constants/goals.js';
+import { MAX_EXTRA_GOALS, extraGoalBlockReason, cleanExtraGoals, checkTargetDate, targetDateBounds } from '../../../../lib/goalSetup.js';
 
 // Change Goal modal (master plan §12) — switch the active goal without replaying
 // onboarding. Body profile is carried forward server-side (PATCH /:userId/change).
@@ -11,7 +12,7 @@ import { GOAL_TYPES, PACES, goalLabel } from '../../Onboarding/constants/goals.j
 // what the create endpoint requires (height + weight), carries over DOB / sex
 // typed in My Account, and POSTs /api/goals/:userId — the user never leaves
 // the Profile page for the onboarding wizard.
-const ChangeGoalModal = ({ userId, currentGoal, identity, onClose, onUpdated, showToast }) => {
+const ChangeGoalModal = ({ userId = undefined, currentGoal = undefined, identity = undefined, onClose = undefined, onUpdated = undefined, showToast = undefined }) => {
   const firstSetup = !currentGoal?.goalType;
   const [goalType, setGoalType] = useState(firstSetup ? 'LOSE_WEIGHT' : (currentGoal?.goalType || 'LOSE_WEIGHT'));
   const [targetWeight, setTargetWeight] = useState(
@@ -23,6 +24,8 @@ const ChangeGoalModal = ({ userId, currentGoal, identity, onClose, onUpdated, sh
   const [weight, setWeight] = useState(currentGoal?.weightKg != null ? String(currentGoal.weightKg) : '');
   const [dob, setDob] = useState(identity?.dob || currentGoal?.dob ? String(identity?.dob || currentGoal?.dob).slice(0, 10) : '');
   const [sex, setSex] = useState(identity?.sex || currentGoal?.sex || '');
+  const [extraGoals, setExtraGoals] = useState(() => currentGoal?.secondaryGoals || []);
+  const [targetDate, setTargetDate] = useState(() => currentGoal?.targetDate || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -36,6 +39,14 @@ const ChangeGoalModal = ({ userId, currentGoal, identity, onClose, onUpdated, sh
 
   const needsTarget = goalType === 'LOSE_WEIGHT' || goalType === 'GAIN_WEIGHT';
   const paceOptions = PACES[goalType] || [];
+  const bounds = targetDateBounds();
+  const dateCheck = checkTargetDate({
+    targetDate,
+    weightKg: firstSetup ? weight : currentGoal?.weightKg,
+    targetWeightKg: targetWeight || null,
+  });
+  const pickGoal = (k) => { setGoalType(k); setExtraGoals((list) => cleanExtraGoals(k, list)); };
+  const toggleExtra = (k) => setExtraGoals((list) => (list.includes(k) ? list.filter((x) => x !== k) : [...list, k]));
 
   const submit = async (e) => {
     e.preventDefault();
@@ -48,6 +59,7 @@ const ChangeGoalModal = ({ userId, currentGoal, identity, onClose, onUpdated, sh
       setError('Target weight must be between 10 and 1000 kg.');
       return;
     }
+    if (!dateCheck.ok) return setError(dateCheck.message);
     if (firstSetup) {
       const h = Number(height);
       const w = Number(weight);
@@ -62,6 +74,8 @@ const ChangeGoalModal = ({ userId, currentGoal, identity, onClose, onUpdated, sh
           body.targetWeightKg = Number(targetWeight);
           if (pace) body.pace = pace;
         }
+        body.secondaryGoals = extraGoals;
+        body.targetDate = targetDate || null;
         if (dob) body.dob = dob;
         if (sex) body.sex = sex;
         const data = await apiPost(`/api/goals/${userId}`, body);
@@ -69,7 +83,7 @@ const ChangeGoalModal = ({ userId, currentGoal, identity, onClose, onUpdated, sh
         onUpdated?.(data.goal);
         onClose();
       } else {
-        const body = { goalType };
+        const body = { goalType, secondaryGoals: extraGoals, targetDate: targetDate || null };
         if (needsTarget) {
           body.targetWeightKg = Number(targetWeight);
           if (pace) body.pace = pace;
@@ -78,6 +92,9 @@ const ChangeGoalModal = ({ userId, currentGoal, identity, onClose, onUpdated, sh
           method: 'PATCH',
           body: JSON.stringify(body),
         });
+        // Make sure every goal (main + extras) has its recommended plan; the
+        // main goal's plan becomes active. Existing plans are left as they are.
+        apiPost('/api/plans/auto-from-goal', { all: true }).catch(() => {});
         showToast?.(`Goal updated to ${goalLabel(goalType)}`);
         onUpdated?.(data.goal);
         onClose();
@@ -109,7 +126,7 @@ const ChangeGoalModal = ({ userId, currentGoal, identity, onClose, onUpdated, sh
 
         <form onSubmit={submit} className="space-y-3">
           {GOAL_TYPES.map((g) => (
-            <button type="button" key={g.key} onClick={() => setGoalType(g.key)}
+            <button type="button" key={g.key} onClick={() => pickGoal(g.key)}
               className={`w-full text-left p-3.5 rounded-[14px] border transition-colors flex items-center gap-3 ${goalType === g.key ? 'border-[var(--accent)] bg-[var(--accent-bg)]' : 'border-[var(--border-light)] bg-[var(--bg-hover)] hover:border-[var(--border-medium)]'}`}>
               <span className="w-9 h-9 rounded-xl bg-[var(--bg-active)] border border-[var(--border-light)] flex items-center justify-center shrink-0 overflow-hidden">
                 <Icon name={g.icon} className="text-[length:var(--fs-20)] text-[var(--accent)]" />
@@ -178,6 +195,41 @@ const ChangeGoalModal = ({ userId, currentGoal, identity, onClose, onUpdated, sh
               )}
             </>
           )}
+
+          <div>
+            <p className="text-[length:var(--fs-10)] font-bold uppercase tracking-widest text-[var(--text-muted)]">Extra goals (optional, up to {MAX_EXTRA_GOALS})</p>
+            <div className="flex gap-2 mt-1 flex-wrap">
+              {GOAL_TYPES.filter((g) => g.key !== goalType).map((g) => {
+                const active = extraGoals.includes(g.key);
+                const reason = active ? null : extraGoalBlockReason(goalType, g.key, extraGoals);
+                return (
+                  <button type="button" key={g.key} onClick={() => toggleExtra(g.key)} disabled={Boolean(reason)} title={reason || undefined}
+                    aria-pressed={active}
+                    className={`h-9 px-3 rounded-full text-[12px] font-semibold border transition-colors disabled:opacity-40 ${active
+                      ? 'bg-[var(--accent-bg)] text-[var(--accent)] border-[var(--accent-border)]'
+                      : 'border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-medium)]'}`}>
+                    {g.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1 text-[12px] text-[var(--text-muted)]">Each extra goal gets its own workout plan in My Plans.</p>
+          </div>
+
+          <div>
+            <label htmlFor="cg-target-date" className="text-[length:var(--fs-10)] font-bold uppercase tracking-widest text-[var(--text-muted)]">Target date (optional)</label>
+            <input id="cg-target-date" type="date" min={bounds.min} max={bounds.max} value={targetDate}
+              onChange={(e) => setTargetDate(e.target.value)} aria-invalid={!dateCheck.ok || undefined} className={inputCls} />
+            {targetDate && !dateCheck.ok && <p className="mt-1 text-[12px] text-[var(--error)]" role="alert">{dateCheck.message}</p>}
+            {targetDate && dateCheck.ok && dateCheck.feasibility && (
+              <p className="mt-1 text-[12px]" style={{ color: dateCheck.feasibility.realistic ? 'var(--success, #10b981)' : 'var(--warning, #b45309)' }} role="status">
+                {dateCheck.feasibility.message}
+                {!dateCheck.feasibility.realistic && (
+                  <> <button type="button" className="underline font-semibold" onClick={() => setTargetDate(dateCheck.feasibility.suggestedDate)}>Use safer date</button></>
+                )}
+              </p>
+            )}
+          </div>
 
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose}

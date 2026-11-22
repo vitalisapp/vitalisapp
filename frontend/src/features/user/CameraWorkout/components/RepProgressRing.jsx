@@ -3,7 +3,7 @@ import { formStatus } from "./formStatus.js";
 
 // Rep progress ring: current / target with an accent arc.
 // Pure SVG, theme-aware, no image assets.
-export default function RepProgressRing({ value, target, label = 'REPS', size = 120 }) {
+export default function RepProgressRing({ value = undefined, target = undefined, label = 'REPS', size = 120 }) {
   const safeTarget = Math.max(1, Number(target) || 1);
   const clamped = Math.max(0, Math.min(safeTarget, Number(value) || 0));
   const r = 52;
@@ -35,7 +35,7 @@ export default function RepProgressRing({ value, target, label = 'REPS', size = 
   );
 }
 
-export function FormStatusPill({ alignment, symmetry }) {
+export function FormStatusPill({ alignment = undefined, symmetry = undefined }) {
   const status = formStatus(alignment, symmetry);
   if (status === 'idle') {
     return (

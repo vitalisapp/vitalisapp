@@ -19,7 +19,7 @@ import '../password-ui.css';
  * password returns 401 INVALID_PASSWORD, so this request opts out of the
  * global unauthorized redirect and handles that specific 401 inline.
  */
-export default function ChangePasswordModal({ onClose, onSuccess, onForgotPassword }) {
+export default function ChangePasswordModal({ onClose = undefined, onSuccess = undefined, onForgotPassword = undefined }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

@@ -13,6 +13,8 @@ router.patch('/:id/end', verifyUser, controller.patchIdEnd);
 router.post('/:id/pause', verifyUser, controller.postPause);
 router.post('/:id/resume', verifyUser, controller.postResume);
 router.patch('/:id/feedback', verifyUser, controller.patchFeedback);
+// Calendar dots for the Progress page; literal path must precede '/:id'.
+router.get('/days', verifyUser, controller.getDays);
 router.get('/:id', verifyUser, controller.getId);
 router.get('/', verifyUser, controller.get);
 

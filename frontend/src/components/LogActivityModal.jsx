@@ -4,7 +4,7 @@ import Input from './ui/Input.jsx';
 import Button from './ui/Button.jsx';
 import { EMPTY_ACTIVITY_FORM, validateActivityForm } from '../lib/activityForm.js';
 
-const LogActivityModal = ({ isOpen, onClose, onSave }) => {
+const LogActivityModal = ({ isOpen = undefined, onClose = undefined, onSave = undefined }) => {
   const [formData, setFormData] = useState(EMPTY_ACTIVITY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -44,7 +44,7 @@ const LogActivityModal = ({ isOpen, onClose, onSave }) => {
       isOpen={isOpen}
       onClose={handleClose}
       title="Log Activity"
-      subtitle="Daily Biometric Entry"
+      subtitle="Record today’s activity"
       icon="edit_note"
       size="md"
     >

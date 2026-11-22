@@ -7,6 +7,10 @@ import {
   EXERCISE_FREQ,
   EXERCISE_FREQ_LABELS,
 } from '../../Onboarding/constants/goals.js';
+import { SLEEP_CHOICES } from '../../../../lib/bmi.js';
+import { ageOn } from '../../../../lib/age.js';
+import SleepNote from '../../../../components/health/SleepNote.jsx';
+import ActivityDetail from '../../../../components/health/ActivityDetail.jsx';
 
 // Common allergens offered as toggle chips; "Something else?" adds free text.
 // Mirrors onboarding's ALLERGEN_PRESETS so the two screens stay in sync.
@@ -14,7 +18,7 @@ const ALLERGEN_PRESETS = ['Gluten', 'Peanuts', 'Tree nuts', 'Milk', 'Eggs', 'Fis
 const MAX_CUSTOM = 40;
 
 // Eyebrow label used by every field. Matches Profile.jsx's shared <Eyebrow>.
-const FieldLabel = ({ children, hint }) => (
+const FieldLabel = ({ children = undefined, hint = undefined }) => (
   <div className="flex items-baseline justify-between gap-2">
     <span className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">{children}</span>
     {hint && <span className="text-[length:var(--fs-9)] text-[var(--text-disabled)] shrink-0">{hint}</span>}
@@ -23,7 +27,7 @@ const FieldLabel = ({ children, hint }) => (
 
 // Horizontal pill strip. flex-wrap keeps tiny 320px screens readable, and the
 // active pill stays legible in both themes (accent bg + inverse text).
-const PillGroup = ({ label, hint, value, options, onChange }) => (
+const PillGroup = ({ label = undefined, hint = undefined, value = undefined, options = undefined, onChange = undefined }) => (
   <div>
     <FieldLabel hint={hint}>{label}</FieldLabel>
     <div className="flex flex-wrap gap-2 mt-2">
@@ -46,11 +50,12 @@ const PillGroup = ({ label, hint, value, options, onChange }) => (
   </div>
 );
 
-export default function PersonalizationSection({ userId, onboarding, onSaved, showToast }) {
+export default function PersonalizationSection({ userId = undefined, onboarding = undefined, onSaved = undefined, showToast = undefined }) {
   const [allergies, setAllergies] = useState([]);
   const [customAllergy, setCustomAllergy] = useState('');
   const [activityLevel, setActivityLevel] = useState('');
   const [exerciseFreq, setExerciseFreq] = useState('');
+  const [sleepHours, setSleepHours] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -59,7 +64,9 @@ export default function PersonalizationSection({ userId, onboarding, onSaved, sh
     if (!onboarding) return;
     setActivityLevel(onboarding.activityLevel || '');
     setExerciseFreq(onboarding.exerciseFreq || '');
+    setSleepHours(onboarding.sleepHours != null ? Number(onboarding.sleepHours) : null);
   }, [onboarding]);
+  const userAge = onboarding?.dob ? ageOn(String(onboarding.dob).slice(0, 10)) : null;
 
   // Load saved allergies once. Best-effort: a failure just leaves the list empty.
   useEffect(() => {
@@ -103,6 +110,7 @@ export default function PersonalizationSection({ userId, onboarding, onSaved, sh
         body: JSON.stringify({
           activityLevel,
           exerciseFreq,
+          sleepHours,
         }),
       });
       onSaved?.(data?.goal);
@@ -214,6 +222,19 @@ export default function PersonalizationSection({ userId, onboarding, onSaved, sh
             );
           })}
         </div>
+        <ActivityDetail level={ACTIVITY_LEVELS.find((a) => a.key === activityLevel)} />
+      </div>
+
+      {/* Usual sleep — single estimate, not daily tracking (Section 2) */}
+      <div>
+        <PillGroup
+          label="Usual Sleep per Night"
+          hint="Optional"
+          value={sleepHours}
+          onChange={(v) => setSleepHours((cur) => (cur === v ? null : v))}
+          options={SLEEP_CHOICES.map((c) => ({ key: c.value, label: c.label }))}
+        />
+        <SleepNote hours={sleepHours} age={userAge} />
       </div>
 
       {/* Exercise Frequency */}
@@ -229,7 +250,7 @@ export default function PersonalizationSection({ userId, onboarding, onSaved, sh
           {saving ? 'Saving…' : 'Save Personalization'}
         </Button>
         <p className="text-[length:var(--fs-10)] text-[var(--text-disabled)] text-center mt-2.5 leading-relaxed">
-          Updating activity or exercise frequency recalculates your calorie targets and regenerates your workout plan.
+          Updating activity, sleep or exercise frequency recalculates your calorie targets and regenerates your workout plan.
         </p>
       </div>
     </div>

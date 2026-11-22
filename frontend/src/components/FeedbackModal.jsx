@@ -4,7 +4,7 @@ import Input from './ui/Input.jsx';
 import Button from './ui/Button.jsx';
 import { apiPost } from '../lib/apiClient.js';
 
-export default function FeedbackModal({ onClose }) {
+export default function FeedbackModal({ onClose = undefined }) {
   // Callers mount this conditionally; close locally first so the Modal exit
   // animation plays, then tell the parent once it has finished.
   const [open, setOpen] = useState(true);

@@ -1,5 +1,5 @@
 import Icon from "../../../../components/Icon.jsx";
-export default function CameraOffPlaceholder({ cameraOn, onTurnOn }) {
+export default function CameraOffPlaceholder({ cameraOn = undefined, onTurnOn = undefined }) {
   if (cameraOn) return null;
   return (
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-[var(--bg-card)]">

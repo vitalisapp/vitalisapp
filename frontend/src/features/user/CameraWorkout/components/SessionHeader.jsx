@@ -8,9 +8,9 @@ import Icon from "../../../../components/Icon.jsx";
 // holding the voice/camera toggles. START lives in the bottom bar.
 // Minimal variant unchanged: toggles only, used on the chooser screen.
 export default function SessionHeader({
-  workoutLabel, workoutSub, isRecording, paused,
-  cameraOn, voiceEnabled, onCameraToggle, onVoiceToggle, onBack,
-  onChangeExercise, onLogManual, minimal = false,
+  workoutLabel = undefined, workoutSub = undefined, isRecording = undefined, paused = undefined,
+  cameraOn = undefined, voiceEnabled = undefined, onCameraToggle = undefined, onVoiceToggle = undefined, onBack = undefined,
+  onChangeExercise = undefined, onLogManual = undefined, minimal = false,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 

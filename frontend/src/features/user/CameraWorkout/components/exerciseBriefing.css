@@ -1,0 +1,43 @@
+/* Section 7 — pre-start exercise briefing */
+.cw-brief { display: grid; gap: 16px; padding: 18px; border: 1px solid var(--border-light); border-radius: 24px; }
+.cw-brief h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font-size: 13px; font-weight: 800; color: var(--text-primary); }
+.cw-brief h3 .material-symbols-outlined { font-size: 17px; color: var(--accent); }
+.cw-brief ul, .cw-brief ol { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; line-height: 1.5; color: var(--text-primary); }
+.cw-brief-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.cw-brief-eyebrow { display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+.cw-brief-title { margin: 2px 0 4px; font-size: 20px; font-weight: 900; color: var(--text-primary); }
+.cw-brief-method { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 12.5px; font-weight: 600; color: var(--accent); }
+.cw-brief-method .material-symbols-outlined { font-size: 16px; }
+.cw-brief-close { flex-shrink: 0; width: 40px; height: 40px; border: 0; border-radius: 999px; display: grid; place-items: center; background: var(--bg-hover); color: var(--text-muted); cursor: pointer; }
+.cw-brief-grid { display: grid; gap: 16px; }
+@media (min-width: 720px) { .cw-brief-grid { grid-template-columns: 220px 1fr; align-items: start; } }
+.cw-brief-frames { margin: 0; display: grid; gap: 6px; justify-items: center; }
+.cw-brief-frames img { width: 100%; max-width: 220px; aspect-ratio: 1; object-fit: contain; border-radius: 16px; background: #1e1e1e; }
+.cw-brief-frames figcaption { font-size: 10px; color: var(--text-muted); text-align: center; }
+.cw-brief-dots { display: flex; gap: 6px; }
+.cw-brief-dots button { width: 10px; height: 10px; padding: 0; border: 0; border-radius: 999px; background: var(--border-medium); cursor: pointer; }
+.cw-brief-dots button.is-on { background: var(--accent); }
+.cw-brief-setup { display: grid; gap: 8px; }
+.cw-brief-distance { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 14px; background: var(--accent-bg); color: var(--accent); }
+.cw-brief-distance .material-symbols-outlined { font-size: 28px; }
+.cw-brief-line { position: relative; flex: 1; height: 2px; background: repeating-linear-gradient(90deg, var(--accent) 0 6px, transparent 6px 10px); }
+.cw-brief-line span { position: absolute; left: 50%; top: -20px; transform: translateX(-50%); font-size: 12px; font-weight: 800; white-space: nowrap; }
+.cw-brief-checks { list-style: none; padding: 0 !important; }
+.cw-brief-checks li { display: flex; gap: 8px; align-items: flex-start; }
+.cw-brief-checks .material-symbols-outlined { flex-shrink: 0; font-size: 17px; color: var(--text-muted); margin-top: 1px; }
+.cw-brief-two { display: grid; gap: 12px; }
+@media (min-width: 640px) { .cw-brief-two { grid-template-columns: 1fr 1fr; } }
+.cw-brief-block { padding: 12px 14px; border-radius: 14px; background: var(--bg-hover); }
+.cw-brief-block--warn h3 .material-symbols-outlined { color: var(--warning, #b45309); }
+.cw-brief-count { padding: 12px 14px; border-radius: 14px; border: 1px solid var(--accent-border, var(--border-light)); }
+.cw-brief-count p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text-primary); }
+.cw-brief-count p + p { margin-top: 6px; }
+.cw-brief-note { font-size: 12px !important; color: var(--text-muted) !important; }
+.cw-brief-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.cw-brief-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--border-medium); background: transparent; color: var(--text-primary); font-size: 13px; font-weight: 700; cursor: pointer; }
+.cw-brief-btn .material-symbols-outlined { font-size: 19px; }
+.cw-brief-btn--primary { border-color: var(--accent); background: var(--accent); color: var(--text-inverse); }
+.cw-brief-btn:focus-visible, .cw-brief-close:focus-visible, .cw-brief-reopen:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cw-brief-reopen { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border-light); background: var(--bg-card); color: var(--text-primary); font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.cw-brief-reopen .material-symbols-outlined { font-size: 18px; color: var(--accent); }
+@media (max-width: 520px) { .cw-brief-actions { flex-direction: column-reverse; } .cw-brief-btn { justify-content: center; } }

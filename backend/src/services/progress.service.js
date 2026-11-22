@@ -13,12 +13,15 @@
 //      (upsert). Weight mirrors into bmi_records so existing BMI surfaces and
 //      AI weight-trend context keep working.
 const db = require("../config/db");
+const tasks = require('../utils/taskNotifications');
 const { AppError } = require("../utils/errors");
 const gemini = require("../config/gemini");
 const { computeBmi } = require("./bmi.service");
 // Single BMI category source — matches planEngine (Onboarding) and the master plan.
 const { bmiCategory: getBmiCategory } = require("../utils/planEngine");
 const overview = require("../utils/progressOverview");
+const { buildProgressSummary } = require("../utils/progressInsights");
+const { buildSampleDataset } = require("../utils/sampleProgress");
 
 const POSES = ["front", "side", "back"];
 // ~4.5MB of base64 ≈ 3.3MB binary — client compresses far below this.
@@ -182,6 +185,11 @@ async function getOverview(userId, rawRange) {
   const weights = weightRows.map((r) => ({ day: r.day, value: Number(r.value) }));
   const waists = waistRows.map((r) => ({ day: r.day, value: Number(r.value) }));
 
+  return assembleOverview(range, today, nominalStart, { workouts, meals, weights, waists });
+}
+
+// Shared bucketing for real rows and the demo dataset.
+function assembleOverview(range, today, nominalStart, { workouts, meals, weights, waists }) {
   // "All" starts at the first real row so an empty chart never pretends to
   // have years of history; the fallback window keeps the axis sensible.
   let start = nominalStart;
@@ -205,6 +213,148 @@ async function getOverview(userId, rawRange) {
     chartStart,
     end: today,
     metrics: overview.aggregateOverview({ buckets, workouts, meals, weights, waists }),
+  };
+}
+
+// ─── 1b. SAMPLE DATA (demo mode) ───────────────────────────────────────
+// Generated in memory from utils/sampleProgress — never stored, always
+// flagged `sample: true` so the UI can label it clearly.
+function getSampleOverview(rawRange) {
+  const range = overview.normalizeRange(rawRange);
+  const today = overview.todayISO();
+  const nominalStart = overview.rangeStartISO(range, today);
+  const ds = buildSampleDataset(today);
+  const from = (rows) => (nominalStart ? rows.filter((r) => r.day >= nominalStart) : rows);
+  return {
+    sample: true,
+    ...assembleOverview(range, today, nominalStart, {
+      workouts: from(ds.workouts),
+      meals: from(ds.mealDays),
+      weights: from(ds.weights),
+      waists: from(ds.waists),
+    }),
+  };
+}
+
+function getSampleHistory() {
+  const ds = buildSampleDataset(overview.todayISO());
+  return {
+    sample: true,
+    sessions: ds.sessions,
+    meals: ds.meals,
+    goal: ds.goal,
+    currentWeightKg: ds.currentWeightKg,
+    progressPct: ds.progressPct,
+  };
+}
+
+// ─── 1c. PROGRESS SUMMARY (rule-based interpretation) ──────────────────
+// Plain-language reading of the last 14 days + goal timeline. Built only from
+// recorded rows; utils/progressInsights holds the rules (unit-tested).
+async function getSummary(userId, { sample = false } = {}) {
+  const today = overview.todayISO();
+
+  if (sample) {
+    const ds = buildSampleDataset(today);
+    return {
+      sample: true,
+      ...buildProgressSummary({
+        today,
+        goal: ds.goal,
+        workouts: ds.workouts,
+        meals: ds.mealDays,
+        weights: ds.weights,
+        currentWeightKg: ds.currentWeightKg,
+        progressPct: ds.progressPct,
+        sessionsSinceStart: ds.sessionsSinceStart,
+      }),
+      goal: ds.goal,
+      currentWeightKg: ds.currentWeightKg,
+      progressPct: ds.progressPct,
+    };
+  }
+
+  // Lazy require: goals.service is a sibling domain; keeps load order simple.
+  const goals = require("./goals.service");
+  const goalRow = await goals.getActiveGoalRow(userId);
+  const goal = goalRow ? goals.toRecord(goalRow) : null;
+  let currentWeightKg = null;
+  let progressPct = null;
+  if (goal) ({ currentWeightKg, progressPct } = await goals.computeProgress(userId, goal));
+
+  const since14 = `${overview.addDays(today, -13)} 00:00:00`;
+  const goalStart = goal?.createdAt ? new Date(goal.createdAt) : null;
+
+  const [[workoutRows], [mealRows], [weightRows], sessionsRes] = await Promise.all([
+    db.query(
+      `SELECT DATE_FORMAT(t.start_time, '%Y-%m-%d') AS day,
+              COUNT(*) AS sessions,
+              COALESCE(SUM(${activeMinutesExpr()}), 0) AS minutes,
+              SUM(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END) AS completed
+         FROM workout_logs t
+        WHERE t.user_id = ? AND COALESCE(t.status, 'completed') <> 'cancelled'
+          AND t.start_time >= ?
+        GROUP BY day ORDER BY day ASC`,
+      [userId, since14],
+    ),
+    db.query(
+      `SELECT DATE_FORMAT(logged_at, '%Y-%m-%d') AS day,
+              COALESCE(SUM(calories), 0) AS kcal,
+              COALESCE(SUM(protein), 0) AS protein
+         FROM food_logs
+        WHERE user_id = ? AND logged_at >= ?
+        GROUP BY day ORDER BY day ASC`,
+      [userId, since14],
+    ),
+    db.query(
+      `SELECT DATE_FORMAT(recorded_at, '%Y-%m-%d') AS day, weight_kg AS value
+         FROM bmi_records
+        WHERE user_id = ? AND weight_kg IS NOT NULL
+          AND recorded_at >= DATE_SUB(CURDATE(), INTERVAL 120 DAY)
+        ORDER BY recorded_at ASC, id ASC`,
+      [userId],
+    ),
+    goalStart && !Number.isNaN(goalStart.getTime())
+      ? db.query(
+        `SELECT COUNT(*) AS n FROM workout_logs
+          WHERE user_id = ? AND COALESCE(status, 'completed') <> 'cancelled' AND start_time >= ?`,
+        [userId, goalStart],
+      )
+      : Promise.resolve([[{ n: 0 }]]),
+  ]);
+
+  // Older weigh-ins: still give "last weigh-in was N days ago" context.
+  let weights = weightRows.map((r) => ({ day: r.day, value: Number(r.value) }));
+  if (!weights.length) {
+    const [[last]] = await db.query(
+      `SELECT DATE_FORMAT(recorded_at, '%Y-%m-%d') AS day, weight_kg AS value
+         FROM bmi_records WHERE user_id = ? AND weight_kg IS NOT NULL
+        ORDER BY recorded_at DESC, id DESC LIMIT 1`,
+      [userId],
+    );
+    if (last) weights = [{ day: last.day, value: Number(last.value) }];
+  }
+
+  return {
+    sample: false,
+    ...buildProgressSummary({
+      today,
+      goal,
+      workouts: workoutRows.map((r) => ({
+        day: r.day,
+        sessions: Number(r.sessions) || 0,
+        minutes: Number(r.minutes) || 0,
+        completed: Number(r.completed) || 0,
+      })),
+      meals: mealRows.map((r) => ({ day: r.day, kcal: Number(r.kcal) || 0, protein: Number(r.protein) || 0 })),
+      weights,
+      currentWeightKg,
+      progressPct,
+      sessionsSinceStart: Number(sessionsRes[0]?.[0]?.n) || 0,
+    }),
+    goal,
+    currentWeightKg,
+    progressPct,
   };
 }
 
@@ -323,6 +473,7 @@ async function savePhoto(userId, { pose, image_data }) {
     `INSERT INTO progress_photos (user_id, pose, image_data) VALUES (?, ?, ?)`,
     [userId, pose, b64],
   );
+  tasks.notifyTask(userId, { category: 'PROGRESS', message: tasks.photoMessage(pose) });
   return { id: result.insertId, pose };
 }
 
@@ -638,6 +789,7 @@ async function saveMeasurements(userId, body) {
     }
   }
 
+  tasks.notifyTask(userId, { category: 'PROGRESS', message: tasks.measurementMessage(fields) });
   return { success: true, recorded_at: date };
 }
 
@@ -688,11 +840,54 @@ async function buildExportCsv(userId) {
     pose: p.pose, captured_at: p.captured_at, ai_rating: p.ai_rating,
   }));
 
+  const [meals] = await db.query(
+    `SELECT DATE_FORMAT(logged_at, '%Y-%m-%d %H:%i') AS logged_at, meal_type, food_name, serving,
+            calories, protein, carbs, fat
+     FROM food_logs WHERE user_id = ? ORDER BY logged_at DESC LIMIT 2000`,
+    [userId],
+  );
+
+  // Section 11: indicators + plain-language interpretation at the top of the
+  // report, computed from the same real records listed below (never sample data).
+  const summaryRows = [];
+  const indicatorRows = [];
+  try {
+    const sum = await getSummary(userId);
+    const label = { great: "Great", steady: "Steady", needs_attention: "Needs attention", getting_started: "Getting started" };
+    summaryRows.push(
+      ["Overall", label[sum.status] || sum.status, sum.headline],
+      ["Workouts (last 7 days)", sum.week?.sessions ?? 0, `${sum.week?.activeDays ?? 0} active days, ${sum.week?.minutes ?? 0} active minutes`],
+      ["Meal logging (last 7 days)", `${sum.week?.mealDays ?? 0} of 7 days`, sum.week?.avgKcal ? `Average ${sum.week.avgKcal} kcal on logged days` : "No meals logged this week"],
+      ["Latest weight", sum.latestWeightKg != null ? `${sum.latestWeightKg} kg` : "Not logged", sum.weightChange30d != null ? `Change in 30 days: ${sum.weightChange30d > 0 ? "+" : ""}${sum.weightChange30d} kg` : ""],
+    );
+    if (sum.timeline) summaryRows.push(["Goal timeline", String(sum.timeline.status || "").replace(/_/g, " "), sum.timeline.text]);
+    const flagOf = { good: "Good", warn: "Needs attention", info: "Info" };
+    for (const i of sum.insights || []) indicatorRows.push([flagOf[i.tone] || i.tone, i.title, i.text]);
+  } catch (_) {
+    summaryRows.push(["Overall", "Unavailable", "Summary could not be computed; the records below are complete."]);
+  }
+  try {
+    const act = await require("./adminMonitoring.service").getUserActivity(userId);
+    if (act) {
+      const color = { green: "GREEN (Active)", yellow: "YELLOW (Needs attention)", red: "RED (Inactive)" };
+      const { interpretUser } = require("../utils/activityStatus");
+      summaryRows.push(["Activity status", color[act.status] || act.status, interpretUser(act, { audience: "member" })]);
+      for (const f of act.flags) indicatorRows.push([`Flag: ${f.group}`, f.label, f.detail || ""]);
+    }
+  } catch (_) { /* status is optional in the export */ }
+
   const ts = new Date().toISOString().slice(0, 10);
-  const header = `Vitalis progress export — user #${userId} — ${ts}\nGenerated by Vitalis. Private data.\n`;
+  const header = `Vitalis progress report — user #${userId} — ${ts}\nBuilt from your logged records only (no sample data). Private data.\n`;
   return [
     header,
+    csvSection("SUMMARY", ["indicator", "value", "interpretation"], summaryRows),
+    "",
+    csvSection("INSIGHTS AND FLAGS", ["flag", "topic", "interpretation"],
+      indicatorRows.length ? indicatorRows : [["Info", "No flags", "Nothing needs attention right now."]]),
+    "",
     csvSection("WORKOUTS", ["start_time", "end_time", "status", "workout_type", "rep_count", "duration_seconds", "paused_seconds", "sets"], workouts),
+    "",
+    csvSection("MEALS", ["logged_at", "meal_type", "food_name", "serving", "calories", "protein", "carbs", "fat"], meals),
     "",
     csvSection("MEASUREMENTS", ["recorded_at", "weight_kg", "body_fat_pct", "chest_cm", "waist_cm", "hips_cm", "arm_cm", "thigh_cm", "notes"], measurements),
     "",
@@ -774,6 +969,9 @@ module.exports = {
   MEASUREMENT_FIELDS,
   getActivity,
   getOverview,
+  getSampleOverview,
+  getSampleHistory,
+  getSummary,
   savePhoto,
   listPhotos,
   getPhotoImage,

@@ -2,21 +2,18 @@ import { useState, useRef } from 'react';
 import { useToastStore } from '../../../../stores/toastStore.js';
 import { compressAvatarFile } from '../utils/compressAvatar.js';
 
-export const useAvatar = ({ setAvatarSrc, setPendingAvatar }) => {
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+// Avatar edits stay as a local draft until the user confirms them, so the
+// profile photo never changes (or saves) by accident.
+// Draft shape: { type: 'upload', value: <base64> } | { type: 'remove' } | null
+export const useAvatar = () => {
   const [uploadPreview, setUploadPreview] = useState(null);
+  const [draftAvatar, setDraftAvatar] = useState(null);
   const fileInputRef = useRef(null);
-
-  // Presets are local `preset:<id>` tokens (offline gradient + initials).
-  const handleSelectPreset = (presetId) => {
-    setPendingAvatar({ type: 'preset', value: presetId });
-    setUploadPreview(null);
-    setAvatarSrc(presetId);
-    setShowAvatarPicker(false);
-  };
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
+    // Reset so choosing the same file again still fires onChange.
+    e.target.value = '';
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
@@ -33,9 +30,7 @@ export const useAvatar = ({ setAvatarSrc, setPendingAvatar }) => {
     compressAvatarFile(file)
       .then((base64) => {
         setUploadPreview(base64);
-        setPendingAvatar({ type: 'upload', value: base64 });
-        setAvatarSrc(base64);
-        setShowAvatarPicker(false);
+        setDraftAvatar({ type: 'upload', value: base64 });
       })
       .catch((err) => {
         useToastStore.getState().addToast(err?.message || 'Could not process that image.', 'error');
@@ -44,17 +39,20 @@ export const useAvatar = ({ setAvatarSrc, setPendingAvatar }) => {
 
   const handleRemoveAvatar = () => {
     setUploadPreview(null);
-    setPendingAvatar(null);
-    setAvatarSrc(null);
+    setDraftAvatar({ type: 'remove' });
+  };
+
+  const clearDraft = () => {
+    setUploadPreview(null);
+    setDraftAvatar(null);
   };
 
   return {
-    showAvatarPicker,
-    setShowAvatarPicker,
     uploadPreview,
+    draftAvatar,
     fileInputRef,
-    handleSelectPreset,
     handleFileChange,
     handleRemoveAvatar,
+    clearDraft,
   };
 };

@@ -126,7 +126,7 @@ function withAlpha(color, alpha) {
   return value;
 }
 
-export default function ProgressOverviewChart({ userId }) {
+export default function ProgressOverviewChart({ userId = undefined }) {
   const [range, setRange] = useState('90d');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -256,14 +256,14 @@ export default function ProgressOverviewChart({ userId }) {
           const { ctx, chartArea } = chart;
           if (!chartArea) return 'rgba(0, 0, 0, 0)';
           const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          gradient.addColorStop(0, withAlpha(palette.accent, 0.3));
-          gradient.addColorStop(0.55, withAlpha(palette.accent, 0.1));
+          gradient.addColorStop(0, withAlpha(palette.accent, 0.18));
+          gradient.addColorStop(0.55, withAlpha(palette.accent, 0.06));
           gradient.addColorStop(1, withAlpha(palette.accent, 0));
           return gradient;
         },
         fill: true,
         tension: 0.38,
-        borderWidth: 2.5,
+        borderWidth: 2,
         borderCapStyle: 'round',
         borderJoinStyle: 'round',
         pointRadius: valued <= 1 ? 4 : 0,
@@ -312,7 +312,7 @@ export default function ProgressOverviewChart({ userId }) {
         border: { display: false },
         ticks: {
           color: palette.muted,
-          font: { size: 9.5, weight: '600' },
+          font: { size: 11, weight: '400' },
           maxRotation: 0,
           autoSkip: true,
           maxTicksLimit: 7,
@@ -321,13 +321,16 @@ export default function ProgressOverviewChart({ userId }) {
         },
       },
       y: {
-        beginAtZero: false,
+        // Counts (minutes, kcal, protein) never go below zero; body metrics
+        // keep a free axis so small weight/waist changes stay visible.
+        beginAtZero: metricKey !== 'weight' && metricKey !== 'waist',
+        ...(metricKey !== 'weight' && metricKey !== 'waist' ? { min: 0 } : {}),
         grace: '12%',
         grid: { color: withAlpha(palette.border, 0.55), drawTicks: false },
         border: { display: false },
         ticks: {
           color: palette.muted,
-          font: { size: 9.5, weight: '600' },
+          font: { size: 11, weight: '400' },
           maxTicksLimit: 5,
           padding: 8,
           callback: (value) => fmtAxis(metricKey, value),
@@ -348,33 +351,21 @@ export default function ProgressOverviewChart({ userId }) {
 
   return (
     <section className="po-card" aria-labelledby="po-heading" aria-busy={loading}>
-      <div className="po-top">
+      <header className="po-top">
         <div className="po-heading">
-          <span className="po-eyebrow">
-            <Icon name="insights" />
-            Progress overview
-          </span>
-          <h2 id="po-heading" className="po-title">
-            All your progress, <em>one line.</em>
-          </h2>
-          <p className="po-sub">
-            Weight, training, nutrition and waist — drawn from your real logs. No estimates.
-          </p>
+          <h2 id="po-heading" className="po-title">Trends</h2>
+          <p className="po-sub">{BUCKET_CAPTION[data?.bucket] || 'Adaptive'} view · {rangeMeta.caption.toLowerCase()}</p>
         </div>
-
         <div className="po-controls">
-          <div className="po-ranges" role="group" aria-label="Chart range">
+          <div className="lg-seg" role="group" aria-label="Chart range">
             {RANGES.map((r) => (
               <button
                 key={r.key}
                 type="button"
-                className={`po-range${range === r.key ? ' is-active' : ''}`}
+                className={range === r.key ? 'is-active' : ''}
                 aria-pressed={range === r.key}
                 aria-label={r.caption}
-                onClick={() => {
-                  if (r.key === range) return;
-                  setRange(r.key);
-                }}
+                onClick={() => { if (r.key !== range) setRange(r.key); }}
               >
                 {r.label}
               </button>
@@ -382,16 +373,16 @@ export default function ProgressOverviewChart({ userId }) {
           </div>
           <button
             type="button"
-            className={`po-refresh${loading ? ' is-spinning' : ''}`}
-            aria-label="Refresh progress chart"
+            className={`lg-icon-btn po-refresh${loading ? ' is-spinning' : ''}`}
+            aria-label="Refresh chart"
             onClick={reload}
           >
             <Icon name="refresh" />
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="po-metrics" role="tablist" aria-label="Choose a progress metric">
+      <div className="po-metrics" role="tablist" aria-label="Choose a metric">
         {METRICS.map((m) => (
           <button
             key={m.key}
@@ -401,89 +392,62 @@ export default function ProgressOverviewChart({ userId }) {
             className={`po-metric${metricKey === m.key ? ' is-active' : ''}`}
             onClick={() => setMetricKey(m.key)}
           >
-            <span className="po-metric-icon"><Icon name={m.icon} /></span>
-            <span className="po-metric-copy">
-              <span className="po-metric-label">{m.label}</span>
-              <span className="po-metric-value">{chipValue(m.key, metrics?.[m.key])}</span>
-            </span>
+            <span className="po-metric-label">{m.label}</span>
+            <span className="po-metric-value">{chipValue(m.key, metrics?.[m.key])}</span>
           </button>
         ))}
       </div>
 
       {error && data && (
-        <div className="po-inline-error" role="alert">
+        <div className="lg-inline-error po-inline-error" role="alert">
           <Icon name="cloud_off" />
           <span>{error}</span>
-          <button type="button" onClick={reload}>Retry</button>
+          <button type="button" className="lg-link" onClick={reload}>Retry</button>
         </div>
       )}
 
-      <div className="po-chart-shell">
-        <div className="po-chart-head">
-          <div>
-            <div className="po-headline">
-              <span className="po-headline-value">
-                {headline.value}
-                <small>{headline.unit}</small>
-              </span>
-              {headline.delta && (
-                <span className="po-delta">
-                  <Icon name={String(headline.delta).startsWith('−')
-                    ? 'trending_down'
-                    : String(headline.delta).startsWith('+') ? 'trending_up' : 'remove'} />
-                  {headline.delta}
-                </span>
-              )}
-            </div>
-            <p className="po-headline-caption">{headline.caption}</p>
-          </div>
-          {headline.badge && <span className="po-badge">{headline.badge}</span>}
+      <div className="po-chart-head">
+        <div className="po-headline">
+          <span className="po-headline-value">
+            {headline.value}<small> {headline.unit}</small>
+          </span>
+          {headline.delta && <span className="po-delta">{headline.delta}</span>}
         </div>
-
-        <div className="po-chart-body">
-          {loading && !data && (
-            <div className="po-skeleton" aria-hidden="true">
-              <span className="po-skel po-skel--value" />
-              <span className="po-skel po-skel--chart" />
-            </div>
-          )}
-
-          {!loading && error && !data && (
-            <div className="po-error" role="alert">
-              <span className="po-empty-icon"><Icon name="cloud_off" /></span>
-              <strong>Couldn&apos;t load your progress</strong>
-              <p>{error}</p>
-              <button type="button" onClick={reload}>Try again</button>
-            </div>
-          )}
-
-          {data && !hasData && (
-            <div className="po-empty">
-              <span className="po-empty-icon"><Icon name={metricMeta.icon} /></span>
-              <strong>No {metricMeta.short.toLowerCase()} logged yet</strong>
-              <p>{emptyCopy}</p>
-            </div>
-          )}
-
-          {data && hasData && (
-            <div className={`po-canvas${loading ? ' is-loading' : ''}`}>
-              <Line
-                data={chartData}
-                options={options}
-                role="img"
-                aria-label={`${metricMeta.label} over ${rangeMeta.caption.toLowerCase()}`}
-              />
-              {loading && <span className="po-updating">Updating…</span>}
-            </div>
-          )}
-        </div>
+        <p className="po-headline-caption">
+          {headline.caption}{headline.badge ? ` · ${headline.badge}` : ''}
+        </p>
       </div>
 
-      <div className="po-foot">
-        <span><Icon name="database" /> Built from your real logs</span>
-        <span>
-          {BUCKET_CAPTION[data?.bucket] || 'Adaptive'} buckets · {rangeMeta.caption.toLowerCase()}
-        </span>
+      <div className="po-chart-body">
+        {loading && !data && <div className="po-skeleton" aria-hidden="true" />}
+
+        {!loading && error && !data && (
+          <div className="lg-state lg-state--error" role="alert">
+            <Icon name="cloud_off" />
+            <strong>Couldn&apos;t load your trends</strong>
+            <p>{error}</p>
+            <button type="button" className="lg-btn lg-btn--ghost" onClick={reload}>Try again</button>
+          </div>
+        )}
+
+        {data && !hasData && (
+          <div className="lg-state">
+            <Icon name={metricMeta.icon} />
+            <strong>No {metricMeta.short.toLowerCase()} logged yet</strong>
+            <p>{emptyCopy}</p>
+          </div>
+        )}
+
+        {data && hasData && (
+          <div className={`po-canvas${loading ? ' is-loading' : ''}`}>
+            <Line
+              data={chartData}
+              options={options}
+              role="img"
+              aria-label={`${metricMeta.label} over ${rangeMeta.caption.toLowerCase()}`}
+            />
+          </div>
+        )}
       </div>
     </section>
   );

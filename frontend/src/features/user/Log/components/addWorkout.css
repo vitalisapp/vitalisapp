@@ -1,0 +1,178 @@
+/* Log a workout modal — form inside the shared <Modal>. Same minimal type
+   scale as the Progress page: labels 13 · inputs 14 · hints 12. */
+
+.aw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.aw-row {
+  display: grid;
+  gap: 12px;
+}
+
+.aw-row--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.aw-row--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.aw-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aw-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.aw-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.aw-input {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--input-border, var(--border-light));
+  border-radius: 10px;
+  background: var(--input-bg, var(--bg-card));
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.aw-input::placeholder { color: var(--text-disabled, var(--text-muted)); }
+.aw-input:hover { border-color: var(--border-medium, var(--border-light)); }
+
+.aw-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+  outline: none;
+}
+
+.aw-control.has-suffix .aw-input { padding-right: 44px; }
+
+.aw-suffix {
+  position: absolute;
+  right: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.aw-control.is-invalid .aw-input { border-color: var(--error); }
+.aw-control.is-invalid .aw-input:focus { box-shadow: 0 0 0 3px var(--error-bg, rgba(220, 80, 80, 0.15)); }
+
+/* Hide number spinners: cleaner, and typing is faster on every device. */
+.aw-input[type='number']::-webkit-outer-spin-button,
+.aw-input[type='number']::-webkit-inner-spin-button { margin: 0; -webkit-appearance: none; }
+.aw-input[type='number'] { -moz-appearance: textfield; appearance: textfield; }
+
+.aw-hint {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.aw-hint--error { color: var(--error); }
+
+/* Optional group */
+.aw-group {
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  background: var(--bg-hover);
+}
+
+.aw-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.aw-group-title span {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.aw-group .aw-row { margin-top: 4px; }
+.aw-group .aw-input { background: var(--bg-card); }
+
+.aw-summary {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.aw-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--error-bg, rgba(220, 80, 80, 0.1));
+  color: var(--error);
+  font-size: 13px;
+}
+
+/* Footer actions (rendered in the Modal footer slot) */
+.aw-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.aw-btn {
+  min-width: 96px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, filter 0.15s, opacity 0.15s;
+}
+
+.aw-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.aw-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.aw-btn--ghost {
+  border-color: var(--border-light);
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.aw-btn--ghost:hover:not(:disabled) { background: var(--bg-hover); }
+
+.aw-btn--primary {
+  background: var(--accent);
+  color: var(--text-inverse);
+}
+
+.aw-btn--primary:hover:not(:disabled) { filter: brightness(1.06); }
+
+@media (max-width: 480px) {
+  .aw-row--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .aw-row--3 > :last-child { grid-column: 1 / -1; }
+  .aw-footer .aw-btn { flex: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aw-input,
+  .aw-btn { transition: none; }
+}

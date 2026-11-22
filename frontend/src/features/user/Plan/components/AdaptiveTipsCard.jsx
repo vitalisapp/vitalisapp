@@ -21,7 +21,7 @@ const TIP_STYLES = {
   info: { bg: 'var(--bg-hover)', border: 'var(--border-light)' },
 };
 
-export default function AdaptiveTipsCard({ tips, loading, applying, onApply }) {
+export default function AdaptiveTipsCard({ tips = undefined, loading = undefined, applying = undefined, onApply = undefined }) {
   if (loading && (!tips || tips.length === 0)) return null;
   if (!tips || tips.length === 0) return null;
 

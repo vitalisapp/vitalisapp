@@ -1,5 +1,5 @@
 import Icon from "../../../../components/Icon.jsx";
-export default function VoiceToggleButton({ voiceEnabled, onToggle }) {
+export default function VoiceToggleButton({ voiceEnabled = undefined, onToggle = undefined }) {
   return (
     <button
       onClick={onToggle}

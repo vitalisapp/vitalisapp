@@ -4,7 +4,7 @@ import { fmtNum } from '../utils/format.js';
 /* ── Hero / header ─────────────────────────────────────────────────────── */
 
 export function PageHero({
-  eyebrow, title, accent, description, chips = [], actions = undefined,
+  eyebrow = undefined, title = undefined, accent = undefined, description = undefined, chips = [], actions = undefined,
   image = undefined, imageAlt = '',
 }) {
   return (
@@ -41,7 +41,7 @@ export function PageHero({
 
 /* ── Primitives ────────────────────────────────────────────────────────── */
 
-export function Badge({ tone = 'member', icon = undefined, children }) {
+export function Badge({ tone = 'member', icon = undefined, children = undefined }) {
   return (
     <span className={`adm-badge is-${tone}`}>
       {icon && <Icon name={icon} />}
@@ -50,7 +50,7 @@ export function Badge({ tone = 'member', icon = undefined, children }) {
   );
 }
 
-export function Panel({ title, subtitle, icon, actions, flush = false, children, className = '' }) {
+export function Panel({ title = undefined, subtitle = undefined, icon = undefined, actions = undefined, flush = false, children = undefined, className = '' }) {
   return (
     <section className={`adm-panel ${className}`.trim()}>
       {(title || actions) && (
@@ -67,7 +67,7 @@ export function Panel({ title, subtitle, icon, actions, flush = false, children,
   );
 }
 
-export function Kpi({ label, value, hint, icon, tone = 'accent', suffix = undefined, featured = false }) {
+export function Kpi({ label = undefined, value = undefined, hint = undefined, icon = undefined, tone = 'accent', suffix = undefined, featured = false }) {
   const styles = {
     accent: { '--kpi-color': 'var(--accent)', '--kpi-tile': 'var(--accent-bg)', '--kpi-glow': 'var(--accent)' },
     green: { '--kpi-color': 'var(--accent-2)', '--kpi-tile': 'var(--accent-2-bg)', '--kpi-glow': 'var(--accent-2)' },
@@ -88,7 +88,7 @@ export function Kpi({ label, value, hint, icon, tone = 'accent', suffix = undefi
   );
 }
 
-export function MiniStat({ value, label }) {
+export function MiniStat({ value = undefined, label = undefined }) {
   return (
     <div className="adm-mini">
       <b>{fmtNum(value)}</b>
@@ -97,7 +97,7 @@ export function MiniStat({ value, label }) {
   );
 }
 
-export function SearchField({ value, onChange, placeholder = 'Search…' }) {
+export function SearchField({ value = undefined, onChange = undefined, placeholder = 'Search…' }) {
   return (
     <label className="adm-search">
       <Icon name="search" />
@@ -113,7 +113,7 @@ export function SearchField({ value, onChange, placeholder = 'Search…' }) {
   );
 }
 
-export function Pager({ total, limit, offset, onChange }) {
+export function Pager({ total = undefined, limit = undefined, offset = undefined, onChange = undefined }) {
   const pages = Math.max(Math.ceil(total / limit), 1);
   const current = Math.floor(offset / limit);
   const start = total === 0 ? 0 : offset + 1;
@@ -149,7 +149,7 @@ export function Pager({ total, limit, offset, onChange }) {
   );
 }
 
-export function StateBlock({ kind = 'empty', icon = 'inbox', title, note, action = undefined }) {
+export function StateBlock({ kind = 'empty', icon = 'inbox', title = undefined, note = undefined, action = undefined }) {
   return (
     <div className={`adm-state${kind === 'error' ? ' is-error' : ''}`}>
       <span className="adm-state__icon"><Icon name={kind === 'error' ? 'error' : icon} /></span>
@@ -173,16 +173,16 @@ export function TableSkeleton({ rows = 6 }) {
 /* ── Confirm modal ─────────────────────────────────────────────────────── */
 
 export function ConfirmDialog({
-  title,
-  message,
+  title = undefined,
+  message = undefined,
   children = undefined,
   confirmLabel = 'Confirm',
   danger = false,
   busy = false,
   error = '',
   confirmDisabled = false,
-  onCancel,
-  onConfirm,
+  onCancel = undefined,
+  onConfirm = undefined,
 }) {
   return (
     <div className="adm-modal-scrim" onClick={busy ? undefined : onCancel}>

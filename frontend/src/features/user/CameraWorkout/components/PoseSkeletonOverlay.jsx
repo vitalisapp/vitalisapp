@@ -34,7 +34,7 @@ const DOT_MIN_VIS = 0.6;
 // MediaPipe pose: 0-10 = face, 11-32 = torso + limbs.
 const isFaceLandmark = (i) => i <= 10;
 
-export default function PoseSkeletonOverlay({ landmarksRef, webcamRef, mirrored = true }) {
+export default function PoseSkeletonOverlay({ landmarksRef = undefined, webcamRef = undefined, mirrored = true }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {

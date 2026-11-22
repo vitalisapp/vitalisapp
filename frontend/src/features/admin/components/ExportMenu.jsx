@@ -12,7 +12,7 @@ import { exportCsv, exportXlsx } from '../utils/exportTable.js';
  *  - sheetName: Excel sheet name
  *  - onToast(message, tone): optional feedback
  */
-export default function ExportMenu({ getRows, columns, fileName, sheetName = 'Export', onToast, disabled = false }) {
+export default function ExportMenu({ getRows = undefined, columns = undefined, fileName = undefined, sheetName = 'Export', onToast = undefined, disabled = false }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState('');
   const rootRef = useRef(null);

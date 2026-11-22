@@ -15,6 +15,7 @@ import { buildUsageSeries } from '../utils/usage.js';
 import { metaForAction } from '../utils/actionMeta.js';
 import { fmtAgo, localDayKey } from '../utils/time.js';
 import { fmtNum } from '../utils/format.js';
+import { STATUS_META } from '../components/StatusDot.jsx';
 
 const OVERVIEW_PATH = '/api/admin/overview';
 const WINDOWS = [7, 14, 30];
@@ -88,6 +89,15 @@ const buildOverviewRows = (data, { windowDays, windowCalls, peakCalls }) => {
   const { users: u, ai } = data;
 
   push('Key metrics', 'Total members', u.total);
+  if (data.engagement) {
+    const e = data.engagement;
+    push('Engagement (7 days)', 'Members who logged activity', e.activeMembers7d);
+    push('Engagement (7 days)', 'Workouts logged', e.workouts7d);
+    push('Engagement (7 days)', 'Meals logged', e.meals7d);
+    push('Engagement (7 days)', 'Green (active)', e.summary.green);
+    push('Engagement (7 days)', 'Yellow (needs attention)', e.summary.yellow);
+    push('Engagement (7 days)', 'Red (inactive)', e.summary.red);
+  }
   push('Key metrics', 'New members in 7 days', u.newLast7d);
   push('Key metrics', 'Active sessions (30d)', ai.activeSessions);
   push('Key metrics', 'AI calls today', ai.callsToday);
@@ -110,6 +120,47 @@ const buildOverviewRows = (data, { windowDays, windowCalls, peakCalls }) => {
 
   return rows;
 };
+
+// Section 11: one compact engagement summary — a single status bar, three
+// numbers and a sentence. Details live on the Monitoring page.
+function EngagementPanel({ engagement = undefined }) {
+  const { summary, activeMembers7d, workouts7d, meals7d, interpretation } = engagement;
+  const total = summary.total || 0;
+  const pct = (n) => (total ? (n / total) * 100 : 0);
+  return (
+    <Panel
+      className="adm-engage"
+      title="Member engagement"
+      subtitle="Last 7 days, from members' own workout, meal and weight logs."
+      icon="monitor_heart"
+      actions={<Link to="/admin/monitoring" className="adm-btn is-sm">Open monitoring <Icon name="arrow_forward" /></Link>}
+    >
+      <p className="adm-engage__text">{interpretation}</p>
+      {total > 0 && (
+        <>
+          <div className="adm-engage__bar" role="img" aria-label={`${summary.green} green, ${summary.yellow} yellow, ${summary.red} red`}>
+            {['green', 'yellow', 'red'].map((s) => (summary[s] > 0 ? (
+              <span key={s} className={`is-${s}`} style={{ width: `${pct(summary[s])}%` }} />
+            ) : null))}
+          </div>
+          <div className="adm-engage__legend">
+            {['green', 'yellow', 'red'].map((s) => (
+              <Link key={s} to={`/admin/monitoring?status=${s}`} className={`adm-mon-status is-${s}`}>
+                <span className="adm-mon-dot" aria-hidden="true" />
+                {STATUS_META[s].label} <b>{fmtNum(summary[s])}</b>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+      <div className="adm-engage__stats">
+        <div><b>{fmtNum(activeMembers7d)}<small> / {fmtNum(total)}</small></b><span>Members active</span></div>
+        <div><b>{fmtNum(workouts7d)}</b><span>Workouts logged</span></div>
+        <div><b>{fmtNum(meals7d)}</b><span>Meals logged</span></div>
+      </div>
+    </Panel>
+  );
+}
 
 const OverviewSkeleton = () => (
   <div className="adm-dash" aria-busy="true" aria-label="Loading platform overview">
@@ -391,6 +442,8 @@ export default function AdminOverview() {
 
             <AdminSmsPanel resource={sms} windowDays={windowDays} />
           </section>
+
+          {data.engagement && <EngagementPanel engagement={data.engagement} />}
 
           <div className="adm-dash__lower">
             <Panel

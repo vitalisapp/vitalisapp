@@ -1,0 +1,45 @@
+/* App-wide connectivity pill (NetworkStatus.jsx). Fixed, so it never shifts layout. */
+.net-status {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  left: 50%;
+  z-index: 10000;
+  display: flex;
+  max-width: min(560px, calc(100vw - 24px));
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  background: var(--bg-card, #141a12);
+  box-shadow: var(--shadow-md, 0 8px 24px rgba(0, 0, 0, 0.25));
+  color: var(--text-secondary, #d6dccf);
+  font-size: 12px;
+  line-height: 1.35;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: net-in 0.2s ease-out;
+}
+
+.net-status .material-symbols-outlined { flex-shrink: 0; font-size: 18px; }
+.net-status strong { color: var(--text-primary, #f1f5ea); }
+
+.net-status.is-offline {
+  border-color: var(--warning, #f5b544);
+}
+.net-status.is-offline .material-symbols-outlined { color: var(--warning, #f5b544); }
+
+.net-status.is-online .material-symbols-outlined { color: var(--success, var(--accent, #c7f464)); }
+
+@media (max-width: 639px) {
+  .net-status { border-radius: 16px; font-size: 11.5px; }
+}
+
+@keyframes net-in {
+  from { opacity: 0; transform: translate(-50%, -6px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .net-status { animation: none; }
+}

@@ -1,11 +1,7 @@
 export const fmtNum = (value) => Number(value || 0).toLocaleString('en-US');
 
-export const initials = (name = '') => {
-  const parts = String(name).trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-};
+// Same one-letter rule as the member app (lib/avatar.js getInitials).
+export { getInitials as initials } from '../../../lib/avatar.js';
 
 export const fmtWhen = (value) => {
   if (!value) return '—';

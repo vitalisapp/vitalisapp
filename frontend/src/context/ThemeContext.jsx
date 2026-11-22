@@ -70,7 +70,7 @@ const persistServerTheme = (theme) => {
   }
 };
 
-export const ThemeProvider = ({ children }) => {
+export const ThemeProvider = ({ children = undefined }) => {
   const readPreference = () => {
     const savedTheme = safeGet(THEME_STORAGE_KEY, null);
     if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') {

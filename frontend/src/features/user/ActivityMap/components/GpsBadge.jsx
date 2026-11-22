@@ -18,7 +18,7 @@ const DOT = {
   unavailable: 'bg-[#ff6b6b]',
 };
 
-const GpsBadge = ({ locationStatus, accuracy, coords }) => {
+const GpsBadge = ({ locationStatus = undefined, accuracy = undefined, coords = undefined }) => {
   const granted = locationStatus === 'granted';
   const label = LABELS[locationStatus] || 'GPS Off';
   const hasAccuracy = granted && Number.isFinite(accuracy);

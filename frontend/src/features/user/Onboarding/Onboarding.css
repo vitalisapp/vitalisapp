@@ -331,3 +331,27 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Inline field explanation (e.g. minimum-age rule on the DOB field). */
+.onb-note--warn {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--warning-bg, color-mix(in srgb, #f59e0b 12%, transparent));
+  color: var(--text-secondary, var(--onb-muted));
+  border: 1px solid color-mix(in srgb, var(--warning, #f59e0b) 30%, transparent);
+  line-height: 1.55;
+}
+.onb-note--warn > .material-symbols-outlined { color: var(--warning, #f59e0b); }
+.onb-note--warn strong { color: var(--text-primary); font-weight: 600; }
+.onb-choice-grid > .vh-activity-detail { grid-column: 1 / -1; margin-top: 2px; }
+
+/* Section 3 — extra goals, target date, experience */
+.onb-extra-goals { margin-top: 18px; }
+.onb-hint-text { margin: 8px 0 0; font-size: 12px; line-height: 1.55; color: var(--onb-muted); }
+.onb-chip:disabled { opacity: 0.45; cursor: not-allowed; }
+.onb-note--ok { background: var(--success-bg, rgba(16, 185, 129, 0.1)); }
+.onb-note--ok > .material-symbols-outlined { color: var(--success, #10b981); }
+.onb-link-btn {
+  padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+}

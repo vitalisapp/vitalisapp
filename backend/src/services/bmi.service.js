@@ -1,9 +1,11 @@
 // BMI — business logic + DB access.
 // (BMI calculation, profile sync, AI suggestion, record listing.)
 const db = require('../config/db');
+const tasks = require('../utils/taskNotifications');
 const { callGeminiWithFallback } = require('../config/gemini');
 // Single BMI category source — matches planEngine (Onboarding) and the master plan.
 const { bmiCategory: getBmiCategory } = require('../utils/planEngine');
+const { classifyBmi } = require('../utils/health');
 
 // BMI from metric weight (kg) / height (cm). Pure — used by the controller for
 // its finite-value guard before the (unreachable) insert path.
@@ -16,11 +18,22 @@ function computeBmi(weightKg, heightCm) {
 async function saveBmi(userId, { weight, height, bmi, age, gender }) {
   const category = getBmiCategory(bmi);
 
+  // Previous reading, for the "+/- kg since last time" notification.
+  let previousKg = null;
+  try {
+    const [[prev]] = await db.execute(
+      'SELECT weight_kg FROM bmi_records WHERE user_id = ? AND weight_kg IS NOT NULL ORDER BY recorded_at DESC, id DESC LIMIT 1',
+      [userId],
+    );
+    previousKg = prev ? Number(prev.weight_kg) : null;
+  } catch (_) { /* optional */ }
+
   const [result] = await db.execute(
     `INSERT INTO bmi_records (user_id, weight_kg, height_cm, bmi, bmi_category, recorded_at)
      VALUES (?, ?, ?, ?, ?, NOW())`,
     [userId, weight, height, bmi, category]
   );
+  tasks.notifyTask(userId, { category: 'PROGRESS', message: tasks.weighInMessage(weight, previousKg) });
 
   // FIX: keep user_profiles.height_cm / weight_kg in sync with the
   // latest BMI log, so the Profile page (which computes BMI live
@@ -100,4 +113,75 @@ async function listRecords(userId, limit, offset) {
   return { records: rows, total: countRow?.total ?? 0 };
 }
 
-module.exports = { computeBmi, saveBmi, listRecords };
+
+// ─── Yearly BMI monitoring ──────────────────────────────────────────────
+// One row per calendar year: first/last/average reading, the class at the
+// end of the year and the change against the previous year's last reading,
+// plus a plain-language summary. `checkDue` flags a yearly re-check once the
+// latest reading is more than 12 months old.
+function summarizeYears(rows, now = new Date()) {
+  const byYear = new Map();
+  for (const r of rows) {
+    const bmi = Number(r.bmi);
+    if (!Number.isFinite(bmi) || bmi <= 0) continue;
+    const year = Number(String(r.recorded_on).slice(0, 4));
+    if (!byYear.has(year)) byYear.set(year, []);
+    byYear.get(year).push({ bmi, weightKg: r.weight_kg != null ? Number(r.weight_kg) : null, on: r.recorded_on });
+  }
+  const years = [...byYear.keys()].sort((a, b) => a - b);
+  let prevLast = null;
+  let prevClass = null;
+  const out = years.map((year) => {
+    const list = byYear.get(year);
+    const first = list[0];
+    const last = list[list.length - 1];
+    const avg = list.reduce((t, x) => t + x.bmi, 0) / list.length;
+    const cls = classifyBmi(last.bmi);
+    const change = prevLast != null ? Number((last.bmi - prevLast).toFixed(1)) : null;
+    let summary;
+    if (change == null) {
+      summary = `First year on record: ended at BMI ${last.bmi.toFixed(1)} (${cls.label}).`;
+    } else if (Math.abs(change) < 0.5) {
+      summary = `Stable: BMI stayed about the same as last year (${change >= 0 ? '+' : ''}${change}).`;
+    } else {
+      summary = `BMI ${change > 0 ? 'rose' : 'fell'} by ${Math.abs(change)} compared with last year.`;
+    }
+    if (prevClass && prevClass.key !== cls.key) summary += ` Category changed from ${prevClass.label} to ${cls.label}.`;
+    prevLast = last.bmi;
+    prevClass = cls;
+    return {
+      year,
+      readings: list.length,
+      firstBmi: Number(first.bmi.toFixed(1)),
+      lastBmi: Number(last.bmi.toFixed(1)),
+      avgBmi: Number(avg.toFixed(1)),
+      minBmi: Number(Math.min(...list.map((x) => x.bmi)).toFixed(1)),
+      maxBmi: Number(Math.max(...list.map((x) => x.bmi)).toFixed(1)),
+      lastWeightKg: last.weightKg,
+      category: cls.label,
+      categoryKey: cls.key,
+      changeFromPrevYear: change,
+      summary,
+    };
+  });
+  const latest = rows.length ? rows[rows.length - 1].recorded_on : null;
+  const daysSince = latest ? Math.floor((now.getTime() - new Date(`${String(latest).slice(0, 10)}T00:00:00Z`).getTime()) / 86400000) : null;
+  return {
+    years: out.reverse(),
+    lastRecordedOn: latest ? String(latest).slice(0, 10) : null,
+    daysSinceLast: daysSince,
+    checkDue: daysSince == null ? true : daysSince > 365,
+  };
+}
+
+async function yearlySummary(userId) {
+  const [rows] = await db.query(
+    `SELECT bmi, weight_kg, DATE_FORMAT(recorded_at, '%Y-%m-%d') AS recorded_on
+     FROM bmi_records WHERE user_id = ?
+     ORDER BY recorded_at ASC, id ASC LIMIT 5000`,
+    [userId]
+  );
+  return summarizeYears(rows);
+}
+
+module.exports = { computeBmi, saveBmi, listRecords, yearlySummary, summarizeYears };

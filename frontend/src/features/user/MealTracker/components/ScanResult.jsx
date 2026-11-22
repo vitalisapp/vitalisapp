@@ -28,7 +28,7 @@ const iconFor = (name) => {
 };
 const cleanFoodName = (name) => String(name || '').replace(/^[\p{Emoji}\s]+/u, '');
 
-function KcalRing({ value }) {
+function KcalRing({ value = undefined }) {
   const radius = 34;
   const circumference = 2 * Math.PI * radius;
   const pct = Math.max(0, Math.min(1, Number(value || 0) / 1000));
@@ -63,7 +63,7 @@ function KcalRing({ value }) {
   );
 }
 
-function MacroBar({ label, grams, max }) {
+function MacroBar({ label = undefined, grams = undefined, max = undefined }) {
   const pct = max > 0 ? Math.min(100, Math.round(((Number(grams) || 0) / max) * 100)) : 0;
   return (
     <div className="mt-result-macro">
@@ -79,7 +79,7 @@ function MacroBar({ label, grams, max }) {
 }
 
 // One numeric input of the tap-to-correct editor.
-function CorrectInput({ label, value, onChange, disabled }) {
+function CorrectInput({ label = undefined, value = undefined, onChange = undefined, disabled = undefined }) {
   return (
     <label className="mt-result-correct-field">
       <span>{label}</span>
@@ -97,15 +97,15 @@ function CorrectInput({ label, value, onChange, disabled }) {
 }
 
 export default function ScanResult({
-  result,
-  isLogging,
-  onToggle,
-  onScale,
-  onEditItem,
-  onAddCustom,
-  onSave,
-  onRescan,
-  onClear,
+  result = undefined,
+  isLogging = undefined,
+  onToggle = undefined,
+  onScale = undefined,
+  onEditItem = undefined,
+  onAddCustom = undefined,
+  onSave = undefined,
+  onRescan = undefined,
+  onClear = undefined,
 }) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState({ food_name: '', calories: '', serving: '' });
@@ -126,6 +126,10 @@ export default function ScanResult({
     carbs: Math.round(sum('carbs')),
     fat: Math.round(sum('fat')),
   };
+  // Section 6: sugar / sodium only when the AI returned them.
+  const hasSugarSodium = selected.some((item) => item.sugar != null || item.sodium != null);
+  const sugarTotal = Math.round(sum('sugar') * 10) / 10;
+  const sodiumTotal = Math.round(sum('sodium'));
   const macroMax = Math.max(1, totals.protein, totals.carbs, totals.fat);
   const title =
     selected.length === 1
@@ -240,6 +244,12 @@ export default function ScanResult({
           <MacroBar label="Fats" grams={totals.fat} max={macroMax} />
         </div>
       </div>
+      {hasSugarSodium && (
+        <p className={`mt-result-extra${sodiumTotal >= 800 || sugarTotal >= 15 ? ' is-warn' : ''}`}>
+          Sugar <strong>{sugarTotal} g</strong> · Sodium <strong>{sodiumTotal.toLocaleString()} mg</strong>
+          {sodiumTotal >= 800 ? ' · High sodium for one meal' : sugarTotal >= 15 ? ' · High sugar' : ''}
+        </p>
+      )}
 
       <p className="mt-result-hint">
         Photo estimates only — tap the pencil on any item to correct it.

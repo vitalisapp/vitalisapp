@@ -76,6 +76,8 @@ async function apiSaveFoodLog(userId, meal, imageBlob) {
       trans_fat: meal.trans_fat ?? 0,
       polyunsaturated_fat: meal.polyunsaturated_fat ?? 0,
       monounsaturated_fat: meal.monounsaturated_fat ?? 0,
+      sugar: meal.sugar ?? "",
+      sodium: meal.sodium ?? "",
     })) {
       form.append(k, String(v ?? ""));
     }
@@ -98,6 +100,9 @@ async function apiSaveFoodLog(userId, meal, imageBlob) {
       trans_fat: meal.trans_fat || 0,
       polyunsaturated_fat: meal.polyunsaturated_fat || 0,
       monounsaturated_fat: meal.monounsaturated_fat || 0,
+      // Section 6: null = unknown (not counted in daily sugar / sodium).
+      sugar:     meal.sugar  ?? null,
+      sodium:    meal.sodium ?? null,
       image_url: meal.image_url || null,
     }),
   });
@@ -148,6 +153,8 @@ function toScanResult(data) {
         trans_fat: Math.max(0, Number(it.trans_fat) || 0),
         polyunsaturated_fat: Math.max(0, Number(it.polyunsaturated_fat) || 0),
         monounsaturated_fat: Math.max(0, Number(it.monounsaturated_fat) || 0),
+        sugar: it.sugar == null ? null : Math.max(0, Math.round((Number(it.sugar) || 0) * 10) / 10),
+        sodium: it.sodium == null ? null : Math.max(0, Math.round(Number(it.sodium) || 0)),
         low_confidence: Boolean(it.low_confidence),
         // Allergen flag from analyze-pic: matches against your onboarding list
         allergy_matches: Array.isArray(it.allergy_matches)
@@ -221,8 +228,8 @@ export function useNutritionTracker(USER_ID) {
       if (!scan || scan.items.length === 0) {
         setScanError({
           code: 'NO_FOOD_DETECTED',
-          message: 'No food was detected in this photo.',
-          retryable: true,
+          message: 'This doesn’t look like food. Please scan a meal, snack, or drink.',
+          retryable: false,
         });
         return;
       }

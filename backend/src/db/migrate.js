@@ -103,6 +103,34 @@ function splitStatements(sql) {
 async function run() {
   const dryRun = process.argv.includes('--dry-run') || process.argv.includes('--dry');
   const verbose = process.argv.includes('--verbose');
+  // Replay the existing seed without resetting migration history.
+  if (process.argv.includes('--seed-plans')) {
+    const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, '030_seeds.sql'), 'utf8');
+    const statements = splitStatements(sql);
+    if (dryRun) {
+      console.log(`Plan seed: ${statements.length} statements. No changes applied.`);
+      return;
+    }
+    const conn = await db.getConnection();
+    let locked = false;
+    try {
+      const [[lock]] = await conn.query("SELECT GET_LOCK('vitalis:seed:plans', 10) AS acquired");
+      if (Number(lock.acquired) !== 1) throw new Error('Another plan seed is running. Try again shortly.');
+      locked = true;
+      await conn.beginTransaction();
+      for (const statement of statements) await conn.query(statement);
+      await conn.commit();
+      console.log('Plan seed complete. Existing plans preserved; duplicate names skipped.');
+    } catch (error) {
+      await conn.rollback();
+      console.error(`Plan seed failed: ${error.message}`);
+      throw error;
+    } finally {
+      if (locked) await conn.query("SELECT RELEASE_LOCK('vitalis:seed:plans')");
+      conn.release();
+    }
+    return;
+  }
   await ensureMigrationsTable();
   const applied = await getApplied();
   const files = getFiles();

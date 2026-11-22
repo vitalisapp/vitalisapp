@@ -8,7 +8,7 @@ const paceToSeconds = (pace) => {
   return match ? Number(match[1]) * 60 + Number(match[2]) : null;
 };
 
-const SplitRows = ({ splits }) => {
+const SplitRows = ({ splits = undefined }) => {
   if (splits.length === 0) {
     return (
       <div className="am-splits-empty">
@@ -44,7 +44,7 @@ const SplitRows = ({ splits }) => {
   );
 };
 
-const StatusPill = ({ label, state }) => (
+const StatusPill = ({ label = undefined, state = undefined }) => (
   <span className={`am-status ${state}`.trim()}>
     <span className="am-status__dot" />
     {label}
@@ -52,9 +52,9 @@ const StatusPill = ({ label, state }) => (
 );
 
 const StatsPanel = ({
-  metrics,
-  splits,
-  formatTime,
+  metrics = undefined,
+  splits = undefined,
+  formatTime = undefined,
   isDesktop = false,
   controls = null,
   isRecording = false,

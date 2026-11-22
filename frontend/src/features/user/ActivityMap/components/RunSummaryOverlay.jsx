@@ -9,7 +9,7 @@ import {
 
 // Post-run card: floating white summary sheet over the replayed
 // route, accent Save. No logic changes.
-const RunSummaryOverlay = ({ metrics, splits, formatTime, route, onSave, onDiscard, isSaving }) => {
+const RunSummaryOverlay = ({ metrics = undefined, splits = undefined, formatTime = undefined, route = undefined, onSave = undefined, onDiscard = undefined, isSaving = undefined }) => {
   const [sharing, setSharing] = useState(false);
 
   const handleShare = async () => {

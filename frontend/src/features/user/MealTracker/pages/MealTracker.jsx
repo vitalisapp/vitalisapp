@@ -5,6 +5,7 @@ import AppShell from "../../../../components/AppShell.jsx";
 import PageHeader from "../../../../components/app/PageHeader.jsx";
 import Icon from "../../../../components/Icon.jsx";
 import MacroCoachCard from "../components/MacroCoachCard.jsx";
+import SugarSodiumCard from "../components/SugarSodiumCard.jsx";
 import ScanResult from "../components/ScanResult.jsx";
 import CameraScanner from "../components/CameraScanner.jsx";
 import MealDiary from "../components/MealTrackerDiary.jsx";
@@ -37,6 +38,10 @@ const EMPTY_FORM = {
   protein: "",
   carbs: "",
   fat: "",
+  // Section 6: sugar (g) / sodium (mg) from the picked catalog food ("" = unknown).
+  sugar: "",
+  sodium: "",
+  food: null,
   mealType: "Breakfast",
   image_url: "",
   // Nutrition density for gram-based scaling: { calories, protein, carbs, fat }
@@ -65,7 +70,7 @@ function buildMonthGrid(year, month) {
 }
 
 // App-styled calendar dropdown (replaces the unstyled native picker popup).
-function CalendarPopup({ currentDate, today, onPick }) {
+function CalendarPopup({ currentDate = undefined, today = undefined, onPick = undefined }) {
   const [view, setView] = useState(() => {
     const [year, month] = currentDate.split("-").map(Number);
     return { y: year, m: month - 1 };
@@ -188,7 +193,7 @@ function CalendarPopup({ currentDate, today, onPick }) {
 }
 
 // Header date picker (calendar popup + Today shortcut).
-function TodayButton({ selectedDate, today, onDateChange }) {
+function TodayButton({ selectedDate = undefined, today = undefined, onDateChange = undefined }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
   const isToday = selectedDate === today;
@@ -248,7 +253,7 @@ function TodayButton({ selectedDate, today, onDateChange }) {
 }
 
 // Week strip (Sun–Sat, selected day filled) with compact week navigation.
-function WeekStrip({ selectedDate, onDateChange }) {
+function WeekStrip({ selectedDate = undefined, onDateChange = undefined }) {
   const today = toLocalKey(new Date());
   const parseDate = (value) => {
     const [year, month, day] = value.split("-").map(Number);
@@ -463,6 +468,8 @@ export default function MealTracker() {
           protein: "",
           carbs: "",
           fat: "",
+          sugar: "",
+          sodium: "",
           macroOverride: false,
         };
       }
@@ -473,6 +480,8 @@ export default function MealTracker() {
         protein: toInputValue(scaled.protein),
         carbs: toInputValue(scaled.carbs),
         fat: toInputValue(scaled.fat),
+        sugar: scaled.sugar != null ? toInputValue(scaled.sugar) : "",
+        sodium: scaled.sodium != null ? toInputValue(scaled.sodium) : "",
         macroOverride: false,
       };
     });
@@ -489,6 +498,9 @@ export default function MealTracker() {
         ...current,
         name: value,
         per100: null,
+        food: null,
+        sugar: "",
+        sodium: "",
         servingLabel: "",
         servingGrams: null,
         densitySource: "",
@@ -508,6 +520,7 @@ export default function MealTracker() {
           ...current,
           name: item?.name || current.name,
           per100,
+          food: item || null,
           servingLabel: item?.serving_label || "",
           servingGrams: Number(item?.serving_grams) > 0 ? Number(item.serving_grams) : null,
           densitySource: per100 ? "catalog" : "",
@@ -522,6 +535,8 @@ export default function MealTracker() {
             protein: toInputValue(scaled.protein),
             carbs: toInputValue(scaled.carbs),
             fat: toInputValue(scaled.fat),
+            sugar: scaled.sugar != null ? toInputValue(scaled.sugar) : "",
+            sodium: scaled.sodium != null ? toInputValue(scaled.sodium) : "",
           };
         }
         // No weight yet (or the row has no gram reference): show the reference
@@ -532,6 +547,8 @@ export default function MealTracker() {
           protein: toInputValue(item?.protein),
           carbs: toInputValue(item?.carbs),
           fat: toInputValue(item?.fat),
+          sugar: item?.sugar != null ? toInputValue(item.sugar) : "",
+          sodium: item?.sodium != null ? toInputValue(item.sodium) : "",
         };
       });
     },
@@ -701,6 +718,7 @@ export default function MealTracker() {
   // Real goals: nutrient-goals API + active goal dailyKcal (fall back to constants offline).
   const [calorieGoal, setCalorieGoal] = useState(FALLBACK_CALORIE_GOAL);
   const [macroTargets, setMacroTargets] = useState(FALLBACK_MACRO_TARGETS);
+  const [goalType, setGoalType] = useState(null);
   useEffect(() => {
     if (!userId) return undefined;
     let cancelled = false;
@@ -716,6 +734,7 @@ export default function MealTracker() {
       };
       const kcal = find("CALORIES") ?? activeGoal?.goal?.dailyKcal ?? FALLBACK_CALORIE_GOAL;
       setCalorieGoal(Number(kcal) || FALLBACK_CALORIE_GOAL);
+      setGoalType(activeGoal?.goal?.goalType || null);
       setMacroTargets({
         protein: find("PROTEIN") ?? activeGoal?.goal?.proteinG ?? FALLBACK_MACRO_TARGETS.protein,
         carbs: find("CARBOHYDRATES") ?? activeGoal?.goal?.carbsG ?? FALLBACK_MACRO_TARGETS.carbs,
@@ -824,6 +843,8 @@ export default function MealTracker() {
       protein: toNum(manualForm.protein),
       carbs: toNum(manualForm.carbs),
       fat: toNum(manualForm.fat),
+      sugar: manualForm.sugar === "" || manualForm.sugar == null ? null : toNum(manualForm.sugar),
+      sodium: manualForm.sodium === "" || manualForm.sodium == null ? null : toNum(manualForm.sodium),
       image_url: manualForm.image_url || null,
     });
     if (!saved) return; // keep the typed values for a retry
@@ -909,7 +930,15 @@ export default function MealTracker() {
               fatGoal={macroTargets.fat}
             />
 
-
+            <SugarSodiumCard
+              entries={dayHistory}
+              goalType={goalType}
+              calories={caloriesToday}
+              calorieGoal={calorieGoal}
+              protein={proteinToday}
+              proteinGoal={macroTargets.protein}
+              dateLabel={dateLabel}
+            />
           </div>
 
           <aside className="mt-rail" aria-label="Meal logging and nutrition insight">

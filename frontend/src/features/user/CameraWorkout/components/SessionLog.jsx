@@ -1,7 +1,7 @@
 import Icon from "../../../../components/Icon.jsx";
 import SessionLogRow from "./SessionLogRow.jsx";
 
-export default function SessionLog({ logs }) {
+export default function SessionLog({ logs = undefined }) {
   if (logs.length === 0) return null;
   return (
     <div className="glass-card p-5 sm:p-6 rounded-2xl border border-[var(--border-light)]">

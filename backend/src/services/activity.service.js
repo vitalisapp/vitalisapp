@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const tasks = require('../utils/taskNotifications');
 
 const ROUTE_MAX_CHARS = 64000;
 const ROUTE_MAX_POINTS = 2000;
@@ -65,6 +66,7 @@ async function saveActivity(userId, params) {
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [uid, duration, distance, pace, calories, isGps ? 1 : 0, route],
   );
+  tasks.notifyTask(uid, { category: 'ACTIVITY', message: tasks.activityMessage({ duration, distance, pace, calories }) });
   return { success: true, id: result.insertId };
 }
 

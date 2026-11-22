@@ -1,4 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { checkDob, todayIso } from '../../../../lib/age.js';
+import { SLEEP_CHOICES } from '../../../../lib/bmi.js';
+import {
+  EXPERIENCE_LEVELS, EXCLUSION_CATEGORIES, MAX_EXTRA_GOALS,
+  extraGoalBlockReason, cleanExtraGoals, isRecomposition, checkTargetDate, targetDateBounds,
+} from '../../../../lib/goalSetup.js';
+import BmiInsight from '../../../../components/health/BmiInsight.jsx';
+import SleepNote from '../../../../components/health/SleepNote.jsx';
+import ActivityDetail from '../../../../components/health/ActivityDetail.jsx';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars -- false positive: `motion` is used as <motion.*> JSX namespace below
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
@@ -22,13 +31,6 @@ const calcBmi = (hCm, wKg) => {
   return Number((w / (h * h)).toFixed(1));
 };
 
-const bmiCategory = (bmi) => {
-  if (bmi == null) return '—';
-  if (bmi < 18.5) return 'Underweight';
-  if (bmi < 25) return 'Healthy range';
-  if (bmi < 30) return 'Overweight';
-  return 'Obese';
-};
 
 // Common allergens offered as toggle chips; "Something else?" adds free text.
 const ALLERGEN_PRESETS = ['Gluten', 'Peanuts', 'Tree nuts', 'Milk', 'Eggs', 'Fish', 'Shellfish', 'Soy', 'Sesame'];
@@ -71,10 +73,12 @@ const SESSION_MINS_CHOICES = [20, 30, 45, 60];
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-const Chip = ({ active, onClick, children, label = undefined }) => (
+const Chip = ({ active = undefined, onClick = undefined, children = undefined, label = undefined, disabled = false, title = undefined }) => (
   <button
     type="button"
     onClick={onClick}
+    disabled={disabled}
+    title={title}
     aria-pressed={Boolean(active)}
     aria-label={label}
     className={`onb-chip${active ? ' is-selected' : ''}`}
@@ -84,7 +88,7 @@ const Chip = ({ active, onClick, children, label = undefined }) => (
   </button>
 );
 
-const ChoiceCard = ({ active, onClick, icon, title, description }) => (
+const ChoiceCard = ({ active = undefined, onClick = undefined, icon = undefined, title = undefined, description = undefined }) => (
   <button
     type="button"
     aria-pressed={Boolean(active)}
@@ -124,6 +128,11 @@ const Onboarding = () => {
   const [weightKg, setWeightKg] = useState('');
   // Step 3 — Goal
   const [goalType, setGoalType] = useState('');
+  // Section 3: up to 2 extra goals, optional target date, experience level.
+  const [extraGoals, setExtraGoals] = useState(/** @type {string[]} */ ([]));
+  const [targetDate, setTargetDate] = useState('');
+  const [experience, setExperience] = useState('BEGINNER');
+  const [excludedCats, setExcludedCats] = useState(/** @type {string[]} */ ([]));
   // Step 4 — Details
   const [targetWeight, setTargetWeight] = useState('');
   const [pace, setPace] = useState('');
@@ -132,6 +141,8 @@ const Onboarding = () => {
   const [activityLevel, setActivityLevel] = useState('');
   // Step 6 — Habits
   const [exerciseFreq, setExerciseFreq] = useState('1_2_DAYS');
+  // Section 2 — usual sleep per night (optional, hours).
+  const [sleepHours, setSleepHours] = useState(null);
   // Step 5 — Training setup (Module 3): optional; saved into
   // training_preferences so the generated starter plan matches reality
   // (plan length, day-cycling schedule, exercise swaps).
@@ -224,15 +235,16 @@ const Onboarding = () => {
     }
   };
 
-  const isValidDob = (v) => {
-    if (!v) return false;
-    const d = new Date(v);
-    if (Number.isNaN(d.getTime())) return false;
-    const now = new Date();
-    if (d > now) return false;
-    const age = (now.getTime() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-    return age >= 13 && age <= 120;
-  };
+  // Shared age rule (lib/age.js) — same limits and wording as the backend.
+  const isValidDob = (v) => checkDob(v).ok;
+  const dobCheck = checkDob(dob);
+  // Only explain once the user has typed a full date; an empty field just
+  // uses the normal step hint.
+  const dobProblem = dob && !dobCheck.ok ? dobCheck : null;
+
+  const dateBounds = useMemo(() => targetDateBounds(), []);
+  const dateCheck = checkTargetDate({ targetDate, weightKg, targetWeightKg: targetWeight || null });
+  const toggleExtra = (k) => setExtraGoals((list) => (list.includes(k) ? list.filter((x) => x !== k) : [...list, k]));
 
   const canContinue = () => {
     switch (step) {
@@ -243,6 +255,7 @@ const Onboarding = () => {
       }
       case 1: return Boolean(goalType);
       case 2:
+        if (!dateCheck.ok) return false;
         if (goalType === 'LOSE_WEIGHT' || goalType === 'GAIN_WEIGHT') {
           return Boolean(Number(targetWeight) > 0 && pace);
         }
@@ -261,7 +274,7 @@ const Onboarding = () => {
   const stepHint = () => {
     switch (step) {
       case 0: {
-        if (!isValidDob(dob)) return 'Enter a valid birth date (age 13–120).';
+        if (!isValidDob(dob)) return dobProblem ? dobProblem.title : 'Enter your date of birth.';
         if (!sex) return 'Select an option for metabolic calculation.';
         const h = Number(heightCm);
         const w = Number(weightKg);
@@ -271,6 +284,7 @@ const Onboarding = () => {
       }
       case 1: return goalType ? '' : 'Select a goal to continue.';
       case 2: {
+        if (!dateCheck.ok) return dateCheck.message;
         if (goalType === 'LOSE_WEIGHT' || goalType === 'GAIN_WEIGHT') {
           if (!(Number(targetWeight) > 0)) return 'Enter your target weight.';
           if (!pace) return 'Choose your preferred progress pace.';
@@ -295,6 +309,10 @@ const Onboarding = () => {
           goalType, targetWeightKg: targetWeight ? Number(targetWeight) : null,
           pace: pace || null, focus: focus || null, activityLevel,
           exerciseFreq,
+          sleepHours,
+          secondaryGoals: extraGoals,
+          targetDate: targetDate || null,
+          experienceLevel: experience,
         });
         if (!data?.goal) throw new Error('Could not generate your plan.');
         // Module 3 — persist the training setup BEFORE the starter plan is
@@ -309,6 +327,7 @@ const Onboarding = () => {
               preferred_days: prefDays,
               session_duration_mins: sessionMins || undefined,
               workout_location: workoutLocation || undefined,
+              excluded_categories: excludedCats,
             }),
           });
         } catch { /* fall back to defaults; user can edit in Plans later */ }
@@ -333,9 +352,9 @@ const Onboarding = () => {
       safeSet('vitalis:onboarding', 'done');
       const cached = safeGetJSON('vitalis_user', null);
       if (cached) safeSetJSON('vitalis_user', { ...cached, onboardingCompleted: true });
-      // Best-effort: seed a personal 7-day starter from the new goal.
+      // Best-effort: build one recommended plan per goal (primary active).
       // Fire-and-forget so it never delays the dashboard transition.
-      apiPost('/api/plans/auto-from-goal', {}).catch(() => {});
+      apiPost('/api/plans/auto-from-goal', { all: true, regenerate: true }).catch(() => {});
       navigate('/dashboard/plans?mine=1');
     } catch (e) {
       setError(e?.message || 'Could not finish. Check connection and try again — you can skip for now.');
@@ -472,7 +491,27 @@ const Onboarding = () => {
                     <div className="onb-form">
                       <div className="onb-field">
                         <label className="onb-label" htmlFor="ob-dob">Date of birth</label>
-                        <input id="ob-dob" type="date" autoComplete="bday" value={dob} onChange={(e) => setDob(e.target.value)} className="onb-input" />
+                        <input
+                          id="ob-dob"
+                          type="date"
+                          autoComplete="bday"
+                          max={todayIso()}
+                          value={dob}
+                          onChange={(e) => setDob(e.target.value)}
+                          className="onb-input"
+                          aria-invalid={dobProblem ? 'true' : undefined}
+                          aria-describedby={dobProblem ? 'ob-dob-problem' : undefined}
+                        />
+                        {dobProblem && (
+                          <p id="ob-dob-problem" className="onb-note onb-note--warn" role="alert">
+                            <Icon name={dobProblem.code === 'AGE_TOO_YOUNG' ? 'info' : 'error'} />
+                            <span>
+                              <strong>{dobProblem.title}</strong>
+                              <br />
+                              {dobProblem.message}
+                            </span>
+                          </p>
+                        )}
                       </div>
 
                       <fieldset className="onb-fieldset">
@@ -497,31 +536,55 @@ const Onboarding = () => {
                         </div>
                       </div>
 
-                        <div className="onb-bmi" aria-live="polite">
-                          <span className="onb-bmi__icon" aria-hidden="true"><Icon name="monitor_weight" /></span>
-                          <div>
-                            <p className="onb-bmi__label">Your starting snapshot</p>
-                            <p className="onb-bmi__category">{bmi == null ? 'Add your height and weight to see your BMI.' : bmiCategory(bmi)}</p>
-                          </div>
-                          <p className="onb-bmi__value">{bmi ?? '—'}<span>BMI</span></p>
+                        <div aria-live="polite">
+                          <BmiInsight bmi={bmi} heightCm={heightCm} weightKg={weightKg} compact />
                         </div>
                     </div>
                   )}
 
                   {/* STEP 2 — Primary goal */}
                   {step === 1 && (
-                    <div className="onb-choice-grid" role="group" aria-label="Primary goal">
-                      {GOAL_TYPES.map((g) => (
-                        <ChoiceCard
-                          key={g.key}
-                          active={goalType === g.key}
-                          icon={g.icon}
-                          title={g.label}
-                          description={g.desc}
-                          onClick={() => { setGoalType(g.key); setPace(''); setFocus(''); setTargetWeight(''); }}
-                        />
-                      ))}
-                    </div>
+                    <>
+                      <div className="onb-choice-grid" role="group" aria-label="Primary goal">
+                        {GOAL_TYPES.map((g) => (
+                          <ChoiceCard
+                            key={g.key}
+                            active={goalType === g.key}
+                            icon={g.icon}
+                            title={g.label}
+                            description={g.desc}
+                            onClick={() => {
+                              setGoalType(g.key); setPace(''); setFocus(''); setTargetWeight('');
+                              setExtraGoals((list) => cleanExtraGoals(g.key, list));
+                            }}
+                          />
+                        ))}
+                      </div>
+                      {goalType && (
+                        <fieldset className="onb-fieldset onb-extra-goals">
+                          <legend className="onb-label">
+                            Extra goals <span className="onb-label__hint">optional, up to {MAX_EXTRA_GOALS}</span>
+                          </legend>
+                          <div className="onb-chip-row">
+                            {GOAL_TYPES.filter((g) => g.key !== goalType).map((g) => {
+                              const reason = extraGoalBlockReason(goalType, g.key, extraGoals);
+                              const active = extraGoals.includes(g.key);
+                              return (
+                                <Chip key={g.key} active={active} disabled={!active && Boolean(reason)} title={!active ? reason || undefined : undefined}
+                                  onClick={() => toggleExtra(g.key)}>
+                                  {g.label}
+                                </Chip>
+                              );
+                            })}
+                          </div>
+                          <p className="onb-hint-text">
+                            {isRecomposition(goalType, extraGoals)
+                              ? 'Losing fat while building muscle: your calories stay close to maintenance and protein goes up, so you keep and build muscle.'
+                              : 'Your main goal sets your calories. Each extra goal gets its own workout plan you can switch to anytime.'}
+                          </p>
+                        </fieldset>
+                      )}
+                    </>
                   )}
 
                   {/* STEP 3 — Goal details (depends on goal) */}
@@ -596,6 +659,32 @@ const Onboarding = () => {
                           </div>
                         </fieldset>
                       )}
+                      <div className="onb-field">
+                        <label className="onb-label" htmlFor="ob-target-date">
+                          Target date <span className="onb-label__hint">optional</span>
+                        </label>
+                        <input id="ob-target-date" type="date" className="onb-input"
+                          min={dateBounds.min} max={dateBounds.max}
+                          value={targetDate} onChange={(e) => setTargetDate(e.target.value)}
+                          aria-invalid={!dateCheck.ok || undefined}
+                          aria-describedby={targetDate ? 'ob-target-date-note' : undefined} />
+                      </div>
+                      {targetDate && !dateCheck.ok && (
+                        <p id="ob-target-date-note" className="onb-note onb-note--warn" role="alert">
+                          <Icon name="event_busy" /> <span>{dateCheck.message}</span>
+                        </p>
+                      )}
+                      {targetDate && dateCheck.ok && dateCheck.feasibility && (
+                        <p id="ob-target-date-note" className={`onb-note ${dateCheck.feasibility.realistic ? 'onb-note--ok' : 'onb-note--warn'}`} role="status">
+                          <Icon name={dateCheck.feasibility.realistic ? 'check_circle' : 'warning'} />
+                          <span>
+                            {dateCheck.feasibility.message}
+                            {!dateCheck.feasibility.realistic && (
+                              <> <button type="button" className="onb-link-btn" onClick={() => setTargetDate(dateCheck.feasibility.suggestedDate)}>Use safer date</button></>
+                            )}
+                          </span>
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -612,6 +701,7 @@ const Onboarding = () => {
                           onClick={() => setActivityLevel(a.key)}
                         />
                       ))}
+                      <ActivityDetail level={ACTIVITY_LEVELS.find((a) => a.key === activityLevel)} />
                     </div>
                   )}
 
@@ -621,6 +711,15 @@ const Onboarding = () => {
                       <p className="onb-note">
                         <Icon name="info" /> Pick what works for you. You can update these in Plans → Preferences anytime.
                       </p>
+                      <fieldset className="onb-fieldset">
+                        <legend className="onb-label">Training experience</legend>
+                        <div className="onb-chip-row">
+                          {EXPERIENCE_LEVELS.map((lv) => (
+                            <Chip key={lv.key} active={experience === lv.key} onClick={() => setExperience(lv.key)}>{lv.label}</Chip>
+                          ))}
+                        </div>
+                        <p className="onb-hint-text">{EXPERIENCE_LEVELS.find((lv) => lv.key === experience)?.desc}</p>
+                      </fieldset>
                       <fieldset className="onb-fieldset">
                         <legend className="onb-label">
                           Available equipment <span className="onb-label__hint">(none is fine)</span>
@@ -676,6 +775,19 @@ const Onboarding = () => {
                           ))}
                         </div>
                       </fieldset>
+                      <fieldset className="onb-fieldset">
+                        <legend className="onb-label">
+                          Exercises to avoid <span className="onb-label__hint">(optional, e.g. for injuries)</span>
+                        </legend>
+                        <div className="onb-chip-row">
+                          {EXCLUSION_CATEGORIES.map((c) => (
+                            <Chip key={c.key} title={c.desc} active={excludedCats.includes(c.key)}
+                              onClick={() => setExcludedCats((list) => (list.includes(c.key) ? list.filter((x) => x !== c.key) : [...list, c.key]))}>
+                              {c.label}
+                            </Chip>
+                          ))}
+                        </div>
+                      </fieldset>
                     </div>
                   )}
 
@@ -697,6 +809,21 @@ const Onboarding = () => {
                           </fieldset>
                         ))}
                       </div>
+
+                      <fieldset className="onb-fieldset">
+                        <legend className="onb-label">
+                          Usual sleep per night <span className="onb-label__hint">(optional)</span>
+                        </legend>
+                        <div className="onb-chip-row">
+                          {SLEEP_CHOICES.map((c) => (
+                            <Chip key={c.value} label={c.label} active={sleepHours === c.value}
+                              onClick={() => setSleepHours((cur) => (cur === c.value ? null : c.value))}>
+                              {c.label}
+                            </Chip>
+                          ))}
+                        </div>
+                        <SleepNote hours={sleepHours} age={dobCheck.ok ? dobCheck.age : null} />
+                      </fieldset>
 
                       <div className="onb-allergies" ref={allergiesRef}>
                         <button
@@ -793,6 +920,12 @@ const Onboarding = () => {
                       <div className="onb-result__goal">
                         <p className="onb-result__label">Primary goal</p>
                         <p className="onb-result__goal-value">{goalLabel(plan.goal.goalType)}</p>
+                        {plan.goal.secondaryGoals?.length > 0 && (
+                          <p className="onb-result__macros">Also: {plan.goal.secondaryGoals.map(goalLabel).join(' · ')}</p>
+                        )}
+                        {plan.goal.targetDate && (
+                          <p className="onb-result__macros">Target date: {plan.goal.targetDate}</p>
+                        )}
                       </div>
 
                       <div className="onb-result__stats">
@@ -819,6 +952,18 @@ const Onboarding = () => {
                           Protein {plan.plan?.proteinG ?? '—'}g · Carbs {plan.plan?.carbsG ?? '—'}g · Fat {plan.plan?.fatG ?? '—'}g
                         </p>
                       </div>
+
+                      {plan.plan?.recomposition && (
+                        <p className="onb-note onb-note--ok">
+                          <Icon name="balance" />
+                          <span>Recomposition: a small calorie deficit with high protein, so you lose fat while building muscle.</span>
+                        </p>
+                      )}
+                      {plan.targetFeasibility && !plan.targetFeasibility.realistic && (
+                        <p className="onb-note onb-note--warn">
+                          <Icon name="warning" /> <span>{plan.targetFeasibility.message}</span>
+                        </p>
+                      )}
 
                       <p className="onb-result__note">
                         Initial estimates based on your info. Vitalis refines them as you log nutrition, activity and weight.

@@ -12,17 +12,14 @@ const ICONS = {
   info: 'info',
 };
 
-function Toast({ id, variant = 'info', message, title, description, duration, onClose }) {
+function Toast({ id = undefined, variant = 'info', message = undefined, title = undefined, description = undefined, onClose = undefined }) {
   return (
-    <div className={`v-toast is-${variant}`} role="status" aria-live="polite">
+    <div className={`v-toast is-${variant}`} role={variant === 'error' ? 'alert' : 'status'} aria-live={variant === 'error' ? 'assertive' : 'polite'}>
       <span className="v-toast-icon" aria-hidden="true">
         <Icon name={ICONS[variant] || ICONS.info} />
       </span>
 
       <div className="v-toast-body">
-        <span className="v-toast-eyebrow">
-          {variant === 'success' ? 'Confirmed' : variant === 'error' ? 'Action needed' : 'Vitalis'}
-        </span>
         <p className="v-toast-title">{title || message}</p>
         {description ? <p className="v-toast-description">{description}</p> : null}
       </div>
@@ -35,20 +32,11 @@ function Toast({ id, variant = 'info', message, title, description, duration, on
       >
         <Icon name="close" />
       </button>
-
-      {duration ? (
-        <span
-          id={`v-toast-progress-${id}`}
-          className="v-toast-progress"
-          style={{ animationDuration: `${duration}ms` }}
-          aria-hidden="true"
-        />
-      ) : null}
     </div>
   );
 }
 
-function ToastContainer({ toasts, onClose }) {
+function ToastContainer({ toasts = undefined, onClose = undefined }) {
   return (
     <div className="v-toast-container">
       {toasts.map((toast) => (
@@ -58,7 +46,7 @@ function ToastContainer({ toasts, onClose }) {
   );
 }
 
-export function NotificationProvider({ children }) {
+export function NotificationProvider({ children = undefined }) {
   const toasts = useToastStore((s) => s.toasts);
   const removeToast = useToastStore((s) => s.removeToast);
   return (

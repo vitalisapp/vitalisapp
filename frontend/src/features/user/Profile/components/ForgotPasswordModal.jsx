@@ -40,7 +40,7 @@ const STEP_LABELS = ['Email', 'Code', 'Password'];
  * useForgotPassword. Presentation is owned here so it matches the premium
  * security form, but the reset still revokes every session.
  */
-export default function ForgotPasswordModal({ defaultEmail, onClose, onBack, onDone }) {
+export default function ForgotPasswordModal({ defaultEmail = undefined, onClose = undefined, onBack = undefined, onDone = undefined }) {
   const flow = useForgotPassword({ initialEmail: defaultEmail || '' });
   const { step } = flow;
   const meta = STEP_META[step] || STEP_META[0];

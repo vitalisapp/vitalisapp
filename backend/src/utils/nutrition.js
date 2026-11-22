@@ -52,6 +52,8 @@ function per100FromServing(item = {}) {
     protein: clamp(round1((Number(item.protein) || 0) * factor), 0, MAX_MACRO_PER_100G),
     carbs: clamp(round1((Number(item.carbs) || 0) * factor), 0, MAX_MACRO_PER_100G),
     fat: clamp(round1((Number(item.fat) || 0) * factor), 0, MAX_MACRO_PER_100G),
+    ...(item.sugar != null ? { sugar: clamp(round1((Number(item.sugar) || 0) * factor), 0, MAX_MACRO_PER_100G) } : {}),
+    ...(item.sodium != null ? { sodium: Math.max(0, Math.round((Number(item.sodium) || 0) * factor)) } : {}),
   };
 }
 
@@ -67,6 +69,8 @@ function scaleFromPer100(per100, grams) {
     protein: Math.max(0, round1((Number(per100.protein) || 0) * factor)),
     carbs: Math.max(0, round1((Number(per100.carbs) || 0) * factor)),
     fat: Math.max(0, round1((Number(per100.fat) || 0) * factor)),
+    ...(per100.sugar != null ? { sugar: Math.max(0, round1((Number(per100.sugar) || 0) * factor)) } : {}),
+    ...(per100.sodium != null ? { sodium: Math.max(0, Math.round((Number(per100.sodium) || 0) * factor)) } : {}),
   };
 }
 

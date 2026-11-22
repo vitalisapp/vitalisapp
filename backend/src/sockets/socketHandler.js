@@ -60,7 +60,8 @@ module.exports = (io) => {
       return;
     }
     // Immediate DB verification on connect (not only after 90s): revoked or
-    // unverified sessions are rejected at once instead of getting a live room.
+    // sessions are rejected at once instead of getting a live room. Unverified
+    // accounts are allowed (soft verification, same as verifyUser).
     (async () => {
       try {
         const db = require("../config/db");
@@ -69,7 +70,7 @@ module.exports = (io) => {
           [authedUserId]
         );
         const row = rows[0];
-        if (!row || !row.is_verified || Number(row.token_version || 0) !== Number(session.tv || 0)) {
+        if (!row || Number(row.token_version || 0) !== Number(session.tv || 0)) {
           socket.emit("session_revoked", { error: "Session revoked. Please sign in again." });
           try { socket.disconnect(true); } catch { /* noop */ }
           return;
@@ -100,7 +101,7 @@ module.exports = (io) => {
           [socket.data.userId]
         );
         const current = rows[0] ? Number(rows[0].token_version || 0) : null;
-        if (current === null || !rows[0].is_verified || current !== Number(socket.data.tv || 0)) {
+        if (current === null || current !== Number(socket.data.tv || 0)) {
           socket.emit("session_revoked", { error: "Session revoked. Please sign in again." });
           socket.disconnect(true);
         }

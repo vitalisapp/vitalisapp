@@ -156,8 +156,30 @@ async function deletePlanId(req, res, next) {
 async function postAutoFromGoal(req, res, next) {
     const userId = req.user.id;
     try {
-        const { planId, created } = await plansService.autoCreateFromGoal(userId);
-        res.status(created ? 201 : 200).json({ success: true, planId, created });
+        // Body (all optional): { goalType, regenerate, all, makeActive }.
+        // all=true builds one plan per goal (primary + extras); primary active.
+        const body = req.body || {};
+        const regenerate = body.regenerate === true;
+        if (body.all === true) {
+            const out = await plansService.generateForAllGoals(userId, { regenerate });
+            return res.status(out.created ? 201 : 200).json({ success: true, ...out });
+        }
+        const goalType = typeof body.goalType === 'string' ? body.goalType : undefined;
+        const makeActive = typeof body.makeActive === 'boolean' ? body.makeActive : undefined;
+        const out = await plansService.autoCreateFromGoal(userId, { goalType, regenerate, makeActive });
+        res.status(out.created ? 201 : 200).json({ success: true, ...out });
+    } catch (err) {
+        sendPlanError(err, res, next);
+    }
+}
+
+// POST /api/plans/:planId/activate — make this plan the active plan for the goal.
+async function postActivate(req, res, next) {
+    try {
+        const planId = Number(req.params.planId);
+        if (!Number.isInteger(planId) || planId <= 0) return res.status(400).json({ error: 'Invalid plan id', code: 'INVALID_PLAN_ID' });
+        const out = await plansService.setActivePlan(req.user.id, planId);
+        res.json({ success: true, ...out });
     } catch (err) {
         sendPlanError(err, res, next);
     }
@@ -195,6 +217,7 @@ module.exports = {
     patchPlanId,
     deletePlanId,
     postAutoFromGoal,
+    postActivate,
     postAdjust,
     humanizeGoal: plansService.humanizeGoal,
     tagForGoal: plansService.tagForGoal,

@@ -159,7 +159,7 @@ const TITLES = [
   ['/dashboard/activity-map', 'Activity'],
   ['/dashboard/logs', 'Progress'],
   ['/dashboard/plans', 'Plans'],
-  ['/dashboard/messenger', 'Messages'],
+  ['/dashboard/community/messages', 'Messages'],
   ['/dashboard/community', 'Community'],
   ['/dashboard/profile', 'Profile'],
   ['/dashboard/preferences', 'Preferences'],
@@ -188,7 +188,7 @@ export function AppTopbarLeft({ mobileTitle = undefined }) {
 }
 
 /** Small labelled link used in card headers / page actions. */
-export function AppTextLink({ to, onClick, icon = 'arrow_forward', children = undefined, className = '' }) {
+export function AppTextLink({ to = undefined, onClick = undefined, icon = 'arrow_forward', children = undefined, className = '' }) {
   const content = (
     <>
       {children}

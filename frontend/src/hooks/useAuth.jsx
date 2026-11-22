@@ -34,7 +34,7 @@ const AuthContext = createContext({
   setUser: /** @type {import('react').Dispatch<any>} */ (() => {}),
 });
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children = undefined }) => {
   const [user, setUser] = useState(() => {
     return safeGetJSON('vitalis_user', null);
   });

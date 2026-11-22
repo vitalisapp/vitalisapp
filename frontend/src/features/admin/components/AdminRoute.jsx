@@ -9,7 +9,7 @@ import '../admin.css';
  * /admin (or any sub-path) is silently redirected to their own dashboard;
  * there is no restricted-area screen to keep probing.
  */
-export default function AdminRoute({ children }) {
+export default function AdminRoute({ children = undefined }) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -20,7 +20,6 @@ export default function AdminRoute({ children }) {
     );
   }
   if (!user) return <Navigate to="/login" replace />;
-  if (user.isVerified !== true && user.email) return <Navigate to="/check-email" replace />;
   // Role middleware — members get their own dashboard, never the console.
   if (user.role !== 'admin') return <Navigate to="/dashboard" replace />;
 

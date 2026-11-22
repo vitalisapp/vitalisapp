@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-export const Icon = ({ name, className = "", style }) => (
+export const Icon = ({ name = undefined, className = "", style = undefined }) => (
   <span
     aria-hidden="true"
     className={`material-symbols-outlined select-none leading-none ${className}`}
@@ -27,7 +27,7 @@ export const Brand = ({ href = "#top" }) => (
 
 // Single restrained reveal used across the page. Content stays visible when
 // IntersectionObserver is unavailable or the visitor prefers reduced motion.
-export const Reveal = ({ children, className = "", delay = 0 }) => {
+export const Reveal = ({ children = undefined, className = "", delay = 0 }) => {
   const ref = useRef(null);
   const [visible, setVisible] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -64,7 +64,7 @@ export const Reveal = ({ children, className = "", delay = 0 }) => {
   );
 };
 
-export const RoundArrowPair = ({ onPrev, onNext, prevDisabled, nextDisabled, prevLabel, nextLabel }) => (
+export const RoundArrowPair = ({ onPrev = undefined, onNext = undefined, prevDisabled = undefined, nextDisabled = undefined, prevLabel = undefined, nextLabel = undefined }) => (
   <div className="nn-arrow-pair">
     <button
       type="button"
@@ -87,7 +87,7 @@ export const RoundArrowPair = ({ onPrev, onNext, prevDisabled, nextDisabled, pre
   </div>
 );
 
-export const PillCta = ({ children, onClick, href, type = "button", className = "" }) => {
+export const PillCta = ({ children = undefined, onClick = undefined, href = undefined, type = "button", className = "" }) => {
   const content = (
     <>
       <span>{children}</span>
@@ -386,7 +386,7 @@ export const DownloadPhoneSet = () => (
   </div>
 );
 
-export const ProductTour = ({ open, onClose, onPrimary, isAuthenticated }) => {
+export const ProductTour = ({ open = undefined, onClose = undefined, onPrimary = undefined, isAuthenticated = undefined }) => {
   const closeRef = useRef(null);
   const [step, setStep] = useState(0);
   const steps = [
@@ -574,12 +574,12 @@ const INSTALL_STEPS = {
 };
 
 export const InstallStepsModal = ({
-  help,
-  onClose,
-  onPrimary,
-  onInstall,
+  help = undefined,
+  onClose = undefined,
+  onPrimary = undefined,
+  onInstall = undefined,
   canAutoInstall = false,
-  isAuthenticated,
+  isAuthenticated = undefined,
 }) => {
   const closeRef = useRef(null);
   const [device, setDevice] = useState(help?.kind || "ios");
@@ -764,7 +764,7 @@ export const InstallStepsModal = ({
   );
 };
 
-export const FooterInfoModal = ({ info, onClose, onAction }) => {
+export const FooterInfoModal = ({ info = undefined, onClose = undefined, onAction = undefined }) => {
   const closeRef = useRef(null);
 
   useEffect(() => {
@@ -870,7 +870,7 @@ export const FooterInfoModal = ({ info, onClose, onAction }) => {
   );
 };
 
-export const FooterLink = ({ item, onInfo, onLegal }) => {
+export const FooterLink = ({ item = undefined, onInfo = undefined, onLegal = undefined }) => {
   if (item.legal) {
     return <button type="button" onClick={() => onLegal(item.legal)}>{item.label}</button>;
   }

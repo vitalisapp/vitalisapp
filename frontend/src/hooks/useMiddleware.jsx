@@ -10,8 +10,9 @@ const GuardFallback = () => (
 );
 
 // Users with incomplete onboarding go to /onboarding first.
-// Email confirmation comes before onboarding or any protected screen.
-export const ProtectedRoute = ({ children, requireOnboarding = true }) => {
+// Email confirmation is soft: unverified users get full access and the
+// VerifyEmailBanner (AppShell) reminds them to confirm.
+export const ProtectedRoute = ({ children = undefined, requireOnboarding = true }) => {
   const { user, loading, sessionValid } = useAuth();
 
   if (loading) return <GuardFallback />;
@@ -22,9 +23,6 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.isVerified !== true) {
-    return <Navigate to="/check-email" replace state={{ email: user.email }} />;
-  }
   if (requireOnboarding && user.onboardingCompleted === false) {
     const skipped = safeGet('vitalis:onboarding') === 'skipped';
     let sessionSkipped = false;
@@ -36,7 +34,7 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }) => {
 };
 
 // Blocks logged-in users from Login/Register pages.
-export const PublicRoute = ({ children }) => {
+export const PublicRoute = ({ children = undefined }) => {
   const { user, loading, sessionValid } = useAuth();
 
   if (loading) return <GuardFallback />;
@@ -50,8 +48,8 @@ export const PublicRoute = ({ children }) => {
 
 // Member-only wrapper: an admin typing any /dashboard/* URL straight into the
 // address bar is redirected to their own console. Members pass through to
-// ProtectedRoute (verification + onboarding checks still apply).
-export const MemberRoute = ({ children, requireOnboarding = true }) => {
+// ProtectedRoute (onboarding check still applies).
+export const MemberRoute = ({ children = undefined, requireOnboarding = true }) => {
   const { user, loading } = useAuth();
 
   if (loading) return <GuardFallback />;

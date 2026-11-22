@@ -1,0 +1,138 @@
+// scripts/build-database-sql.js — regenerate the repo-root database.sql.
+//
+//   npm run db:sql
+//   npm run db:sql -- --demo  (five demo members + admin, every table populated)
+//
+// Creates a throwaway database, applies EVERY migration to it (so it holds
+// only schema + the migrations' own seed data — never real user records),
+// exports it to ../database.sql in a MariaDB 10.4 / MySQL 8 friendly form,
+// then drops the throwaway database. Your DB_NAME database is never touched.
+// Run it after adding a migration so database.sql stays the full snapshot.
+require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+const { execFileSync } = require('child_process');
+const mysql = require('mysql2/promise');
+
+const TMP_DB = `vitalis_sqlbuild_${Date.now()}`;
+const OUT = path.join(__dirname, '..', '..', 'database.sql');
+const DEMO = process.argv.includes('--demo');
+const conn = {
+  host: process.env.DB_HOST || '127.0.0.1',
+  port: parseInt(process.env.DB_PORT, 10) || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASS || undefined,
+  dateStrings: true,
+  supportBigNumbers: true,
+  bigNumberStrings: true,
+};
+
+const esc = (v) => {
+  if (v === null || v === undefined) return 'NULL';
+  if (typeof v === 'number' || typeof v === 'bigint') return String(v);
+  if (typeof v === 'boolean') return v ? '1' : '0';
+  if (Buffer.isBuffer(v)) return `0x${v.toString('hex')}`;
+  if (typeof v === 'object') v = JSON.stringify(v);
+  return `'${String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\0/g, '\\0')}'`;
+};
+
+// MySQL 8 → also importable on XAMPP MariaDB 10.4.
+const portable = (ddl) => ddl
+  .replace(/utf8mb4_0900_ai_ci/g, 'utf8mb4_unicode_ci')
+  .replace(/ AUTO_INCREMENT=\d+/, '')
+  .replace(/^CREATE TABLE `/, 'CREATE TABLE IF NOT EXISTS `');
+
+async function dump(srcDb, outFile) {
+  const c = await mysql.createConnection({ ...conn, database: srcDb, dateStrings: true, supportBigNumbers: true, bigNumberStrings: true });
+  const [tables] = await c.query(
+    "SELECT table_name AS t FROM information_schema.tables WHERE table_schema = ? AND table_type = 'BASE TABLE' ORDER BY table_name", [srcDb],
+  );
+  const names = tables.map((r) => r.t);
+  const [migs] = await c.query('SELECT name FROM _migrations ORDER BY name');
+
+  const out = [];
+  out.push(`-- database.sql - Vitalis full schema + seed data
+-- Generated for a clean XAMPP (MariaDB 10.4) / MySQL 8 phpMyAdmin import.
+--
+-- Source of truth: backend/migrations/001..${migs[migs.length - 1].name.slice(0, 3)} (${migs.length} files).
+-- Built by applying every migration to an EMPTY database and exporting it,
+-- so this file holds the schema plus seed data and no real user records.
+-- Dataset: ${DEMO ? 'DEMO: user5@gmail.com through user9@gmail.com + admin@gmail.com; all passwords: 12345678.' : 'Clean: plans, food catalog and default admin account.'}
+${DEMO ? '-- Demo photos are placeholder PNGs. Verification/reset records are used and expired.\n-- Demo email-delivery entries are fixtures; no messages were sent.\n' : ''}-- Importing this file ERASES existing application data in fitnessapp.
+-- Rebuild: npm run db:sql${DEMO ? ' -- --demo' : ''} (from backend/).
+-- Regenerated: ${new Date().toISOString().slice(0, 10)}.
+--
+-- What this does:
+--   1. Creates database \`fitnessapp\` and selects it.
+--   2. Drops and recreates all ${names.length - 1} application tables + \`_migrations\` (clean reset).
+--   3. Loads the seed data.
+--   4. Fills \`_migrations\` so \`npm run db:migrate\` reports nothing pending.
+--
+-- Default admin (from 040_admin_seed.sql): admin@gmail.com / 12345678.
+-- Change that password after the first sign-in.
+--
+-- Safe to paste straight into the phpMyAdmin "Import" tab or the SQL tab.
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+SET @OLD_SQL_MODE = @@SQL_MODE;
+SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';
+
+CREATE DATABASE IF NOT EXISTS \`fitnessapp\`
+  DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE \`fitnessapp\`;
+
+-- --------------------------------------------------------
+-- Drop existing tables (clean reset)
+-- --------------------------------------------------------`);
+  for (const t of names) out.push(`DROP TABLE IF EXISTS \`${t}\`;`);
+
+  let rowsTotal = 0;
+  const seeded = [];
+  for (const t of names) {
+    const [[ddl]] = await c.query(`SHOW CREATE TABLE \`${t}\``);
+    out.push('', '-- --------------------------------------------------------', `-- Table \`${t}\``, '-- --------------------------------------------------------');
+    out.push(`${portable(ddl['Create Table'])};`);
+    const [rows] = await c.query(`SELECT * FROM \`${t}\``);
+    if (!rows.length) continue;
+    rowsTotal += rows.length;
+    seeded.push(`${t} (${rows.length})`);
+    const cols = Object.keys(rows[0]).map((k) => `\`${k}\``).join(', ');
+    for (let i = 0; i < rows.length; i += 100) {
+      const chunk = rows.slice(i, i + 100).map((r) => `(${Object.values(r).map(esc).join(', ')})`).join(',\n');
+      out.push('', `INSERT INTO \`${t}\` (${cols}) VALUES\n${chunk};`);
+    }
+  }
+
+  out.push('', 'SET SQL_MODE = @OLD_SQL_MODE;', 'SET FOREIGN_KEY_CHECKS = 1;', '', `-- Done. Tables: ${names.length - 1} + _migrations. Seeded: ${seeded.join(', ')}.`, '');
+  fs.writeFileSync(outFile, out.join('\n'), 'utf8');
+  await c.end();
+  return { tables: names.length, migrations: migs.length, rows: rowsTotal, seeded };
+}
+
+(async () => {
+  const admin = await mysql.createConnection(conn);
+  await admin.query(`CREATE DATABASE \`${TMP_DB}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+  try {
+    execFileSync(process.execPath, [path.join(__dirname, '..', 'src', 'db', 'migrate.js')], {
+      env: { ...process.env, DB_NAME: TMP_DB },
+      stdio: ['ignore', 'ignore', 'inherit'],
+    });
+    if (DEMO) {
+      const demo = await mysql.createConnection({ ...conn, database: TMP_DB });
+      try {
+        await require('./seed-demo-data')(demo);
+      } finally {
+        await demo.end();
+      }
+    }
+    const tmpFile = `${OUT}.tmp`;
+    const info = await dump(TMP_DB, tmpFile);
+    if (DEMO) await require('./verify-demo-sql')(conn, tmpFile);
+    fs.renameSync(tmpFile, OUT);
+    console.log(`database.sql updated: ${info.tables} tables, ${info.migrations} migrations, seeded ${info.seeded.join(', ')}`);
+  } finally {
+    await admin.query(`DROP DATABASE IF EXISTS \`${TMP_DB}\``);
+    await admin.end();
+  }
+})().catch((e) => { console.error('db:sql failed:', e.message); process.exit(1); });

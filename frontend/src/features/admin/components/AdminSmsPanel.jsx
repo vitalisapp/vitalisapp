@@ -15,7 +15,7 @@ const LEVEL = {
  * plus verification SMS sent vs phones verified per day (from our DB).
  * `resource` is the useAdminResource result for /api/admin/sms.
  */
-export default function AdminSmsPanel({ resource, windowDays }) {
+export default function AdminSmsPanel({ resource = undefined, windowDays = undefined }) {
   const { data, loading, error, reload } = resource;
   const balance = data?.balance;
   const level = LEVEL[balance?.level] || LEVEL.unknown;

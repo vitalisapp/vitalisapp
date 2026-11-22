@@ -7,7 +7,7 @@ const NotificationStreamContext = createContext({
   subscribe: /** @type {(fn: (notification: any) => void) => () => void} */ (() => () => {}),
 });
 
-export const NotificationStreamProvider = ({ children }) => {
+export const NotificationStreamProvider = ({ children = undefined }) => {
   const { user, sessionValid } = useAuth();
   // Proven session only: stale cache + dead cookie would instantly 401.
   const userId = sessionValid === true ? (user?.id ?? null) : null;

@@ -44,7 +44,6 @@ export const CATEGORIES = [
 
 export const TABS = [
   { id: 'my-plans', label: 'My Plans',  icon: 'bookmarks' },
-  { id: 'find',     label: 'Find Plan', icon: 'search'    },
   { id: 'explore',  label: 'Explore',   icon: 'explore'   },
   { id: 'library',  label: 'Library',   icon: 'fitness_center' },
   { id: 'history',  label: 'History',   icon: 'history'   },

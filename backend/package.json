@@ -16,7 +16,10 @@
     "db:migrate": "node src/db/migrate.js",
     "db:migrate:dry": "node src/db/migrate.js --dry-run",
     "db:status": "node src/db/migrate.js --dry-run",
-    "db:create": "node src/db/create-migration.js"
+    "db:create": "node src/db/create-migration.js",
+    "db:sql": "node scripts/build-database-sql.js",
+    "seed:plans": "node src/db/migrate.js --seed-plans",
+    "foods:images": "node scripts/fillFoodImages.js"
   },
   "engines": {
     "node": ">=20"

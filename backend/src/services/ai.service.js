@@ -58,6 +58,28 @@ async function analyzePose(base64, metadata) {
   throw lastErr || new Error('All vision providers failed');
 }
 
+// ── Data minimisation (Section 9) ───────────────────────────────────────────
+// The user's name never leaves the server. Prompts ask the model to write the
+// literal token {{name}}; personalize() swaps the real first name in after the
+// reply comes back, so users see the same greeting and the AI provider only
+// ever receives anonymous numbers (activity, macros, goal type).
+const NAME_TOKEN = '{{name}}';
+const NAME_TOKEN_RE = /\{\{\s*name\s*\}\}/gi;
+function personalize(value, firstName) {
+  if (typeof value !== 'string') return value;
+  const name = String(firstName || '').trim() || 'Athlete';
+  return value.replace(NAME_TOKEN_RE, name);
+}
+function personalizeFields(obj, firstName, keys) {
+  if (!obj || typeof obj !== 'object') return obj;
+  const out = { ...obj };
+  for (const k of keys) {
+    if (Array.isArray(out[k])) out[k] = out[k].map((v) => personalize(v, firstName));
+    else out[k] = personalize(out[k], firstName);
+  }
+  return out;
+}
+
 async function fitnessAnalysis(userId, stats) {
   const [userRows] = await db.execute(
     'SELECT name, fitness_goal FROM users WHERE id = ? LIMIT 1',
@@ -100,7 +122,7 @@ async function fitnessAnalysis(userId, stats) {
   if (cached.length > 0) {
     let activityCached = null;
     try { activityCached = JSON.parse(cached[0].activity_suggestion); } catch { activityCached = { message: cached[0].activity_suggestion }; }
-    return { kind: 'cached', activityCached };
+    return { kind: 'cached', activityCached: personalizeFields(activityCached, firstName, ['message']) };
   }
 
   // Contextual flags
@@ -113,10 +135,9 @@ async function fitnessAnalysis(userId, stats) {
   const DISCLAIMER = 'General fitness info only — not medical advice. Consult a professional if concerned.';
   const prompt = `
                     You are Vitalis AI Coach, a fitness coaching assistant embedded in a training dashboard.
-                    Your job is to give ${firstName} a personalized, specific, and motivating fitness insight — not generic advice.
+                    Your job is to give the user (written as ${NAME_TOKEN}) a personalized, specific, and motivating fitness insight — not generic advice.
 
                     ATHLETE PROFILE:
-                    - Name: ${firstName}
                     - Fitness Goal: ${user.fitness_goal || 'general fitness'}
                     - Date: ${todayDate}
 
@@ -126,13 +147,13 @@ async function fitnessAnalysis(userId, stats) {
                     - Workout:         ${activity.workout_duration_mins} mins (${workoutStatus})
 
                     INSTRUCTIONS:
-                    1. Address ${firstName} by name naturally — not robotically.
+                    1. Address the user by writing the exact token ${NAME_TOKEN} where their name goes (it is filled in later). Use it once, naturally.
                     2. Reference their EXACT numbers in the advice (e.g., "those ${activity.steps} steps").
                     3. The message must be 2–3 sentences. Be specific, supportive, and actionable — never vague. Do not diagnose, treat, or prescribe.
                     4. Choose the trend ("up", "down", "stable") based on whether the metric is improving, declining, or neutral.
                     5. Focus on workout output, step count, and calorie burn relative to their goal.
                     6. Tone: supportive fitness coach — warm but data-driven.
-                    7. NEVER say "great job" or "keep it up" as opening words. Start with ${firstName}'s name or an observation.
+                    7. NEVER say "great job" or "keep it up" as opening words. Start with ${NAME_TOKEN} or an observation.
                     8. Do not use clinical/diagnostic language. This is general fitness info only (${DISCLAIMER}).
 
                     RESPONSE FORMAT (strict JSON only, no markdown, no extra text):
@@ -153,7 +174,7 @@ async function fitnessAnalysis(userId, stats) {
   const { parsed: aiResult, raw: rawStr } = safeParseAI(raw);
   if (!aiResult?.activity_suggestion) {
     // AI returned non-JSON fallback string — degrade gracefully, don't 500
-    return { kind: 'plainText', rawStr };
+    return { kind: 'plainText', rawStr: personalize(rawStr, firstName) };
   }
 
   await db.execute(
@@ -168,7 +189,7 @@ async function fitnessAnalysis(userId, stats) {
   return {
     kind: 'ok',
     firstName,
-    activitySuggestion: aiResult.activity_suggestion,
+    activitySuggestion: personalizeFields(aiResult.activity_suggestion, firstName, ['message']),
   };
 }
 
@@ -289,10 +310,9 @@ async function runAnalysis(userId, cleanRun) {
 
   const prompt = `
                     You are Vitalis AI, a warm, friendly, and encouraging running coach embedded in a fitness app.
-                    Your job is to give ${firstName} a personalized post-run analysis with a friendly tone — like a supportive coach who's genuinely proud              of them.
+                    Your job is to give the runner (written as ${NAME_TOKEN}) a personalized post-run analysis with a friendly tone — like a supportive coach who's genuinely proud              of them.
 
                     RUNNER PROFILE:
-                    - Name: ${firstName}
                     - Fitness Goal: ${user.fitness_goal || 'general fitness'}
                     - Consistency Level: ${consistency} (${totalRuns} runs logged)
 
@@ -331,19 +351,21 @@ async function runAnalysis(userId, cleanRun) {
     throw new Error("Invalid response from AI");
   }
 
-  const { parsed: aiResult, raw: rawText } = safeParseAI(raw);
+  const { parsed: parsedRun, raw: rawText } = safeParseAI(raw);
+  const aiResult = personalizeFields(parsedRun, firstName, ['summary', 'prediction', 'tip']);
   if (!aiResult?.summary) {
-    return { kind: 'plainText', firstName, rawText };
+    return { kind: 'plainText', firstName, rawText: personalize(rawText, firstName) };
   }
 
   // Send notification
   try {
     await db.execute(
-      'INSERT INTO notifications (user_id, message, type) VALUES (?, ?, ?)',
+      'INSERT INTO notifications (user_id, message, type, category) VALUES (?, ?, ?, ?)',
       [
         userId,
         `${aiResult.emoji_verdict} Run Analysis: ${aiResult.summary}`,
-        'info'
+        'info',
+        'ACTIVITY'
       ]
     );
   } catch (notifErr) {
@@ -697,6 +719,7 @@ function buildProjection(goal, metrics, profile = null) {
 
 /** Optional Gemini enrichment. Returns null on any failure so callers fall back. */
 async function aiSummary(firstName, goal, profile, metrics, nutrition, projection) {
+  // firstName is NOT put in the prompt — only used to fill {{name}} afterwards.
   const kcalTarget = goal.daily_kcal != null ? Number(goal.daily_kcal) : null;
   const proteinTarget = goal.protein_g != null ? Number(goal.protein_g) : null;
   const nutSection = nutrition
@@ -706,7 +729,7 @@ async function aiSummary(firstName, goal, profile, metrics, nutrition, projectio
     ? `Weight trajectory: ${metrics.currentWeightKg} kg → ${metrics.targetWeightKg} kg target. Recent rate: ${projection.weeklyRateKg} kg/week. Workout consistency (7d): ${metrics.workoutDaysLast7} days, ${metrics.avgWorkoutMinsLast7} min avg.`
     : '';
   const prompt = `
-                    You are Vitalis AI Coach. Write a SHORT, specific daily summary for ${firstName || 'the athlete'}.
+                    You are Vitalis AI Coach. Write a SHORT, specific daily summary for the user. If you address them, write the exact token ${NAME_TOKEN} (filled in later).
                     Goal: ${profile.label} — ${profile.aiDirective}
                     Today's data:
                     - Calories: ${Math.round(metrics.kcalToday)}${kcalTarget ? ` of ${kcalTarget}` : ''} kcal
@@ -731,8 +754,8 @@ async function aiSummary(firstName, goal, profile, metrics, nutrition, projectio
   const { parsed } = safeParseAI(raw);
   if (parsed?.headline && Array.isArray(parsed.bullets)) {
     return {
-      headline: String(parsed.headline).slice(0, 200),
-      bullets: parsed.bullets.slice(0, 3).map((b) => String(b).slice(0, 160)),
+      headline: personalize(String(parsed.headline), firstName).slice(0, 200),
+      bullets: parsed.bullets.slice(0, 3).map((b) => personalize(String(b), firstName).slice(0, 160)),
       category: parsed.category ? String(parsed.category).slice(0, 60) : 'Daily Summary',
       nutrition: nutrition || null,
       projection: projection || null,
@@ -816,6 +839,7 @@ async function dailySummary(userId) {
 }
 
 module.exports = {
+  personalize,
   analyzePose,
   fitnessAnalysis,
   // Backward-compatible alias — older callers/tests still import clinicalAnalysis

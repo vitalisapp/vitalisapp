@@ -4,12 +4,12 @@ import Icon from '../../../../components/Icon.jsx';
 // Session controls — sized for the stats console on desktop and the floating
 // dock on mobile. The parent owns positioning; this component owns intent.
 const RunControls = ({
-  isRecording,
-  hasPaused,
-  metricsTime,
-  onStart,
-  onPauseResume,
-  onFinish,
+  isRecording = undefined,
+  hasPaused = undefined,
+  metricsTime = undefined,
+  onStart = undefined,
+  onPauseResume = undefined,
+  onFinish = undefined,
   gpsReady = true,
 }) => {
   const idle = !isRecording && !hasPaused && metricsTime === 0;

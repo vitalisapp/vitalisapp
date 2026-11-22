@@ -10,7 +10,7 @@ const goalIcon = (goalType) => GOAL_TYPES.find((g) => g.key === goalType)?.icon 
 // Goal detail sheet — opened from the Dashboard "Goal" card so "View"
 // shows the actual goal (targets, weight progress) instead of landing
 // on the generic Analytics page.
-export default function GoalDetailSheet({ userId, goal, currentWeightKg, progressPct, onClose, onUpdated }) {
+export default function GoalDetailSheet({ userId = undefined, goal = undefined, currentWeightKg = undefined, progressPct = undefined, onClose = undefined, onUpdated = undefined }) {
   const navigate = useNavigate();
   const [changeOpen, setChangeOpen] = useState(false);
   const [recalBusy, setRecalBusy] = useState(false);

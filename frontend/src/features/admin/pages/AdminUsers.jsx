@@ -12,6 +12,7 @@ import { useAdminToast } from '../hooks/useAdminToast.jsx';
 import { fmtNum, fmtWhen, initials, verificationMeta } from '../utils/format.js';
 import ExportMenu from '../components/ExportMenu.jsx';
 import { fetchAllRows } from '../utils/exportTable.js';
+import { StatusDot } from '../components/StatusDot.jsx';
 
 // +639059335613 -> "0905 933 5613"; anything else passes through.
 const exportPhone = (value) => {
@@ -29,6 +30,7 @@ const USER_EXPORT_COLUMNS = [
   { header: 'Phone', value: (u) => exportPhone(u.phone), width: 16 },
   { header: 'Role', value: (u) => u.role, width: 10 },
   { header: 'Status', value: (u) => u.status, width: 12 },
+  { header: 'Activity', value: (u) => u.activity?.status || null, width: 10 },
   { header: 'Verified', value: (u) => Boolean(u.is_verified), width: 10 },
   { header: 'Verification', value: (u) => verificationMeta(u).label, width: 22 },
   { header: 'Phone verified at', value: (u) => u.phone_verified_at, type: 'date', width: 18 },
@@ -169,6 +171,7 @@ export default function AdminUsers() {
                   <th>Member</th>
                   <th>Role</th>
                   <th>Status</th>
+                  <th>Activity</th>
                   <th>Verification</th>
                   <th>Joined</th>
                   <th style={{ textAlign: 'right' }}>Actions</th>
@@ -188,6 +191,9 @@ export default function AdminUsers() {
                     </td>
                     <td><Badge tone={row.role === 'admin' ? 'admin' : 'member'}>{row.role}</Badge></td>
                     <td><Badge tone={row.status === 'active' ? 'active' : 'off'}>{row.status}</Badge></td>
+                    <td title={row.activity?.reasons?.join('\n') || undefined}>
+                      {row.activity ? <StatusDot status={row.activity.status} /> : <span className="adm-cell-muted">—</span>}
+                    </td>
                     <td>
                       {(() => {
                         const v = verificationMeta(row);

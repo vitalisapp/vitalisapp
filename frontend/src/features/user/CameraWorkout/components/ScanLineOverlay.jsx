@@ -1,4 +1,4 @@
-export default function ScanLineOverlay({ isRecording, cameraOn }) {
+export default function ScanLineOverlay({ isRecording = undefined, cameraOn = undefined }) {
   if (!isRecording || !cameraOn) return null;
   return (
     <div className="absolute inset-0 pointer-events-none z-10 border-2 border-[#D1FD52]/10 rounded-2xl">

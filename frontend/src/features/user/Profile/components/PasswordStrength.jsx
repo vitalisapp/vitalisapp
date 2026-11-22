@@ -1,6 +1,6 @@
 import { getPasswordStrength } from '../utils/passwordStrength.js';
 
-export default function PasswordStrength({ password }) {
+export default function PasswordStrength({ password = undefined }) {
   const strength = getPasswordStrength(password);
   if (!strength) return null;
 

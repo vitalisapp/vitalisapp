@@ -4,7 +4,7 @@ import { resolveWorkout } from '../constants/workoutGuide.js';
 // ── Exercise choice: after picking a card, decide HOW to log the session ────
 // Offered for every library exercise: launch the AI camera tracker, or enter
 // the session by hand (reps / sets / weight) through the reused manual modal.
-export default function ExerciseChoiceModal({ exercise, onUseCamera, onLogManually, onClose }) {
+export default function ExerciseChoiceModal({ exercise = undefined, onUseCamera = undefined, onLogManually = undefined, onClose = undefined }) {
   const workout = resolveWorkout(exercise?.id);
   const selfTracked = workout?.mode !== 'hold' && workout?.counterType === 'generic';
   return (

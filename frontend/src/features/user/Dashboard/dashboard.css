@@ -131,6 +131,7 @@
     grid-template-areas:
       'intro intro intro intro intro weekly weekly weekly weekly plan plan plan'
       'hero hero hero hero hero weekly weekly weekly weekly plan plan plan'
+      'coach coach coach coach coach coach coach coach coach coach coach coach'
       'streak streak streak streak streak streak streak streak streak streak streak streak'
       'stats stats stats stats stats stats stats stats stats stats stats stats'
       'lower lower lower lower lower lower lower lower lower lower lower lower'
@@ -138,6 +139,7 @@
   }
   .vd-intro { grid-area: intro; }
   .vd-hero { grid-area: hero; }
+  .vd-coach { grid-area: coach; }
   .vd-streak { grid-area: streak; }
   .vd-weekly-col { grid-area: weekly; }
   .vd-plan-col { grid-area: plan; }
@@ -150,6 +152,7 @@
     grid-template-areas:
       'intro intro intro intro intro intro weekly weekly weekly weekly weekly weekly'
       'hero hero hero hero hero hero weekly weekly weekly weekly weekly weekly'
+      'coach coach coach coach coach coach coach coach coach coach coach coach'
       'streak streak streak streak streak streak streak streak streak streak streak streak'
       'plan plan plan plan plan plan plan plan plan plan plan plan'
       'stats stats stats stats stats stats stats stats stats stats stats stats'
@@ -163,6 +166,7 @@
 .vd-intro { display: none; }
 .vd-quick { display: block; order: 4; }
 .vd-hero { order: 2; }
+.vd-coach { order: 2; }
 .vd-streak { order: 3; }
 .vd-weekly-col { order: 5; }
 .vd-stats { order: 6; }
@@ -172,7 +176,7 @@
 @media (min-width: 768px) {
   .vd-intro { display: block; }
   .vd-quick { display: none; }
-  .vd-hero, .vd-streak, .vd-weekly-col, .vd-plan-col, .vd-stats, .vd-lower, .vd-bottom { order: initial; }
+  .vd-hero, .vd-coach, .vd-streak, .vd-weekly-col, .vd-plan-col, .vd-stats, .vd-lower, .vd-bottom { order: initial; }
 }
 
 /* ── Intro / headline ──────────────────────────────────────────────── */
@@ -2616,3 +2620,46 @@
   .vd-streak-mile i { width: 25px; height: 25px; }
   .vd-streak-heat { --vd-cell: 8px; }
 }
+
+/* ── Section 4: personal coach card ───────────────────────────────── */
+.vd-coach { display: flex; flex-direction: column; gap: 14px; }
+.vd-coach-skel { height: 120px; border-radius: 12px; background: var(--bg-hover); }
+.vd-coach-head { display: flex; gap: 12px; align-items: flex-start; }
+.vd-coach-head-text { min-width: 0; }
+.vd-coach-avatar { flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-bg); color: var(--accent); }
+.vd-coach-avatar .material-symbols-outlined { font-size: 20px; }
+.vd-coach-avatar.is-alert { background: var(--warning-bg, rgba(245, 158, 11, 0.12)); color: var(--warning, #b45309); }
+.vd-coach .vd-card-title { display: flex; align-items: center; gap: 6px; font-size: 15px; }
+.vd-coach-ai { padding: 1px 6px; border-radius: 999px; font-family: inherit; font-size: 10px; font-weight: 600; letter-spacing: 0.02em; background: var(--bg-hover); color: var(--text-muted); }
+.vd-coach-msg { margin: 4px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--text-primary); }
+.vd-coach-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.vd-coach-day { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.vd-coach-dow { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.vd-coach-dot { width: 30px; height: 30px; border-radius: 999px; display: grid; place-items: center; border: 1px solid var(--border-light); background: var(--bg-hover); color: var(--text-muted); }
+.vd-coach-dot .material-symbols-outlined { font-size: 16px; }
+.vd-coach-day.is-done .vd-coach-dot { background: var(--success, #10b981); border-color: transparent; color: #fff; }
+.vd-coach-day.is-missed .vd-coach-dot { background: var(--error-bg, rgba(239, 68, 68, 0.1)); border-color: var(--error, #ef4444); color: var(--error, #ef4444); }
+.vd-coach-day.is-today .vd-coach-dot { border: 2px solid var(--accent); color: var(--accent); background: var(--accent-bg); }
+.vd-coach-day.is-today-rest .vd-coach-dot { border: 2px solid var(--border-medium); }
+.vd-coach-day.is-upcoming .vd-coach-dot { color: var(--text-primary); }
+.vd-coach-day.is-rest .vd-coach-dot,
+.vd-coach-day.is-skipped .vd-coach-dot { opacity: 0.6; }
+.vd-coach-day.is-moved .vd-coach-dot { border-style: dashed; border-color: var(--accent); }
+.vd-coach-options { display: grid; gap: 8px; }
+@media (min-width: 768px) { .vd-coach-options { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.vd-coach-opt { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; min-height: 44px; text-align: left; border-radius: 10px; border: 1px solid var(--border-light); background: var(--bg-card); color: var(--text-primary); cursor: pointer; }
+.vd-coach-opt:hover:not(:disabled) { border-color: var(--border-medium); }
+.vd-coach-opt.is-recommended { border-color: var(--accent); background: var(--accent-bg); }
+.vd-coach-opt:disabled { opacity: 0.55; cursor: progress; }
+.vd-coach-opt-label { font-size: 13px; font-weight: 600; }
+.vd-coach-opt-label em { font-style: normal; font-weight: 500; color: var(--accent); }
+.vd-coach-opt-detail { font-size: 12px; line-height: 1.45; color: var(--text-muted); }
+.vd-coach-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.vd-coach-btn { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border-medium); background: transparent; color: var(--text-primary); font-size: 13px; font-weight: 600; cursor: pointer; }
+.vd-coach-btn--primary { border-color: var(--accent); background: var(--accent); color: var(--text-inverse); }
+.vd-coach-btn .material-symbols-outlined { font-size: 18px; }
+.vd-coach-link { padding: 0; border: 0; background: none; color: var(--accent); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.vd-coach-tips { display: grid; gap: 8px; margin: 0; padding: 12px 0 0; list-style: none; border-top: 1px solid var(--border-light); }
+.vd-coach-tips li { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.5; color: var(--text-primary); }
+.vd-coach-tips .material-symbols-outlined { flex-shrink: 0; font-size: 17px; color: var(--accent); margin-top: 1px; }
+.vd-coach-error { margin: 0; font-size: 12.5px; color: var(--error); }

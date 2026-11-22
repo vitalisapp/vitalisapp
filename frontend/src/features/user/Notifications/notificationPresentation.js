@@ -3,25 +3,36 @@
 // returns ({ id, message, type, category, is_read, created_at }). Pure logic —
 // no React, no DOM — so it is unit-testable with node --test.
 
-export const NOTIFICATION_CATEGORIES = ['TRAINING', 'NUTRITION', 'RECOVERY', 'GOAL', 'SOCIAL', 'SYSTEM'];
+// Filter chips. RECOVERY is not listed (sleep/recovery logging was removed)
+// but old RECOVERY rows still render with their own meta below.
+export const NOTIFICATION_CATEGORIES = ['TRAINING', 'ACTIVITY', 'NUTRITION', 'PROGRESS', 'GOAL', 'SOCIAL', 'SYSTEM'];
 
+// One distinct hue per task type, so the type is readable at a glance:
+//   Training orange · Activity teal · Nutrition green · Progress purple ·
+//   Goals pink · Social blue · System grey. Yellow is reserved for warnings
+//   and red for errors, so no category uses either.
 const CATEGORY_META = {
-  TRAINING:  { label: 'Training',  icon: 'fitness_center', tone: 'accent' },
-  NUTRITION: { label: 'Nutrition', icon: 'restaurant',     tone: 'success' },
-  RECOVERY:  { label: 'Recovery',  icon: 'bedtime',        tone: 'info' },
-  GOAL:      { label: 'Goals',     icon: 'flag',           tone: 'warning' },
-  SOCIAL:    { label: 'Social',    icon: 'group',          tone: 'info' },
-  SYSTEM:    { label: 'System',    icon: 'campaign',       tone: 'neutral' },
+  TRAINING:  { label: 'Training',  icon: 'fitness_center',   tone: 'training' },
+  ACTIVITY:  { label: 'Activity',  icon: 'directions_run',   tone: 'activity' },
+  NUTRITION: { label: 'Nutrition', icon: 'restaurant',       tone: 'success' },
+  PROGRESS:  { label: 'Progress',  icon: 'monitor_weight',   tone: 'progress' },
+  RECOVERY:  { label: 'Recovery',  icon: 'bedtime',          tone: 'neutral' },
+  GOAL:      { label: 'Goals',     icon: 'flag',             tone: 'goal' },
+  SOCIAL:    { label: 'Social',    icon: 'group',            tone: 'info' },
+  SYSTEM:    { label: 'System',    icon: 'campaign',         tone: 'neutral' },
 };
 
-// Theme tokens only — no new colors. Every token exists in both themes.
+// Theme tokens (index.css defines each for dark and light).
 const TONES = {
-  accent:  { fg: 'var(--accent)',         bg: 'var(--accent-bg)' },
-  success: { fg: 'var(--success)',        bg: 'var(--success-bg)' },
-  info:    { fg: 'var(--info)',           bg: 'var(--info-bg)' },
-  warning: { fg: 'var(--warning)',        bg: 'var(--warning-bg)' },
-  error:   { fg: 'var(--error)',          bg: 'var(--error-bg)' },
-  neutral: { fg: 'var(--text-secondary)', bg: 'var(--bg-tertiary)' },
+  training: { fg: 'var(--notif-training)', bg: 'var(--notif-training-bg)' },
+  activity: { fg: 'var(--notif-activity)', bg: 'var(--notif-activity-bg)' },
+  progress: { fg: 'var(--notif-progress)', bg: 'var(--notif-progress-bg)' },
+  goal:     { fg: 'var(--notif-goal)',     bg: 'var(--notif-goal-bg)' },
+  success:  { fg: 'var(--success)',        bg: 'var(--success-bg)' },
+  info:     { fg: 'var(--info)',           bg: 'var(--info-bg)' },
+  warning:  { fg: 'var(--notif-warning)',  bg: 'var(--notif-warning-bg)' },
+  error:    { fg: 'var(--error)',          bg: 'var(--error-bg)' },
+  neutral:  { fg: 'var(--text-secondary)', bg: 'var(--bg-tertiary)' },
 };
 
 /** Normalized category (pre-category rows and unknown values fall back to SYSTEM). */
@@ -40,8 +51,9 @@ export function getCategoryIcon(category) {
 
 /**
  * Visual treatment for one notification.
- * Category picks the icon; a warning/error type overrides icon + tone so
- * problems stand out, a success type tints the category icon green.
+ * Category picks the icon and color. Only problems override it: warning →
+ * yellow, error → red. Success keeps the category color so a completed
+ * workout stays orange and a meal stays green.
  */
 export function getNotificationMeta(n) {
   const category = getCategory(n);
@@ -51,7 +63,6 @@ export function getNotificationMeta(n) {
   let tone = base.tone;
   if (type === 'error') { icon = 'error'; tone = 'error'; }
   else if (type === 'warning') { icon = 'warning'; tone = 'warning'; }
-  else if (type === 'success') { tone = 'success'; }
   return { category, label: base.label, icon, tone: TONES[tone], type };
 }
 

@@ -2,6 +2,7 @@
 // Every handler assumes `verifyUser, requireAdmin` already ran (mounted at the
 // router level) — req.user is the signed-in admin.
 const service = require("../services/admin.service");
+const monitoring = require("../services/adminMonitoring.service");
 
 // GET /api/admin/overview — dashboard counters.
 async function getOverview(req, res, next) {
@@ -17,6 +18,15 @@ async function getUsers(req, res, next) {
   try {
     const { q, role, status, limit, offset } = req.query;
     res.json(await service.listUsers({ q, role, status, limit, offset }));
+  } catch (e) {
+    next(e);
+  }
+}
+
+// GET /api/admin/monitoring — Section 10 activity monitoring report.
+async function getMonitoring(req, res, next) {
+  try {
+    res.json(await monitoring.getMonitoring(req.query));
   } catch (e) {
     next(e);
   }
@@ -130,6 +140,7 @@ async function getAudit(req, res, next) {
 module.exports = {
   getOverview,
   getUsers,
+  getMonitoring,
   getUserDetail,
   postUserRole,
   postUserStatus,

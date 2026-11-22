@@ -11,8 +11,8 @@ export const getInitials = (name) => {
     .split(/\s+/)
     .filter(Boolean);
   if (!parts.length) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  // One letter: the first character of the name ("Juan Dela Cruz" → "J").
+  return Array.from(parts[0])[0].toUpperCase();
 };
 
 const hashSeed = (seed) => {
@@ -71,7 +71,10 @@ export const getAvatarUrl = (seed) =>
       .replace(/[^a-z0-9]+/g, '') || 'vitalis'
   }`;
 
-const RETIRED_HOSTS = ['dicebear', 'ui-avatars'];
+// Third-party pictures the app used to adopt automatically (generated
+// avatars, Gravatar, Google account photos). They render as the lettered
+// circle instead; only an image the user uploads in Vitalis is shown.
+const RETIRED_HOSTS = ['dicebear', 'ui-avatars', 'gravatar.com', 'googleusercontent.com'];
 export const resolveAvatar = (avatarUrl, name, seedFallback = '') => {
   if (typeof avatarUrl === 'string' && avatarUrl.length > 0 && !isPresetToken(avatarUrl)) {
     if (RETIRED_HOSTS.some((h) => avatarUrl.includes(h))) {
@@ -83,7 +86,16 @@ export const resolveAvatar = (avatarUrl, name, seedFallback = '') => {
         initials: getInitials(name),
       };
     }
-    return { kind: 'image', src: avatarUrl };
+    // Callers fall back to initials when the <img> fails to load, so the
+    // image result must carry the same surface/initials as the initials case.
+    const seed = name || seedFallback || 'vitalis';
+    return {
+      kind: 'image',
+      src: avatarUrl,
+      gradient: avatarGradient(seed),
+      surface: avatarSurface(seed),
+      initials: getInitials(name),
+    };
   }
   const seed = isPresetToken(avatarUrl) ? avatarUrl : name || seedFallback || 'vitalis';
   return {

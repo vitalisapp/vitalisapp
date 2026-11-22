@@ -13,6 +13,7 @@ import { apiGet, apiFetch } from '../../../../lib/apiClient.js';
 import { safeGet, safeSet } from '../../../../lib/storage.js';
 import { useToastStore } from '../../../../stores/toastStore.js';
 import '../preferences.css';
+import ReminderSettings from '../components/ReminderSettings.jsx';
 
 const THEME_OPTIONS = [
   { value: 'light', label: 'Light', icon: 'light_mode', preview: 'light', radioLabel: 'Light theme' },
@@ -28,7 +29,7 @@ const UNIT_OPTIONS = [
 const GOAL_PRESETS = [5000, 8000, 10000, 12000];
 const clampStepGoal = (value) => Math.min(30000, Math.max(1000, Number(value) || 8000));
 
-function ThemePreview({ variant }) {
+function ThemePreview({ variant = undefined }) {
   return (
     <span className={`pref-theme-preview pref-theme-preview--${variant}`} aria-hidden="true">
       <span className="pref-preview-rail" />
@@ -362,6 +363,8 @@ const Preferences = ({ embedded = false }) => {
               </div>
             </div>
           </section>
+
+          <ReminderSettings />
 
           <section className="pref-section" aria-labelledby="pref-goal-setup-title">
             <div className="pref-section-head">

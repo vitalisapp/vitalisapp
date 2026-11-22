@@ -87,7 +87,7 @@ const BottomNav = ({
     return false;
   };
 
-  const NavButton = ({ item, isActive }) => (
+  const NavButton = ({ item = undefined, isActive = undefined }) => (
     <button
       onClick={() => handleNavClick(item.path)}
       aria-label={item.label}

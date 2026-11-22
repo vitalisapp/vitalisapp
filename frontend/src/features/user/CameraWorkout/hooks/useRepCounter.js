@@ -47,8 +47,13 @@ export function assessPose(lm, type, aspect = 1, world, preferredSide) {
   return { ready: true, hint: `${view} · Tracking active`, view, side, points };
 }
 
-export function buildRepCounter() {
+// Section 7: onPartial(type) fires when a movement clearly started toward the
+// counted position but turned back before reaching it (shallow rep), so the
+// user hears WHY it was not counted instead of silence.
+export function buildRepCounter({ onPartial } = {}) {
   let phase = 'ready';
+  let nearEnd = false;
+  let currentType = '';
   let source = '';
   let changedAt = 0;
   let lastFrame = 0;
@@ -68,7 +73,8 @@ export function buildRepCounter() {
     return Number.isFinite(p.x) && Number.isFinite(p.y);
   });
   return function countRep(landmarks, workoutType, assessment, now = performance.now()) {
-    const reset = () => { phase = 'ready'; angleHistory.length = 0; source = ''; heelBaseline = null; return false; };
+    const reset = () => { phase = 'ready'; nearEnd = false; angleHistory.length = 0; source = ''; heelBaseline = null; return false; };
+    currentType = workoutType;
     const pose = assessment ?? assessPose(landmarks, workoutType);
     if (!pose.ready) return reset();
     const key = `${workoutType}:${pose.side}:${pose.view}`;
@@ -78,9 +84,14 @@ export function buildRepCounter() {
     // Remap the selected visible side into the existing left-side indices.
     const lm = (pose.points ?? landmarks).map((p, i, all) =>
       pose.side && !['lateral_raise', 'calfraise', 'jumpingjack'].includes(workoutType) && [11, 13, 15, 23, 25, 27].includes(i) ? all[i + 1] : p);
-    const cycle = (start, end) => {
-      if (phase === 'ready' && start) { phase = 'up'; changedAt = now; }
-      else if (phase === 'up' && end && now - changedAt >= 200) { phase = 'down'; changedAt = now; }
+    const cycle = (start, end, near = false) => {
+      if (phase === 'ready' && start) { phase = 'up'; changedAt = now; nearEnd = false; }
+      else if (phase === 'up' && end && now - changedAt >= 200) { phase = 'down'; changedAt = now; nearEnd = false; }
+      else if (phase === 'up' && near && !start) nearEnd = true;
+      else if (phase === 'up' && start && nearEnd) {
+        nearEnd = false;
+        try { onPartial?.(currentType); } catch { /* never break counting */ }
+      }
       else if (phase === 'down' && start && now - changedAt >= 200) { phase = 'up'; changedAt = now; return true; }
       return false;
     };
@@ -90,33 +101,33 @@ export function buildRepCounter() {
         case 'pushup': {
           if (!visible(lm, [11, 13, 15])) return false;
           const ang = push(angle3(lm[11], lm[13], lm[15]));
-           return cycle(ang > 155, ang < 100);
+           return cycle(ang > 155, ang < 100, ang < 130);
         }
         case 'squat': {
           if (!visible(lm, [23, 25, 27])) return false;
           const ang = push(angle3(lm[23], lm[25], lm[27]));
-           return cycle(ang > 160, ang < 105);
+           return cycle(ang > 160, ang < 105, ang < 135);
         }
         case 'lunge': {
           if (!visible(lm, [23, 25, 27])) return false;
           const ang = push(angle3(lm[23], lm[25], lm[27]));
-           return cycle(ang > 160, ang < 110);
+           return cycle(ang > 160, ang < 110, ang < 140);
         }
         case 'bicep_curl': {
           if (!visible(lm, [11, 13, 15])) return false;
           const ang = push(angle3(lm[11], lm[13], lm[15]));
-           return cycle(ang > 150, ang < 60);
+           return cycle(ang > 150, ang < 60, ang < 105);
         }
         case 'overhead': {
           if (!visible(lm, [13, 11, 23])) return false;
           const ang = push(angle3(lm[13], lm[11], lm[23]));
-           return cycle(ang < 80, ang > 160);
+           return cycle(ang < 80, ang > 160, ang > 125);
         }
         case 'crunch':
         case 'situp': {
           if (!visible(lm, [11, 23, 25])) return false;
           const ang = push(angle3(lm[11], lm[23], lm[25]));
-           return cycle(ang > 140, ang < 80);
+           return cycle(ang > 140, ang < 80, ang < 115);
         }
         case 'lateral_raise': {
           if (!visible(lm, [11, 12, 13, 14])) return false;
@@ -176,12 +187,16 @@ export function speak(text, rate = 1.05, pitch = 1.0, interrupt = true) {
   }
 }
 
-export function useRepCounter({ voiceEnabled }) {
+export function useRepCounter({ voiceEnabled, onPartialRep }) {
   const [repCount, setRepCount] = useState(0);
 
   const repCountRef      = useRef(0);
   const lastSpokenRef    = useRef(0);
-  const repCounterRef    = useRef(buildRepCounter());
+  const partialRef       = useRef(onPartialRep);
+  useEffect(() => { partialRef.current = onPartialRep; }, [onPartialRep]);
+  const makeCounter      = useCallback(() => buildRepCounter({ onPartial: (t) => partialRef.current?.(t) }), []);
+  // Created lazily on first use (inside callbacks), never during render.
+  const repCounterRef    = useRef(null);
 
   useEffect(() => { repCountRef.current = repCount; }, [repCount]);
 
@@ -198,6 +213,7 @@ export function useRepCounter({ voiceEnabled }) {
   }, [repCount, voiceEnabled]);
 
   const countRep = useCallback((landmarks, type, assessment) => {
+    if (!repCounterRef.current) repCounterRef.current = makeCounter();
     const didRep = repCounterRef.current(landmarks, type, assessment);
     if (didRep) {
       // Update synchronously so target auto-stop sees this final rep before
@@ -206,15 +222,15 @@ export function useRepCounter({ voiceEnabled }) {
       repCountRef.current = next;
       setRepCount(next);
     }
-  }, []);
+  }, [makeCounter]);
 
-  const invalidateRep = useCallback(() => { repCounterRef.current = buildRepCounter(); }, []);
+  const invalidateRep = useCallback(() => { repCounterRef.current = makeCounter(); }, [makeCounter]);
   const resetReps = useCallback(() => {
-    repCounterRef.current = buildRepCounter();
+    repCounterRef.current = makeCounter();
     setRepCount(0);
     lastSpokenRef.current = 0;
     repCountRef.current = 0;
-  }, []);
+  }, [makeCounter]);
 
   const addRep = useCallback(() => {
     repCountRef.current += 1;

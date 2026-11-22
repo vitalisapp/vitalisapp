@@ -23,9 +23,9 @@ const VARIANTS = {
 };
 
 const Toast = ({
-  message,
-  visible,
-  onDismiss,
+  message = undefined,
+  visible = undefined,
+  onDismiss = undefined,
   duration = 2800,
   variant = 'success',
 }) => {

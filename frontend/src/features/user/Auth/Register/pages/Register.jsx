@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRegister } from '../hooks/useRegister.js';
+import { useAccessInvite } from '../hooks/useAccessInvite.js';
 import { TermsOfUseModal, PrivacyPolicyModal } from '../components/LegalModals.jsx';
 import NetworkNotice from '../../VerifyEmail/components/NetworkNotice.jsx';
 import { SMS_SENDER_ID } from '../../../../../app/config/env.js';
@@ -18,7 +19,7 @@ const pwStrength = (pw) => {
   return              { label: 'Strong', color: 'var(--accent)',  pct: '100%' };
 };
 
-const VisibilityToggle = ({ visible, onToggle, label }) => (
+const VisibilityToggle = ({ visible = undefined, onToggle = undefined, label = undefined }) => (
   <button
     type="button"
     onClick={onToggle}
@@ -29,9 +30,9 @@ const VisibilityToggle = ({ visible, onToggle, label }) => (
   </button>
 );
 
-// Dark field matching Login's ACCESS PORTAL inputs (hardcoded dark —
+// Dark field matching Login's sign-in inputs (hardcoded dark —
 // the card is always dark glass regardless of document theme).
-const Field = ({ id, label, icon, error = undefined, rightElement = undefined, focusedId, setFocusedId, ...props }) => {
+const Field = ({ id = undefined, label = undefined, icon = undefined, error = undefined, rightElement = undefined, focusedId = undefined, setFocusedId = undefined, ...props }) => {
   const isFocused = focusedId === id;
   return (
     <div>
@@ -81,6 +82,7 @@ const Register = () => {
 
   const navigate = useNavigate();
   const { loading, error, clearError, handleRegister, signupWithGoogle, googleEnabled } = useRegister();
+  const { invite } = useAccessInvite();
 
   const filledFields = [formData.name, formData.email, formData.password, formData.confirm, formData.verificationMethod === 'sms' ? formData.phone : true].filter(Boolean).length;
   const totalFields  = formData.verificationMethod === 'sms' ? 5 : 4;
@@ -115,11 +117,11 @@ const Register = () => {
         <span className="text-[14px] leading-none">←</span> Back to Landing
       </button>
 
-      <div className="relative z-30 w-full min-h-screen m-auto grid grid-cols-1 max-[960px]:grid-cols-1 min-[960px]:grid-cols-[1fr_500px]">
+      <div className="relative z-30 mx-auto grid w-full max-w-[1180px] min-h-screen grid-cols-1 px-4 sm:px-8 lg:px-12 min-[960px]:gap-16 min-[960px]:grid-cols-[minmax(0,1fr)_420px]">
 
         {/* ── Left hero ── (centered in the viewport, not the tall form row) ── */}
-        <div className="hidden min-[960px]:flex flex-col justify-center p-[64px_56px] gap-4 min-[960px]:h-screen min-[960px]:self-start">
-          <span className="text-[11px] font-semibold tracking-[0.35em] uppercase text-[var(--accent)] opacity-80">Vitalis Performance OS</span>
+        <div className="hidden min-[960px]:flex flex-col justify-center py-16 gap-4 min-[960px]:h-screen min-[960px]:self-start">
+          <span className="text-[11px] font-semibold tracking-[0.35em] uppercase text-[var(--accent)] opacity-80">AI-powered fitness &amp; nutrition</span>
           <h1 className="font-['Bebas_Neue',sans-serif] text-[clamp(52px,5.5vw,82px)] leading-[0.95] tracking-[0.02em]">
             BUILD<br />YOUR<br /><span className="text-[var(--accent)]">ATHLETE</span><br />PROFILE.
           </h1>
@@ -129,7 +131,7 @@ const Register = () => {
         </div>
 
         {/* ── Right glass card ── */}
-        <div className="flex items-center justify-center p-5 sm:p-[40px_32px] max-[960px]:px-[20px] max-[960px]:pb-[20px] max-[960px]:pt-[84px]">
+        <div className="flex items-center justify-center py-5 sm:py-10 max-[960px]:pb-[20px] max-[960px]:pt-[84px]">
           <div className="relative w-full max-w-[420px] bg-[#121210]/65 backdrop-blur-[32px] saturate-[140%] border border-[var(--accent)]/10 rounded-[20px] p-6 sm:p-10 shadow-[0_32px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)] overflow-hidden">
             <div className="scan-bar absolute left-0 right-0 top-0 h-[1px] rounded-t-[20px]" />
 
@@ -153,6 +155,24 @@ const Register = () => {
 
             <h2 className="font-['Bebas_Neue',sans-serif] text-[32px] tracking-wider leading-none mb-1.5">CREATE ACCOUNT</h2>
             <p className="text-xs text-[#c4c9b0]/55 tracking-wide mb-8">Step 1 of onboarding — you can set your goal and body profile next (optional).</p>
+
+            {invite?.valid && invite.kind !== 'link' && (
+              <div className="flex items-start gap-2.5 rounded-xl border border-[var(--accent)]/25 bg-[var(--accent)]/[0.07] px-3.5 py-2.5 mb-5 text-[12px] leading-relaxed text-[#e5e2e1]/85" role="status">
+                <span className="material-symbols-outlined text-[18px] text-[var(--accent)] mt-px" aria-hidden="true">qr_code_2</span>
+                <span>
+                  You&apos;re joining through <strong className="font-semibold text-[#e5e2e1]">{invite.label}</strong>.
+                  {invite.description ? <span className="block text-[#c4c9b0]/60">{invite.description}</span> : null}
+                </span>
+              </div>
+            )}
+            {invite && !invite.valid && (invite.reason === 'expired' || invite.reason === 'disabled') && (
+              <div className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 mb-5 text-[12px] leading-relaxed text-[#c4c9b0]/75" role="status">
+                <span className="material-symbols-outlined text-[18px] mt-px" aria-hidden="true">info</span>
+                <span>
+                  This invite QR{invite.label ? ` for ${invite.label}` : ''} is {invite.reason === 'expired' ? 'no longer valid (expired)' : 'turned off'}. You can still create an account normally.
+                </span>
+              </div>
+            )}
 
             <form onSubmit={(e) => handleRegister(e, formData)} noValidate={false}>
               {error && (

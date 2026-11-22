@@ -8,26 +8,26 @@ import { clampPct, minutesFromSeconds, workoutLabel, fmtClock, fmtShortDate, isT
 
 /* ── Shared primitives (dashboard-local) ───────────────────────────── */
 
-const IconTile = ({ name, small = false }) => (
+const IconTile = ({ name = undefined, small = false }) => (
   <span className={`vd-icon-tile${small ? ' vd-icon-tile--sm' : ''}`}><Icon name={name} /></span>
 );
 
-const ProgressBar = ({ value }) => (
+const ProgressBar = ({ value = undefined }) => (
   <div className="vd-progress"><span style={{ width: `${clampPct(value)}%` }} /></div>
 );
 
-const MiniRow = ({ label, value }) => (
+const MiniRow = ({ label = undefined, value = undefined }) => (
   <div className="vd-mini-row"><span>{label}</span><strong>{value}</strong></div>
 );
 
-const TextButton = ({ onClick, icon = null, children = null, ariaLabel = undefined }) => (
+const TextButton = ({ onClick = undefined, icon = null, children = null, ariaLabel = undefined }) => (
   <button type="button" className="vd-text-btn v-touch-target" onClick={onClick} aria-label={ariaLabel}>
     {children}
     {icon && <Icon name={icon} style={{ fontSize: 14 }} />}
   </button>
 );
 
-const EmptyPrompt = ({ icon, title, children, onClick }) => (
+const EmptyPrompt = ({ icon = undefined, title = undefined, children = undefined, onClick = undefined }) => (
   <button type="button" className="vd-empty" onClick={onClick}>
     <Icon name={icon} />
     <span>
@@ -37,7 +37,7 @@ const EmptyPrompt = ({ icon, title, children, onClick }) => (
   </button>
 );
 
-const CardHead = ({ icon = null, title, sub = '', action = null, chip = null }) => (
+const CardHead = ({ icon = null, title = undefined, sub = '', action = null, chip = null }) => (
   <div className="vd-card-head">
     <div className={icon ? 'vd-ai-head' : undefined}>
       {icon && <IconTile name={icon} />}
@@ -54,7 +54,7 @@ const CardHead = ({ icon = null, title, sub = '', action = null, chip = null }) 
 
 /* ── Topbar slots ───────────────────────────────────────────────────── */
 
-export const DashboardGreeting = ({ name, avatar }) => {
+export const DashboardGreeting = ({ name = undefined, avatar = undefined }) => {
   const display = capitalizeName(name || 'Member');
   const hour = new Date().getHours();
   const part = hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
@@ -312,7 +312,7 @@ export const QuickActions = ({ onAction = undefined }) => (
 
 /* ── Stat cards + macro focus ──────────────────────────────────────── */
 
-export const StatCard = ({ icon, label, value, unit = '', note = '', footLeft = '', footRight = '', progress = null, tone = '' }) => (
+export const StatCard = ({ icon = undefined, label = undefined, value = undefined, unit = '', note = '', footLeft = '', footRight = '', progress = null, tone = '' }) => (
   <div className={`vd-stat${tone ? ` ${tone}` : ''}`}>
     <div className="vd-stat-top">
       <span className="vd-stat-label">{label}</span>

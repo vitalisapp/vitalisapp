@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/public.controller');
+const access = require('../controllers/accessGroups.controller');
 const { makeLimiter } = require('../middleware/rateLimits');
 
 // Generous but bounded: landing hammers this on every visit.
@@ -20,5 +21,7 @@ const visitLimiter = makeLimiter({
 
 router.get('/landing-stats', landingLimiter, controller.getlandingStats);
 router.post('/landing-visit', visitLimiter, controller.postVisit);
+// Access QR lookup for the register page banner (no counts exposed).
+router.get('/access/:code', visitLimiter, access.getPublic);
 
 module.exports = router;

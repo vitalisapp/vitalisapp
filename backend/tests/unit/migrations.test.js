@@ -23,7 +23,13 @@ const EXPECTED = [
   '038_progress_module.sql', '039_admin_audit.sql', '040_admin_seed.sql',
   '041_goal_recalibration.sql', '042_progress_cadence.sql',
   '043_food_grams.sql', '044_food_density_cache.sql', '045_email_delivery.sql',
-  '046_phone_verifications.sql', '047_remove_sleep_recovery.sql',
+  '046_phone_verifications.sql', '047_remove_sleep_recovery.sql', '048_access_groups.sql', '049_sleep_hours.sql',
+  '050_goal_personalization.sql',
+  '051_coach_weeks.sql',
+  '052_smart_reminders.sql',
+  '053_food_details.sql',
+  '054_free_plans.sql',
+  '055_dedupe_user_sessions.sql',
 ];
 
 describe('migrations per-table baseline', () => {
@@ -79,6 +85,15 @@ describe('migrations per-table baseline', () => {
     }
     assert.match(sql, /ALTER TABLE `ai_insight_cache` DROP COLUMN `sleep_suggestion`;/);
     assert.doesNotMatch(sql, /DROP COLUMN `exercise_freq`/);
+  });
+
+  it('054 makes every plan free and runs after the priced seeds', () => {
+    const sql = read('054_free_plans.sql');
+    // Zeroes every non-zero (or NULL) price; idempotent by construction.
+    assert.match(sql, /UPDATE `plans` SET `price` = 0\.00 WHERE `price` IS NULL OR `price` <> 0/);
+    // Applied seeds are never edited (README rule): 054 must sort after 030
+    // so fresh databases end up free too.
+    assert.ok(EXPECTED.indexOf('054_free_plans.sql') > EXPECTED.indexOf('030_seeds.sql'));
   });
 
   it('seeds stay INSERT IGNORE (runner fails 1062 otherwise)', () => {

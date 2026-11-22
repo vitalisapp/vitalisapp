@@ -1,6 +1,8 @@
 const db = require("../config/db");
 const { generatePlan } = require("../utils/planEngine");
 const { AppError } = require("../utils/errors");
+const { checkDob } = require("../utils/age");
+const { parseSleepHours } = require("../utils/health");
 
 const GOAL_TYPES = ['LOSE_WEIGHT', 'MAINTAIN_WEIGHT', 'GAIN_WEIGHT', 'BUILD_MUSCLE', 'PERFORMANCE'];
 const SEXES = ['male', 'female', 'other'];
@@ -30,12 +32,13 @@ function numOrNull(v, { min, max, name, integer = false }) {
   return { value: n };
 }
 
+// Optional field, but when present it must pass the shared age rule
+// (utils/age.js) — a 2015 birth year gets a clear explanation, not a 400 code.
 function validDob(v) {
   if (v === undefined || v === null || v === '') return { value: null };
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime()) || d > new Date())
-    return { error: 'dob must be a valid past date' };
-  return { value: d.toISOString().slice(0, 10) };
+  const check = checkDob(v);
+  if (!check.ok) return { error: check.message, code: check.code, friendly: true };
+  return { value: check.value };
 }
 
 function toRecord(row) {
@@ -53,6 +56,10 @@ function toRecord(row) {
     dob: row.dob,
     sex: row.sex,
     exerciseFreq: row.exercise_freq,
+    sleepHours: row.sleep_hours != null ? Number(row.sleep_hours) : null,
+    secondaryGoals: splitGoals(row.secondary_goals),
+    targetDate: row.target_date ? isoDate(row.target_date) : null,
+    experienceLevel: row.experience_level || null,
     dailyKcal: row.daily_kcal != null ? Number(row.daily_kcal) : null,
     proteinG: row.protein_g != null ? Number(row.protein_g) : null,
     carbsG: row.carbs_g != null ? Number(row.carbs_g) : null,
@@ -75,8 +82,29 @@ function carriedBody(prev, overrides) {
     focus: prev.focus,
     activityLevel: prev.activity_level,
     exerciseFreq: prev.exercise_freq,
+    sleepHours: prev.sleep_hours != null ? Number(prev.sleep_hours) : null,
+    secondaryGoals: splitGoals(prev.secondary_goals),
+    targetDate: prev.target_date ? isoDate(prev.target_date) : null,
+    experienceLevel: prev.experience_level || null,
+    // Lets the controller quietly drop carried values that no longer fit
+    // (an extra goal that conflicts with the new main goal, a passed date).
+    _carried: {
+      secondaryGoals: overrides?.secondaryGoals === undefined,
+      targetDate: overrides?.targetDate === undefined,
+    },
     ...(overrides || {}),
   };
+}
+
+function splitGoals(raw) {
+  return String(raw || '').split(',').map((x) => x.trim()).filter(Boolean);
+}
+
+function isoDate(v) {
+  if (v instanceof Date) {
+    return `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, '0')}-${String(v.getDate()).padStart(2, '0')}`;
+  }
+  return String(v).slice(0, 10);
 }
 
 // POST /api/goals/:userId — create (or replace) the active goal + generate plan
@@ -89,6 +117,7 @@ async function createGoal(userId, fields) {
     activityLevel: fields.activity,
     goalType: fields.goal,
     pace: fields.pace,
+    secondaryGoals: fields.secondaryGoals || [],
   });
 
   // Archive + insert + legacy sync must succeed or fail together —
@@ -103,12 +132,15 @@ async function createGoal(userId, fields) {
       [userId]
     );
 
-    [result] = await conn.execute(
+    // sleep_hours arrived in migration 049. If that has not run yet, insert
+    // without it rather than failing onboarding (a failed statement does not
+    // abort the surrounding MySQL transaction).
+    const insertGoal = (withSleep) => conn.execute(
       `INSERT INTO fitness_goals
          (user_id, dob, sex, height_cm, weight_kg, bmi, goal_type, target_weight_kg,
-          pace, focus, activity_level, exercise_freq,
+          pace, focus, activity_level, exercise_freq,${withSleep ? ' sleep_hours,' : ''}
           daily_kcal, protein_g, carbs_g, fat_g, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,${withSleep ? ' ?,' : ''} ?, ?, ?, ?, 'active')`,
       [
         userId,
         fields.dob,
@@ -122,12 +154,37 @@ async function createGoal(userId, fields) {
         fields.focus,
         fields.activity,
         fields.exerciseFreq,
+        ...(withSleep ? [fields.sleepHours ?? null] : []),
         plan.dailyKcal,
         plan.proteinG,
         plan.carbsG,
         plan.fatG,
       ]
     );
+    try {
+      [result] = await insertGoal(true);
+    } catch (insErr) {
+      if (insErr.errno !== 1054 && insErr.code !== 'ER_BAD_FIELD_ERROR') throw insErr;
+      console.warn('[goals] sleep_hours column missing; run migration 049');
+      [result] = await insertGoal(false);
+    }
+
+    // Section 3 fields (migration 050). Separate UPDATE so a database that
+    // has not run 050 yet still saves the goal itself.
+    try {
+      await conn.execute(
+        'UPDATE fitness_goals SET secondary_goals = ?, target_date = ?, experience_level = ? WHERE id = ?',
+        [
+          (fields.secondaryGoals || []).join(',') || null,
+          fields.targetDate || null,
+          fields.experienceLevel || null,
+          result.insertId,
+        ]
+      );
+    } catch (extraErr) {
+      if (extraErr.errno !== 1054 && extraErr.code !== 'ER_BAD_FIELD_ERROR') throw extraErr;
+      console.warn('[goals] Section 3 columns missing; run migration 050');
+    }
 
     // Keep legacy surfaces in sync: users.fitness_goal + user_profiles metrics
     await conn.execute('UPDATE users SET fitness_goal = ? WHERE id = ?', [fields.goal, userId]);
@@ -151,6 +208,15 @@ async function createGoal(userId, fields) {
   if (!row)
     throw new AppError('Goal was saved but could not be read back', 500, 'GOAL_READBACK_FAILED');
   return { plan, goal: toRecord(row) };
+}
+
+async function updateExperience(goalId, level) {
+  try {
+    await db.execute('UPDATE fitness_goals SET experience_level = ? WHERE id = ?', [level, goalId]);
+  } catch (err) {
+    if (err.errno === 1054) throw new AppError('Experience level needs migration 050 — run npm run db:migrate', 503, 'NEEDS_MIGRATION_050');
+    throw err;
+  }
 }
 
 async function getActiveGoalRow(userId) {
@@ -314,10 +380,12 @@ module.exports = {
   enumField,
   numOrNull,
   validDob,
+  parseSleepHours,
   toRecord,
   carriedBody,
   createGoal,
   getActiveGoalRow,
+  updateExperience,
   getLatestBmiWeight,
   computeProgress,
   updateActiveGoalIdentity,

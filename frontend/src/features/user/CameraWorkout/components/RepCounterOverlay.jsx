@@ -1,4 +1,4 @@
-export default function RepCounterOverlay({ repCount }) {
+export default function RepCounterOverlay({ repCount = undefined }) {
   return (
     <div className="absolute bottom-4 right-4 sm:bottom-10 sm:right-10 z-20">
       <div className="text-right">

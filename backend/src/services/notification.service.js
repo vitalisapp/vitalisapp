@@ -2,7 +2,8 @@
 // SSE fan-out (client registry, broadcast, stream) stays in the controller.
 const db = require('../config/db');
 
-const CATEGORIES = ['TRAINING', 'NUTRITION', 'RECOVERY', 'GOAL', 'SYSTEM', 'SOCIAL'];
+// ACTIVITY + PROGRESS: task notifications (utils/taskNotifications.js).
+const CATEGORIES = ['TRAINING', 'ACTIVITY', 'NUTRITION', 'PROGRESS', 'RECOVERY', 'GOAL', 'SYSTEM', 'SOCIAL'];
 const TYPES = ['info', 'success', 'warning', 'error'];
 
 async function getNotifications(userId) {
@@ -11,11 +12,22 @@ async function getNotifications(userId) {
   return { count: result.count, notifications };
 }
 
-async function createNotification(userId, text, type, category) {
+async function createNotification(userId, text, type, category, source = null) {
   const cat = CATEGORIES.includes(String(category).toUpperCase())
     ? String(category).toUpperCase() : 'SYSTEM';
   const notifType = TYPES.includes(String(type)) ? String(type) : 'info';
   try {
+    if (source) {
+      try {
+        await db.execute(
+          'INSERT INTO notifications (user_id, message, type, category, source) VALUES (?, ?, ?, ?, ?)',
+          [userId, text, notifType, cat, String(source).slice(0, 32)]
+        );
+        return { category: cat };
+      } catch (srcErr) {
+        if (srcErr.code !== 'ER_BAD_FIELD_ERROR') throw srcErr; // pre-052: no source column
+      }
+    }
     await db.execute(
       'INSERT INTO notifications (user_id, message, type, category) VALUES (?, ?, ?, ?)',
       [userId, text, notifType, cat]

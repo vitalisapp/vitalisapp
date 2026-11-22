@@ -22,7 +22,7 @@ const monthStart = (date) => new Date(date.getFullYear(), date.getMonth(), 1);
  * so the adjacent activity feed can show the real audit rows for that day.
  * `eventsByDay` is a Map of local YYYY-MM-DD → admin action count.
  */
-export default function AdminCalendar({ selectedDate = null, onSelectDate, eventsByDay = new Map() }) {
+export default function AdminCalendar({ selectedDate = null, onSelectDate = undefined, eventsByDay = new Map() }) {
   const today = new Date();
   const [view, setView] = useState(() => monthStart(selectedDate || today));
 

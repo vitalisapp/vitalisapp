@@ -9,6 +9,7 @@ router.post('/', verifyUser, validate(controller.createPersonalSchema), controll
 router.post('/auto-from-goal', verifyUser, controller.postAutoFromGoal);
 // 'adjust-from-goal' must sit before '/:planId' routes for the literal to win.
 router.post('/adjust-from-goal', verifyUser, controller.postAdjust);
+router.post('/:planId/activate', verifyUser, controller.postActivate);
 router.patch('/:planId', verifyUser, validate(controller.updatePersonalSchema), controller.patchPlanId);
 router.delete('/:planId', verifyUser, controller.deletePlanId);
 router.post('/enroll', verifyUser, validate(controller.enrollSchema), controller.postenroll);

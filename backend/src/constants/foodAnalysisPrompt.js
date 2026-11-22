@@ -3,7 +3,7 @@ Estimates are approximate general fitness info only — not medical or dietetic 
 
 TASK
 List EVERY distinct food visible in this photo as its own item, then output a single JSON object with an "items" array:
-If NO food or drink is visible, return {"items":[],"suggestion":"No food detected"} — never invent a dish.
+FOOD CHECK FIRST: only analyze food or drink meant to be eaten. If the photo does NOT clearly show real food or drink — e.g. a person, face or selfie, body part, pet/animal, screen, document, room, scenery, vehicle, everyday object, empty plate/packaging, toy or fake food, or a blank/blurry image — return ONLY {"items":[],"not_food":true,"subject":"<2-5 words: what the photo shows>","suggestion":"This doesn't look like food."} — never invent a dish and never guess food from a person, logo or object. A person holding or eating real food still counts as food: analyze the food only.
 {
   "items": [
     {
@@ -18,6 +18,8 @@ If NO food or drink is visible, return {"items":[],"suggestion":"No food detecte
       trans_fat           – number: grams of trans fat (1 decimal),
       polyunsaturated_fat – number: grams of polyunsaturated fat (1 decimal),
       monounsaturated_fat – number: grams of monounsaturated fat (1 decimal),
+      sugar               – number: grams of total sugars (1 decimal), part of carbs, never more than carbs,
+      sodium              – integer: milligrams of sodium (soy sauce, bagoong, patis, instant noodles and processed meat are high),
       possible_allergens  – array of strings: allergens likely present in THIS item, using ONLY these canonical names: peanut, tree nut, milk, egg, gluten, soy, fish, shellfish, sesame. Use [] when none apply or you cannot tell from the image — never invent other names.
     }
   ],
@@ -242,7 +244,7 @@ FAT BREAKDOWN RULES
 11. If unsure, split remaining fat after saturated/trans as 40% mono, 35% poly, remainder.
 
 OUTPUT FORMAT (raw JSON only — no markdown, no prose, no code fences):
-{"items":[{"food_name":"...","serving":"...","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"possible_allergens":[]}],"suggestion":"..."}`;
+{"items":[{"food_name":"...","serving":"...","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"sugar":0,"sodium":0,"possible_allergens":[]}],"suggestion":"..."}`;
 
 // Compact variant for providers with tight input budgets (Groq free tier:
 // 7,000 tokens/minute). Keeps the rules that drive accuracy — visible-portion
@@ -253,15 +255,16 @@ Estimates are approximate general fitness info only — not medical advice.
 
 TASK
 List EVERY distinct food as its own item. Maximum 8. Group identical pieces (e.g. "3 pcs nuggets").
-If NO food or drink is visible, return {"items":[],"suggestion":"No food detected"} — never invent a dish.
+FOOD CHECK FIRST: only analyze food or drink meant to be eaten. If the photo does NOT clearly show real food or drink — e.g. a person, face or selfie, body part, pet/animal, screen, document, room, scenery, vehicle, everyday object, empty plate/packaging, toy or fake food, or a blank/blurry image — return ONLY {"items":[],"not_food":true,"subject":"<2-5 words: what the photo shows>","suggestion":"This doesn't look like food."} — never invent a dish and never guess food from a person, logo or object. A person holding or eating real food still counts as food: analyze the food only.
 Output ONLY raw JSON, no markdown or prose:
-{"items":[{"food_name":"...","serving":"1 cup","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"possible_allergens":[]}],"suggestion":"one short tip"}
+{"items":[{"food_name":"...","serving":"1 cup","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"sugar":0,"sodium":0,"possible_allergens":[]}],"suggestion":"one short tip"}
 
 RULES
 1. Estimate only what is visible. Count pieces and put the count in food_name. Never assume off-screen food.
 2. Estimate grams first, then derive macros from that weight. Do not count a composite dish and its ingredients twice.
 3. kcal/g must be plausible: watery veg 0.1–1, rice/noodles 1–1.5, bread 2–3, meat 1.5–3, fried food 2–4, oil ~9.
 4. Check energy: (protein × 4) + (carbs × 4) + (fat × 9) ≈ calories ± 5%. Zero is valid for absent nutrients — never add a minimum.
+4b. sugar (g) is part of carbs. sodium is in mg: salty sauces, cured meat and instant noodles are high.
 5. Saturated + trans + poly + mono fat ≤ fat (1g rounding). possible_allergens: only peanut, tree nut, milk, egg, gluten, soy, fish, shellfish, sesame — else [].
 
 PHILIPPINE / COMMON ANCHORS (scale to the visible portion, never assume a whole serving)

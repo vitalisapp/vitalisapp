@@ -31,7 +31,7 @@ const todayKey = () => {
 };
 
 // Weight delta headline across the visible history.
-function WeightSummary({ measurements }) {
+function WeightSummary({ measurements = undefined }) {
   const withWeight = measurements.filter((m) => m.weight_kg != null);
   if (withWeight.length < 2) return null;
   const first = withWeight[withWeight.length - 1];
@@ -48,7 +48,7 @@ function WeightSummary({ measurements }) {
   );
 }
 
-export default function BodyMeasurementsPanel({ userId }) {
+export default function BodyMeasurementsPanel({ userId = undefined }) {
   const [rows,     setRows]    = useState(null);
   const [error,    setError]   = useState(null);
   const [form,     setForm]    = useState(EMPTY);

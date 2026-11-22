@@ -298,6 +298,45 @@ export const useProfile = () => {
     }
   };
 
+  // Persist only the avatar. Sending the saved snapshot for the other fields
+  // means unrelated unsaved edits on the page are never written by accident.
+  // Returns true when the server accepted the change.
+  const saveAvatar = async (nextAvatar) => {
+    if (!USER_ID) return false;
+    setIsSaving(true);
+    try {
+      const body = {
+        fullName: savedData.fullName || formData.fullName,
+        contact: savedData.contact,
+        phone: savedData.phone,
+        bio: savedData.bio,
+        avatar_url: nextAvatar || null,
+      };
+      await apiFetch('/api/profile/update', {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      });
+
+      const stored = nextAvatar || null;
+      queryClient.setQueryData(['profile', USER_ID], (prev) => (prev ? { ...prev, avatar_url: stored } : prev));
+      setSavedAvatarSrc(stored);
+      setAvatarSrc(stored);
+      setPendingAvatar(null);
+      setUser((prev) => ({ ...prev, avatar: stored, avatar_url: stored }));
+
+      await refreshAuth({ silent: true });
+      showToast(stored ? 'Profile photo updated' : 'Profile photo removed');
+      return true;
+    } catch (err) {
+      if (import.meta.env.DEV) console.error('Avatar save error:', err);
+      const clientError = Number(err?.status) >= 400 && Number(err?.status) < 500 && err?.message;
+      showToast(clientError ? err.message : 'Could not update your photo — check your connection', 'error');
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -317,7 +356,7 @@ export const useProfile = () => {
     dob, setDob, sex, setSex,
     pendingIdentity, setPendingIdentity,
     setToastVisible, setAvatarSrc, setPendingAvatar, setIsEditing,
-    handleInputChange, handleDiscard, confirmDiscard, cancelDiscard, showDiscardConfirm, handleRevoke, handleSave, handleLogout,
+    handleInputChange, handleDiscard, confirmDiscard, cancelDiscard, showDiscardConfirm, handleRevoke, handleSave, saveAvatar, handleLogout,
     showToast,
   };
 };

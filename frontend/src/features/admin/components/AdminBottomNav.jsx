@@ -3,10 +3,10 @@ import Icon from '../../../components/Icon.jsx';
 
 /**
  * Phone navigation for the console. Mirrors the member app's floating bottom
- * bar while keeping the five real admin destinations and their permission
+ * bar while keeping the real admin destinations and their permission
  * boundaries untouched.
  */
-export default function AdminBottomNav({ items }) {
+export default function AdminBottomNav({ items = undefined }) {
   return (
     <nav className="adm-bottomnav" aria-label="Admin sections">
       {items.map((item) => (

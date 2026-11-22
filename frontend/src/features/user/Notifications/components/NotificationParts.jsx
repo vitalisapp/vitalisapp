@@ -14,7 +14,7 @@ import '../notifications.css';
  * marks the notification read (the only existing per-item action). Read
  * cards are static.
  */
-export function NotificationCard({ notification, onMarkRead, compact = false }) {
+export function NotificationCard({ notification = undefined, onMarkRead = undefined, compact = false }) {
   const n = notification;
   const meta = getNotificationMeta(n);
   const { title, body } = splitTitle(n.message, meta.label);
@@ -35,16 +35,16 @@ export function NotificationCard({ notification, onMarkRead, compact = false }) 
       <span className="vn-card__main">
         <span className="vn-card__top">
           <span className="vn-card__title">{title}</span>
-          {time && <time className="vn-card__time" dateTime={String(n.created_at)} title={fullTime}>{time}</time>}
+          {unread && <span className="vn-card__dot" aria-hidden="true" />}
         </span>
         {body && <span className="vn-card__body">{body}</span>}
         <span className="vn-card__meta">
+          {time && <time className="vn-card__time" dateTime={String(n.created_at)} title={fullTime}>{time}</time>}
+          {time && <span className="vn-card__sep" aria-hidden="true">·</span>}
           <span className="vn-chip">{meta.label}</span>
           {unread && <span className="vn-card__hint">Mark as read</span>}
         </span>
       </span>
-
-      {unread && <span className="vn-card__dot" aria-hidden="true" />}
     </>
   );
 
@@ -84,7 +84,7 @@ export function NotificationSkeleton({ rows = 4, compact = false }) {
 }
 
 /** Empty / no-results state with a small icon illustration. */
-export function NotificationEmpty({ icon = 'notifications', title, message, compact = false, action = null }) {
+export function NotificationEmpty({ icon = 'notifications', title = undefined, message = undefined, compact = false, action = null }) {
   return (
     <div className={`vn-empty${compact ? ' is-compact' : ''}`}>
       <span className="vn-empty__art" aria-hidden="true">

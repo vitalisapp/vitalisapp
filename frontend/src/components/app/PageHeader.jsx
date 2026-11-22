@@ -7,7 +7,7 @@
  */
 export default function PageHeader({
   eyebrow = undefined,
-  title,
+  title = undefined,
   description = undefined,
   actions = undefined,
   children = undefined,

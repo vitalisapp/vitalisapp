@@ -118,11 +118,27 @@ async function get(req, res, next) {
   try {
     try {
       const with_sets = req.query.with_sets === '1' || req.query.with_sets === 'true';
+      // Paginated mode when ?page or ?date is present (Progress page):
+      // { logs, page, limit, total, pageCount, date, stats }.
+      // Without them the legacy { logs } (latest 50) contract is unchanged.
+      if (req.query.page !== undefined || req.query.date !== undefined) {
+        const q = workoutService.parseHistoryQuery(req.query);
+        return res.json(await workoutService.listWorkoutsPage(req.user.id, { ...q, with_sets }));
+      }
       const logs = await workoutService.listWorkouts(req.user.id, { with_sets });
       res.json({ logs });
     } catch (err) {
       next(err);
     }
+  } catch (e) {
+    next(e);
+  }
+}
+
+// GET /days?month=YYYY-MM — days with at least one session (calendar dots).
+async function getDays(req, res, next) {
+  try {
+    res.json(await workoutService.listWorkoutDays(req.user.id, req.query.month));
   } catch (e) {
     next(e);
   }
@@ -146,4 +162,5 @@ async function postManual(req, res, next) {
   }
 }
 
-module.exports = { poststart, patchIdEnd, postPause, postResume, patchFeedback, postManual, getId, get };
+module.exports = {
+  getDays, poststart, patchIdEnd, postPause, postResume, patchFeedback, postManual, getId, get };

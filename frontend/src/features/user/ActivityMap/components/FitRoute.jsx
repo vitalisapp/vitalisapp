@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
-const FitRoute = ({ path }) => {
+const FitRoute = ({ path = undefined }) => {
   const map = useMap();
   useEffect(() => {
     if (path.length > 1) {

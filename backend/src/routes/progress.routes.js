@@ -12,6 +12,10 @@ const read=meLimiter();
 router.get('/activity', verifyUser, read, controller.getActivity);
 // Multi-metric overview for the Logs progress chart (30d/90d/1y/all).
 router.get('/overview', verifyUser, read, controller.getOverview);
+// Section 8: rule-based progress interpretation + goal timeline (?sample=1 = demo).
+router.get('/summary', verifyUser, read, controller.getSummary);
+// Demo history (dummy dates, never stored) for thesis demonstrations.
+router.get('/sample-history', verifyUser, read, controller.getSampleHistory);
 
 // Photos: upload first, analyze separately (retry-friendly, quota-safe).
 // NOTE Express 5: no :param(\d+) constraints — ownership + 404 handling is

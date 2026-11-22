@@ -1,5 +1,5 @@
 // A stable viewport and card shared by the email confirmation screens.
-export default function VerificationLayout({ children }) {
+export default function VerificationLayout({ children = undefined }) {
   return (
     <main data-theme="dark" className="relative isolate flex min-h-svh w-full bg-[#0e0e0e] px-4 py-8 font-['DM_Sans'] text-[#e5e2e1] sm:px-6">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-[url('/auth-gym.jpg')] bg-cover bg-[center_30%] brightness-[0.28] saturate-[0.7]" />

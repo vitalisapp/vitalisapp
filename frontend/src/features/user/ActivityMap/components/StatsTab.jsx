@@ -36,7 +36,7 @@ const formatBestDate = (date) => {
   return parsed.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 };
 
-const StatCard = ({ icon, label, value, unit }) => (
+const StatCard = ({ icon = undefined, label = undefined, value = undefined, unit = undefined }) => (
   <div className="am-stat-card">
     <span className="am-stat-card__icon">
       <Icon name={icon} />
@@ -71,7 +71,7 @@ const LoadingState = () => (
   </div>
 );
 
-const StatsTab = ({ stats, statsLoading, statsError, formatTime, isOverlay = false }) => {
+const StatsTab = ({ stats = undefined, statsLoading = undefined, statsError = undefined, formatTime = undefined, isOverlay = false }) => {
   const totalRuns = Number(stats?.totalRuns) || 0;
   const totalDistance = parseFloat(stats?.totalDistance || 0);
   const totalDuration = parseInt(stats?.totalDuration, 10) || 0;

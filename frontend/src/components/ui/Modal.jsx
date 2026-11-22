@@ -107,30 +107,30 @@ export default function Modal({
         <div
           ref={cardRef}
           tabIndex={-1}
-          className={`v-motion-dialog${motionState} bg-[var(--bg-elevated)] shadow-[var(--shadow-xl)] border border-[var(--border-medium)] w-full ${sizeClass} rounded-[var(--radius-xl)] overflow-hidden flex flex-col max-h-[min(90vh,100%)] supports-[height:100dvh]:max-h-[min(90dvh,100%)] outline-none ${className}`}
+          className={`v-motion-dialog${motionState} bg-[var(--bg-elevated)] shadow-[var(--shadow-lg)] border border-[var(--border-medium)] w-full ${sizeClass} rounded-[12px] overflow-hidden flex flex-col max-h-[min(90vh,100%)] supports-[height:100dvh]:max-h-[min(90dvh,100%)] outline-none ${className}`}
           onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
           {(title || subtitle || icon || !hideClose) && (
-            <div className={`flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-[var(--border-light)] bg-transparent shrink-0 ${headerClassName}`}>
+            <div className={`flex items-center justify-between gap-3 pl-5 pr-3 sm:pl-6 sm:pr-4 py-3.5 border-b border-[var(--border-light)] bg-transparent shrink-0 ${headerClassName}`}>
               <div className="flex items-center gap-3 min-w-0">
                 {icon && (
-                  <div className="w-8 h-8 rounded-lg bg-[var(--bg-hover)] border border-[var(--border-light)] flex items-center justify-center shrink-0">
-                    <Icon name={icon} className="text-[length:var(--fs-16)] text-[var(--accent)]" />
+                  <div className="w-8 h-8 rounded-lg bg-[var(--accent-bg)] flex items-center justify-center shrink-0">
+                    <Icon name={icon} className="text-[17px] text-[var(--accent)]" />
                   </div>
                 )}
                 <div className="min-w-0">
-                  {title && <h3 id={titleId} className="text-[length:var(--fs-14)] font-bold text-[var(--text-primary)] leading-tight break-words">{title}</h3>}
-                  {subtitle && <p className="text-[length:var(--fs-11)] text-[var(--text-muted)] mt-0.5 break-words">{subtitle}</p>}
+                  {title && <h3 id={titleId} className="text-[16px] font-semibold text-[var(--text-primary)] leading-snug break-words">{title}</h3>}
+                  {subtitle && <p className="text-[12.5px] text-[var(--text-muted)] mt-0.5 leading-snug break-words">{subtitle}</p>}
                 </div>
               </div>
               {!hideClose && (
                 <button
                   onClick={onClose}
-                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[var(--bg-hover)] hover:bg-[var(--bg-active)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors shrink-0"
+                  className="w-8 h-8 pointer-coarse:w-10 pointer-coarse:h-10 rounded-lg bg-transparent hover:bg-[var(--bg-hover)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-[var(--accent)] transition-colors shrink-0"
                   aria-label="Close dialog"
                 >
-                  <Icon name="close" className="text-[length:var(--fs-16)]" />
+                  <Icon name="close" className="text-[18px]" />
                 </button>
               )}
             </div>
@@ -141,7 +141,7 @@ export default function Modal({
           </div>
 
           {footer && (
-            <div className="px-5 sm:px-6 py-4 border-t border-[var(--border-light)] bg-[var(--bg-tertiary)] shrink-0">
+            <div className="px-5 sm:px-6 py-3.5 border-t border-[var(--border-light)] shrink-0">
               {footer}
             </div>
           )}

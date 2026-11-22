@@ -17,6 +17,8 @@ const {
   normalizeFoodName,
   sanitizeDensity,
 } = require("../utils/nutrition");
+const { CATEGORIES, describeFood } = require("../utils/foodTraits");
+const foodImages = require("./foodImage.service");
 
 // Module 4 — persisted meal slot. The manual form used to stuff the meal type
 // into `serving` and the diary reverse-engineered it by string-matching; now
@@ -122,6 +124,9 @@ async function analyzeAndClamp(base64Image) {
     trans_fat: Math.max(0, Math.round(Number(it.trans_fat || 0) * 10) / 10),
     polyunsaturated_fat: Math.max(0, Math.round(Number(it.polyunsaturated_fat || 0) * 10) / 10),
     monounsaturated_fat: Math.max(0, Math.round(Number(it.monounsaturated_fat || 0) * 10) / 10),
+    // Section 6: sugar (g) + sodium (mg). Null when the model omitted them.
+    sugar: it.sugar == null || it.sugar === "" ? null : Math.max(0, Math.round(Number(it.sugar) * 10) / 10) || 0,
+    sodium: it.sodium == null || it.sodium === "" ? null : Math.min(20000, Math.max(0, Math.round(Number(it.sodium)) || 0)),
     ...(it.low_confidence ? { low_confidence: true } : {}),
     // Allergen hints (safety signal) — keep the model's strings, capped.
     ...(Array.isArray(it.possible_allergens)
@@ -385,6 +390,8 @@ async function saveFoodLog(userId, body) {
     trans_fat,
     polyunsaturated_fat,
     monounsaturated_fat,
+    sugar,
+    sodium,
     image_url,
   } = body;
 
@@ -402,9 +409,23 @@ async function saveFoodLog(userId, body) {
   const tFat = round1(trans_fat);
   const pFat = round1(polyunsaturated_fat);
   const mFat = round1(monounsaturated_fat);
+  const sugarNorm = sugar != null && sugar !== "" && Number.isFinite(Number(sugar)) ? round1(sugar) : null;
+  const sodiumNorm = sodium != null && sodium !== "" && Number.isFinite(Number(sodium)) ? Math.round(Number(sodium)) : null;
 
   let insertId;
-  // Try full schema first (with grams + fat breakdown)
+  // Section 6 schema (sugar + sodium); falls through to the older shapes.
+  try {
+    const [result] = await db.execute(
+      `INSERT INTO food_logs (user_id, food_name, serving, grams, meal_type, calories, protein, carbs, fat, sugar, sodium, saturated_fat, trans_fat, polyunsaturated_fat, monounsaturated_fat, image_url, logged_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [userId, foodNameNorm, servingText, gramsNorm, mealTypeNorm, calories || 0, protein || 0, carbs || 0, fat || 0,
+        sugarNorm, sodiumNorm, sFat, tFat, pFat, mFat, image_url || null],
+    );
+    return { insertId: result.insertId };
+  } catch (colErr) {
+    if (colErr.code !== "ER_BAD_FIELD_ERROR") throw colErr;
+  }
+  // Try full pre-053 schema (with grams + fat breakdown)
   try {
     const [result] = await db.execute(
       `INSERT INTO food_logs (user_id, food_name, serving, grams, meal_type, calories, protein, carbs, fat, saturated_fat, trans_fat, polyunsaturated_fat, monounsaturated_fat, image_url, logged_at)
@@ -485,7 +506,16 @@ function buildMealNotification(summary) {
 }
 
 async function insertNotification(userId, message) {
-  await db.execute("INSERT INTO notifications (user_id, message) VALUES (?, ?)", [userId, message]);
+  // NUTRITION category so the meal notification gets its own color.
+  try {
+    await db.execute(
+      "INSERT INTO notifications (user_id, message, type, category) VALUES (?, ?, 'success', 'NUTRITION')",
+      [userId, message],
+    );
+  } catch (e) {
+    if (e.code !== "ER_BAD_FIELD_ERROR") throw e; // pre-category schema
+    await db.execute("INSERT INTO notifications (user_id, message) VALUES (?, ?)", [userId, message]);
+  }
 }
 
 async function listFoodLogs(userId, limit, offset) {
@@ -494,13 +524,22 @@ async function listFoodLogs(userId, limit, offset) {
   // LIMIT/OFFSET on some MySQL versions.
   try {
     [rows] = await db.query(
-      `SELECT id, food_name, serving, grams, meal_type, calories, protein, carbs, fat, saturated_fat, trans_fat, polyunsaturated_fat, monounsaturated_fat, image_url,
+      `SELECT id, food_name, serving, grams, meal_type, calories, protein, carbs, fat, sugar, sodium, saturated_fat, trans_fat, polyunsaturated_fat, monounsaturated_fat, image_url,
                 DATE_FORMAT(logged_at, '%Y-%m-%d %H:%i') AS logged_at
          FROM food_logs WHERE user_id = ? ORDER BY logged_at DESC LIMIT ? OFFSET ?`,
       [userId, limit, offset],
     );
   } catch (colErr) {
     if (colErr.code !== "ER_BAD_FIELD_ERROR") throw colErr;
+    try {
+      [rows] = await db.query(
+        `SELECT id, food_name, serving, grams, meal_type, calories, protein, carbs, fat, saturated_fat, trans_fat, polyunsaturated_fat, monounsaturated_fat, image_url,
+                  DATE_FORMAT(logged_at, '%Y-%m-%d %H:%i') AS logged_at
+           FROM food_logs WHERE user_id = ? ORDER BY logged_at DESC LIMIT ? OFFSET ?`,
+        [userId, limit, offset],
+      );
+    } catch (e1) {
+      if (e1.code !== "ER_BAD_FIELD_ERROR") throw e1;
     try {
       [rows] = await db.query(
         `SELECT id, food_name, serving, meal_type, calories, protein, carbs, fat, image_url,
@@ -517,6 +556,7 @@ async function listFoodLogs(userId, limit, offset) {
         [userId, limit, offset],
       );
     }
+    }
   }
   const [[countRow]] = await db.execute("SELECT COUNT(*) AS total FROM food_logs WHERE user_id = ?", [
     userId,
@@ -528,33 +568,44 @@ async function listFoodLogs(userId, limit, offset) {
 // Seeded reference table; case-insensitive prefix-then-contains ranking.
 // Returns both the reference serving values and a derived per-100 g density so
 // the manual form can scale macros from a user-entered weight.
-async function searchFoodCatalog(q, limit = 20) {
+async function searchFoodCatalog(q, limit = 20, opts = {}) {
   const term = String(q || "").trim().slice(0, 80);
   const cap = Math.min(Math.max(Number(limit) || 20, 1), 50);
-  if (term.length < 2) return [];
+  const category = typeof opts.category === "string" && CATEGORIES[opts.category] ? opts.category : null;
+  if (term.length < 2 && !category) return [];
   const like = `%${term}%`;
+  const where = [term.length >= 2 ? "name LIKE ?" : "1=1", category ? "category = ?" : null].filter(Boolean).join(" AND ");
+  const params = [...(term.length >= 2 ? [like] : []), ...(category ? [category] : []), `${term}%`];
+  const order = `ORDER BY name LIKE CONCAT(?) DESC, name LIMIT ${cap}`;
   let rows;
   try {
+    // Section 6 schema: sugar, sodium, descriptions and cached photo.
     [rows] = await db.query(
-      `SELECT name, serving_label, serving_grams, calories, protein, carbs, fat
-         FROM food_catalog
-        WHERE name LIKE ?
-        ORDER BY name LIKE CONCAT(?) DESC, name
-        LIMIT ${cap}`,
-      [like, `${term}%`],
+      `SELECT name, serving_label, serving_grams, calories, protein, carbs, fat, sugar, sodium,
+              category, prep_method, description, image_url, image_credit, image_link, image_checked_at
+         FROM food_catalog WHERE ${where} ${order}`,
+      params,
     );
-  } catch (colErr) {
-    if (colErr.code !== "ER_BAD_FIELD_ERROR") throw colErr;
-    // Pre-043 catalog: still serve autocomplete, just without weight scaling.
-    [rows] = await db.query(
-      `SELECT name, serving_label, calories, protein, carbs, fat
-         FROM food_catalog
-        WHERE name LIKE ?
-        ORDER BY name LIKE CONCAT(?) DESC, name
-        LIMIT ${cap}`,
-      [like, `${term}%`],
-    );
+  } catch (e053) {
+    if (e053.code !== "ER_BAD_FIELD_ERROR") throw e053;
+    if (category) return [];
+    try {
+      [rows] = await db.query(
+        `SELECT name, serving_label, serving_grams, calories, protein, carbs, fat
+           FROM food_catalog WHERE name LIKE ? ${order}`,
+        [like, `${term}%`],
+      );
+    } catch (colErr) {
+      if (colErr.code !== "ER_BAD_FIELD_ERROR") throw colErr;
+      // Pre-043 catalog: still serve autocomplete, just without weight scaling.
+      [rows] = await db.query(
+        `SELECT name, serving_label, calories, protein, carbs, fat
+           FROM food_catalog WHERE name LIKE ? ${order}`,
+        [like, `${term}%`],
+      );
+    }
   }
+  if ("image_checked_at" in (rows[0] || {})) foodImages.fillInBackground(rows);
   return rows.map((row) => {
     const grams = Number(row.serving_grams);
     return {
@@ -565,9 +616,27 @@ async function searchFoodCatalog(q, limit = 20) {
       protein: Number(row.protein) || 0,
       carbs: Number(row.carbs) || 0,
       fat: Number(row.fat) || 0,
+      sugar: row.sugar == null ? null : Number(row.sugar),
+      sodium: row.sodium == null ? null : Math.round(Number(row.sodium)),
+      description: row.description || null,
+      image: row.image_url ? { url: row.image_url, credit: row.image_credit || "Pexels", link: row.image_link || "https://www.pexels.com" } : null,
+      ...describeFood(row, opts.goalType),
       per100: per100FromServing(row),
     };
   });
+}
+
+/** Active goal type for goal-fit notes (null when none / table missing). */
+async function activeGoalType(userId) {
+  try {
+    const [[g]] = await db.execute(
+      "SELECT goal_type FROM fitness_goals WHERE user_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1",
+      [userId],
+    );
+    return g?.goal_type || null;
+  } catch {
+    return null;
+  }
 }
 
 async function deleteFoodLog(userId, mealId) {
@@ -589,6 +658,7 @@ module.exports = {
   listFoodLogs,
   deleteFoodLog,
   searchFoodCatalog,
+  activeGoalType,
   estimateFoodDensity,
   MEAL_TYPES,
   // exposed for tests / introspection

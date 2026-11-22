@@ -129,12 +129,12 @@ async function putreadAllUserId(req, res, next) {
 // Cross-module helper: persist a notification AND push it live over SSE in one
 // call. Used by other domains (messenger/friends, plans, …) so they don't have
 // to know about the SSE client registry. Best-effort — never throws.
-async function notifyUser(userId, { message, type = 'info', category = 'SYSTEM' } = {}) {
+async function notifyUser(userId, { message, type = 'info', category = 'SYSTEM', source = null } = {}) {
   const text = String(message || '').trim();
   if (!text) return false;
   try {
     const { category: cat } = await notificationService.createNotification(
-      userId, text, type, category
+      userId, text, type, category, source
     );
     broadcast(String(userId), { message: text, type, category: cat });
     return true;

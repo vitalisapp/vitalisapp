@@ -210,6 +210,17 @@ async function doFetch(
       }
       throw abortError();
     }
+    // fetch() rejects with a bare TypeError when the network is unreachable.
+    // Give users a plain-language reason instead of "Failed to fetch".
+    if (err instanceof TypeError && !(err instanceof ApiError)) {
+      const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+      throw new ApiError(
+        offline
+          ? "You're offline. Check your internet connection and try again."
+          : "Can't reach the VITALIS server right now. Please try again in a moment.",
+        { status: 0, code: offline ? "OFFLINE" : "NETWORK" },
+      );
+    }
     throw err;
   } finally {
     clearTimeout(t);

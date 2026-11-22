@@ -663,7 +663,7 @@
   }
 }
 
-/* ── Avatar picker ─────────────────────────────────────────────────── */
+/* ── Profile photo controls ────────────────────────────────────────── */
 .pf-avatar-picker {
   margin-top: 18px;
   padding-top: 16px;
@@ -696,7 +696,6 @@
 }
 
 .pf-picker-close:focus-visible,
-.pf-avatar-preset:focus-visible,
 .pf-avatar-upload:focus-visible,
 .pf-avatar-remove:focus-visible,
 .pf-session-revoke:focus-visible {
@@ -706,40 +705,6 @@
 
 .pf-picker-close .material-symbols-outlined {
   font-size: 16px;
-}
-
-.pf-avatar-presets {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.pf-avatar-preset {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 1;
-  min-width: 0;
-  padding: 0;
-  border: 2px solid var(--border-light);
-  border-radius: 14px;
-  background: var(--bg-hover);
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: border-color 0.16s ease, transform 0.16s ease;
-}
-
-.pf-avatar-preset:hover {
-  border-color: var(--accent-border);
-  transform: translateY(-1px);
-}
-
-.pf-avatar-preset[aria-pressed='true'] {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-bg);
 }
 
 .pf-avatar-upload {
@@ -796,6 +761,52 @@
 
 .pf-avatar-remove:hover {
   color: var(--error);
+}
+
+.pf-avatar-draft-note {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.pf-avatar-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 0 4px;
+  text-align: center;
+}
+
+.pf-avatar-confirm-photo {
+  display: grid;
+  width: 88px;
+  height: 88px;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid var(--bg-card);
+  border-radius: 50%;
+  background: var(--accent-bg);
+  box-shadow: var(--shadow-sm);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.pf-avatar-confirm-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pf-avatar-confirm-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .pf-picker-actions {
@@ -1693,13 +1704,48 @@
 }
 
 .pf-session-device {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
   margin: 0;
-  overflow: hidden;
   color: var(--text-primary);
   font-size: 12px;
   font-weight: 700;
+}
+
+.pf-session-device-name {
+  overflow: hidden;
+  min-width: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.pf-session-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: 0.5;
+}
+
+.pf-session-dot.is-active {
+  background: var(--success);
+  box-shadow: 0 0 0 3px var(--success-bg);
+  opacity: 1;
+}
+
+.pf-session-active {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--success-bg);
+  color: var(--success);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .pf-session-meta {
@@ -1710,16 +1756,6 @@
   font-size: 9.5px;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.pf-session-badge {
-  flex-shrink: 0;
-  padding: 4px 7px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--text-inverse);
-  font-size: 9px;
-  font-weight: 800;
 }
 
 .pf-session-revoke {
@@ -1889,7 +1925,6 @@
 
   .pf-edit-action,
   .pf-avatar-edit,
-  .pf-avatar-preset,
   .pf-goal-action,
   .pf-row,
   .pf-row-chevron,

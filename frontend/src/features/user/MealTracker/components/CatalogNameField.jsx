@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { apiGet } from '../../../../lib/apiClient.js';
+import { FoodThumb, TraitChips } from './FoodInfoCard.jsx';
 
 // Module 4 — food catalog autocomplete for the manual meal form.
 // Debounced GET /api/food-logs/food-catalog?q=; picking a suggestion pre-fills name +
@@ -9,10 +10,10 @@ import { apiGet } from '../../../../lib/apiClient.js';
 export default function CatalogNameField({
   label = 'Meal name',
   placeholder = 'e.g. Chicken adobo + rice',
-  value,
-  onChange,
-  onPick,
-  error,
+  value = undefined,
+  onChange = undefined,
+  onPick = undefined,
+  error = undefined,
   inputId = 'meal-name-input',
 }) {
   const [results,   setResults]   = useState([]);
@@ -123,12 +124,15 @@ export default function CatalogNameField({
                 onMouseEnter={() => setHighlight(i)}
                 className={`mt-catalog-option ${i === highlight ? 'is-highlighted' : ''}`}
               >
+                <FoodThumb food={it} size="sm" />
                 <span className="mt-catalog-option-copy">
                   <span className="mt-catalog-option-name">{it.name}</span>
                   <span className="mt-catalog-option-serving">
                     {it.serving_label || 'typical serving'}
                     {it.serving_grams ? ` · ${Number(it.serving_grams)} g` : ''}
+                    {it.prep_label ? ` · ${it.prep_label}` : ''}
                   </span>
+                  <TraitChips traits={(it.traits || []).filter((t) => t.tone !== 'info')} max={2} />
                 </span>
                 <span className="mt-catalog-option-values">
                   <span className="mt-catalog-option-kcal">
@@ -139,6 +143,13 @@ export default function CatalogNameField({
                       ? `P${Number(it.per100.protein)} · C${Number(it.per100.carbs)} · F${Number(it.per100.fat)}`
                       : `P${Number(it.protein)} · C${Number(it.carbs)} · F${Number(it.fat)}`}
                   </span>
+                  {(it.sugar != null || it.sodium != null) && (
+                    <span className="mt-catalog-option-macros">
+                      {it.per100
+                        ? `Sugar ${it.per100.sugar ?? '–'} g · Na ${it.per100.sodium ?? '–'} mg`
+                        : `Sugar ${it.sugar ?? '–'} g · Na ${it.sodium ?? '–'} mg`}
+                    </span>
+                  )}
                 </span>
               </button>
             </li>

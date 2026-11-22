@@ -99,6 +99,17 @@
   --warning-border: rgba(240, 195, 77, 0.32);
   --info: #8fb8ff;
   --info-bg: rgba(143, 184, 255, 0.12);
+  /* Notification categories — one hue per task type (dark). */
+  --notif-training: #ff9f5a;
+  --notif-training-bg: rgba(255, 159, 90, 0.14);
+  --notif-activity: #4fd1c5;
+  --notif-activity-bg: rgba(79, 209, 197, 0.14);
+  --notif-progress: #b794f6;
+  --notif-progress-bg: rgba(183, 148, 246, 0.14);
+  --notif-goal: #f687b3;
+  --notif-goal-bg: rgba(246, 135, 179, 0.14);
+  --notif-warning: #f0c34d;
+  --notif-warning-bg: rgba(240, 195, 77, 0.14);
 
   /* ── Charts (Analytics) ── */
   --chart-1: #c7f464;
@@ -143,8 +154,8 @@
   --tracking-widest: 0.12em;
 
   /* ── Layout ── */
-  --sidebar-w-collapsed: 80px;
-  --sidebar-w-expanded: 240px;
+  --sidebar-w-collapsed: 72px;
+  --sidebar-w-expanded: 260px;
   --topbar-h: 56px;
   --content-max: 1200px;
 
@@ -244,6 +255,18 @@
   --warning-bg: rgba(180, 83, 9, 0.1);
   --info: #2563eb;
   --info-bg: rgba(37, 99, 235, 0.08);
+  /* Notification categories — one hue per task type (light, AA on white). */
+  --notif-training: #c2410c;
+  --notif-training-bg: rgba(194, 65, 12, 0.09);
+  --notif-activity: #0f766e;
+  --notif-activity-bg: rgba(15, 118, 110, 0.09);
+  --notif-progress: #7c3aed;
+  --notif-progress-bg: rgba(124, 58, 237, 0.09);
+  --notif-goal: #be185d;
+  --notif-goal-bg: rgba(190, 24, 93, 0.09);
+  /* True yellow for warnings (app --warning is amber, too close to training orange). */
+  --notif-warning: #a16207;
+  --notif-warning-bg: rgba(234, 179, 8, 0.14);
 
   /* ── Charts ── */
   --chart-1: #347a2b;
@@ -284,8 +307,8 @@
   --tracking-wide: 0.06em;
   --tracking-widest: 0.12em;
 
-  --sidebar-w-collapsed: 80px;
-  --sidebar-w-expanded: 240px;
+  --sidebar-w-collapsed: 72px;
+  --sidebar-w-expanded: 260px;
   --topbar-h: 56px;
   --content-max: 1200px;
 

@@ -3,7 +3,7 @@ import Icon from "../../../../components/Icon.jsx";
 // Correction banner pinned to the video bottom: shows the latest coach cue
 // while recording. Dark card like the reference — readable over video in
 // both themes. Hidden when there is nothing fresh to say.
-export default function CorrectionBanner({ text, warn = false, onOpen }) {
+export default function CorrectionBanner({ text = undefined, warn = false, onOpen = undefined }) {
   if (!text) return null;
   return (
     <button

@@ -7,7 +7,7 @@ export default function Button({
   variant = 'primary',
   size = 'md',
   className = '',
-  children,
+  children = undefined,
   loading = false,
   isLoading = false,
   disabled = false,

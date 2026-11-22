@@ -54,6 +54,12 @@ server.listen(PORT, () => {
   console.log(
     `   Routes: http://localhost:${PORT}/api/_routes  | Health: /api/health`,
   );
+  // Section 5 — smart reminders (in-app + weekly email).
+  try {
+    require("./src/jobs/reminderScheduler").start();
+  } catch (e) {
+    console.warn("[reminders] scheduler not started:", e.message);
+  }
 });
 
 process.on("unhandledRejection", (reason) => {

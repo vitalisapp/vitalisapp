@@ -2,6 +2,7 @@ import { AppProviders } from "./app/providers/index.jsx";
 import AppRoutes from "./app/routes/AppRoutes.jsx";
 import { ENV_ERROR } from "./app/config/env.js";
 import { ErrorBoundary } from "./components/ErrorBoundary.jsx";
+import NetworkStatus from "./components/NetworkStatus.jsx";
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
         </p>
       ) : null}
       <AppProviders>
+        <NetworkStatus />
         <AppRoutes />
       </AppProviders>
     </div>

@@ -1,4 +1,4 @@
-export default function PoseStatusBadge({ poseReady, loadError, onRetry }) {
+export default function PoseStatusBadge({ poseReady = undefined, loadError = undefined, onRetry = undefined }) {
   const label = loadError ? 'Load Failed' : poseReady ? 'Pose AI' : 'Loading model';
   const title = loadError
     ? 'Pose AI failed to load — tap to retry'

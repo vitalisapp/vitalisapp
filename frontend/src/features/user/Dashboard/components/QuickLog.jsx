@@ -7,7 +7,7 @@ import Spinner from '../../../../components/ui/Spinner.jsx';
 
 // MyFitnessPal-inspired quick log: one tap → the right logging surface.
 // Weight logs inline; everything else deep-links to its module.
-const QuickLog = ({ userId, onWeightLogged }) => {
+const QuickLog = ({ userId = undefined, onWeightLogged = undefined }) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [weight, setWeight] = useState('');

@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import Icon from '../../../components/Icon.jsx';
 import LogoutConfirmDialog from '../../../components/ui/LogoutConfirmDialog.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
-import { initials } from '../utils/format.js';
+import { SidebarSection, SidebarAccount } from '../../../components/Sidebar.jsx';
+import { capitalizeName } from '../../../lib/avatar.js';
 import '../../../components/Sidebar.css';
+
+// Section order for the console rail; items without a group fall into Console.
+const ADMIN_GROUPS = [
+  { key: 'console', label: 'Console' },
+  { key: 'content', label: 'Content' },
+  { key: 'security', label: 'Security' },
+];
 
 /**
  * Admin rail.
@@ -17,11 +25,11 @@ import '../../../components/Sidebar.css';
 const AdminRow = ({
   to = undefined,
   end = undefined,
-  icon,
-  label,
-  collapsed,
-  showTooltip,
-  hideTooltip,
+  icon = undefined,
+  label = undefined,
+  collapsed = undefined,
+  showTooltip = undefined,
+  hideTooltip = undefined,
   danger = false,
   onClick = undefined,
 }) => {
@@ -76,9 +84,10 @@ const AdminRow = ({
   );
 };
 
-export default function AdminSidebar({ items, collapsed = false, onToggle = undefined }) {
+export default function AdminSidebar({ items = undefined, collapsed = false, onToggle = undefined }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [tooltip, setTooltip] = useState(null);
   const [logoutOpen, setLogoutOpen] = useState(false);
 
@@ -110,7 +119,8 @@ export default function AdminSidebar({ items, collapsed = false, onToggle = unde
     navigate('/login');
   };
 
-  const adminName = user?.name || 'Administrator';
+  const adminName = capitalizeName(user?.name || 'Administrator');
+  const hideTooltip = () => setTooltip(null);
 
   return (
     <>
@@ -137,7 +147,7 @@ export default function AdminSidebar({ items, collapsed = false, onToggle = unde
             </span>
             <span className="v-sidebar__brand-copy adm-sidebar__brand-copy" aria-hidden={collapsed ? 'true' : undefined}>
               <span className="adm-sidebar__brand-name">Vitalis</span>
-              <span className="adm-sidebar__brand-sub">Admin Console</span>
+              <span className="adm-sidebar__brand-sub">Admin console</span>
             </span>
           </Link>
 
@@ -155,51 +165,50 @@ export default function AdminSidebar({ items, collapsed = false, onToggle = unde
         </div>
 
         <div className="v-sidebar__body">
-          <div className="v-sidebar__group-head" aria-hidden={collapsed ? 'true' : undefined}>
-            Console
-          </div>
           <nav aria-label="Admin sections" className="v-sidebar__nav">
-            {items.map((item) => (
-              <AdminRow
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                icon={item.icon}
-                label={item.label}
-                collapsed={collapsed}
-                showTooltip={showTooltip}
-                hideTooltip={() => setTooltip(null)}
-              />
-            ))}
+            {ADMIN_GROUPS.map((group) => {
+              const groupItems = items.filter((item) => (item.group || 'console') === group.key);
+              if (groupItems.length === 0) return null;
+              return (
+                <SidebarSection key={group.key} label={group.label}>
+                  {groupItems.map((item) => (
+                    <AdminRow
+                      key={item.to}
+                      to={item.to}
+                      end={item.end}
+                      icon={item.icon}
+                      label={item.label}
+                      collapsed={collapsed}
+                      showTooltip={showTooltip}
+                      hideTooltip={hideTooltip}
+                    />
+                  ))}
+                </SidebarSection>
+              );
+            })}
           </nav>
         </div>
 
         <div className="v-sidebar__foot">
-          <div className="v-sidebar__group-head" aria-hidden={collapsed ? 'true' : undefined}>
-            Account
-          </div>
-
-          <div
-            className="adm-sidebar__account"
-            title={collapsed ? `${adminName} — Elevated access` : undefined}
-          >
-            <span className="adm-sidebar__avatar" aria-hidden="true">{initials(adminName)}</span>
-            <span className="adm-sidebar__account-copy" aria-hidden={collapsed ? 'true' : undefined}>
-              <span className="adm-sidebar__account-name">{adminName}</span>
-              <span className="adm-sidebar__account-role">
-                <Icon name="verified_user" /> Elevated access
-              </span>
-            </span>
-          </div>
-
           <AdminRow
             icon="logout"
             label="Sign out"
             danger
             collapsed={collapsed}
             showTooltip={showTooltip}
-            hideTooltip={() => setTooltip(null)}
+            hideTooltip={hideTooltip}
             onClick={() => setLogoutOpen(true)}
+          />
+
+          <SidebarAccount
+            to="/admin/profile"
+            name={adminName}
+            subtitle="Administrator · Elevated access"
+            avatarUrl={user?.avatar}
+            active={pathname === '/admin/profile'}
+            collapsed={collapsed}
+            showTooltip={showTooltip}
+            hideTooltip={hideTooltip}
           />
         </div>
       </aside>

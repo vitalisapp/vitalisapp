@@ -1,5 +1,5 @@
 import Icon from "../../../../components/Icon.jsx";
-export default function CameraToggleButton({ cameraOn, onToggle }) {
+export default function CameraToggleButton({ cameraOn = undefined, onToggle = undefined }) {
   return (
     <button
       onClick={onToggle}

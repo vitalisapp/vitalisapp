@@ -4,6 +4,7 @@ import { useAdminResource } from '../hooks/useAdminResource.js';
 import Icon from '../../../components/Icon.jsx';
 import { Badge, ConfirmDialog, MiniStat, StateBlock, TableSkeleton } from './AdminBits.jsx';
 import { fmtNum, fmtPhone, fmtWhen, initials, verificationMeta } from '../utils/format.js';
+import { StatusDot } from './StatusDot.jsx';
 
 const humanize = (value) => String(value || '—')
   .toLowerCase()
@@ -14,7 +15,7 @@ const humanize = (value) => String(value || '—')
  * Right-side account inspector + every mutating action for one user.
  * Mirrors the backend safety rails: no self-actions, no actions on admins.
  */
-export default function UserDrawer({ userId, currentAdminId, onClose, onToast, onChanged }) {
+export default function UserDrawer({ userId = undefined, currentAdminId = undefined, onClose = undefined, onToast = undefined, onChanged = undefined }) {
   const { data, loading, error, reload } = useAdminResource(`/api/admin/users/${userId}`);
   const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -121,6 +122,23 @@ export default function UserDrawer({ userId, currentAdminId, onClose, onToast, o
                   </div>
                 </div>
               </div>
+
+              {data.activity && (
+                <div className={`adm-mon-insight is-${data.activity.status}`}>
+                  <div className="adm-mon-insight__head">
+                    <p className="adm-section-title">Activity this week</p>
+                    <StatusDot status={data.activity.status} />
+                  </div>
+                  <p className="adm-mon-insight__text">{data.activity.interpretation}</p>
+                  {data.activity.flags.length > 0 && (
+                    <span className="adm-mon-flags">
+                      {data.activity.flags.map((f) => (
+                        <span key={f.key} className={`adm-mon-flag is-${f.group}`}>{f.detail || f.label}</span>
+                      ))}
+                    </span>
+                  )}
+                </div>
+              )}
 
               <div className="adm-mini-grid">
                 <MiniStat value={data.counts.workouts} label="Workouts" />

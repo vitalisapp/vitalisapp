@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Email service — outbound message logic.
-// Transport lives in config/mailer.js, markup in templates/email.templates.js.
+// Transport lives in config/mailer.js, markup in src/emails/ (one file per template).
 // Controllers call these functions; they never build HTML themselves.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -10,7 +10,7 @@ const {
   fromAddress,
   fromHeader,
 } = require("../config/mailer");
-const templates = require("../templates/email.templates");
+const templates = require("../emails");
 
 const { escapeHtml } = templates;
 
@@ -29,18 +29,24 @@ function requireRecipient(to) {
   }
 }
 
-async function deliver(to, { subject, html }, extra = {}) {
+async function deliver(to, { subject, html, text }, extra = {}) {
   requireRecipient(to);
   return getTransporter().sendMail({
     from: fromHeader(),
     to,
     subject,
     html,
+    ...(text ? { text } : {}),
     ...extra,
   });
 }
 
 // ─── PUBLIC SEND HELPERS ─────────────────────────────────────────────────────
+
+// Section 5 — weekly progress email (opt-out via reminder_prefs.email_weekly).
+async function sendWeeklyProgressEmail(to, props) {
+  return deliver(to, templates.weeklyProgressEmail(props));
+}
 
 async function sendMealSummaryEmail(to, summary) {
   return deliver(to, templates.mealSummaryEmail({ summary }));
@@ -66,8 +72,16 @@ async function sendPasswordChangedEmail(to, name, resetUrl, when) {
   return deliver(to, templates.passwordChangedEmail({ name, resetUrl, when }));
 }
 
-async function sendWelcomeEmail(to, name) {
-  return deliver(to, templates.welcomeEmail({ name }));
+// Sent once per new account. Options are passed straight to the template:
+//   verifyUrl — include the email-verification CTA (email signups)
+//   provider  — 'email' | 'google' | 'sms'
+/**
+ * @param {string} to
+ * @param {string} name
+ * @param {{ verifyUrl?: string | null, provider?: "email" | "google" | "sms", ctaUrl?: string }} [options]
+ */
+async function sendWelcomeEmail(to, name, options = {}) {
+  return deliver(to, templates.welcomeEmail({ name, ...options }));
 }
 
 async function sendVerificationEmail(to, verifyLink) {
@@ -101,6 +115,7 @@ async function sendEmailChangedNotice(to, newEmail) {
 }
 
 module.exports = {
+  sendWeeklyProgressEmail,
   escapeHtml,
   requireMailEnv,
   requireRecipient,

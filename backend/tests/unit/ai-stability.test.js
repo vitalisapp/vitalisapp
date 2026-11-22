@@ -63,6 +63,32 @@ describe('ai model config (stabilize MVP)', () => {
     assert.equal(ok.result.items.length, 1);
   });
 
+  it('rejects non-food photos (faces, objects) with a clear "not food" message', () => {
+    const face = gemini.visionOutcome(
+      '{"items":[],"not_food":true,"subject":"a person\'s face.","suggestion":"This doesn\'t look like food."}',
+    );
+    assert.equal(face.status, 'empty');
+    assert.equal(face.notFood, true);
+    assert.equal(face.subject, "a person's face");
+    assert.match(face.suggestion, /doesn't look like food — it looks like a person's face/);
+
+    // not_food wins even if the model also listed a guessed item.
+    const guessed = gemini.visionOutcome(
+      '{"items":[{"food_name":"Cake","calories":300,"protein":3,"carbs":40,"fat":14}],"not_food":true,"subject":"a toy"}',
+    );
+    assert.equal(guessed.status, 'empty');
+
+    // Untrusted subject text is sanitized and capped.
+    const hostile = gemini.visionOutcome(
+      JSON.stringify({ items: [], not_food: true, subject: '<img src=x onerror=alert(1)>' + 'x'.repeat(200) }),
+    );
+    assert.ok(!/[<>]/.test(hostile.subject));
+    assert.ok(hostile.subject.length <= 60);
+
+    const noSubject = gemini.visionOutcome('{"items":[],"not_food":true}');
+    assert.match(noSubject.suggestion, /^This doesn't look like food\. Please scan/);
+  });
+
   it('classifies token-limit and auth errors apart from retryable overload', () => {
     assert.equal(gemini.isTokenLimitError(new Error('413 Request too large (ITPM: Limit 7000)')), true);
     assert.equal(gemini.isAuthError(new Error('401 Unauthorized: invalid api key')), true);

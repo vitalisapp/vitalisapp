@@ -37,6 +37,8 @@ export function scaleFromPer100(per100, grams) {
     protein: Math.max(0, round1((Number(per100.protein) || 0) * factor)),
     carbs: Math.max(0, round1((Number(per100.carbs) || 0) * factor)),
     fat: Math.max(0, round1((Number(per100.fat) || 0) * factor)),
+    ...(per100.sugar != null ? { sugar: Math.max(0, round1((Number(per100.sugar) || 0) * factor)) } : {}),
+    ...(per100.sodium != null ? { sodium: Math.max(0, Math.round((Number(per100.sodium) || 0) * factor)) } : {}),
   };
 }
 
@@ -56,6 +58,9 @@ export function scalePortion(item, factor) {
   for (const key of ['protein', 'carbs', 'fat', 'saturated_fat', 'trans_fat', 'polyunsaturated_fat', 'monounsaturated_fat']) {
     next[key] = Math.max(0, round1((Number(base[key]) || 0) * f));
   }
+  // Section 6: sugar (g) / sodium (mg) stay null when unknown.
+  if (base.sugar != null) next.sugar = Math.max(0, round1((Number(base.sugar) || 0) * f));
+  if (base.sodium != null) next.sodium = Math.max(0, Math.round((Number(base.sodium) || 0) * f));
   return next;
 }
 

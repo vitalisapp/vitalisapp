@@ -10,7 +10,7 @@ function scoreChip(score) {
   return { label: 'Needs work', cls: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' };
 }
 
-export default function WorkoutSummary({ summary, onDone }) {
+export default function WorkoutSummary({ summary = undefined, onDone = undefined }) {
   if (!summary) return null;
   const chip = scoreChip(summary.score);
   const r = 52;
