@@ -632,8 +632,9 @@ async function verifyEmail(token) {
     );
   }
   const verification = rows[0];
-  // A known link for an already-confirmed account is safe to open again.
-  if (verification.is_verified) return;
+  // A known link for an already-confirmed account is safe to open again, but
+  // only the click that actually verifies the account may start a session.
+  if (verification.is_verified) return { userId: verification.user_id, justVerified: false };
   if (verification.used) {
     throw new AppError("This verification link was replaced. Request a new one.", 400, "INVALID_TOKEN");
   }
@@ -644,14 +645,16 @@ async function verifyEmail(token) {
   const [result] = await db.execute(
     `UPDATE users u JOIN email_verifications v ON v.user_id = u.id
      SET u.is_verified = 1
-     WHERE v.id = ? AND v.used = 0 AND v.expires_at > NOW()`,
+     WHERE v.id = ? AND v.used = 0 AND v.expires_at > NOW() AND u.is_verified = 0`,
     [verification.id],
   );
   if (!result.affectedRows) {
+    // Lost a race with another click (or an email change): never a session.
     const current = await getMe(verification.user_id);
-    if (current?.is_verified) return;
+    if (current?.is_verified) return { userId: verification.user_id, justVerified: false };
     throw new AppError("This verification link is no longer valid. Request a new one.", 400, "INVALID_TOKEN");
   }
+  return { userId: verification.user_id, justVerified: true };
 }
 
 // ─── CHANGE EMAIL (typo fix, unverified accounts only) ───

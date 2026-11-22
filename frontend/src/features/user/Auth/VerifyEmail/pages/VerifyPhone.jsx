@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiPost } from '../../../../../lib/apiClient.js';
+import { useAuth } from '../../../../../hooks/useAuth.jsx';
+import { postVerifyRoute } from '../utils/postVerifyRoute.js';
 import { SMS_SENDER_ID } from '../../../../../app/config/env.js';
 import { isValidPhMobile } from '../../../../../lib/phone.js';
 import VerificationLayout from '../components/VerificationLayout.jsx';
@@ -16,6 +18,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const VerifyPhone = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setUser, refreshAuth } = useAuth();
 
   const [email, setEmail] = useState(location.state?.email || '');
   const [phoneMasked, setPhoneMasked] = useState(location.state?.phoneMasked || '');
@@ -88,9 +91,20 @@ const VerifyPhone = () => {
     setError('');
     setSuccess('');
     try {
-      const data = await apiPost('/api/auth/sms-verify', { email: email.trim(), code });
-      setSuccess(data.message || 'Phone verified. Sign in to continue.');
+      const data = await apiPost('/api/auth/sms-verify', { email: email.trim(), code }, { skipAuthRedirect: true });
       setCode('');
+      // The backend signs the user in on a correct code — go straight in.
+      if (data.signedIn && data.user) {
+        setUser(data.user);
+        if (await refreshAuth({ silent: true })) {
+          navigate(postVerifyRoute(data.user), { replace: true });
+          return;
+        }
+        // Cookie blocked: the account is verified, fall back to signing in.
+        setSuccess('Phone verified. Your browser blocked the session cookie — sign in to continue.');
+        return;
+      }
+      setSuccess(data.message || 'Phone verified. Sign in to continue.');
     } catch (err) {
       setError(err.message || 'That code could not be verified.');
       if (err?.code === 'OTP_EXPIRED' || err?.code === 'OTP_LOCKED') setCode('');

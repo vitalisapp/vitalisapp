@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiGet } from '../../../../../lib/apiClient.js';
 import { useAuth } from '../../../../../hooks/useAuth.jsx';
 import VerificationLayout from '../components/VerificationLayout.jsx';
+import { postVerifyRoute } from '../utils/postVerifyRoute.js';
 
 const VerifyEmail = () => {
   const navigate = useNavigate();
@@ -30,8 +31,14 @@ const VerifyEmail = () => {
         // A blocking refresh unmounts this page via AppRoutes' loading gate,
         // causing another verification on every remount. Keep it mounted.
         // Read the actual session: this link may belong to a different account.
-        await refreshAuth({ silent: true }).catch(() => {});
-        if (active) setResult({ token, attempt, state: 'done' });
+        const hasSession = await refreshAuth({ silent: true }).catch(() => false);
+        if (!active) return;
+        // First click on the link signs the user in — go straight into the app.
+        if (data.signedIn && data.user && hasSession) {
+          navigate(postVerifyRoute(data.user), { replace: true });
+          return;
+        }
+        setResult({ token, attempt, state: 'done' });
       } catch (err) {
         if (!active) return;
         setResult({

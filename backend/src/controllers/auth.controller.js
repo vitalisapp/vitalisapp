@@ -493,18 +493,45 @@ async function postsmsOtp(req, res, next) {
   }
 }
 
+// Sign a user in right after they prove ownership (first SMS code / first
+// email-link click). Returns the same user shape /login and /me return, or
+// null when the account must not get a session (e.g. deactivated).
+async function startVerifiedSession(req, res, user) {
+  if (!user || !user.is_verified || user.status === "deactivated") return null;
+  setSessionCookie(res, user.id, user.email, req, user.token_version);
+  await service.logUserSession(req, user.id);
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar ?? user.avatar_url ?? null,
+    goal: user.fitness_goal,
+    isVerified: true,
+    onboardingCompleted: Boolean(user.onboarding_completed),
+    role: user.role,
+    status: user.status,
+    acceptedTermsAt: user.accepted_terms_at,
+    acceptedTermsVersion: user.accepted_terms_version,
+  };
+}
+
 // ─── POST /api/auth/sms-verify { email, code } — verify the SMS code
-// Registration-only flow: a successful code activates the account but does
-// not create a session — the user then signs in with email + password.
+// A correct code is single-use and proves the phone, so it also signs the
+// user in (modern signup: no detour through the login page).
 async function postsmsVerify(req, res, next) {
   try {
     const email = normEmail(req.body?.email);
     const user = await phoneVerification.verifyCode({ email, code: req.body?.code });
+    const sessionUser = await startVerifiedSession(req, res, user);
     res.json({
       success: true,
-      message: "Phone verified. Your Vitalis account is now active — sign in to continue.",
+      message: sessionUser
+        ? "Phone verified. Welcome to Vitalis!"
+        : "Phone verified. Your Vitalis account is now active — sign in to continue.",
       email: user.email,
       phoneMasked: user.phone_masked,
+      signedIn: Boolean(sessionUser),
+      ...(sessionUser ? { user: sessionUser } : {}),
     });
   } catch (err) {
     if (err.isOperational) {
@@ -521,10 +548,19 @@ async function getverifyEmail(req, res, next) {
     const { token } = req.query;
     if (!token) return res.status(400).json({ error: "Verification token is required" });
     try {
-      await service.verifyEmail(token);
+      const { userId, justVerified } = (await service.verifyEmail(token)) || {};
+      // Only the click that verified the account signs in; reopening an old
+      // link later just confirms it (a forwarded link can't mint sessions).
+      const sessionUser = justVerified && userId
+        ? await startVerifiedSession(req, res, await service.getMe(userId))
+        : null;
       res.json({
         success: true,
-        message: "Email verified. Your Vitalis account is now active.",
+        message: sessionUser
+          ? "Email verified. Welcome to Vitalis!"
+          : "Email verified. Your Vitalis account is now active.",
+        signedIn: Boolean(sessionUser),
+        ...(sessionUser ? { user: sessionUser } : {}),
       });
     } catch (err) {
       if (err.isOperational) return res.status(err.status).json({ error: err.message, code: err.code });

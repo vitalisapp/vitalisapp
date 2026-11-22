@@ -1,8 +1,8 @@
 const { it } = require('node:test');
 const assert = require('node:assert/strict');
 
-// Soft verification: signup always signs in; verify links still work and are
-// skipped entirely in NODE_ENV=development.
+// Hard verification: signup gets no session until the email link is opened;
+// the first successful click signs the user in. Skipped in development.
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret-min-32-chars-0123456789ab';
 let queries = [];
@@ -27,6 +27,8 @@ stub('../../src/config/db', {
       return [token ? [{ ...token, expired: token.expires <= new Date(), is_verified: Number(verified) }] : []];
     }
     if (sql.startsWith('UPDATE users u JOIN email_verifications')) {
+      // Mirrors `AND u.is_verified = 0`: only the first click changes a row.
+      if (verified) return [{ affectedRows: 0 }];
       verified = true;
       return [{ affectedRows: 1 }];
     }
@@ -46,7 +48,7 @@ stub('../../src/services/email.service', {
 });
 const flush = () => new Promise((r) => setImmediate(r));
 const service = require('../../src/services/auth.service');
-const { postregister } = require('../../src/controllers/auth.controller');
+const { postregister, getverifyEmail } = require('../../src/controllers/auth.controller');
 const verifyUser = require('../../src/middleware/verifyUser');
 const jwt = require('jsonwebtoken');
 const { signSession } = require('../../src/config/jwt');
@@ -147,4 +149,26 @@ it('skips verification in development: signup is verified, gets a session, and l
   } finally {
     process.env.NODE_ENV = 'test';
   }
+});
+
+it('signs the user in on the first verification click only', async () => {
+  process.env.NODE_ENV = 'test';
+  verified = false;
+  await service.resendVerification('test@example.com');
+  const token = new URL(sentLink).searchParams.get('token');
+
+  const first = response();
+  await getverifyEmail({ query: { token }, headers: {}, cookies: {} }, first, nextError);
+  assert.equal(first.body.success, true);
+  assert.equal(first.body.signedIn, true);
+  assert.equal(first.cookieSet, true, 'first click must start a session');
+  assert.equal(first.body.user.id, 13);
+  assert.equal(first.body.user.isVerified, true);
+
+  // Reopening the same (still known) link confirms, but never mints a session.
+  const again = response();
+  await getverifyEmail({ query: { token }, headers: {}, cookies: {} }, again, nextError);
+  assert.equal(again.body.success, true);
+  assert.equal(again.body.signedIn, false);
+  assert.equal(again.cookieSet, false);
 });
