@@ -13,7 +13,6 @@ import { safeGet, safeSet } from '../../../../lib/storage.js';
 import { useToastStore } from '../../../../stores/toastStore.js';
 import '../preferences.css';
 import ReminderSettings from '../components/ReminderSettings.jsx';
-import HomeScreenWidgets from '../components/HomeScreenWidgets.jsx';
 
 const THEME_OPTIONS = [
   { value: 'light', label: 'Light', icon: 'light_mode', preview: 'light', radioLabel: 'Light theme' },
@@ -373,8 +372,6 @@ const Preferences = ({ embedded = false }) => {
               </div>
             </div>
           </section>
-
-          <HomeScreenWidgets userId={user?.id} />
 
           <ReminderSettings />
 

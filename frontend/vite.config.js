@@ -39,23 +39,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, '');
   const backendTarget = env.BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3000';
   const hmrPort = env.VITE_HMR_CLIENT_PORT || process.env.VITE_HMR_CLIENT_PORT;
-  // Windows Widgets Board: the service worker can't read import.meta.env, so the
-  // API origin is emitted as widgets/config.js and loaded before sw-widgets.js.
-  // Empty = same origin (dev/preview proxy), matching src/app/config/env.js.
-  const widgetApiBase = String(env.VITE_API_URL || '').trim().replace(/\/+$/, '');
-  const widgetsConfigPlugin = {
-    name: 'vitalis-widgets-config',
-    apply: 'build',
-    generateBundle() {
-      this.emitFile({
-        type: 'asset',
-        fileName: 'widgets/config.js',
-        source: `self.VITALIS_WIDGETS_CONFIG = ${JSON.stringify({ apiBase: widgetApiBase })};\n`,
-      });
-    },
-  };
   // Shared by `npm run dev` and `npm run preview` (preview serves the built
-  // service worker, which Windows widgets need, so it must reach /api too).
+  // app + service worker, so it must reach /api too).
   const apiProxy = {
     // Long-lived SSE must bypass the 15s /api timeout (else 504s). Listed first.
     '/api/notifications/stream': {
@@ -105,7 +90,6 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
-      widgetsConfigPlugin,
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['offline.html', 'robots.txt', 'favicon.ico', 'apple-touch-icon.png'],
@@ -148,39 +132,8 @@ export default defineConfig(({ mode }) => {
               purpose: 'maskable',
             },
           ],
-          // Windows 11 Widgets Board (installed PWA in Microsoft Edge). Rendered
-          // by public/widgets/sw-widgets.js. Phase 0: Today's Activity only.
-          // `template` is informational per Microsoft but listed as required.
-          widgets: [
-            {
-              name: "Today's Activity",
-              short_name: 'Today',
-              description: 'Steps logged against your daily goal, with calories and active minutes.',
-              tag: 'vitalis-today',
-              template: 'vitalis-today',
-              ms_ac_template: '/widgets/today-activity.json',
-              // Initial "loading" card (same shape as Microsoft's PWAmp demo);
-              // sw-widgets.js replaces it with live data right after install.
-              data: '/widgets/today-activity-data.json',
-              type: 'application/json',
-              update: 1800, // seconds — user decision: refresh every 30 minutes
-              multiple: false,
-              icons: [{ src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
-              screenshots: [
-                {
-                  src: '/widgets/screenshots/today-activity.png',
-                  sizes: '300x304',
-                  type: 'image/png',
-                  label: "VITALIS Today's Activity widget",
-                },
-              ],
-            },
-          ],
         },
         workbox: {
-          // Windows widget handlers, appended to the generated sw.js. Order
-          // matters: config + data helpers must load before sw-widgets.js.
-          importScripts: ['widgets/config.js', 'widgets/widget-data.js', 'widgets/sw-widgets.js'],
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
           // Hero/auth JPGs (~830KB) stay lazy-loaded online, not precached — offline shell uses offline.html.
           // Loading_green.png: legacy 2.4MB source art (BrandLoader uses the 9KB webp).
@@ -275,9 +228,6 @@ export default defineConfig(({ mode }) => {
     preview: {
       host: true,
       port: 4173,
-      // Local Windows-widget testing through an HTTPS tunnel (PWABuilder needs
-      // a public URL). Same setting the dev server already uses.
-      allowedHosts: true,
       // Same proxy as dev so login + /api work on the built app (service worker).
       proxy: apiProxy,
     },

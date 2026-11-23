@@ -25,12 +25,9 @@ import { installGlobalButtonLoading } from './lib/buttonLoading.js';
 // boot so an install prompt firing before hydration is never missed.
 import './lib/pwaInstall.js';
 import { installServiceWorkerUpdate } from './lib/pwaUpdate.js';
-import { installWidgetSync } from './lib/widgetBridge.js';
 
 installGlobalButtonLoading();
 installServiceWorkerUpdate();
-// Windows Widgets Board: clear widget data on logout, refresh on app open.
-installWidgetSync();
 
 if (!GOOGLE_CLIENT_ID && import.meta.env.DEV) {
   console.warn('[env] VITE_GOOGLE_CLIENT_ID not set — Google login disabled');
