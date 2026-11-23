@@ -12,6 +12,7 @@ const stub = (rel, exports) => {
   require.cache[id] = { id, filename: id, loaded: true, exports };
 };
 
+const storedKcal = [];
 // Fake pool: answers the handful of statements these save paths issue.
 const ok = [{ insertId: 42, affectedRows: 1 }];
 const fakeConn = {
@@ -19,9 +20,13 @@ const fakeConn = {
   beginTransaction: async () => {},
   commit: async () => {},
   rollback: async () => {},
-  async execute(sql) {
+  async execute(sql, params) {
     if (/SELECT id, status, pause_started_at/.test(sql)) return [[{ id: 7, status: 'active', pause_started_at: null, paused_seconds: 0 }]];
     if (/SELECT id, workout_type, rep_count/.test(sql)) return [[{ id: 7, workout_type: 'Squats', rep_count: 20, status: 'completed', duration_seconds: 300 }]];
+    // Calorie recording on completion (energyBurn).
+    if (/SELECT workout_type, duration_seconds, difficulty_rating, status/.test(sql)) return [[{ workout_type: 'Squats', duration_seconds: 300, difficulty_rating: null, status: 'completed' }]];
+    if (/AS weight_kg/.test(sql)) return [[{ weight_kg: 78 }]];
+    if (/SET calories_burned = \?/.test(sql)) storedKcal.push(params[0]);
     return ok;
   },
   release() {},
@@ -61,6 +66,8 @@ describe('task notifications are wired to the save paths', () => {
     assert.equal(sent.length, 1);
     assert.equal(sent[0].category, 'TRAINING');
     assert.match(sent[0].message, /^Workout complete: Squats · 5 min · 20 reps/);
+    // 5 min squats at 78 kg: (4.0 − 1) × 78 × 300/3600 ≈ 20 kcal, stored on the log.
+    assert.deepEqual(storedKcal, [20]);
   });
 
   it('saving an activity → ACTIVITY', async () => {

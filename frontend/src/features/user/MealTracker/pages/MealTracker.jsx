@@ -728,6 +728,20 @@ export default function MealTracker() {
     ...swr,
   });
   const { goal: activeGoal, initialLoading: activeGoalLoading } = useActiveGoal(userId);
+  // Exercise burned on the selected day (workouts + runs + manual logs) —
+  // the same figure the Dashboard adds back, so both screens agree.
+  const burnQuery = useQuery({
+    queryKey: ['dayBurn', userId, selectedDate],
+    queryFn: () => apiGet(`/api/dashboard/calendar/${selectedDate}`),
+    enabled: Boolean(userId),
+    select: (d) => ({
+      burned: Number(d?.activity?.caloriesBurned) || 0,
+      credited: Number(d?.activity?.burn?.credited ?? d?.activity?.caloriesBurned) || 0,
+    }),
+    ...swr,
+  });
+  const caloriesBurnedOnDay = burnQuery.data?.burned || 0;
+  const caloriesCreditedOnDay = burnQuery.data?.credited || 0;
   // Like the old Promise.all: only switch off the fallbacks once BOTH requests
   // have settled (success or failure), so targets never flicker between sources.
   const goalsSettled = !nutrientGoalsQuery.isLoading && !activeGoalLoading;
@@ -918,6 +932,8 @@ export default function MealTracker() {
             <DailySummaryCard
               calories={caloriesToday}
               goal={calorieGoal}
+              burned={caloriesBurnedOnDay}
+              credited={caloriesCreditedOnDay}
               protein={proteinToday}
               proteinGoal={macroTargets.protein}
               carbs={carbsToday}

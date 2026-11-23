@@ -4,6 +4,8 @@
 const db = require('../config/db');
 const tasks = require('../utils/taskNotifications');
 const { AppError } = require('../utils/errors');
+const { estimateWorkoutKcal } = require('../utils/energyBurn');
+const { getUserWeightKg } = require('./energy.service');
 
 const VALID_END_STATUS = ['completed', 'cancelled'];
 
@@ -107,6 +109,30 @@ async function replaceSets(conn, logId, userId, sets) {
   );
 }
 
+/**
+ * Store net kcal for a completed session (inside the caller's transaction).
+ * Re-run whenever duration or the difficulty rating changes.
+ */
+async function recordCalories(conn, userId, logId) {
+  const [[row]] = await conn.execute(
+    `SELECT workout_type, duration_seconds, difficulty_rating, status
+       FROM workout_logs WHERE id = ? AND user_id = ?`,
+    [logId, userId]
+  );
+  if (!row || row.status !== 'completed') return null;
+  const kcal = estimateWorkoutKcal({
+    workoutType: row.workout_type,
+    durationSeconds: row.duration_seconds,
+    weightKg: await getUserWeightKg(userId, conn),
+    difficulty: row.difficulty_rating,
+  });
+  await conn.execute(
+    `UPDATE workout_logs SET calories_burned = ? WHERE id = ? AND user_id = ?`,
+    [kcal, logId, userId]
+  );
+  return kcal;
+}
+
 async function startWorkout(userId, workoutType) {
   const [result] = await db.execute(
     `INSERT INTO workout_logs (user_id, workout_type, status)
@@ -205,8 +231,10 @@ async function endWorkout(userId, logId, status, reps, sets) {
     if (validated !== null) {
       await replaceSets(conn, logId, userId, validated);
     }
+    await recordCalories(conn, userId, logId);
     const [[updated]] = await conn.execute(
-      `SELECT id, workout_type, rep_count, start_time, end_time, status, duration_seconds, paused_seconds
+      `SELECT id, workout_type, rep_count, start_time, end_time, status, duration_seconds, paused_seconds,
+              calories_burned
              FROM workout_logs WHERE id = ? AND user_id = ?`,
       [logId, userId]
     );
@@ -256,8 +284,10 @@ async function updateFeedback(userId, logId, { difficulty_rating, session_notes 
         WHERE id = ? AND user_id = ? AND status = 'completed'`,
     [rating, notes, logId, userId]
   );
+  // A harder session burns more: re-estimate with the new rating.
+  if (rating !== null) await recordCalories(db, userId, logId);
   const [[updated]] = await db.execute(
-    `SELECT id, difficulty_rating, session_notes FROM workout_logs WHERE id = ? AND user_id = ?`,
+    `SELECT id, difficulty_rating, session_notes, calories_burned FROM workout_logs WHERE id = ? AND user_id = ?`,
     [logId, userId]
   );
   return { outcome: 'ok', log: updated };
@@ -318,8 +348,10 @@ async function createManualWorkout(userId, { workout_type, duration_minutes, rep
         }
       }
     }
+    await recordCalories(conn, userId, logId);
     const [[log]] = await conn.execute(
-      `SELECT id, workout_type, rep_count, start_time, end_time, status, duration_seconds, paused_seconds
+      `SELECT id, workout_type, rep_count, start_time, end_time, status, duration_seconds, paused_seconds,
+              calories_burned
           FROM workout_logs WHERE id = ? AND user_id = ?`,
       [logId, userId]
     );
@@ -338,7 +370,7 @@ async function createManualWorkout(userId, { workout_type, duration_minutes, rep
 async function getWorkoutDetail(userId, logId) {
   const [[log]] = await db.execute(
     `SELECT id, workout_type, rep_count, start_time, end_time, status,
-               duration_seconds, paused_seconds, difficulty_rating, session_notes
+               duration_seconds, paused_seconds, difficulty_rating, session_notes, calories_burned
           FROM workout_logs WHERE id = ? AND user_id = ?`,
     [logId, userId]
   );
@@ -384,7 +416,7 @@ async function attachSetSummary(userId, logs) {
 }
 
 const LOG_COLUMNS = `id, workout_type, rep_count, start_time, end_time, status,
-               duration_seconds, paused_seconds, difficulty_rating, session_notes`;
+               duration_seconds, paused_seconds, difficulty_rating, session_notes, calories_burned`;
 
 /** Legacy list: latest 50 sessions (Dashboard, Plans). Unchanged contract. */
 async function listWorkouts(userId, { with_sets = false } = {}) {

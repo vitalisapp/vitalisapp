@@ -79,6 +79,7 @@ export const DashboardHero = ({
   goalLabelText = 'Vitalis',
   foodKcal = 0,
   caloriesBurned = 0,
+  caloriesCredited = null,
   workoutMinToday = 0,
   workoutGoalMin = 0,
   onLogActivity = undefined,
@@ -101,7 +102,15 @@ export const DashboardHero = ({
         </p>
         <div className="vd-hero-meta">
           <span><Icon name="restaurant" />{foodKcal.toLocaleString()} kcal eaten</span>
-          <span><Icon name="local_fire_department" />{caloriesBurned.toLocaleString()} kcal burned</span>
+          <span
+            title={caloriesCredited != null && caloriesCredited < caloriesBurned
+              ? `${caloriesCredited.toLocaleString()} kcal added back to your budget — burn estimates run high, so only part counts toward your goal.`
+              : undefined}
+          >
+            <Icon name="local_fire_department" />{caloriesBurned.toLocaleString()} kcal burned
+            {caloriesCredited != null && caloriesCredited < caloriesBurned && caloriesBurned > 0
+              && <> · +{caloriesCredited.toLocaleString()} back</>}
+          </span>
           <span><Icon name="timer" />{workoutMinToday} / {workoutGoalMin} min</span>
         </div>
       </div>

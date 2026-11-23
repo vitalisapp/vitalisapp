@@ -947,7 +947,7 @@ const CameraWorkout = () => {
         </div>
         {/* Room for the fixed BottomNav so the bar never rests underneath it at page end. */}
         <div className="md:hidden" style={{ height: 'calc(84px + env(safe-area-inset-bottom, 0px))' }} aria-hidden="true" />
-        <WorkoutSummary summary={summary} onDone={handleSummaryDone} />
+        <WorkoutSummary summary={summary} kcalBurned={sessionResult?.calories_burned ?? null} onDone={handleSummaryDone} />
         <WorkoutFeedbackSheet logId={feedbackFor} onClose={handleFeedbackClose} />
         </>
         )}

@@ -32,6 +32,7 @@ const EXPECTED = [
   '055_dedupe_user_sessions.sql',
   '056_plan_images.sql',
   '058_browser_device_identity.sql',
+  '059_workout_calories.sql',
 ];
 
 describe('migrations per-table baseline', () => {

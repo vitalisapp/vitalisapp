@@ -123,7 +123,8 @@ export default function AddWorkoutModal({ onClose = undefined, onSaved = undefin
           : {}),
       };
       const log = await apiPost('/api/workout-logs/manual', payload);
-      useToastStore.getState().addToast('Workout logged', 'success');
+      const kcal = Number(log?.calories_burned) || 0;
+      useToastStore.getState().addToast(kcal > 0 ? `Workout logged · ${kcal.toLocaleString()} kcal burned` : 'Workout logged', 'success');
       onSaved?.(log);
       setOpen(false);
     } catch (err) {

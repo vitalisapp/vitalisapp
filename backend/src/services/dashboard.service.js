@@ -3,6 +3,7 @@ const db = require('../config/db');
 const { AppError } = require('../utils/errors');
 const { clientDateFromQuery } = require('../utils/clientDate');
 const { getStreakSummary } = require('./streaks.service');
+const { getBurnForDay, getBurnByDay, EMPTY_BURN } = require('./energy.service');
 
 // clientToday: the browser's local date (YYYY-MM-DD) from ?today=. Falls back
 // to the server clock when absent/invalid, so the dashboard follows the
@@ -10,7 +11,9 @@ const { getStreakSummary } = require('./streaks.service');
 async function getDashboard(userId, clientToday) {
   const today = clientDateFromQuery({ today: clientToday });
   // Independent selects run concurrently — ~3x faster than sequential awaits.
-  const [statsRes, userRes, streakRes] = await Promise.all([
+  const day = today
+    || (await db.execute(`SELECT DATE_FORMAT(CURDATE(), '%Y-%m-%d') AS today`))[0][0].today;
+  const [statsRes, userRes, streakRes, burn] = await Promise.all([
     db.execute(
       `SELECT calories_burned, steps, workout_duration_mins
        FROM daily_stats 
@@ -27,10 +30,18 @@ async function getDashboard(userId, clientToday) {
     // payload — the Dashboard hook already fetches this endpoint, so the
     // streak section costs zero extra round-trips. Never fails the dashboard.
     getStreakSummary(userId, today).catch(() => null),
+    // Workouts + runs + manual logs. Never fails the dashboard.
+    getBurnForDay(userId, day).catch(() => null),
   ]);
   const [stats] = statsRes;
   const [user] = userRes;
-  const s = stats[0] || { calories_burned: 0, steps: 0, workout_duration_mins: 0 };
+  const s = { ...(stats[0] || { calories_burned: 0, steps: 0, workout_duration_mins: 0 }) };
+  if (burn) {
+    // Total burn for the day (manual + finished workouts + runs), with the
+    // breakdown so the UI can explain where the number came from.
+    s.calories_burned = burn.total;
+    s.burn = burn;
+  }
 
   return {
     stats:    s,
@@ -80,7 +91,7 @@ async function getWeekCalendar(userId, clientToday) {
   const monday = addDaysISO(today, -weekdayIndex(today));
   const sunday = addDaysISO(monday, 7);
 
-  const [workoutsRes, mealsRes, statsRes] = await Promise.all([
+  const [workoutsRes, mealsRes, statsRes, burnByDay] = await Promise.all([
     db.execute(
       `SELECT DATE_FORMAT(start_time, '%Y-%m-%d') AS d,
               COUNT(*) AS sessions,
@@ -107,6 +118,7 @@ async function getWeekCalendar(userId, clientToday) {
        WHERE user_id = ? AND stat_date >= ? AND stat_date < ?`,
       [userId, monday, sunday],
     ),
+    getBurnByDay(userId, monday, sunday).catch(() => new Map()),
   ]);
   const byDate = (rows) => new Map(rows.map((r) => [r.d, r]));
   const workoutMap = byDate(workoutsRes[0]);
@@ -130,6 +142,7 @@ async function getWeekCalendar(userId, clientToday) {
       },
       meals: { count: Number(fo?.count || 0), kcal: Math.round(Number(fo?.kcal || 0)) },
       steps: Number(st?.steps || 0),
+      kcalBurned: (burnByDay.get(date) || EMPTY_BURN).total,
     });
   }
 
@@ -143,6 +156,7 @@ async function getWeekCalendar(userId, clientToday) {
       minutes: days.reduce((s, d) => s + d.workouts.minutes, 0),
       kcal: days.reduce((s, d) => s + d.meals.kcal, 0),
       steps: days.reduce((s, d) => s + d.steps, 0),
+      kcalBurned: days.reduce((s, d) => s + d.kcalBurned, 0),
     },
   };
 }
@@ -161,9 +175,10 @@ async function getDaySnapshot(userId, dateStr) {
   }
   const next = addDaysISO(date, 1);
 
-  const [workouts, meals, stats, measurements, bmi] = await Promise.all([
+  const [workouts, meals, stats, measurements, bmi, burn] = await Promise.all([
     db.execute(
-      `SELECT workout_type, status, rep_count, start_time, duration_seconds, paused_seconds, difficulty_rating
+      `SELECT workout_type, status, rep_count, start_time, duration_seconds, paused_seconds, difficulty_rating,
+              calories_burned
        FROM workout_logs
        WHERE user_id = ? AND status <> 'cancelled'
          AND start_time >= ? AND start_time < ?
@@ -196,6 +211,7 @@ async function getDaySnapshot(userId, dateStr) {
        ORDER BY recorded_at DESC, id DESC LIMIT 1`,
       [userId, date, next],
     ),
+    getBurnForDay(userId, date).catch(() => null),
   ]);
 
   const workoutRows = (workouts[0] || []).map((w) => ({
@@ -208,6 +224,7 @@ async function getDaySnapshot(userId, dateStr) {
     difficulty: w.difficulty_rating != null ? Number(w.difficulty_rating) : null,
     startTime: w.start_time,
     durationSeconds: Number(w.duration_seconds || 0),
+    kcalBurned: w.calories_burned != null ? Number(w.calories_burned) : null,
   }));
 
   const mealRows = (meals[0] || []).map((f) => ({
@@ -246,7 +263,8 @@ async function getDaySnapshot(userId, dateStr) {
     nutrition: { items: mealRows, totals: nutritionTotals },
     activity: {
       steps: Number(stats[0]?.[0]?.steps || 0),
-      caloriesBurned: Number(stats[0]?.[0]?.calories_burned || 0),
+      caloriesBurned: burn ? burn.total : Number(stats[0]?.[0]?.calories_burned || 0),
+      burn: burn || null,
       workoutMinutes: Number(stats[0]?.[0]?.workout_duration_mins || 0),
     },
     measurements: measurementRow,

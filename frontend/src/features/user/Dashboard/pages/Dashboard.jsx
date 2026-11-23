@@ -127,6 +127,7 @@ const Dashboard = () => {
       steps: dayView.activity.steps,
       calories_burned: dayView.activity.caloriesBurned,
       workout_duration_mins: dayView.activity.workoutMinutes,
+      burn: dayView.activity.burn,
     } : EMPTY_STATS)
     : liveStats;
   const viewMeals = isPastView ? (dayView ? dayView.nutrition.totals : EMPTY_MEALS) : meals;
@@ -137,7 +138,12 @@ const Dashboard = () => {
   const caloriesBurned = viewStats.calories_burned || 0;
   const tKcal = goal?.dailyKcal ?? 1500;
   const foodKcal = viewMeals.kcal || 0;
-  const remaining = Math.max(0, tKcal - foodKcal + caloriesBurned);
+  // Goal-aware add-back from the server (e.g. 50% when losing weight);
+  // older payloads without `burn` fall back to full credit.
+  const caloriesCredited = Number.isFinite(Number(viewStats.burn?.credited))
+    ? Number(viewStats.burn.credited)
+    : caloriesBurned;
+  const remaining = Math.max(0, tKcal - foodKcal + caloriesCredited);
 
   // Refetch when returning from other pages (MealTracker, etc.)
   // One named handler so cleanup actually removes it (the inline visibility
@@ -496,6 +502,7 @@ const Dashboard = () => {
               goalLabelText={goal ? goalLabel(goal.goalType) : 'Vitalis'}
               foodKcal={foodKcal}
               caloriesBurned={caloriesBurned}
+              caloriesCredited={caloriesCredited}
               workoutMinToday={workoutMinToday}
               workoutGoalMin={workoutGoalMin}
               onLogActivity={() => setLogOpen(true)}

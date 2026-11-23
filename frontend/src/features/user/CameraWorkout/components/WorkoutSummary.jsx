@@ -11,7 +11,7 @@ function scoreChip(score) {
   return { label: 'Needs work', cls: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' };
 }
 
-export default function WorkoutSummary({ summary = undefined, onDone = undefined }) {
+export default function WorkoutSummary({ summary = undefined, kcalBurned = null, onDone = undefined }) {
   if (!summary) return null;
   const chip = scoreChip(summary.score);
   const r = 52;
@@ -31,6 +31,13 @@ export default function WorkoutSummary({ summary = undefined, onDone = undefined
           </h2>
           <p className="mt-1 text-[length:var(--fs-15)] font-bold text-[var(--text-primary)]">{summary.exercise}</p>
           <p className="text-[length:var(--fs-13)] text-[var(--text-muted)] tabular-nums">{summary.achieved}</p>
+          {/* Arrives when the server confirms the save; same number the dashboard adds back. */}
+          {Number(kcalBurned) > 0 && (
+            <p className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[length:var(--fs-13)] font-bold text-[var(--accent)] tabular-nums">
+              <Icon name="local_fire_department" className="text-[length:var(--fs-15)]" />
+              {Number(kcalBurned).toLocaleString()} kcal burned · counts toward today&apos;s budget
+            </p>
+          )}
         </div>
 
         <div className="mt-6 bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-5 flex flex-wrap items-center gap-5">

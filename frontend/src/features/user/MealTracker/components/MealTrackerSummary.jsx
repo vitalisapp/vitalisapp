@@ -31,6 +31,8 @@ function formatNumber(value) {
 export function DailySummaryCard({
   calories = 0,
   goal = 0,
+  burned = 0,
+  credited = null,
   protein = 0,
   proteinGoal = 0,
   carbs = 0,
@@ -39,7 +41,12 @@ export function DailySummaryCard({
   fatGoal = 0,
   dateLabel = 'Today',
 }) {
-  const safeGoal = Math.max(1, Math.round(Number(goal) || 0));
+  // Exercise earns calories back: budget = target + burned (matches Dashboard).
+  const baseGoal = Math.max(1, Math.round(Number(goal) || 0));
+  const burnedKcal = Math.max(0, Math.round(Number(burned) || 0));
+  // Goal-aware share of the burn (server-computed); full credit if absent.
+  const creditedKcal = credited == null ? burnedKcal : Math.max(0, Math.round(Number(credited) || 0));
+  const safeGoal = baseGoal + creditedKcal;
   const consumed = Math.max(0, Math.round(Number(calories) || 0));
   const kcalPct = Math.min(100, Math.round((consumed / safeGoal) * 100));
   const rawKcalPct = Math.round((consumed / safeGoal) * 100);
@@ -155,7 +162,11 @@ export function DailySummaryCard({
             <p className="mt-remaining-note">
               {overBy > 0
                 ? 'A lighter next meal can bring the day back in balance.'
-                : `${formatNumber(safeGoal)} kcal daily target`}
+                : creditedKcal > 0
+                  ? creditedKcal < burnedKcal
+                    ? `${formatNumber(baseGoal)} target + ${formatNumber(creditedKcal)} of ${formatNumber(burnedKcal)} burned`
+                    : `${formatNumber(baseGoal)} target + ${formatNumber(burnedKcal)} burned`
+                  : `${formatNumber(baseGoal)} kcal daily target`}
             </p>
           </div>
 

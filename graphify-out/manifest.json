@@ -804,9 +804,9 @@
     "semantic_hash": ""
   },
   "backend/src/services/dashboard.service.js": {
-    "mtime": 1795311204.612924,
-    "seen": 1795311886.095117,
-    "ast_hash": "3e9e6725fc1cf2faaa2bf17b6ee0de84",
+    "mtime": 1795474118.8031719,
+    "seen": 1795474660.6673293,
+    "ast_hash": "04e43f335d99768c97d64fa2e24131a9",
     "semantic_hash": ""
   },
   "backend/src/services/email.service.js": {
@@ -912,9 +912,9 @@
     "semantic_hash": ""
   },
   "backend/src/services/stats.service.js": {
-    "mtime": 1795311204.6169474,
-    "seen": 1795311886.0962563,
-    "ast_hash": "cdae0ce34bda2fb217c0ee5df7b192f6",
+    "mtime": 1795474113.5754814,
+    "seen": 1795474660.6752553,
+    "ast_hash": "a79124d8b72e8329a096d0175668d1f6",
     "semantic_hash": ""
   },
   "backend/src/services/streaks.service.js": {
@@ -936,9 +936,9 @@
     "semantic_hash": ""
   },
   "backend/src/services/workoutLogs.service.js": {
-    "mtime": 1795311205.4046533,
-    "seen": 1795311886.0962656,
-    "ast_hash": "fb93560d10b8cf7a9a7439bf156b8263",
+    "mtime": 1795474095.5593853,
+    "seen": 1795474660.676562,
+    "ast_hash": "32113e2a33988528cd9df010a39f2f34",
     "semantic_hash": ""
   },
   "backend/src/sockets/socketHandler.js": {
@@ -1104,9 +1104,9 @@
     "semantic_hash": ""
   },
   "backend/tests/unit/migrations.test.js": {
-    "mtime": 1795398372.2662187,
-    "seen": 1795411848.683281,
-    "ast_hash": "be32a216a24638ae96ec19b5a1c1495b",
+    "mtime": 1795474080.0218275,
+    "seen": 1795474660.7025466,
+    "ast_hash": "aa01b6323f8bb02ff53aafd73291b203",
     "semantic_hash": ""
   },
   "backend/tests/unit/nutrition.test.js": {
@@ -1170,9 +1170,9 @@
     "semantic_hash": ""
   },
   "frontend/eslint.config.js": {
-    "mtime": 1791956008.6960614,
-    "seen": 1795221113.162344,
-    "ast_hash": "1dc52660775869952eaf82725265cee5",
+    "mtime": 1795418630.8904946,
+    "seen": 1795474660.7167263,
+    "ast_hash": "8a23fb24b3a5cedb4ba876e31b18c713",
     "semantic_hash": ""
   },
   "frontend/jsconfig.json": {
@@ -1182,9 +1182,9 @@
     "semantic_hash": ""
   },
   "frontend/package.json": {
-    "mtime": 1795412841.6384468,
-    "seen": 1795413275.6853426,
-    "ast_hash": "89cbb37d6e3f78ad137458088cfd8440",
+    "mtime": 1795418419.2621107,
+    "seen": 1795474660.718646,
+    "ast_hash": "e64b04e83004b5d341cc32ede5b8735d",
     "semantic_hash": ""
   },
   "frontend/public/manifest-snippet.json": {
@@ -1239,12 +1239,6 @@
     "mtime": 1792807151.0213912,
     "seen": 1795221113.162378,
     "ast_hash": "1fa7efe2b3733cfbe28c20a07dab3dd2",
-    "semantic_hash": ""
-  },
-  "frontend/src/components/FAB.jsx": {
-    "mtime": 1795311205.6367052,
-    "seen": 1795311886.1017518,
-    "ast_hash": "eded184985e25b1d896d9e0c17810e2a",
     "semantic_hash": ""
   },
   "frontend/src/components/FeedbackModal.jsx": {
@@ -1332,9 +1326,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/index.js": {
-    "mtime": 1795311204.6960006,
-    "seen": 1795311886.102846,
-    "ast_hash": "5cedb530a8d6c331b494e4bf1d518b22",
+    "mtime": 1795418295.2930777,
+    "seen": 1795474660.7497866,
+    "ast_hash": "6eec675ef932bc26d112dd669ab94ea9",
     "semantic_hash": ""
   },
   "frontend/src/components/ui/BrandLoader.jsx": {
@@ -1350,9 +1344,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ui/ConfirmDialog.jsx": {
-    "mtime": 1795311204.6970613,
-    "seen": 1795311886.1030045,
-    "ast_hash": "9b9c264d1ca7094abf14005d687be08c",
+    "mtime": 1795419167.8711336,
+    "seen": 1795474660.750712,
+    "ast_hash": "1f91f2e7ac301de1ca361e1e471ee493",
     "semantic_hash": ""
   },
   "frontend/src/components/ui/Dropdown.jsx": {
@@ -1416,9 +1410,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/components/AdminBits.jsx": {
-    "mtime": 1795311205.703063,
-    "seen": 1795311886.103483,
-    "ast_hash": "f6884bfac7d6a702c499b806da20ec88",
+    "mtime": 1795419167.8721519,
+    "seen": 1795474660.7589798,
+    "ast_hash": "fec25310d338c5c90951f4f3f3712619",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/components/AdminBottomNav.jsx": {
@@ -1470,21 +1464,21 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/components/UserDrawer.jsx": {
-    "mtime": 1795311205.7248473,
-    "seen": 1795311886.103658,
-    "ast_hash": "60a5dfc5d1e312d83319d15dd738688c",
+    "mtime": 1795419182.9136946,
+    "seen": 1795474660.7678409,
+    "ast_hash": "cd6d8d50c5e76bc18d3e3f62548ad29e",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/hooks/useAdminResource.js": {
-    "mtime": 1792807151.6247249,
-    "seen": 1795221113.1625023,
-    "ast_hash": "b3fea40980dfc17627cbc32899f6464d",
+    "mtime": 1795419139.0355775,
+    "seen": 1795474660.7678475,
+    "ast_hash": "b8c66d258059c83fdb80d45026609df5",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/hooks/useAdminToast.jsx": {
-    "mtime": 1792807151.626726,
-    "seen": 1795221113.1625056,
-    "ast_hash": "259e270810864de3a6a3e797006d472a",
+    "mtime": 1795418883.983652,
+    "seen": 1795474660.7678528,
+    "ast_hash": "f4c155fc25369364c967159baa68e535",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/pages/AdminAiUsage.jsx": {
@@ -1596,9 +1590,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/ActivityMap/components/RunAnalysisOverlay.jsx": {
-    "mtime": 1795311205.8030806,
-    "seen": 1795311886.1044776,
-    "ast_hash": "4a7d5b1fbed6e366cd1ec574e2b91a04",
+    "mtime": 1795418285.5985901,
+    "seen": 1795474660.7824929,
+    "ast_hash": "c2e4ac836e1f59fb9a3fc2f7d4c2c43b",
     "semantic_hash": ""
   },
   "frontend/src/features/user/ActivityMap/components/RunControls.jsx": {
@@ -1782,9 +1776,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/ExerciseChoiceModal.jsx": {
-    "mtime": 1795311205.9024324,
-    "seen": 1795311886.1067226,
-    "ast_hash": "1f707dadb62a4015f8e358e3a3063f9e",
+    "mtime": 1795418272.229506,
+    "seen": 1795474660.8197222,
+    "ast_hash": "a87fed63a3f0e2448521c7bc98808fae",
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/MobileWorkoutPills.jsx": {
@@ -1884,9 +1878,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/WorkoutSummary.jsx": {
-    "mtime": 1795418088.4233205,
-    "seen": 1795418123.4350178,
-    "ast_hash": "b65ab30ed880adc79dc9d45775f537b4",
+    "mtime": 1795474137.9802585,
+    "seen": 1795474660.8303196,
+    "ast_hash": "bd19bb0fc67988b6c5dbae6021507929",
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/formStatus.js": {
@@ -1920,9 +1914,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/hooks/usePoseEngine.js": {
-    "mtime": 1795417884.695738,
-    "seen": 1795418075.6912491,
-    "ast_hash": "918ce4f982e4c0dbb321c2f30e3f30e0",
+    "mtime": 1795418393.9565134,
+    "seen": 1795474660.8342986,
+    "ast_hash": "74c121aff78dafcad8b256bba6ff4abc",
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/hooks/useRepCounter.js": {
@@ -1938,9 +1932,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/pages/CameraWorkout.jsx": {
-    "mtime": 1795411976.0084565,
-    "seen": 1795412120.3248563,
-    "ast_hash": "f74d5e391a9f31cd4053446250133735",
+    "mtime": 1795474137.9843104,
+    "seen": 1795474660.8362226,
+    "ast_hash": "8120a866503c6d57857f85ddb522c4db",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Community/pages/Community.jsx": {
@@ -2022,9 +2016,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Log/components/AddWorkoutModal.jsx": {
-    "mtime": 1795311206.028714,
-    "seen": 1795311886.1085243,
-    "ast_hash": "561e8caca29f08cbd11ee053d32f441f",
+    "mtime": 1795474137.9843104,
+    "seen": 1795474660.8486173,
+    "ast_hash": "c53e7d6e1c4431b771392fad2406eaf0",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Log/components/BodyMeasurementsPanel.jsx": {
@@ -2094,9 +2088,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/MealTracker/components/MealTrackerSummary.jsx": {
-    "mtime": 1792807151.8618703,
-    "seen": 1795221113.162876,
-    "ast_hash": "17e8fe5c9b4907aa5e887c2a98614ec2",
+    "mtime": 1795474173.6820462,
+    "seen": 1795474660.854582,
+    "ast_hash": "3b9c6051a4647011db0a06b2f02939e4",
     "semantic_hash": ""
   },
   "frontend/src/features/user/MealTracker/components/ScanResult.jsx": {
@@ -2112,9 +2106,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/MealTracker/pages/MealTracker.jsx": {
-    "mtime": 1795394640.7321115,
-    "seen": 1795394996.5352948,
-    "ast_hash": "606a4c86ae1b957ea8f3f5f616373d98",
+    "mtime": 1795474173.6767118,
+    "seen": 1795474660.8558528,
+    "ast_hash": "25076681e43612e9c653861229d3347e",
     "semantic_hash": ""
   },
   "frontend/src/features/user/MealTracker/utils/mealSlots.js": {
@@ -2196,9 +2190,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/pages/Plans.jsx": {
-    "mtime": 1795411899.484526,
-    "seen": 1795412120.345466,
-    "ast_hash": "105c1e150d1bcdc3c183a72911156443",
+    "mtime": 1795418564.0141408,
+    "seen": 1795474660.8627322,
+    "ast_hash": "9799c3fcf628dbea3796bc1b257edbf6",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/utils/exerciseMatch.js": {
@@ -2514,9 +2508,9 @@
     "semantic_hash": ""
   },
   "frontend/vite.config.js": {
-    "mtime": 1795416103.8274195,
-    "seen": 1795416224.4714026,
-    "ast_hash": "975097ca3b1519f3da15094de9303272",
+    "mtime": 1795418433.4760292,
+    "seen": 1795474660.8870625,
+    "ast_hash": "50610476c080741cc21ca9ddc82e99c7",
     "semantic_hash": ""
   },
   "package.json": {
@@ -2856,9 +2850,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/pages/AdminAccess.jsx": {
-    "mtime": 1795311205.7281024,
-    "seen": 1795311886.1039767,
-    "ast_hash": "e501399283db48341d5ce5019d259370",
+    "mtime": 1795418984.6331937,
+    "seen": 1795474660.7678583,
+    "ast_hash": "7085b1f6e522f43e48eddad345a29dcb",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Auth/Register/hooks/useAccessInvite.js": {
@@ -3282,9 +3276,9 @@
     "semantic_hash": ""
   },
   "backend/tests/unit/task-notifications-wiring.test.js": {
-    "mtime": 1795311205.482297,
-    "seen": 1795311886.1000433,
-    "ast_hash": "2359a0076ce34e68f16bd2417335f4e0",
+    "mtime": 1795474349.1626017,
+    "seen": 1795474660.7085438,
+    "ast_hash": "5375844761729442264d4ebb04223c7d",
     "semantic_hash": ""
   },
   "backend/tests/unit/task-notifications.test.js": {
@@ -3336,9 +3330,9 @@
     "semantic_hash": ""
   },
   "frontend/vercel.json": {
-    "mtime": 1795311206.3491983,
-    "seen": 1795317791.092374,
-    "ast_hash": "7708fbf29b99cd92c2a778d60001c5ba",
+    "mtime": 1795418433.545987,
+    "seen": 1795474660.8870552,
+    "ast_hash": "8929fefefbb14736ba89d31a7181c80d",
     "semantic_hash": ""
   },
   "frontend/public/plans/athletic-bodyweight-prep.jpg": {
@@ -3521,6 +3515,84 @@
     "ast_hash": "52eb7cf81a24edf8a3f28e1dacb8b0b2",
     "semantic_hash": ""
   },
+  "backend/src/services/energy.service.js": {
+    "mtime": 1795474071.5394168,
+    "seen": 1795474660.6681547,
+    "ast_hash": "ef76cbecc6c92329a8db943fcabfd615",
+    "semantic_hash": ""
+  },
+  "backend/src/utils/energyBurn.js": {
+    "mtime": 1795474053.3177896,
+    "seen": 1795474660.6802084,
+    "ast_hash": "56e54834c3fda6c8c32e82f15fa610b0",
+    "semantic_hash": ""
+  },
+  "backend/tests/unit/energy-burn.test.js": {
+    "mtime": 1795474190.492201,
+    "seen": 1795474660.6990378,
+    "ast_hash": "830f999163e028c2f38d1f1130329fb0",
+    "semantic_hash": ""
+  },
+  "frontend/scripts/copy-mediapipe.mjs": {
+    "mtime": 1795418346.2427137,
+    "seen": 1795474660.7213027,
+    "ast_hash": "1c9c524302009e47779d7ad2d234e460",
+    "semantic_hash": ""
+  },
+  "frontend/src/features/user/CameraWorkout/components/EarlyExitDialog.jsx": {
+    "mtime": 1795418541.716842,
+    "seen": 1795474660.8190691,
+    "ast_hash": "761dcd353ed0f014249e337c21cf9366",
+    "semantic_hash": ""
+  },
+  "frontend/src/features/user/CameraWorkout/components/WorkoutChooser.jsx": {
+    "mtime": 1795418541.7313738,
+    "seen": 1795474660.8297327,
+    "ast_hash": "d067c2cbd6524e6883d66b506edf96d7",
+    "semantic_hash": ""
+  },
+  "frontend/src/features/user/Plan/components/DayTracker.jsx": {
+    "mtime": 1795418541.6546335,
+    "seen": 1795474660.8598282,
+    "ast_hash": "a8d2ba5b668007b21b2ce979581de423",
+    "semantic_hash": ""
+  },
+  "frontend/src/features/user/Plan/components/ExerciseLibrary.jsx": {
+    "mtime": 1795418541.5820842,
+    "seen": 1795474660.8604672,
+    "ast_hash": "dde770ef9af0b1df53bb5b25f6fc8860",
+    "semantic_hash": ""
+  },
+  "frontend/src/features/user/Plan/components/Explore.jsx": {
+    "mtime": 1795418541.6844335,
+    "seen": 1795474660.8604727,
+    "ast_hash": "280adbf9172e7746eae146683ea9c909",
+    "semantic_hash": ""
+  },
+  "frontend/src/features/user/Plan/components/MyPlans.jsx": {
+    "mtime": 1795418541.6697316,
+    "seen": 1795474660.8609674,
+    "ast_hash": "36eea396a4260460a1d886a1a35d6cb8",
+    "semantic_hash": ""
+  },
+  "frontend/src/features/user/Plan/components/PlanDetailOverlay.jsx": {
+    "mtime": 1795418541.607458,
+    "seen": 1795474660.861253,
+    "ast_hash": "fd640b71e40b24a29a1ee757260d809f",
+    "semantic_hash": ""
+  },
+  "frontend/src/features/user/Plan/components/WorkoutHistory.jsx": {
+    "mtime": 1795418541.5991535,
+    "seen": 1795474660.8618245,
+    "ast_hash": "b180b85b0c8f7c1a2b8ac5aed8d01bf8",
+    "semantic_hash": ""
+  },
+  "frontend/src/features/user/Plan/utils/planFilters.js": {
+    "mtime": 1795418541.567731,
+    "seen": 1795474660.8631592,
+    "ast_hash": "edbe9c30c81b5a6d7dd237dec9bf99a7",
+    "semantic_hash": ""
+  },
   "backend/package-lock.json": {
     "mtime": 1795061101.37524,
     "seen": 1795221113.1631453,
@@ -3528,9 +3600,9 @@
     "semantic_hash": ""
   },
   "frontend/package-lock.json": {
-    "mtime": 1795412840.5199113,
-    "seen": 1795413275.8855155,
-    "ast_hash": "3478e70e4c5282eec8eaff9a61b89199",
+    "mtime": 1795418419.472482,
+    "seen": 1795474660.9171486,
+    "ast_hash": "335d9a7982db8b68c05b62d7af7a4b07",
     "semantic_hash": ""
   }
 }
