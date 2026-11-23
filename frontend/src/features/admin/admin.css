@@ -1756,6 +1756,8 @@
 }
 .adm-drawer__foot {
   padding: 14px 22px;
+  /* Keep footer actions clear of the iPhone home indicator. */
+  padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--border-light);
   background: var(--bg-card);
 }
@@ -1779,41 +1781,8 @@
 /* ══════════════════════════════════════════════════════════════════════════
    MODAL
    ══════════════════════════════════════════════════════════════════════════ */
-.adm-modal-scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 95;
-  display: grid;
-  place-items: center;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(3px);
-  animation: admFade 140ms ease;
-}
-.adm-modal {
-  width: min(460px, 100%);
-  max-height: 88dvh;
-  overflow-y: auto;
-  padding: 22px;
-  border: 1px solid var(--border-medium);
-  border-radius: 19px;
-  background: var(--bg-secondary);
-  box-shadow: var(--shadow-xl);
-  animation: admPop 180ms var(--ease-spring);
-}
-.adm-modal h3 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 15.5px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-.adm-modal__sub {
-  margin: 6px 0 15px;
-  color: var(--text-muted);
-  font-size: 11px;
-  line-height: 1.55;
-}
+/* Confirm dialogs use the shared components/ui ConfirmDialog; only the
+   QR form footer still uses this action row. */
 .adm-modal__actions {
   display: flex;
   justify-content: flex-end;
@@ -2000,8 +1969,10 @@
   .adm-cal__foot { font-size: 8.5px; }
   .adm-feed__body p { font-size: 10px; }
   .adm-page-actions .adm-live { display: none; }
-  .adm-modal { padding: 18px; }
   .adm-btn { padding-inline: 11px; }
+  /* Long labels ("Delete permanently") no longer squeeze side by side. */
+  .adm-modal__actions { flex-direction: column-reverse; }
+  .adm-modal__actions .adm-btn { width: 100%; justify-content: center; }
 }
 @media (max-width: 350px) {
   .adm-kpis { grid-template-columns: minmax(0, 1fr); }

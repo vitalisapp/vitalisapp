@@ -1764,9 +1764,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/CoachFeedbackOverlay.jsx": {
-    "mtime": 1795311205.8918836,
-    "seen": 1795311886.1067147,
-    "ast_hash": "1be9859b4dfbbcf00d439771bc6f717f",
+    "mtime": 1795417895.220455,
+    "seen": 1795418075.6647818,
+    "ast_hash": "ec520fdc4a44a8dd3d20b77f5d11ecd9",
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/CorrectionBanner.jsx": {
@@ -1806,9 +1806,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/PoseStatusBadge.jsx": {
-    "mtime": 1795311205.9119942,
-    "seen": 1795311886.1068883,
-    "ast_hash": "98d1817d8f1d46c05c97fb2b4420e013",
+    "mtime": 1795417895.1808712,
+    "seen": 1795418075.6669977,
+    "ast_hash": "78c0e8557d7c5c3c5f7204c8f5049ffd",
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/RepCounterOverlay.jsx": {
@@ -1872,21 +1872,21 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/WebcamFeed.jsx": {
-    "mtime": 1795311205.9754431,
-    "seen": 1795311886.106909,
-    "ast_hash": "b3fec3ee9e9541ea050216a04e5be419",
+    "mtime": 1795417895.129541,
+    "seen": 1795418075.6885252,
+    "ast_hash": "cd4e76c6c92ea578652572b37c70d526",
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/WorkoutFeedbackSheet.jsx": {
-    "mtime": 1795397199.5770922,
-    "seen": 1795411848.7583852,
-    "ast_hash": "68f86e5abb8e4982f14c268a0d45cbd0",
+    "mtime": 1795418088.437395,
+    "seen": 1795418123.4350128,
+    "ast_hash": "a5ed7a3586b5f7e786ea600ddfd49f8f",
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/WorkoutSummary.jsx": {
-    "mtime": 1795397199.5714953,
-    "seen": 1795411848.7583928,
-    "ast_hash": "4d620ccc4d86186421aa9f6c25b85bd4",
+    "mtime": 1795418088.4233205,
+    "seen": 1795418123.4350178,
+    "ast_hash": "b65ab30ed880adc79dc9d45775f537b4",
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/components/formStatus.js": {
@@ -1920,9 +1920,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/hooks/usePoseEngine.js": {
-    "mtime": 1795066572.4585729,
-    "seen": 1795221113.1627567,
-    "ast_hash": "ca25bb4708b09cac442faccb30c46528",
+    "mtime": 1795417884.695738,
+    "seen": 1795418075.6912491,
+    "ast_hash": "918ce4f982e4c0dbb321c2f30e3f30e0",
     "semantic_hash": ""
   },
   "frontend/src/features/user/CameraWorkout/hooks/useRepCounter.js": {
@@ -2238,9 +2238,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Profile/components/DeactivateAccountModal.jsx": {
-    "mtime": 1795311206.1190221,
-    "seen": 1795311886.1097047,
-    "ast_hash": "146fa60ede55edb006fc466646318d99",
+    "mtime": 1795417924.9756541,
+    "seen": 1795418075.7159503,
+    "ast_hash": "253fb108f9582a41d0711e503999847f",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Profile/components/ForgotPasswordModal.jsx": {
@@ -2274,9 +2274,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Profile/components/Toast.jsx": {
-    "mtime": 1795311206.128072,
-    "seen": 1795311886.1097162,
-    "ast_hash": "2dd6f3b52c48f9418e2cac63d995a64a",
+    "mtime": 1795418030.0347874,
+    "seen": 1795418075.7174492,
+    "ast_hash": "dacea9f7baed7eceb5e70e91dcd7a1bf",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Profile/hooks/useAvatar.js": {
@@ -2298,9 +2298,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Profile/pages/Profile.jsx": {
-    "mtime": 1795397633.4048822,
-    "seen": 1795411848.7946453,
-    "ast_hash": "c91edf75e280db2f783d337c5e8541ec",
+    "mtime": 1795417924.9934042,
+    "seen": 1795418075.718364,
+    "ast_hash": "0a43b1a492208dd31689be88d9510b23",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Profile/utils/avatar.js": {
@@ -3300,9 +3300,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Community/components/CommunityFeed.jsx": {
-    "mtime": 1795311205.9976208,
-    "seen": 1795311886.1080205,
-    "ast_hash": "5abf76c25d9a86775d45dac6927ccbd0",
+    "mtime": 1795417924.9570098,
+    "seen": 1795418075.6922467,
+    "ast_hash": "a340c5df4d2cd451327bf585c1094400",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Social/components/MessengerPanel.jsx": {

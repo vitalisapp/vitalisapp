@@ -636,7 +636,7 @@ const CommunityFeed = ({ header = null }) => {
         title="Delete post?"
         subtitle="This cannot be undone."
         footer={
-          <div className="flex gap-2 justify-end">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="ghost" onClick={() => setPendingDelete(null)}>Cancel</Button>
             <Button variant="danger" loading={pendingDelete ? !!deletingPost[pendingDelete.id] : false} onClick={removePost}>Delete</Button>
           </div>

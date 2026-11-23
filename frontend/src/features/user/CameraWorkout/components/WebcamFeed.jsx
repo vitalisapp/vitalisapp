@@ -522,6 +522,25 @@ export default function WebcamFeed({
         </div>
       )}
 
+      {/* Pose model still loading/warming up: cover the feed so the one-off
+          WASM + GPU init hitch reads as loading, not as a laggy camera. */}
+      {feedLive && !poseReady && !loadError && (
+        <div
+          className="absolute inset-0 z-[25] flex flex-col items-center justify-center gap-3 p-6 text-center bg-black/70 backdrop-blur-sm"
+          role="status"
+          aria-live="polite"
+        >
+          <span
+            aria-hidden="true"
+            className="w-12 h-12 rounded-full border-4 border-white/15 border-t-[var(--accent)] animate-spin motion-reduce:animate-none"
+          />
+          <p className="text-[length:var(--fs-13)] font-bold text-white">Preparing AI coach…</p>
+          <p className="text-[length:var(--fs-11)] text-white/70 max-w-[260px]">
+            Loading the pose model. The first time can take a few seconds.
+          </p>
+        </div>
+      )}
+
       {loadError && !collapsed && (
         <div className="absolute bottom-3 left-3 z-30 flex items-center gap-2 bg-[var(--error-bg)] border border-[var(--error)]/30 pl-3 pr-1.5 py-1.5 rounded-xl">
           <p className="text-[length:var(--fs-9)] text-[var(--error)] font-bold uppercase tracking-widest">

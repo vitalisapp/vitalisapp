@@ -28,7 +28,7 @@ export default function CoachFeedbackOverlay({ aiFeedback = undefined, isAnalyzi
 
   // Inline (non-fullscreen): compact, quiet card that leaves the feed visible.
   return (
-    <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 max-w-[calc(100%-6.5rem)] sm:max-w-[260px]" role="status" aria-live="polite">
+    <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 max-w-[calc(100%-9rem)] sm:max-w-[min(260px,calc(100%-15rem))]" role="status" aria-live="polite">
       <div className="flex items-start gap-2.5 rounded-[14px] border border-white/10 bg-black/60 backdrop-blur-md shadow-[var(--shadow-md)] pl-3 pr-1.5 py-2">
         <span
           aria-hidden="true"

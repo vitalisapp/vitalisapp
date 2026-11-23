@@ -34,6 +34,10 @@ export default function ConfirmDialog({
   busy = false,
   error = '',
   closeOnBackdrop = true,
+  // Optional extras (admin console): block confirm until a form inside is
+  // valid (e.g. type the email to delete), and widen for forms.
+  confirmDisabled = false,
+  size = 'sm',
   children = undefined,
 }) {
   const danger = tone === 'danger';
@@ -45,7 +49,7 @@ export default function ConfirmDialog({
       onClose={safeClose}
       title={title}
       icon={icon}
-      size="sm"
+      size={size}
       hideClose={busy}
       closeOnBackdrop={!busy && closeOnBackdrop}
       closeOnEsc={!busy}
@@ -58,6 +62,7 @@ export default function ConfirmDialog({
             variant={danger ? 'danger' : 'primary'}
             onClick={onConfirm}
             loading={busy}
+            disabled={confirmDisabled}
           >
             {confirmLabel}
           </Button>

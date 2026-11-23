@@ -412,8 +412,11 @@
 /* Page content fades in on every route change (each page mounts its own
    shell). Opacity only — a transform here would re-anchor fixed children. */
 .vapp .app-main > :first-child,
+/* fill-mode backwards (not both): a filled opacity animation keeps the
+   wrapper a stacking context forever, which capped every fixed modal/drawer
+   rendered inside the page below the topbar and bottom nav. */
 .v-page-enter {
-  animation: v-page-enter 0.3s ease-out both;
+  animation: v-page-enter 0.3s ease-out backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

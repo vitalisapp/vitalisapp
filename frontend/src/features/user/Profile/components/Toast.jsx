@@ -41,7 +41,7 @@ const Toast = ({
     <div
       role="status"
       aria-live="polite"
-      className={`fixed bottom-6 left-1/2 z-[110] flex items-center gap-2.5
+      className={`fixed bottom-[calc(88px+env(safe-area-inset-bottom,0px))] md:bottom-6 left-1/2 z-[110] flex items-center gap-2.5 max-w-[calc(100vw-2rem)]
         px-5 py-3 rounded-full shadow-xl pointer-events-none
         transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
         ${v.bg} ${v.text}

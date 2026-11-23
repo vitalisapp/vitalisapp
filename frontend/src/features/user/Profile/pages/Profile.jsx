@@ -1144,7 +1144,7 @@ const Profile = ({ embedded = false }) => {
         title="Discard changes?"
         subtitle="Unsaved edits will be lost."
         footer={
-          <div className="flex gap-2 justify-end">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="ghost" onClick={cancelDiscard}>Keep editing</Button>
             <Button variant="danger" onClick={confirmDiscard}>Discard</Button>
           </div>

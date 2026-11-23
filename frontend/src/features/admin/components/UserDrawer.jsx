@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { apiDelete, apiPost } from '../../../lib/apiClient.js';
 import { useAdminResource } from '../hooks/useAdminResource.js';
 import Icon from '../../../components/Icon.jsx';
@@ -22,13 +23,18 @@ export default function UserDrawer({ userId = undefined, currentAdminId = undefi
   const [actionError, setActionError] = useState('');
   const [reason, setReason] = useState('');
   const [deleteEmail, setDeleteEmail] = useState('');
+  // Read by the Escape handler without re-running the scroll-lock effect.
+  const confirmOpenRef = useRef(false);
+  useEffect(() => { confirmOpenRef.current = !!confirm; }, [confirm]);
 
-  // Lock page scroll behind the drawer + close on Escape.
+  // Lock page scroll behind the drawer + close on Escape. An open
+  // ConfirmDialog handles (and stops) its own Escape first, so this only
+  // fires when no confirmation is showing — Escape never closes both.
   useEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const onKey = (event) => {
-      if (event.key === 'Escape' && !busy) onClose?.();
+      if (event.key === 'Escape' && !busy && !confirmOpenRef.current) onClose?.();
     };
     window.addEventListener('keydown', onKey);
     return () => {
@@ -77,9 +83,10 @@ export default function UserDrawer({ userId = undefined, currentAdminId = undefi
   const locked = isSelf || isAdmin;
   const verify = user ? verificationMeta(user) : null;
 
-  return (
+  // Portalled to <body> so the drawer always covers the topbar and phone nav.
+  return createPortal(
     <>
-      <div className="adm-drawer-scrim" onClick={onClose} />
+      <div className="adm-drawer-scrim" onClick={busy ? undefined : onClose} />
       <aside className="adm-drawer" role="dialog" aria-modal="true" aria-label="User details">
         <header className="adm-drawer__head">
           <div>
@@ -318,7 +325,8 @@ export default function UserDrawer({ userId = undefined, currentAdminId = undefi
           )}
         </ConfirmDialog>
       )}
-    </>
+    </>,
+    document.body,
   );
 }
 

@@ -39,7 +39,7 @@ export default function DeactivateAccountModal({ onClose = undefined, onDeactiva
       subtitle="Reversible — your data is kept, sessions end now"
       icon="pause_circle"
       footer={
-        <div className="flex gap-2 justify-end">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="ghost" onClick={onClose} disabled={busy}>Cancel</Button>
           <Button variant="danger" onClick={submit} disabled={busy}>
             {busy ? 'Deactivating…' : 'Deactivate account'}

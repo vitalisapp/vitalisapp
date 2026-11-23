@@ -48,7 +48,7 @@ export default function WorkoutFeedbackSheet({ logId = undefined, onClose = unde
       className="fixed inset-0 z-[var(--z-modal)] bg-[var(--bg-overlay)] backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
       role="dialog" aria-modal="true" aria-label="Rate your workout"
     >
-      <div className="w-full sm:max-w-md bg-[var(--bg-primary)] border border-[var(--border-light)] rounded-t-3xl sm:rounded-3xl p-6 sm:p-8 max-h-[90dvh] overflow-y-auto">
+      <div className="w-full sm:max-w-md bg-[var(--bg-primary)] border border-[var(--border-light)] rounded-t-3xl sm:rounded-3xl p-6 sm:p-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-8 max-h-[90dvh] overflow-y-auto">
         <div className="flex flex-col items-center text-center">
           <span className="w-14 h-14 rounded-full bg-[var(--accent-bg)] border border-[var(--accent-border)] flex items-center justify-center mb-4">
             <Icon name="forum" className="text-[length:var(--fs-24)] text-[var(--accent)]" />

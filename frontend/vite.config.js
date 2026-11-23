@@ -144,6 +144,9 @@ export default defineConfig(({ mode }) => {
             'auth-gym.jpg',
             'Loading_green.png',
             '**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2',
+            // Pose runtime (~10-15 MB): cached on first camera use below,
+            // never precached on install for users who don't use the camera.
+            'mediapipe/**',
           ],
           globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg,woff2,webp}'],
           // SPA fallback for route reloads: any navigation that isn't a
@@ -153,6 +156,20 @@ export default defineConfig(({ mode }) => {
           navigateFallback: '/index.html',
           navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
+            {
+              // MediaPipe Pose runtime: version-pinned, immutable URLs (local
+              // copy or jsDelivr fallback). CacheFirst makes every visit after
+              // the first load the model instantly, even offline.
+              urlPattern: ({ url }) =>
+                url.pathname.startsWith('/mediapipe/pose/') ||
+                (url.hostname === 'cdn.jsdelivr.net' && url.pathname.startsWith('/npm/@mediapipe/pose@')),
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'mediapipe-pose',
+                expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
             {
               urlPattern:
                 /https:\/\/(tile\.openstreetmap\.org|server\.arcgisonline\.com|.*basemaps\.cartocdn\.com)\/.*/,

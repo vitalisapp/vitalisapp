@@ -1,22 +1,22 @@
 # Graph Report - vitalisapp  (2026-11-23)
 
 ## Corpus Check
-- 580 files · ~384,488 words
+- 580 files · ~384,679 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 32 file(s) not represented in the graph (top: .css 24, (none) 3, .example 2)
 
 ## Summary
-- 3159 nodes · 7955 edges · 153 communities (142 shown, 11 thin omitted)
+- 3160 nodes · 7929 edges · 168 communities (159 shown, 9 thin omitted)
 - Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 637 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `eeb98a3f`
+- Built from commit: `e2e4e8d5`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- WebcamFeed.jsx
+- PoseSkeletonOverlay.jsx
 - MealTracker.jsx
 - ExerciseBriefing.jsx
 - escapeHtml
@@ -39,7 +39,7 @@
 - buildSampleDataset
 - ai.service.js
 - foodLogs.service.js
-- CameraWorkout
+- AdminOverview.jsx
 - AppError
 - devDependencies
 - Profile.jsx
@@ -71,22 +71,23 @@
 - app.js
 - phoneVerification.service.js
 - progress.controller.js
-- frontend/package.json
+- VerifyPhone.jsx
 - compilerOptions
 - package.json
+- MealTrackerDiary.jsx
 - goals.service.js
 - trainingPrefs.service.js
 - utils/nutrition.js
 - scripts
 - HistoryTab.jsx
-- Sidebar.jsx
+- AppNav.jsx
 - validId
 - bmi.js
 - Onboarding.jsx
 - allergies.service.js
 - StreakJourney.jsx
 - email-verification.test.js
-- db.js
+- trainingInsights.service.js
 - workoutLogs.controller.js
 - Vitalis
 - compilerOptions
@@ -100,19 +101,19 @@
 - messenger.service.js
 - email.service.js
 - verify-demo-sql.js
-- AdminOverview.jsx
+- AdminUsers.jsx
 - migrate.js
 - Notifications.jsx
 - PersonalizationSection.jsx
 - apiClient.js
 - generate-email-assets.js
-- App.jsx
+- ThemeContext.jsx
 - forgotpassword.routes.js
 - ExerciseGuideModal.jsx
 - brevo-transport.test.js
 - sms-verification.test.js
-- trainingPrefs.controller.js
-- RightPanel.jsx
+- react-router-dom
+- useAuth
 - security.controller.js
 - CommunityFeed.jsx
 - workoutLogs.service.js
@@ -157,55 +158,70 @@
 - useAvatar.js
 - vite.config.js
 - public.service.js
-- WorkoutSummary.jsx
+- workoutGuide.js
+- Modal
+- exportTable.js
+- mailer.js
+- app/config/env.js
+- UserDrawer.jsx
 - community.test.js
+- ScanResult.jsx
+- AdminMonitoring.jsx
 - vercel.json
-- react-router-dom
+- Topbar.jsx
+- foodInfo.test.js
+- Button
+- AdminAccess.jsx
 - usePoseEngine.js
+- ProgressPhotosTab.jsx
 - cookies.js
 - sessionFit.js
+- Modal.jsx
 - ForgotPassword.jsx
+- StatsTab.jsx
+- StatsPanel.jsx
+- css-custom-properties.d.ts
 
 ## God Nodes (most connected - your core abstractions)
-1. `Icon()` - 243 edges
+1. `Icon()` - 237 edges
 2. `react` - 145 edges
 3. `AppError` - 92 edges
 4. `apiGet()` - 72 edges
 5. `apiPost()` - 72 edges
 6. `useAuth()` - 71 edges
 7. `apiFetch()` - 53 edges
-8. `Modal()` - 45 edges
-9. `react-router-dom` - 45 edges
-10. `Dashboard()` - 42 edges
+8. `react-router-dom` - 45 edges
+9. `Dashboard()` - 42 edges
+10. `Modal()` - 42 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `Conventions` --references--> `logout()`  [INFERRED]
+  frontend/docs/architecture.md → backend/src/services/auth.service.js
 - `4.3 Safety and data minimization` --references--> `personalize()`  [INFERRED]
   docs/AI_INTEGRATION.md → backend/src/services/ai.service.js
-- `1. What the AI does in VITALIS` --references--> `analyzeFoodImage()`  [INFERRED]
-  docs/AI_INTEGRATION.md → backend/src/config/gemini.js
 - `4.2 Cost controls` --references--> `aiLimiter()`  [INFERRED]
   docs/AI_INTEGRATION.md → backend/src/middleware/rateLimits.js
 - `4.2 Cost controls` --references--> `imageHash()`  [INFERRED]
   docs/AI_INTEGRATION.md → backend/src/services/foodLogs.service.js
-- `Conventions` --references--> `logout()`  [INFERRED]
-  frontend/docs/architecture.md → backend/src/services/auth.service.js
+- `1. What the AI does in VITALIS` --references--> `analyzeFoodImage()`  [INFERRED]
+  docs/AI_INTEGRATION.md → backend/src/config/gemini.js
 
 ## Import Cycles
 - None detected.
 
-## Communities (153 total, 11 thin omitted)
+## Communities (168 total, 9 thin omitted)
 
-### Community 0 - "WebcamFeed.jsx"
-Cohesion: 0.16
-Nodes (14): react-webcam@^7.2.0, CameraOffPlaceholder(), CoachFeedbackOverlay(), BONES, isFaceLandmark(), PoseSkeletonOverlay(), PoseStatusBadge(), RepCounterOverlay() (+6 more)
+### Community 0 - "PoseSkeletonOverlay.jsx"
+Cohesion: 0.67
+Nodes (3): BONES, isFaceLandmark(), PoseSkeletonOverlay()
 
 ### Community 1 - "MealTracker.jsx"
-Cohesion: 0.05
-Nodes (71): resolveAssetUrl(), Spinner(), CameraScanner(), CatalogNameField(), FIT_LABEL, fmt(), FoodInfoCard(), FoodThumb() (+63 more)
+Cohesion: 0.14
+Nodes (27): BottomNav(), CameraScanner(), DailySummaryCard(), formatNumber(), MacroCards(), MACROS, pctOf(), buildMonthGrid() (+19 more)
 
 ### Community 2 - "ExerciseBriefing.jsx"
-Cohesion: 0.22
-Nodes (13): ExerciseBriefing(), loadGuide(), METHOD, norm(), briefingFor(), COUNTER_GUIDES, GENERIC_GUIDE, HOLD_GUIDE (+5 more)
+Cohesion: 0.15
+Nodes (21): ExerciseBriefing(), loadGuide(), METHOD, norm(), briefingFor(), COUNTER_GUIDES, GENERIC_GUIDE, HOLD_GUIDE (+13 more)
 
 ### Community 3 - "escapeHtml"
 Cohesion: 0.08
@@ -221,7 +237,7 @@ Nodes (13): assertMutableAdmin(), changeUserRole(), deleteCommunityPost(), delet
 
 ### Community 6 - "Log.jsx"
 Cohesion: 0.06
-Nodes (58): AddWorkoutModal(), clampReps(), clampSets(), clampWeight(), Field(), performedAtToIso(), TYPE_SUGGESTIONS, BUCKET_CAPTION (+50 more)
+Nodes (59): YearlyBmi(), AddWorkoutModal(), clampReps(), clampSets(), clampWeight(), Field(), performedAtToIso(), TYPE_SUGGESTIONS (+51 more)
 
 ### Community 7 - "Plans.jsx"
 Cohesion: 0.10
@@ -236,8 +252,8 @@ Cohesion: 0.24
 Nodes (19): addDays(), buildProgressSummary(), buildTimeline(), diffDays(), goalDirection(), isISO(), minutesInsight(), nutritionInsights() (+11 more)
 
 ### Community 10 - "Landing.jsx"
-Cohesion: 0.05
-Nodes (68): rawApi, rawSocket, SMS_SENDER_ID, SOCKET_URL, AcknowledgeFooter(), DOCS, LegalCenterModal(), LegalDocument() (+60 more)
+Cohesion: 0.13
+Nodes (33): clearInstallEvent(), detectInstallPlatform(), getInstallEvent(), subscribers, subscribeToInstall(), Brand(), DownloadPhoneSet(), DownloadPhoneStatus() (+25 more)
 
 ### Community 11 - "ForgotPasswordModal.jsx"
 Cohesion: 0.25
@@ -245,19 +261,19 @@ Nodes (9): ChangePasswordModal(), ForgotPasswordModal(), STEP_LABELS, STEP_META,
 
 ### Community 12 - "ActivityMap.jsx"
 Cohesion: 0.10
-Nodes (28): AppShell(), BottomNav(), FitRoute(), DOT, GpsBadge(), LABELS, LocationNotice(), MapResizer() (+20 more)
+Nodes (27): leaflet@^1.9.4, react-leaflet@^5.0.0, FitRoute(), DOT, GpsBadge(), LABELS, LocationNotice(), MapResizer() (+19 more)
 
 ### Community 13 - "react"
-Cohesion: 0.10
-Nodes (32): API_BASE_URL, FAB(), FeedbackModal(), LogActivityModal(), Button(), ConfirmDialog(), Dropdown(), Input() (+24 more)
+Cohesion: 0.21
+Nodes (10): FAB(), EmptyState(), FeedbackModal(), LogActivityModal(), Input(), ACTIVITY_LIMITS, clampActivityNumber(), EMPTY_ACTIVITY_FORM (+2 more)
 
 ### Community 14 - "email-delivery.test.js"
-Cohesion: 0.12
-Nodes (10): crypto, jwt, normalizeId(), record(), trackingToken(), assert, dbPath, { it } (+2 more)
+Cohesion: 0.22
+Nodes (5): crypto, jwt, normalizeId(), record(), trackingToken()
 
 ### Community 15 - "AppRoutes.jsx"
-Cohesion: 0.08
-Nodes (42): AccessRedirect, ActivityMap, AdminAccess, AdminAiUsage, AdminAudit, AdminContent, AdminMonitoring, AdminOverview (+34 more)
+Cohesion: 0.11
+Nodes (31): AccessRedirect, ActivityMap, AdminAccess, AdminAiUsage, AdminAudit, AdminContent, AdminMonitoring, AdminOverview (+23 more)
 
 ### Community 16 - "foodLogs.routes.js"
 Cohesion: 0.11
@@ -265,15 +281,15 @@ Nodes (17): aiQuota(), aiRouteLimiter, aiSummaryLimiter, express, router, coachR
 
 ### Community 17 - "progress.service.js"
 Cohesion: 0.10
-Nodes (32): computeBmi(), activeMinutesExpr(), analyzePhoto(), assembleOverview(), buildDiary(), buildExportCsv(), cadenceLabel(), CADENCES (+24 more)
+Nodes (30): computeBmi(), activeMinutesExpr(), analyzePhoto(), assembleOverview(), buildDiary(), cadenceLabel(), CADENCES, callVisionModel() (+22 more)
 
 ### Community 18 - "auth.controller.js"
 Cohesion: 0.10
 Nodes (20): changeEmailSchema, changePasswordSchema, getverifyEmail(), googleLoginSchema, jwt, loginIpLimiter, loginSchema, notifyNewDevice() (+12 more)
 
 ### Community 19 - "auth.service.js"
-Cohesion: 0.13
-Nodes (25): bcrypt, changePassword(), checkRateLimit(), clearAttempts(), createVerificationToken(), crypto, deactivateAccount(), getMe() (+17 more)
+Cohesion: 0.12
+Nodes (26): bcrypt, changePassword(), checkRateLimit(), clearAttempts(), createVerificationToken(), crypto, deactivateAccount(), getMe() (+18 more)
 
 ### Community 20 - "buildSampleDataset"
 Cohesion: 0.31
@@ -287,9 +303,9 @@ Nodes (20): aiConfigured(), getVisionModels(), safeParseAI(), aiSummary(), analy
 Cohesion: 0.12
 Nodes (16): stripDataUriPrefix(), buildFoodDensityPrompt(), analysisCache, analyzeAndClamp(), analyzeImage(), crypto, estimateFoodDensity(), getCached() (+8 more)
 
-### Community 23 - "CameraWorkout"
-Cohesion: 0.22
-Nodes (14): formStatus(), FormStatusPill(), RepProgressRing(), useAICoach(), keyPoints(), useHoldTimer(), angle3(), assessPose() (+6 more)
+### Community 23 - "AdminOverview.jsx"
+Cohesion: 0.10
+Nodes (28): AdminCalendar(), DOW, MONTHS, monthStart(), sameDay(), AdminSmsPanel(), LEVEL, AdminUsageChart() (+20 more)
 
 ### Community 24 - "AppError"
 Cohesion: 0.12
@@ -300,7 +316,7 @@ Cohesion: 0.10
 Nodes (22): devDependencies, browserslist@^4.29.6, eslint@^9.39.4, @eslint/js@^9.39.4, eslint-plugin-react-hooks@^7.0.1, eslint-plugin-react-refresh@^0.5.2, globals@^17.4.0, @types/leaflet@^1.9.22 (+14 more)
 
 ### Community 26 - "Profile.jsx"
-Cohesion: 0.13
+Cohesion: 0.12
 Nodes (26): activityLabel(), Toast(), VARIANTS, activityFactors, bmiCategory(), BodyMetricsPanel(), calcBMR(), ChangeGoalModal (+18 more)
 
 ### Community 27 - "project.yml"
@@ -308,8 +324,8 @@ Cohesion: 0.08
 Nodes (25): activation_command, activation_command_timeout, added_modes, agent_interface, default_modes, encoding, excluded_apis, excluded_tools (+17 more)
 
 ### Community 28 - "dependencies"
-Cohesion: 0.08
-Nodes (25): dependencies, chart.js@^4.5.1, @fontsource/playfair-display@^5.3.0, @fontsource/poppins@^5.3.0, leaflet@^1.9.4, @mediapipe/drawing_utils@^0.3.1675466124, @mediapipe/pose@^0.5.1675469404, qrcode.react@^4.2.0 (+17 more)
+Cohesion: 0.07
+Nodes (40): browserslist, dependencies, @bryllim/workout-guide@^1.0.0, chart.js@^4.5.1, @fontsource/playfair-display@^5.3.0, @fontsource/poppins@^5.3.0, framer-motion@^12.40.0, @mediapipe/camera_utils@^0.3.1675466862 (+32 more)
 
 ### Community 29 - "forgotpassword.service.js"
 Cohesion: 0.17
@@ -320,8 +336,8 @@ Cohesion: 0.18
 Nodes (22): addDays(), aggregateOverview(), buildBuckets(), chooseBucket(), diffDays(), endOfMonthISO(), findBucket(), fmtShort() (+14 more)
 
 ### Community 31 - "ref_node_assert"
-Cohesion: 0.09
-Nodes (16): parseHistoryQuery(), assert, { describe, it }, assert, { describe, it }, plan, assert, { describe, it, beforeEach, afterEach } (+8 more)
+Cohesion: 0.08
+Nodes (18): assert, dbPath, { it }, jwt, rows, assert, { describe, it }, assert (+10 more)
 
 ### Community 32 - "public.routes.js"
 Cohesion: 0.40
@@ -332,8 +348,8 @@ Cohesion: 0.16
 Nodes (16): bcrypt, { createHash }, addDays(), buildWeek(), cleanTitle(), isoLocal(), parseIso(), proposeAdjust() (+8 more)
 
 ### Community 34 - "useAuth"
-Cohesion: 0.16
-Nodes (20): @tanstack/react-query@^5.102.8, applyRootTheme(), fetchServerTheme(), persistServerTheme(), resolveEffective(), ThemeProvider(), AuthContext, AuthProvider() (+12 more)
+Cohesion: 0.14
+Nodes (22): CoachFeedbackOverlay(), PoseStatusBadge(), RepCounterOverlay(), ScanLineOverlay(), desktopConstraints, mobileConstraints, useViewport(), WebcamFeed() (+14 more)
 
 ### Community 35 - "activity.service.js"
 Cohesion: 0.11
@@ -352,8 +368,8 @@ Cohesion: 0.19
 Nodes (10): addDaysISO(), getDashboard(), getDaySnapshot(), getWeekCalendar(), weekdayIndex(), dayKeys(), getStreakSummary(), shiftDay() (+2 more)
 
 ### Community 39 - "adminMonitoring.service.js"
-Cohesion: 0.13
-Nodes (31): listUsers(), byAttention(), FLAG_GROUPS, fmt(), getEngagement(), getMonitoring(), getStatusMap(), getUserActivity() (+23 more)
+Cohesion: 0.07
+Nodes (33): listUsers(), byAttention(), FLAG_GROUPS, fmt(), getEngagement(), getMonitoring(), getStatusMap(), getUserActivity() (+25 more)
 
 ### Community 40 - "upload.js"
 Cohesion: 0.10
@@ -368,24 +384,24 @@ Cohesion: 0.14
 Nodes (9): signSession(), assert, authedReq(), dbPath, { describe, it }, jwtLib, mockRes(), res (+1 more)
 
 ### Community 43 - "accessGroups.service.js"
-Cohesion: 0.23
-Nodes (18): cleanText(), create(), crypto, getById(), isMissingSchema(), KINDS, list(), makeCode() (+10 more)
+Cohesion: 0.24
+Nodes (17): cleanText(), create(), crypto, getById(), isMissingSchema(), KINDS, list(), members() (+9 more)
 
 ### Community 44 - "workoutRecommender.js"
-Cohesion: 0.12
-Nodes (19): EXCLUSION_CATEGORIES, EXERCISES, availableEquipment(), BASE_DAYS, cleanList(), DAY_DESCRIPTIONS, EQUIP_FROM_PREF, exercisesPerSession() (+11 more)
+Cohesion: 0.09
+Nodes (22): EXCLUSION_CATEGORIES, EXERCISES, getExerciseGuide(), availableEquipment(), BASE_DAYS, cleanList(), DAY_DESCRIPTIONS, EQUIP_FROM_PREF (+14 more)
 
 ### Community 45 - "MessengerPanel.jsx"
-Cohesion: 0.08
-Nodes (34): logout(), Build, Conventions, Frontend Architecture — Vitalis, Principles, Related, State, Structure (+26 more)
+Cohesion: 0.14
+Nodes (22): Build, Conventions, Frontend Architecture — Vitalis, Related, State, Structure, ErrorState(), useNotificationStream() (+14 more)
 
 ### Community 46 - "ChangeGoalModal.jsx"
-Cohesion: 0.20
-Nodes (15): GOAL_TYPES, PACES, checkTargetDate(), cleanExtraGoals(), EXCLUSION_CATEGORIES, EXPERIENCE_LEVELS, extraGoalBlockReason(), iso() (+7 more)
+Cohesion: 0.18
+Nodes (18): EQUIPMENT_ICONS, LOCATIONS, MINS_PRESETS, TrainingPrefsSheet(), ChangeGoalModal(), checkTargetDate(), cleanExtraGoals(), EXCLUSION_CATEGORIES (+10 more)
 
 ### Community 47 - "account-validation.test.js"
-Cohesion: 0.17
-Nodes (7): VALID_GENDERS, ageOn(), checkDob(), assert, { describe, it }, NOW, { z }
+Cohesion: 0.16
+Nodes (8): VALID_GENDERS, makeCode(), ageOn(), checkDob(), assert, { describe, it }, NOW, { z }
 
 ### Community 48 - "settings.controller.js"
 Cohesion: 0.14
@@ -396,8 +412,8 @@ Cohesion: 0.31
 Nodes (10): getAccount(), isConfigured(), isMock(), isUnsupportedNetwork(), providerDetail(), readJson(), senderId(), sendSms() (+2 more)
 
 ### Community 50 - "MacroCoachCard.jsx"
-Cohesion: 0.24
-Nodes (10): EMPTY, round1(), todayKey(), useTodayMeals(), macroCoachMessage(), MacroCoachCard(), useActiveGoal(), qk (+2 more)
+Cohesion: 0.16
+Nodes (20): EMPTY, round1(), todayKey(), useTodayMeals(), macroCoachMessage(), MacroCoachCard(), apiAnalyzeFoodImage(), apiDeleteFoodLog() (+12 more)
 
 ### Community 51 - "logs.controller.js"
 Cohesion: 0.20
@@ -415,9 +431,9 @@ Nodes (12): cleanStr(), putupdate(), buildMessage(), crypto, hashValue(), safeEq
 Cohesion: 0.12
 Nodes (3): getOverview(), getSummary(), wantsSample()
 
-### Community 55 - "frontend/package.json"
+### Community 55 - "VerifyPhone.jsx"
 Cohesion: 0.12
-Nodes (15): browserslist, @bryllim/workout-guide@^1.0.0, framer-motion@^12.40.0, @mediapipe/camera_utils@^0.3.1675466862, socket.io-client@^4.8.3, tailwindcss@^4.2.2, name, private (+7 more)
+Nodes (25): getAccessCode(), readCode(), useAccessInvite(), useRegister(), Field(), pwStrength(), Register(), VisibilityToggle() (+17 more)
 
 ### Community 56 - "compilerOptions"
 Cohesion: 0.12
@@ -427,9 +443,13 @@ Nodes (15): compilerOptions, allowJs, baseUrl, checkJs, jsx, lib, module, module
 Cohesion: 0.12
 Nodes (15): author, bugs, url, description, homepage, keywords, license, main (+7 more)
 
+### Community 58 - "MealTrackerDiary.jsx"
+Cohesion: 0.17
+Nodes (20): resolveAssetUrl(), Spinner(), CatalogNameField(), FIT_LABEL, fmt(), FoodInfoCard(), FoodThumb(), TraitChips() (+12 more)
+
 ### Community 59 - "goals.service.js"
-Cohesion: 0.19
-Nodes (16): ACTIVITY_LEVELS, carriedBody(), computeProgress(), createGoal(), getActiveGoalRow(), getLatestBmiWeight(), GOAL_TYPES, isoDate() (+8 more)
+Cohesion: 0.12
+Nodes (24): ACTIVITY_LEVELS, carriedBody(), computeProgress(), createGoal(), getActiveGoalRow(), getLatestBmiWeight(), GOAL_TYPES, isoDate() (+16 more)
 
 ### Community 60 - "trainingPrefs.service.js"
 Cohesion: 0.22
@@ -444,24 +464,24 @@ Cohesion: 0.12
 Nodes (17): scripts, db:create, db:migrate, db:migrate:dry, db:sql, db:status, dev, foods:images (+9 more)
 
 ### Community 63 - "HistoryTab.jsx"
-Cohesion: 0.14
-Nodes (26): ICONS, NotificationProvider(), Toast(), ToastContainer(), ActivityCard(), formatActivityDate(), HistorySkeleton(), HistoryTab() (+18 more)
+Cohesion: 0.23
+Nodes (18): ActivityCard(), formatActivityDate(), HistorySkeleton(), HistoryTab(), KudosButton(), RouteThumbnail(), RunSummaryOverlay(), activityTitle() (+10 more)
 
-### Community 64 - "Sidebar.jsx"
-Cohesion: 0.10
-Nodes (30): AppMobileTitle(), AppQuickJump(), AppTextLink(), AppTopbarLeft(), getPageTitle(), QUICK_LINKS, TITLES, normalize() (+22 more)
+### Community 64 - "AppNav.jsx"
+Cohesion: 0.13
+Nodes (15): AppMobileTitle(), AppQuickJump(), AppTextLink(), AppTopbarLeft(), getPageTitle(), QUICK_LINKS, TITLES, normalize() (+7 more)
 
 ### Community 65 - "validId"
 Cohesion: 0.06
 Nodes (23): addComment(), ALLOWED_TAGS, createCommentSchema, createPostSchema, listComments(), paginationSchema, remove(), toggleLike() (+15 more)
 
 ### Community 66 - "bmi.js"
-Cohesion: 0.35
-Nodes (9): BmiInsight(), SleepNote(), BMI_CLASSES, bmiScalePosition(), calcBmi(), classifyBmi(), distanceToHealthy(), healthyWeightRange() (+1 more)
+Cohesion: 0.30
+Nodes (10): BmiInsight(), SleepNote(), TONE, BMI_CLASSES, bmiScalePosition(), calcBmi(), classifyBmi(), distanceToHealthy() (+2 more)
 
 ### Community 67 - "Onboarding.jsx"
-Cohesion: 0.13
-Nodes (20): humanizeOption(), ALLERGEN_PRESETS, calcBmi(), Chip(), ChoiceCard(), DAY_NAMES, DAY_SHORT, EQUIPMENT_CHOICES (+12 more)
+Cohesion: 0.12
+Nodes (22): ACTIVITY_LEVELS, EXERCISE_FREQ, EXERCISE_FREQ_LABELS, FOCUSES, humanizeOption(), PACES, ALLERGEN_PRESETS, calcBmi() (+14 more)
 
 ### Community 68 - "allergies.service.js"
 Cohesion: 0.29
@@ -475,9 +495,9 @@ Nodes (13): DOW, DOW_SHORT, Flame(), formatLongDate(), HeatGrid(), MILESTONES, m
 Cohesion: 0.17
 Nodes (6): assert, { it }, jwt, queries, tokens, welcome
 
-### Community 71 - "db.js"
-Cohesion: 0.13
-Nodes (9): isAivenHost, mysql, pool, sslFlag, updatePhone(), assertMode(), buildTips(), collectStats() (+1 more)
+### Community 71 - "trainingInsights.service.js"
+Cohesion: 0.38
+Nodes (4): assertMode(), buildTips(), collectStats(), getInsights()
 
 ### Community 72 - "workoutLogs.controller.js"
 Cohesion: 0.27
@@ -492,24 +512,24 @@ Cohesion: 0.17
 Nodes (11): compilerOptions, allowJs, checkJs, lib, module, resolveJsonModule, strict, target (+3 more)
 
 ### Community 75 - "useProfile.js"
-Cohesion: 0.53
-Nodes (5): GOAL_KEYS, prettyBio(), toE164Phone(), toLocalPhone(), useProfile()
+Cohesion: 0.31
+Nodes (9): GoalDetailSheet(), goalIcon(), GOAL_TYPES, goalLabel(), GOAL_KEYS, prettyBio(), toE164Phone(), toLocalPhone() (+1 more)
 
 ### Community 76 - "server.js"
 Cohesion: 0.15
 Nodes (9): socket.io@^4.8.3, app, http, io, { Server }, _jwt, missing, required (+1 more)
 
 ### Community 77 - "bmi.service.js"
-Cohesion: 0.14
-Nodes (18): summarizeYears(), yearlySummary(), BMI_CLASSES, classifyBmi(), healthyWeightRange(), parseSleepHours(), sleepGuidance(), ACTIVITY_FACTORS (+10 more)
+Cohesion: 0.24
+Nodes (10): summarizeYears(), yearlySummary(), BMI_CLASSES, classifyBmi(), healthyWeightRange(), parseSleepHours(), sleepGuidance(), bmiCategory() (+2 more)
 
 ### Community 78 - "reminder.service.js"
 Cohesion: 0.06
 Nodes (38): addClient(), broadcast(), clientCount(), clients, notifyUser(), post(), removeClient(), stream() (+30 more)
 
 ### Community 79 - "main.jsx"
-Cohesion: 0.13
-Nodes (13): @fontsource/bebas-neue@^5.3.0, @fontsource/dm-sans@^5.3.0, @fontsource/inter@^5.2.8, @fontsource/manrope@^5.2.8, material-symbols@^0.44.0, installGlobalButtonLoading(), installServiceWorkerUpdate(), isTyping() (+5 more)
+Cohesion: 0.12
+Nodes (15): @fontsource/bebas-neue@^5.3.0, @fontsource/dm-sans@^5.3.0, @fontsource/inter@^5.2.8, @fontsource/manrope@^5.2.8, material-symbols@^0.44.0, @react-oauth/google@^0.13.4, installGlobalButtonLoading(), installServiceWorkerUpdate() (+7 more)
 
 ### Community 80 - "plans-personal.test.js"
 Cohesion: 0.17
@@ -519,41 +539,45 @@ Nodes (8): assert, dbPath, { describe, it, beforeEach }, executed, fakeDb, mockR
 Cohesion: 0.13
 Nodes (22): getFoodCatalog(), searchFoodCatalog(), CATEGORIES, dailyLimits(), describeFood(), foodTraits(), FRIED, goalFit() (+14 more)
 
+### Community 82 - "messenger.service.js"
+Cohesion: 0.09
+Nodes (7): isAivenHost, mysql, pool, sslFlag, createMessage(), FRIEND_STATUSES, updatePhone()
+
 ### Community 83 - "email.service.js"
-Cohesion: 0.12
-Nodes (18): fromAddress(), fromHeader(), mailConfigured(), nodemailer, settings, transportOptions, post(), changeEmail() (+10 more)
+Cohesion: 0.24
+Nodes (15): fromAddress(), fromHeader(), mailConfigured(), post(), changeEmail(), deliver(), requireMailEnv(), requireRecipient() (+7 more)
 
 ### Community 84 - "verify-demo-sql.js"
 Cohesion: 0.08
 Nodes (24): conn, DEMO, dump(), esc(), { execFileSync }, fs, mysql, OUT (+16 more)
 
-### Community 85 - "AdminOverview.jsx"
-Cohesion: 0.06
-Nodes (95): Badge(), ConfirmDialog(), Kpi(), MiniStat(), PageHero(), Pager(), Panel(), SearchField() (+87 more)
+### Community 85 - "AdminUsers.jsx"
+Cohesion: 0.21
+Nodes (30): Badge(), Kpi(), PageHero(), Pager(), Panel(), StateBlock(), TableSkeleton(), useAdminResource() (+22 more)
 
 ### Community 86 - "migrate.js"
 Cohesion: 0.27
 Nodes (10): ensureMigrationsTable(), fs, getApplied(), getFiles(), IGNORED_ERRNOS, MIGRATIONS_DIR, path, run() (+2 more)
 
 ### Community 87 - "Notifications.jsx"
-Cohesion: 0.11
-Nodes (32): AccountPageShell(), getCachedProfile(), NotificationOverlay(), _profileCache, setCachedProfile(), Topbar(), getSettingsItems(), NotificationCard() (+24 more)
+Cohesion: 0.18
+Nodes (20): NotificationCard(), NotificationSkeleton(), CATEGORY_META, dayDiff(), formatFullTime(), formatRelativeTime(), getCategory(), getCategoryIcon() (+12 more)
 
 ### Community 88 - "PersonalizationSection.jsx"
-Cohesion: 0.26
-Nodes (10): ActivityDetail(), ACTIVITY_LEVELS, EXERCISE_FREQ, EXERCISE_FREQ_LABELS, FOCUSES, ALLERGEN_PRESETS, FieldLabel(), PersonalizationSection() (+2 more)
+Cohesion: 0.27
+Nodes (9): ActivityDetail(), ALLERGEN_PRESETS, FieldLabel(), PersonalizationSection(), PillGroup(), ageOn(), MAX_AGE, MIN_AGE (+1 more)
 
 ### Community 89 - "apiClient.js"
 Cohesion: 0.12
-Nodes (30): isDismissed(), VerifyEmailBanner(), GroupForm(), formatTime(), useActivityApi(), useWorkoutSession(), CoachCard(), optionCopy() (+22 more)
+Nodes (33): Principles, formatTime(), useActivityApi(), CheckEmail(), useWorkoutSession(), useActivityLogger(), useCoachWeek(), BodyMeasurementsPanel() (+25 more)
 
 ### Community 90 - "generate-email-assets.js"
 Cohesion: 0.24
 Nodes (9): COLORS, fs, GLYPHS, LOGO_SRC, main(), OUT_DIR, path, sharp (+1 more)
 
-### Community 91 - "App.jsx"
-Cohesion: 0.21
-Nodes (5): App(), ENV_ERROR, AppProviders(), ErrorBoundary, NotificationStreamProvider()
+### Community 91 - "ThemeContext.jsx"
+Cohesion: 0.12
+Nodes (14): App(), API_BASE_URL, ENV_ERROR, AppProviders(), ErrorBoundary, NotificationStreamContext, NotificationStreamProvider(), applyRootTheme() (+6 more)
 
 ### Community 92 - "forgotpassword.routes.js"
 Cohesion: 0.12
@@ -571,25 +595,25 @@ Nodes (5): createBrevoTransport(), assert, { it }, message, options
 Cohesion: 0.25
 Nodes (10): assert, createDb(), crypto, dbPath, { describe, it, beforeEach, afterEach }, installDb(), lastCode(), loadService() (+2 more)
 
-### Community 96 - "trainingPrefs.controller.js"
-Cohesion: 0.29
-Nodes (3): getExerciseGuide(), exerciseGuide(), EXPERIENCE_LEVELS
+### Community 96 - "react-router-dom"
+Cohesion: 0.19
+Nodes (13): AccountPageShell(), PageHeader(), isDismissed(), VerifyEmailBanner(), AppShell(), GlassAmbient(), Community(), SECTIONS (+5 more)
 
-### Community 97 - "RightPanel.jsx"
-Cohesion: 0.43
-Nodes (4): NeuralStatusCard(), RightPanel(), SessionLog(), SessionLogRow()
+### Community 97 - "useAuth"
+Cohesion: 0.28
+Nodes (9): FullPageLoader(), LoadingState(), BrandLoader(), SIZES, AdminRoute(), useAuth(), MemberRoute(), ProtectedRoute() (+1 more)
 
 ### Community 98 - "security.controller.js"
 Cohesion: 0.16
 Nodes (8): get(), logUserSession(), UAParser, ensureDeviceCookie(), getDeviceId(), { randomUUID }, assert, { test }
 
 ### Community 99 - "CommunityFeed.jsx"
-Cohesion: 0.17
-Nodes (16): ErrorState(), LoadingState(), Avatar(), CommunityFeed(), PostSkeleton(), previewText(), renderRichText(), SCOPES (+8 more)
+Cohesion: 0.15
+Nodes (18): Avatar(), CommunityFeed(), PostSkeleton(), previewText(), renderRichText(), SCOPES, TAG_ICONS, TAGS (+10 more)
 
 ### Community 100 - "workoutLogs.service.js"
-Cohesion: 0.18
-Nodes (12): attachSetSummary(), cleanExerciseName(), cleanWorkoutType(), createManualWorkout(), endWorkout(), listWorkouts(), listWorkoutsPage(), replaceSets() (+4 more)
+Cohesion: 0.12
+Nodes (15): attachSetSummary(), cleanExerciseName(), cleanWorkoutType(), createManualWorkout(), endWorkout(), listWorkouts(), listWorkoutsPage(), parseHistoryQuery() (+7 more)
 
 ### Community 101 - "WeekCalendarCard.jsx"
 Cohesion: 0.46
@@ -601,7 +625,7 @@ Nodes (19): assert, { describe, it }, end, fs, path, personalize, src, start (+1
 
 ### Community 103 - "Preferences.jsx"
 Cohesion: 0.14
-Nodes (17): PageHeader(), ThemeToggle(), VARIANTS, ThemeContext, Community(), SECTIONS, SectionTabs(), FAQS (+9 more)
+Nodes (17): ThemeToggle(), VARIANTS, ICONS, NotificationProvider(), Toast(), ToastContainer(), useToast(), clampStepGoal() (+9 more)
 
 ### Community 104 - "geo.js"
 Cohesion: 0.27
@@ -644,8 +668,8 @@ Cohesion: 0.29
 Nodes (6): endOfLine, printWidth, semi, singleQuote, tabWidth, trailingComma
 
 ### Community 114 - "Dashboard.jsx"
-Cohesion: 0.14
-Nodes (39): AiCoachCard(), CardHead(), DashboardGreeting(), DashboardHero(), EmptyPrompt(), GRID_LINES, IconTile(), MacroFocusCard() (+31 more)
+Cohesion: 0.13
+Nodes (39): CoachCard(), optionCopy(), STATUS, AiCoachCard(), CardHead(), DashboardGreeting(), DashboardHero(), EmptyPrompt() (+31 more)
 
 ### Community 115 - "foodImage.service.js"
 Cohesion: 0.32
@@ -680,8 +704,8 @@ Cohesion: 0.29
 Nodes (6): endOfLine, printWidth, semi, singleQuote, tabWidth, trailingComma
 
 ### Community 123 - "CameraWorkout.jsx"
-Cohesion: 0.11
-Nodes (30): CorrectionBanner(), DesktopWorkoutSelector(), PICKER_OPTIONS, statusOf(), ExerciseChoiceModal(), MobileWorkoutPills(), PICKER_OPTIONS, WORKOUT_OPTIONS (+22 more)
+Cohesion: 0.12
+Nodes (27): CorrectionBanner(), DesktopWorkoutSelector(), PICKER_OPTIONS, statusOf(), ExerciseChoiceModal(), formStatus(), MobileWorkoutPills(), PICKER_OPTIONS (+19 more)
 
 ### Community 124 - "accessGroups.controller.js"
 Cohesion: 0.36
@@ -692,8 +716,8 @@ Cohesion: 0.29
 Nodes (5): zod@^3.23.8, coachSchema, WORKOUT_TYPES, { z }, zod
 
 ### Community 127 - "Icon"
-Cohesion: 0.09
-Nodes (29): TONE, YearlyBmi(), Icon(), NetworkStatus(), COPY, paceToSeconds(), SplitRows(), StatsPanel() (+21 more)
+Cohesion: 0.13
+Nodes (17): Icon(), NetworkStatus(), COPY, CameraOffPlaceholder(), CameraToggleButton(), NeuralStatusCard(), RightPanel(), SessionBottomBar() (+9 more)
 
 ### Community 128 - "callGeminiWithFallback"
 Cohesion: 0.18
@@ -733,23 +757,71 @@ Nodes (17): patchActiveUserId(), patchchangeUserId(), postUserId(), enumField(),
 
 ### Community 143 - "vite.config.js"
 Cohesion: 0.13
-Nodes (12): @tailwindcss/vite@^4.2.2, lightningcss@^1.33.0, vite@^8.0.1, vite-plugin-pwa@^1.3.0, CSS_TARGETS, __dirname, JS_TARGETS, browserslist (+4 more)
+Nodes (12): @tailwindcss/vite@^4.2.2, lightningcss@^1.33.0, vite-plugin-pwa@^1.3.0, @vitejs/plugin-react@^6.0.1, CSS_TARGETS, __dirname, JS_TARGETS, browserslist (+4 more)
 
 ### Community 144 - "public.service.js"
 Cohesion: 0.20
 Nodes (8): LANDING_MODULES, cache, crypto, getLandingStats(), recordVisit(), safeActiveUserCount(), safeCount(), safeManualLogPct()
 
+### Community 145 - "workoutGuide.js"
+Cohesion: 0.17
+Nodes (14): BRYL_CREDIT, counterTypeFor(), EXERCISE_TYPE_LABELS, exerciseTypeLabel(), getWorkoutMode(), guideFilterOptions(), HOLD_TYPES, isHoldExercise() (+6 more)
+
+### Community 146 - "Modal"
+Cohesion: 0.25
+Nodes (12): Modal(), AcknowledgeFooter(), DOCS, LegalCenterModal(), LegalDocument(), PRIVACY_SECTIONS, PrivacyPolicyModal(), TERMS_SECTIONS (+4 more)
+
+### Community 147 - "exportTable.js"
+Cohesion: 0.32
+Nodes (11): ExportMenu(), csvCell(), download(), exportCsv(), exportXlsx(), fmtDateText(), normalize(), pad() (+3 more)
+
+### Community 148 - "mailer.js"
+Cohesion: 0.17
+Nodes (3): nodemailer, settings, transportOptions
+
+### Community 149 - "app/config/env.js"
+Cohesion: 0.27
+Nodes (7): GOOGLE_CLIENT_ID, rawApi, rawSocket, SMS_SENDER_ID, SOCKET_URL, useLogin(), Login()
+
+### Community 150 - "UserDrawer.jsx"
+Cohesion: 0.35
+Nodes (10): ConfirmDialog(), MiniStat(), confirmLabel(), confirmMessage(), confirmTitle(), humanize(), UserDrawer(), fmtPhone() (+2 more)
+
 ### Community 151 - "community.test.js"
 Cohesion: 0.20
 Nodes (9): devDependencies, supertest@^6.3.4, @types/node@^26.6.4, @types/node, app, assert, { describe, it }, request (+1 more)
 
-### Community 155 - "react-router-dom"
-Cohesion: 0.25
-Nodes (9): GOOGLE_CLIENT_ID, AdminBottomNav(), ADMIN_NAV, AdminShell(), AdminTopbarSearch(), useLogin(), Login(), @react-oauth/google (+1 more)
+### Community 152 - "ScanResult.jsx"
+Cohesion: 0.33
+Nodes (9): cleanFoodName(), CorrectInput(), FOOD_ICON_MAP, iconFor(), KcalRing(), MacroBar(), ScanResult(), MEAL_SLOTS (+1 more)
+
+### Community 153 - "AdminMonitoring.jsx"
+Cohesion: 0.33
+Nodes (9): SearchField(), StatusDot(), AdminMonitoring(), daysLabel(), EXPORT_COLUMNS, FLAG_GROUPS, FlagList(), fmtDate() (+1 more)
+
+### Community 155 - "Topbar.jsx"
+Cohesion: 0.14
+Nodes (24): Sidebar(), SidebarAccount(), SidebarRow(), SidebarSection(), getCachedProfile(), NotificationOverlay(), _profileCache, setCachedProfile() (+16 more)
+
+### Community 156 - "foodInfo.test.js"
+Cohesion: 0.47
+Nodes (7): SugarSodiumCard(), goalIntakeNote(), LIMITS, limitStatus(), num(), status(), sugarSodiumTotals()
+
+### Community 157 - "Button"
+Cohesion: 0.33
+Nodes (6): Button(), ConfirmDialog(), QuickLog(), downloadTextFile(), ExportTab(), DeactivateAccountModal()
+
+### Community 158 - "AdminAccess.jsx"
+Cohesion: 0.33
+Nodes (8): downloadPng(), GroupForm(), QrCard(), qrUrl(), slug(), STATUS_LABEL, STATUS_TONE, toLocalInput()
 
 ### Community 159 - "usePoseEngine.js"
 Cohesion: 0.60
 Nodes (4): loadMediaPipe(), POSE_SCRIPTS, startScriptLoad(), usePoseEngine()
+
+### Community 160 - "ProgressPhotosTab.jsx"
+Cohesion: 0.43
+Nodes (6): fmtShortDate(), POSES, poseTitle(), ProgressPhotosTab(), RatingStars(), compressImage()
 
 ### Community 161 - "cookies.js"
 Cohesion: 0.83
@@ -759,27 +831,39 @@ Nodes (3): baseCookieOptions(), getCookieOptions(), isSecureRequest()
 Cohesion: 0.83
 Nodes (3): estimateDayMinutes(), estimateExerciseSeconds(), fitDayToMinutes()
 
+### Community 163 - "Modal.jsx"
+Cohesion: 0.48
+Nodes (4): Dropdown(), SIZES, prefersReducedMotion(), usePresence()
+
 ### Community 164 - "ForgotPassword.jsx"
 Cohesion: 0.43
 Nodes (7): ErrorBox(), ForgotPassword(), OtpInput(), post(), StepBar(), STEPS, SubmitBtn()
 
+### Community 165 - "StatsTab.jsx"
+Cohesion: 0.60
+Nodes (5): formatBestDate(), LoadingState(), ProgressArt(), StatCard(), StatsTab()
+
+### Community 166 - "StatsPanel.jsx"
+Cohesion: 0.70
+Nodes (4): paceToSeconds(), SplitRows(), StatsPanel(), StatusPill()
+
 ## Knowledge Gaps
-- **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `WebcamFeed.jsx`, `MealTracker.jsx`, `ExerciseBriefing.jsx`, `Log.jsx`, `Plans.jsx`, `Landing.jsx`, `ForgotPasswordModal.jsx`, `ActivityMap.jsx`, `useAvatar.js`, `AppRoutes.jsx`, `CameraWorkout`, `Profile.jsx`, `react-router-dom`, `dependencies`, `usePoseEngine.js`, `useAuth`, `ForgotPassword.jsx`, `MessengerPanel.jsx`, `ChangeGoalModal.jsx`, `MacroCoachCard.jsx`, `frontend/package.json`, `HistoryTab.jsx`, `Sidebar.jsx`, `Onboarding.jsx`, `StreakJourney.jsx`, `useProfile.js`, `main.jsx`, `AdminOverview.jsx`, `Notifications.jsx`, `PersonalizationSection.jsx`, `apiClient.js`, `App.jsx`, `ExerciseGuideModal.jsx`, `RightPanel.jsx`, `CommunityFeed.jsx`, `WeekCalendarCard.jsx`, `Preferences.jsx`, `geo.js`, `urlFilters.test.js`, `Dashboard.jsx`, `CameraWorkout.jsx`, `Icon`?**
-  _High betweenness centrality (0.163) - this node is a cross-community bridge._
+- **Why does `react` connect `react` to `PoseSkeletonOverlay.jsx`, `MealTracker.jsx`, `ExerciseBriefing.jsx`, `Log.jsx`, `Plans.jsx`, `Landing.jsx`, `ForgotPasswordModal.jsx`, `ActivityMap.jsx`, `useAvatar.js`, `AppRoutes.jsx`, `Modal`, `exportTable.js`, `app/config/env.js`, `UserDrawer.jsx`, `AdminOverview.jsx`, `ScanResult.jsx`, `AdminMonitoring.jsx`, `Profile.jsx`, `Topbar.jsx`, `dependencies`, `Button`, `AdminAccess.jsx`, `usePoseEngine.js`, `ProgressPhotosTab.jsx`, `useAuth`, `Modal.jsx`, `ForgotPassword.jsx`, `StatsTab.jsx`, `StatsPanel.jsx`, `css-custom-properties.d.ts`, `MessengerPanel.jsx`, `ChangeGoalModal.jsx`, `MacroCoachCard.jsx`, `VerifyPhone.jsx`, `MealTrackerDiary.jsx`, `HistoryTab.jsx`, `AppNav.jsx`, `bmi.js`, `Onboarding.jsx`, `StreakJourney.jsx`, `useProfile.js`, `main.jsx`, `AdminUsers.jsx`, `Notifications.jsx`, `PersonalizationSection.jsx`, `apiClient.js`, `ThemeContext.jsx`, `ExerciseGuideModal.jsx`, `react-router-dom`, `CommunityFeed.jsx`, `WeekCalendarCard.jsx`, `Preferences.jsx`, `geo.js`, `urlFilters.test.js`, `Dashboard.jsx`, `CameraWorkout.jsx`, `Icon`?**
+  _High betweenness centrality (0.129) - this node is a cross-community bridge._
 - **Should `MealTracker.jsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.05426356589147287 - nodes in this community are weakly interconnected._
-- **Why does `Icon()` connect `Icon` to `WebcamFeed.jsx`, `MealTracker.jsx`, `ExerciseBriefing.jsx`, `Log.jsx`, `Plans.jsx`, `Landing.jsx`, `ForgotPasswordModal.jsx`, `ActivityMap.jsx`, `react`, `WorkoutSummary.jsx`, `CameraWorkout`, `react-router-dom`, `MessengerPanel.jsx`, `ChangeGoalModal.jsx`, `MacroCoachCard.jsx`, `HistoryTab.jsx`, `Sidebar.jsx`, `bmi.js`, `Onboarding.jsx`, `StreakJourney.jsx`, `AdminOverview.jsx`, `Notifications.jsx`, `PersonalizationSection.jsx`, `apiClient.js`, `ExerciseGuideModal.jsx`, `RightPanel.jsx`, `CommunityFeed.jsx`, `WeekCalendarCard.jsx`, `Preferences.jsx`, `Dashboard.jsx`, `CameraWorkout.jsx`?**
-  _High betweenness centrality (0.086) - this node is a cross-community bridge._
+  _Cohesion score 0.13636363636363635 - nodes in this community are weakly interconnected._
+- **Why does `AppError` connect `AppError` to `unit/health.test.js`, `admin.service.js`, `express`, `progress.service.js`, `auth.service.js`, `foodLogs.service.js`, `forgotpassword.service.js`, `plans.controller.js`, `dashboard.service.js`, `upload.js`, `coachPlan.service.js`, `accessGroups.service.js`, `app.js`, `phoneVerification.service.js`, `goals.service.js`, `trainingPrefs.service.js`, `trainingInsights.service.js`, `reminder.service.js`, `messenger.service.js`, `email.service.js`, `forgotpassword.routes.js`, `workoutLogs.service.js`, `accessGroups.controller.js`?**
+  _High betweenness centrality (0.059) - this node is a cross-community bridge._
+- **Should `ExerciseBriefing.jsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.14814814814814814 - nodes in this community are weakly interconnected._
+- **Why does `Icon()` connect `Icon` to `MealTracker.jsx`, `ExerciseBriefing.jsx`, `Log.jsx`, `Plans.jsx`, `ForgotPasswordModal.jsx`, `ActivityMap.jsx`, `react`, `workoutGuide.js`, `Modal`, `exportTable.js`, `UserDrawer.jsx`, `AdminOverview.jsx`, `ScanResult.jsx`, `AdminMonitoring.jsx`, `Topbar.jsx`, `foodInfo.test.js`, `Button`, `AdminAccess.jsx`, `ProgressPhotosTab.jsx`, `Modal.jsx`, `StatsTab.jsx`, `StatsPanel.jsx`, `MessengerPanel.jsx`, `ChangeGoalModal.jsx`, `MacroCoachCard.jsx`, `MealTrackerDiary.jsx`, `HistoryTab.jsx`, `AppNav.jsx`, `bmi.js`, `Onboarding.jsx`, `StreakJourney.jsx`, `AdminUsers.jsx`, `Notifications.jsx`, `PersonalizationSection.jsx`, `apiClient.js`, `ExerciseGuideModal.jsx`, `WeekCalendarCard.jsx`, `Preferences.jsx`, `Dashboard.jsx`, `CameraWorkout.jsx`?**
+  _High betweenness centrality (0.055) - this node is a cross-community bridge._
 - **Should `escapeHtml` be split into smaller, more focused modules?**
   _Cohesion score 0.07621326042378673 - nodes in this community are weakly interconnected._
-- **Why does `AppError` connect `AppError` to `unit/health.test.js`, `admin.service.js`, `express`, `progress.service.js`, `auth.service.js`, `foodLogs.service.js`, `forgotpassword.service.js`, `plans.controller.js`, `dashboard.service.js`, `upload.js`, `coachPlan.service.js`, `accessGroups.service.js`, `app.js`, `phoneVerification.service.js`, `goals.service.js`, `trainingPrefs.service.js`, `db.js`, `reminder.service.js`, `messenger.service.js`, `email.service.js`, `forgotpassword.routes.js`, `workoutLogs.service.js`, `accessGroups.controller.js`?**
-  _High betweenness centrality (0.058) - this node is a cross-community bridge._
 - **Should `gemini.js` be split into smaller, more focused modules?**
   _Cohesion score 0.07358156028368794 - nodes in this community are weakly interconnected._
-- **Should `Log.jsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.06153846153846154 - nodes in this community are weakly interconnected._

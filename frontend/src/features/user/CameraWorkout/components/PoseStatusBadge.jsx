@@ -27,7 +27,7 @@ export default function PoseStatusBadge({ poseReady = undefined, loadError = und
   );
 
   return (
-    <div className="absolute top-3 right-14 z-20" title={title} aria-label={title}>
+    <div className="absolute top-3 right-[6.25rem] z-20" title={title} aria-label={title}>
       {clickable ? (
         <button type="button" onClick={onRetry} className={boxStyle} aria-label={title}>
           {content}

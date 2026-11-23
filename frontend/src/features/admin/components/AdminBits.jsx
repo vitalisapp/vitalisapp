@@ -1,4 +1,5 @@
 import Icon from '../../../components/Icon.jsx';
+import SharedConfirmDialog from '../../../components/ui/ConfirmDialog.jsx';
 import { fmtNum } from '../utils/format.js';
 
 /* ── Hero / header ─────────────────────────────────────────────────────── */
@@ -172,6 +173,12 @@ export function TableSkeleton({ rows = 6 }) {
 
 /* ── Confirm modal ─────────────────────────────────────────────────────── */
 
+/**
+ * Admin-flavoured API over the app-wide ConfirmDialog (components/ui), so
+ * there is one dialog implementation: portal, focus trap, Escape, scroll
+ * lock, safe-area padding and mobile button stacking all come from there.
+ * Callers render it conditionally, hence isOpen is always true here.
+ */
 export function ConfirmDialog({
   title = undefined,
   message = undefined,
@@ -185,24 +192,21 @@ export function ConfirmDialog({
   onConfirm = undefined,
 }) {
   return (
-    <div className="adm-modal-scrim" onClick={busy ? undefined : onCancel}>
-      <div className="adm-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-        <h3>{title}</h3>
-        {message && <p className="adm-modal__sub">{message}</p>}
-        {children}
-        {error && <p className="adm-inline-note is-danger" style={{ marginTop: 12 }}><Icon name="error" />{error}</p>}
-        <div className="adm-modal__actions">
-          <button type="button" className="adm-btn is-ghost" onClick={onCancel} disabled={busy}>Cancel</button>
-          <button
-            type="button"
-            className={`adm-btn ${danger ? 'is-danger' : 'is-primary'}`}
-            onClick={onConfirm}
-            disabled={busy || confirmDisabled}
-          >
-            {busy ? 'Working…' : confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+    <SharedConfirmDialog
+      isOpen
+      onClose={onCancel}
+      onConfirm={onConfirm}
+      title={title}
+      message={message}
+      confirmLabel={confirmLabel}
+      tone={danger ? 'danger' : 'primary'}
+      icon={danger ? 'warning' : 'help'}
+      busy={busy}
+      error={error}
+      confirmDisabled={confirmDisabled}
+      size={children ? 'lg' : 'md'}
+    >
+      {children}
+    </SharedConfirmDialog>
   );
 }

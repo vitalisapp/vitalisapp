@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Icon from '../../../components/Icon.jsx';
 
 const TOAST_ICONS = { success: 'check_circle', error: 'error', info: 'info' };
@@ -16,14 +17,16 @@ export function useAdminToast() {
     timer.current = setTimeout(() => setToast(null), 4000);
   }, []);
 
-  const node = toast ? (
+  // Portalled so it layers above the phone bottom nav instead of under it.
+  const node = toast ? createPortal(
     <div
       className={`adm-toast${toast.tone === 'error' ? ' is-error' : toast.tone === 'info' ? ' is-info' : ''}`}
       role="status"
     >
       <Icon name={TOAST_ICONS[toast.tone] || TOAST_ICONS.success} />
       {toast.message}
-    </div>
+    </div>,
+    document.body,
   ) : null;
 
   return { show, node };

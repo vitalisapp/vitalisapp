@@ -6,7 +6,6 @@ export { default as AppShell } from './AppShell.jsx';
 export { default as PageHeader } from './app/PageHeader.jsx';
 export { AppQuickJump, AppMobileTitle, AppTopbarLeft, AppTextLink } from './app/AppNav.jsx';
 export { default as LogActivityModal } from './LogActivityModal.jsx';
-export { default as FAB } from './FAB.jsx';
 // Previously deep-import only — re-exported for consistency (no logic change).
 export { default as ThemeToggle } from './ThemeToggle.jsx';
 export { default as FeedbackModal } from './FeedbackModal.jsx';

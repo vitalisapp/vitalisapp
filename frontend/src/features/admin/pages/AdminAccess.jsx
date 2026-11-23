@@ -20,8 +20,13 @@ import { fmtNum, fmtWhen } from '../utils/format.js';
 const STATUS_TONE = { active: 'active', expired: 'warn', disabled: 'off' };
 const STATUS_LABEL = { active: 'Active', expired: 'Expired', disabled: 'Turned off' };
 
+// Printed QR codes live forever, so they must encode the production origin —
+// not whatever host the admin happens to be on (localhost, a preview deploy).
+// Set VITE_PUBLIC_ORIGIN (e.g. https://vitalis.app) in the deploy env.
+const PUBLIC_ORIGIN = String(import.meta.env.VITE_PUBLIC_ORIGIN || '').replace(/\/+$/, '');
+
 function qrUrl(group) {
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const origin = PUBLIC_ORIGIN || (typeof window !== 'undefined' ? window.location.origin : '');
   return group.kind === 'link' ? `${origin}/go/${group.code}` : `${origin}/register?g=${group.code}`;
 }
 
