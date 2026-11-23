@@ -1,13 +1,10 @@
 import { Navigate } from "react-router-dom";
 import { useAuth, isCacheFresh } from "./useAuth.jsx";
 import { safeGet } from "../lib/storage.js";
-import BrandLoader from "../components/ui/BrandLoader.jsx";
+import { FullPageLoader } from "../components/feedback/LoadingState.jsx";
 
-const GuardFallback = () => (
-  <div className="min-h-dvh flex items-center justify-center bg-[var(--bg-primary)]">
-    <BrandLoader size="md" message="Loading…" />
-  </div>
-);
+// Same loader as the route fallback so stages never swap loader sizes.
+const GuardFallback = FullPageLoader;
 
 // Users with incomplete onboarding go to /onboarding first.
 // Email confirmation is soft: unverified users get full access and the

@@ -140,6 +140,19 @@ export function guideFilterOptions() {
   };
 }
 
+// Human labels for Bryl exerciseType values (URL keeps the slugged raw value).
+export const EXERCISE_TYPE_LABELS = {
+  bodyweight_reps: 'Bodyweight',
+  weight_reps: 'Weighted',
+  assisted_bodyweight: 'Assisted',
+  duration: 'Timed',
+  distance_duration: 'Distance',
+};
+
+export function exerciseTypeLabel(type) {
+  return EXERCISE_TYPE_LABELS[type] ?? String(type ?? '').replace(/_/g, ' ');
+}
+
 // Curated camera picker: real Bryl data, every entry functional (rep or hold).
 // Covers the previous 23-option set; unmapped extras live in the full library.
 const PICKER_SLUGS = [

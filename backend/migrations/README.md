@@ -10,7 +10,7 @@
 Each table file is self-contained (`SET FOREIGN_KEY_CHECKS=0/1` + single
 `CREATE TABLE IF NOT EXISTS`). Seeds use `INSERT IGNORE`.
 Runner `src/db/migrate.js` applies pending `*.sql` in lexicographic order,
-tracked in `_migrations`. Next migration: `057_<slug>.sql`
+tracked in `_migrations`. Next migration: `059_<slug>.sql`
 (`npm run db:create -- <slug>`).
 
 ## History

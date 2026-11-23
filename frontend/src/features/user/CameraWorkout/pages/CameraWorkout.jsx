@@ -5,7 +5,7 @@ import AppShell from '../../../../components/AppShell.jsx';
 import Icon from '../../../../components/Icon.jsx';
 import { useAuth } from '../../../../hooks/useAuth.jsx';
 import { WORKOUT_OPTIONS } from '../constants/workout.js';
-import { getPickerOptions, resolveWorkout, searchGuideExercises, frameUrl, BRYL_CREDIT, guideFilterOptions, getAllGuideExercises } from '../constants/workoutGuide.js';
+import { getPickerOptions, resolveWorkout, searchGuideExercises, frameUrl, BRYL_CREDIT, guideFilterOptions, getAllGuideExercises, exerciseTypeLabel } from '../constants/workoutGuide.js';
 import { useRepCounter, speak, assessPose } from '../hooks/useRepCounter.js';
 import { useHoldTimer } from '../hooks/useHoldTimer.js';
 import { useAICoach } from "../hooks/useAiCoach.js";
@@ -13,7 +13,8 @@ import { usePoseEngine }        from '../hooks/usePoseEngine.js';
 import { useWorkoutSession }    from '../hooks/useWorkoutSession.js';
 import { apiPost } from '../../../../lib/apiClient.js';
 import { safeGet, safeSet } from '../../../../lib/storage.js';
-import Dropdown from '../../../../components/ui/Dropdown.jsx';
+import Modal from '../../../../components/ui/Modal.jsx';
+import { useUrlFilters } from '../../../../hooks/useUrlFilters.js';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import WebcamFeed from '../components/WebcamFeed.jsx';
@@ -103,134 +104,247 @@ function EarlyExitDialog({ mode = undefined, reps = undefined, holdSecs = undefi
 }
 
 // ── Workout chooser: pick a real Bryl exercise first, camera opens after ───
-function WorkoutChooser({ query = undefined, onQuery = undefined, onPick = undefined, onBack = undefined }) {
-  const [equipment, setEquipment] = useState('');
-  const [muscle, setMuscle] = useState('');
-  const [type, setType] = useState('');
-  const filterOpts = useMemo(() => guideFilterOptions(), []);
+// Search + filters live in the URL (?q=&type=&equipment=&muscle=) so refresh,
+// back/forward and shared links keep the same results.
+const CHOOSER_PAGE = 48;
+const CHOOSER_OPTS = guideFilterOptions();
+const CHOOSER_FILTERS = {
+  q: {},
+  type: { options: CHOOSER_OPTS.types },
+  equipment: { options: CHOOSER_OPTS.equipment },
+  muscle: { options: CHOOSER_OPTS.muscles },
+};
+const CHOOSER_GROUPS = [
+  { key: 'type', label: 'Type', options: CHOOSER_OPTS.types.map(v => ({ value: v, label: exerciseTypeLabel(v) })) },
+  { key: 'equipment', label: 'Equipment', options: CHOOSER_OPTS.equipment.map(v => ({ value: v, label: v })) },
+  { key: 'muscle', label: 'Muscle', options: CHOOSER_OPTS.muscles.map(v => ({ value: v, label: v })) },
+];
+
+function WorkoutChooser({ onPick = undefined, onBack = undefined }) {
+  const { values, setFilters, clearFilters } = useUrlFilters(CHOOSER_FILTERS);
+  const { q: query, equipment, muscle, type } = values;
+  const [sheetOpen, setSheetOpen] = useState(false);
   const q = query.trim();
-  const hasFilters = Boolean(q || equipment || muscle || type);
-  const libraryTotal = useMemo(() => getAllGuideExercises().length, []);
-  const list = useMemo(() => {
-    if (q || equipment || muscle || type) {
-      return searchGuideExercises(q, {
-        ...(equipment ? { equipment } : {}),
-        ...(muscle ? { primaryMuscle: muscle } : {}),
-        ...(type ? { exerciseType: type } : {}),
-      }).slice(0, 48);
-    }
-    return getPickerOptions();
-  }, [q, equipment, muscle, type]);
-  const clearFilters = () => {
-    onQuery('');
-    setEquipment('');
-    setMuscle('');
-    setType('');
-  };
+  const filterCount = [equipment, muscle, type].filter(Boolean).length;
+  const searching = Boolean(q) || filterCount > 0;
+  const libraryTotal = getAllGuideExercises().length;
+
+  const results = useMemo(() => {
+    if (!searching) return getPickerOptions();
+    return searchGuideExercises(q, {
+      ...(equipment ? { equipment } : {}),
+      ...(muscle ? { primaryMuscle: muscle } : {}),
+      ...(type ? { exerciseType: type } : {}),
+    });
+  }, [searching, q, equipment, muscle, type]);
+
+  // Paging resets whenever the result set changes (keyed, no effect needed).
+  const resultKey = `${q}|${equipment}|${muscle}|${type}`;
+  const [page, setPage] = useState({ key: resultKey, n: CHOOSER_PAGE });
+  const shown = page.key === resultKey ? page.n : CHOOSER_PAGE;
+  const list = results.slice(0, shown);
+
+  const activeChips = CHOOSER_GROUPS
+    .filter(g => values[g.key])
+    .map(g => ({ key: g.key, label: g.options.find(o => o.value === values[g.key])?.label ?? values[g.key] }));
+
   return (
     <main className="p-4 sm:p-6 md:p-8 pb-28 md:pb-8 max-w-7xl 2xl:max-w-[1400px] mx-auto w-full">
       <div className="glass-card border border-[var(--border-light)] rounded-3xl p-4 sm:p-6">
+        {/* Header */}
         <div className="flex items-center gap-3">
           {onBack && (
             <button
               onClick={onBack}
               aria-label="Back to dashboard"
-              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[var(--bg-hover)] hover:bg-[var(--bg-active)] flex items-center justify-center shrink-0 transition-colors"
+              className="w-10 h-10 min-w-[40px] rounded-full hover:bg-[var(--bg-hover)] flex items-center justify-center shrink-0 transition-colors"
             >
-              <span className="material-symbols-outlined text-[length:var(--fs-18)] text-[var(--text-primary)]">arrow_back</span>
+              <span className="material-symbols-outlined text-[length:var(--fs-20)] text-[var(--text-primary)]">arrow_back</span>
             </button>
           )}
           <div className="min-w-0">
-            <p className="text-[length:var(--fs-10)] font-black uppercase tracking-[0.25em] text-[var(--accent)]">Workouts</p>
-            <h2 className="text-[length:var(--fs-18)] sm:text-[length:var(--fs-20)] font-black tracking-tight leading-tight">Choose your workout</h2>
-            <p className="text-[length:var(--fs-12)] text-[var(--text-muted)] mt-0.5 leading-snug">Real Bryl exercises — pick one, then choose camera or manual.</p>
+            <h2 className="text-[length:var(--fs-20)] sm:text-[length:var(--fs-22)] font-bold tracking-tight leading-tight">Workouts</h2>
+            <p className="text-[length:var(--fs-12)] sm:text-[length:var(--fs-13)] text-[var(--text-muted)] mt-0.5 leading-snug">Pick an exercise, then train with the camera or log it manually.</p>
           </div>
         </div>
-        <div className="relative mt-4">
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[length:var(--fs-18)] text-[var(--text-muted)] pointer-events-none">search</span>
-          <input value={query} onChange={(e) => onQuery(e.target.value)} placeholder="Name, equipment, or muscle"
-            aria-label="Search exercises"
-            className="w-full h-12 min-h-[48px] rounded-2xl bg-[var(--bg-hover)] border border-[var(--border-light)] pl-11 pr-11 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] outline-none focus:border-[var(--accent)] placeholder:text-[var(--text-disabled)]" />
-          {query && (
-            <button
-              onClick={() => onQuery('')}
-              aria-label="Clear search"
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-            >
-              <span className="material-symbols-outlined text-[length:var(--fs-18)]">close</span>
-            </button>
-          )}
+
+        {/* Search + Filters */}
+        <div className="flex gap-2 mt-5">
+          <div className="relative flex-1 min-w-0">
+            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[length:var(--fs-18)] text-[var(--text-muted)] pointer-events-none">search</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setFilters({ q: e.target.value })}
+              placeholder="Search exercises"
+              aria-label="Search exercises"
+              className="w-full h-11 rounded-xl bg-[var(--bg-hover)] border border-transparent pl-10 pr-10 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] outline-none focus:border-[var(--accent)] focus:bg-transparent placeholder:text-[var(--text-disabled)] transition-colors [&::-webkit-search-cancel-button]:hidden"
+            />
+            {query && (
+              <button
+                onClick={() => setFilters({ q: '' })}
+                aria-label="Clear search"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                <span className="material-symbols-outlined text-[length:var(--fs-16)]">close</span>
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            aria-haspopup="dialog"
+            aria-label={filterCount ? `Filters, ${filterCount} active` : 'Filters'}
+            className={`h-11 px-3.5 sm:px-4 rounded-xl border flex items-center gap-2 shrink-0 text-[length:var(--fs-13)] font-semibold transition-colors ${filterCount
+              ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-bg)]'
+              : 'border-[var(--border-light)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'}`}
+          >
+            <span className="material-symbols-outlined text-[length:var(--fs-18)]">tune</span>
+            <span className="hidden sm:inline">Filters</span>
+            {filterCount > 0 && (
+              <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[length:var(--fs-10)] font-bold flex items-center justify-center tabular-nums">{filterCount}</span>
+            )}
+          </button>
         </div>
-        <div className="flex items-center justify-between mt-4 mb-2">
-          <p className="text-[length:var(--fs-10)] font-black uppercase tracking-[0.25em] text-[var(--text-muted)]">
-            Filters{hasFilters && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">{[equipment, muscle, type].filter(Boolean).length + (q ? 1 : 0)}</span>}
-          </p>
-          {hasFilters && (
-            <button onClick={clearFilters} className="text-[length:var(--fs-11)] font-bold text-[var(--accent)] hover:underline">
+
+        {/* Active filters */}
+        {activeChips.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            {activeChips.map(chip => (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={() => setFilters({ [chip.key]: '' })}
+                aria-label={`Remove ${chip.label} filter`}
+                className="h-8 pl-3 pr-2 rounded-full bg-[var(--bg-hover)] hover:bg-[var(--bg-active)] text-[length:var(--fs-12)] font-medium text-[var(--text-primary)] flex items-center gap-1 transition-colors"
+              >
+                {chip.label}
+                <span className="material-symbols-outlined text-[length:var(--fs-14)] text-[var(--text-muted)]">close</span>
+              </button>
+            ))}
+            <button type="button" onClick={clearFilters} className="h-8 px-2 text-[length:var(--fs-12)] font-semibold text-[var(--accent)] hover:underline">
               Clear all
             </button>
-          )}
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { label: 'Equipment', value: equipment, set: setEquipment, options: filterOpts.equipment, all: 'All' },
-            { label: 'Muscle', value: muscle, set: setMuscle, options: filterOpts.muscles, all: 'All' },
-            { label: 'Type', value: type, set: setType, options: filterOpts.types, all: 'All' },
-          ].map(f => (
-            <Dropdown
-              key={f.label}
-              label={f.label}
-              value={f.value}
-              onChange={f.set}
-              options={f.options}
-              allLabel={f.all}
-            />
-          ))}
-        </div>
-        <p className="text-[length:var(--fs-11)] text-[var(--text-muted)] mt-3">
-          {hasFilters ? (
-            <><span className="font-bold text-[var(--text-primary)] tabular-nums">{list.length}</span> of <span className="font-bold text-[var(--text-primary)] tabular-nums">{libraryTotal}</span> exercises found</>
+          </div>
+        )}
+
+        {/* Count */}
+        <p className="text-[length:var(--fs-12)] text-[var(--text-muted)] mt-4">
+          {searching ? (
+            <><span className="font-semibold text-[var(--text-primary)] tabular-nums">{results.length}</span> {results.length === 1 ? 'exercise' : 'exercises'} found</>
           ) : (
-            <><span className="font-bold text-[var(--text-primary)] tabular-nums">{list.length}</span> quick picks · <span className="font-bold text-[var(--accent)] tabular-nums">{libraryTotal}</span> in full library</>
+            <>Quick picks · <span className="tabular-nums">{libraryTotal}</span> in the full library — search or filter to explore</>
           )}
         </p>
+
+        {/* Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-3 items-stretch">
           {list.map((opt) => {
             const slug = opt.slug ?? opt.id;
             const img = frameUrl(slug, 1);
             const label = opt.name ?? opt.label ?? slug;
             const isHold = (opt.mode ?? (opt.exerciseType === 'duration' || opt.exerciseType === 'distance_duration' || opt.isStretch ? 'hold' : 'rep')) === 'hold';
+            const meta = opt.primaryMuscle
+              ? [opt.primaryMuscle, opt.equipment].filter(Boolean).join(' · ')
+              : (isHold ? 'Timer' : 'Camera rep count');
             return (
               <button key={slug} type="button" onClick={() => onPick(opt)}
-                className="text-left rounded-2xl border border-[var(--border-light)] bg-[var(--bg-hover)]/50 hover:border-[var(--accent-border)] hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-[var(--accent)] transition-all duration-300 overflow-hidden h-full">
-                <span className="relative block aspect-square" style={{ background: '#1E1E1E' }}>
+                className="group text-left rounded-2xl border border-[var(--border-light)] hover:border-[var(--accent-border)] focus-visible:outline-2 focus-visible:outline-[var(--accent)] transition-colors overflow-hidden h-full flex flex-col">
+                <span className="relative block aspect-square overflow-hidden" style={{ background: '#1E1E1E' }}>
                   {img
-                    ? <img src={img} alt={label} loading="lazy" className="w-full h-full object-contain p-2"
+                    ? <img src={img} alt="" loading="lazy" className="w-full h-full object-contain p-3 transition-transform duration-300 group-hover:scale-[1.04]"
                         onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                    : <span className="w-full h-full flex items-center justify-center material-symbols-outlined text-[length:var(--fs-28)] text-white">fitness_center</span>}
-                  <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[length:var(--fs-9)] font-black uppercase tracking-widest ${isHold ? 'bg-sky-500/90 text-white' : 'bg-[var(--accent)] text-[var(--text-inverse)]'}`}>
+                    : <span className="w-full h-full flex items-center justify-center material-symbols-outlined text-[length:var(--fs-28)] text-white/70">fitness_center</span>}
+                  <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/55 backdrop-blur-sm text-white text-[length:var(--fs-10)] font-semibold">
                     {isHold ? 'Hold' : 'Reps'}
                   </span>
                 </span>
-                <span className="block p-2.5">
-                  <span className="block text-[length:var(--fs-12)] font-bold truncate">{label}</span>
-                  <span className="block text-[length:var(--fs-10)] text-[var(--text-muted)] mt-0.5">{isHold ? 'Hold · timer' : 'Reps · camera count'}</span>
+                <span className="block px-3 py-2.5">
+                  <span className="block text-[length:var(--fs-13)] font-semibold text-[var(--text-primary)] truncate">{label}</span>
+                  <span className="block text-[length:var(--fs-11)] text-[var(--text-muted)] mt-0.5 truncate">{meta}</span>
                 </span>
               </button>
             );
           })}
         </div>
-        {list.length === 0 && (
-          <div className="text-center py-10">
-            <p className="text-[length:var(--fs-13)] font-bold text-[var(--text-primary)]">No matches</p>
-            <p className="text-[length:var(--fs-12)] text-[var(--text-muted)] mt-1">Try another search or clear the filters.</p>
-            <button onClick={clearFilters} className="mt-3 h-11 px-5 rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] text-[length:var(--fs-12)] font-bold active:scale-95 transition-all">
+
+        {results.length > shown && (
+          <div className="flex justify-center mt-5">
+            <button
+              type="button"
+              onClick={() => setPage({ key: resultKey, n: shown + CHOOSER_PAGE })}
+              className="h-10 px-5 rounded-xl border border-[var(--border-light)] hover:bg-[var(--bg-hover)] text-[length:var(--fs-13)] font-semibold transition-colors"
+            >
+              Show more <span className="text-[var(--text-muted)] font-normal tabular-nums">({results.length - shown})</span>
+            </button>
+          </div>
+        )}
+
+        {results.length === 0 && (
+          <div className="text-center py-12">
+            <span className="material-symbols-outlined text-[length:var(--fs-28)] text-[var(--text-disabled)]">search_off</span>
+            <p className="text-[length:var(--fs-14)] font-semibold text-[var(--text-primary)] mt-2">No exercises found</p>
+            <p className="text-[length:var(--fs-12)] text-[var(--text-muted)] mt-1">Try a different search or remove a filter.</p>
+            <button onClick={clearFilters} className="mt-4 h-10 px-5 rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] text-[length:var(--fs-13)] font-semibold active:scale-95 transition-all">
               Clear filters
             </button>
           </div>
         )}
-        <p className="text-[length:var(--fs-10)] mt-4 leading-relaxed text-[var(--text-muted)]">{BRYL_CREDIT}</p>
+
+        <p className="text-[length:var(--fs-10)] mt-6 leading-relaxed text-[var(--text-disabled)]">{BRYL_CREDIT}</p>
       </div>
+
+      <Modal
+        isOpen={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title="Filters"
+        size="lg"
+        footer={(
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setFilters({ type: '', equipment: '', muscle: '' })}
+              disabled={filterCount === 0}
+              className="h-11 px-4 rounded-xl text-[length:var(--fs-13)] font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:opacity-40 disabled:pointer-events-none transition-colors"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={() => setSheetOpen(false)}
+              className="flex-1 h-11 rounded-xl bg-[var(--accent)] text-[var(--text-inverse)] text-[length:var(--fs-13)] font-semibold active:scale-[0.98] transition-all"
+            >
+              {searching ? `Show ${results.length} ${results.length === 1 ? 'exercise' : 'exercises'}` : 'Done'}
+            </button>
+          </div>
+        )}
+      >
+        <div className="space-y-6">
+          {CHOOSER_GROUPS.map(group => (
+            <fieldset key={group.key}>
+              <legend className="text-[length:var(--fs-12)] font-semibold text-[var(--text-secondary)] mb-2.5">{group.label}</legend>
+              <div className="flex flex-wrap gap-2">
+                {group.options.map(opt => {
+                  const active = values[group.key] === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setFilters({ [group.key]: active ? '' : opt.value })}
+                      className={`h-9 px-3.5 rounded-full border text-[length:var(--fs-12)] font-medium transition-colors ${active
+                        ? 'bg-[var(--accent)] border-[var(--accent)] text-[var(--text-inverse)]'
+                        : 'border-[var(--border-light)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'}`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          ))}
+        </div>
+      </Modal>
     </main>
   );
 }
@@ -318,7 +432,6 @@ const CameraWorkout = () => {
   const [choiceEx,         setChoiceEx]         = useState(null);
   // Exercise label carried from the choice modal into the manual form.
   const [manualTitle,      setManualTitle]      = useState('');
-  const [chooserQuery, setChooserQuery] = useState('');
 
   const webcamRef = useRef(null);
   const doStopRef = useRef(null);
@@ -939,8 +1052,6 @@ const CameraWorkout = () => {
 
         {!chosen ? (
           <WorkoutChooser
-            query={chooserQuery}
-            onQuery={setChooserQuery}
             onPick={(opt) => {
               // Every picked exercise asks: camera tracker or manual logging?
               const slug = opt?.slug ?? opt?.id;
@@ -1122,12 +1233,18 @@ const CameraWorkout = () => {
           </div>
         </div>
 
-        <main className="p-4 sm:p-4 md:p-8 md:pt-4 pb-28 md:pb-8 max-w-7xl 2xl:max-w-[1400px] mx-auto w-full">
+        <main className="p-4 sm:p-4 md:p-8 md:pt-4 pb-4 md:pb-6 max-w-7xl 2xl:max-w-[1400px] mx-auto w-full">
           <div className="flex flex-col gap-4 sm:gap-6">
             <RightPanel logs={logs} />
           </div>
         </main>
-        <div className="sticky bottom-[76px] md:static z-30 px-[clamp(16px,3vw,32px)] max-w-7xl 2xl:max-w-[1400px] mx-auto w-full pb-2 md:pb-0">
+        {/* Mobile: float above the fixed BottomNav (12px offset + ~60px pill
+            + gap), including the iOS home-indicator inset. Desktop: inline
+            with breathing room under it, since app-main--flush drops padding. */}
+        <div
+          className="sticky md:static z-30 px-[clamp(16px,3vw,32px)] max-w-7xl 2xl:max-w-[1400px] mx-auto w-full pb-2 md:pb-10 md:pt-2"
+          style={{ bottom: 'calc(84px + env(safe-area-inset-bottom, 0px))' }}
+        >
           <div className="glass-card border border-[var(--border-light)] rounded-3xl p-3 shadow-lg md:shadow-none md:bg-none md:border-0 md:p-0 md:rounded-none md:shadow-none">
             <SessionBottomBar
               isRecording={isRecording}
@@ -1138,7 +1255,8 @@ const CameraWorkout = () => {
             />
           </div>
         </div>
-        <div className="h-2 md:hidden" />
+        {/* Room for the fixed BottomNav so the bar never rests underneath it at page end. */}
+        <div className="md:hidden" style={{ height: 'calc(84px + env(safe-area-inset-bottom, 0px))' }} aria-hidden="true" />
         <WorkoutSummary summary={summary} onDone={handleSummaryDone} />
         <WorkoutFeedbackSheet logId={feedbackFor} onClose={handleFeedbackClose} />
         </>

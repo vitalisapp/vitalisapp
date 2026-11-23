@@ -28,7 +28,9 @@ export default function BrandLoader({ size = 'md', message = 'Loading', classNam
         }
       `}</style>
       <img
-        src="/Loading_green.png"
+        src="/Loading_green.webp"
+        width={416}
+        height={312}
         alt=""
         aria-hidden="true"
         draggable={false}

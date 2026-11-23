@@ -14,7 +14,7 @@ export const useLogin = () => {
   const [deactivated, setDeactivated] = useState(null);
   const [reactivating, setReactivating] = useState(false);
   const navigate  = useNavigate();
-  const { setUser, refreshAuth } = useAuth();
+  const { refreshAuth } = useAuth();
 
   // Login 200 only means the password was right — the session lives or dies
   // on whether the browser kept the cookie. Verify immediately so a blocked
@@ -22,8 +22,11 @@ export const useLogin = () => {
   const COOKIE_BLOCKED_MSG =
     'Signed in, but your browser refused the session cookie, so you were signed straight back out. ' +
     'Allow cookies for this site (turn off Incognito / third-party-cookie blocking), then try again.';
-  const confirmSession = async () => {
-    const ok = await refreshAuth();
+  // Silent + set from /me: the login page stays mounted (no full-screen loader
+  // flash, and the cookie-blocked error below is actually visible). Setting the
+  // user only after /me also stops the /login route redirecting early.
+  const confirmSession = async (loginUser) => {
+    const ok = await refreshAuth({ silent: true, fallbackUser: loginUser });
     if (!ok) {
       setError(COOKIE_BLOCKED_MSG);
       return false;
@@ -116,9 +119,7 @@ export const useLogin = () => {
       const user = normalizeUser(data);
       if (!user.id) throw new Error('Login response did not include a user ID.');
 
-      // FIX: store normalized user so shape always matches what /me returns
-      setUser(user);
-      if (!(await confirmSession())) return;
+      if (!(await confirmSession(user))) return;
       routeAfterAuth(user);
     } catch (err) {
       // Unverified account: no session was issued — finish verification first.
@@ -170,9 +171,7 @@ export const useLogin = () => {
       const user = normalizeUser(data);
       if (!user.id) throw new Error('Google login response did not include a user ID.');
 
-      // FIX: store normalized user — same shape as /me
-      setUser(user);
-      if (!(await confirmSession())) return;
+      if (!(await confirmSession(user))) return;
       routeAfterAuth(user);
     } catch (err) {
       if (import.meta.env.DEV) console.error('Google Login Error:', err);

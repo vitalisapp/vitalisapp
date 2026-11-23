@@ -31,6 +31,7 @@ const EXPECTED = [
   '054_free_plans.sql',
   '055_dedupe_user_sessions.sql',
   '056_plan_images.sql',
+  '058_browser_device_identity.sql',
 ];
 
 describe('migrations per-table baseline', () => {

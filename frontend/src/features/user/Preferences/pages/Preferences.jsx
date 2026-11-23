@@ -5,7 +5,6 @@ import { useAccountBasePath } from '../../../../hooks/useAccountBasePath.js';
 import PageHeader from '../../../../components/app/PageHeader.jsx';
 import ThemeToggle from '../../../../components/ThemeToggle.jsx';
 import Icon from '../../../../components/Icon.jsx';
-import LoadingState from '../../../../components/feedback/LoadingState.jsx';
 import ErrorState from '../../../../components/feedback/ErrorState.jsx';
 import { useAuth } from '../../../../hooks/useAuth.jsx';
 import { useTheme } from '../../../../hooks/useTheme.js';
@@ -14,6 +13,7 @@ import { safeGet, safeSet } from '../../../../lib/storage.js';
 import { useToastStore } from '../../../../stores/toastStore.js';
 import '../preferences.css';
 import ReminderSettings from '../components/ReminderSettings.jsx';
+import HomeScreenWidgets from '../components/HomeScreenWidgets.jsx';
 
 const THEME_OPTIONS = [
   { value: 'light', label: 'Light', icon: 'light_mode', preview: 'light', radioLabel: 'Light theme' },
@@ -158,7 +158,17 @@ const Preferences = ({ embedded = false }) => {
     return (
       <AccountPageShell embedded={embedded} userId={user?.id} onLogout={handleLogout} contentClassName="app-container app-container--reading">
         <div className="pref-page">
-          <div className="pt-2 pb-6"><LoadingState message="Loading preferences…" /></div>
+          {/* Skeleton in the page's own layout (header + setting cards) instead of a second brand loader. */}
+          <div className="pt-2 pb-6 space-y-4" role="status" aria-busy="true" aria-label="Loading preferences…">
+            <div className="space-y-2" aria-hidden="true">
+              <div className="h-3 w-20 rounded-full bg-[var(--bg-hover)] animate-pulse" />
+              <div className="h-8 w-48 rounded-lg bg-[var(--bg-hover)] animate-pulse" />
+              <div className="h-3 w-full max-w-md rounded-full bg-[var(--bg-hover)] animate-pulse" />
+            </div>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-28 rounded-2xl bg-[var(--bg-hover)] animate-pulse" aria-hidden="true" />
+            ))}
+          </div>
         </div>
       </AccountPageShell>
     );
@@ -363,6 +373,8 @@ const Preferences = ({ embedded = false }) => {
               </div>
             </div>
           </section>
+
+          <HomeScreenWidgets userId={user?.id} />
 
           <ReminderSettings />
 

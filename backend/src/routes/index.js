@@ -27,6 +27,7 @@ const progressRoutes = require('./progress.routes');
 const adminRoutes = require('./admin.routes');
 const publicRoutes = require('./public.routes');
 const reminderRoutes = require('./reminder.routes');
+const widgetsRoutes = require('./widgets.routes');
 
 const { requireMember } = require('../middleware/verifyUser');
 
@@ -70,6 +71,8 @@ function mountRoutes(app) {
   app.use('/api/forgot-password', forgotPasswordRoutes);
   app.use('/api/feedback', feedbackRoutes);
   app.use('/api/stats', requireMember, statsRoutes);
+  // Windows Widgets Board summary (installed PWA service worker).
+  app.use('/api/widgets', widgetsRoutes);
 
   // Debug helper - GET /api/_routes lists all mounted prefixes (non-prod only)
   app.get('/api/_routes', (req, res) => {
@@ -109,6 +112,7 @@ function mountRoutes(app) {
         'POST /api/forgot-password/*',
         'GET|POST /api/feedback/*',
         'GET  /api/stats/*',
+        'GET  /api/widgets/summary?today=YYYY-MM-DD (Windows Widgets Board, read-only)',
         'WS   /socket.io (messenger + dashboard rooms)',
         '410  /api/clinic | /api/atelier | /api/live-coaching | /api/workout-sessions | /api/nutrition (removed modules)',
       ],

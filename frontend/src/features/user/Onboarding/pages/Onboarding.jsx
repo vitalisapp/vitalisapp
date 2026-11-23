@@ -355,7 +355,7 @@ const Onboarding = () => {
       // Best-effort: build one recommended plan per goal (primary active).
       // Fire-and-forget so it never delays the dashboard transition.
       apiPost('/api/plans/auto-from-goal', { all: true, regenerate: true }).catch(() => {});
-      navigate('/dashboard/plans?mine=1');
+      navigate('/dashboard/plans?tab=my-plans');
     } catch (e) {
       setError(e?.message || 'Could not finish. Check connection and try again — you can skip for now.');
     } finally {

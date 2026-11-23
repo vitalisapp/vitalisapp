@@ -33,7 +33,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Vitalis" />
     <link rel="preconnect" href="https://accounts.google.com" />
-    <link rel="preload" as="image" href="/Loading_green.png" fetchpriority="low" />
+    <!-- Boot loader art: 9KB WebP (was a 2.4MB PNG), so it can load at normal priority. -->
+    <link rel="preload" as="image" href="/Loading_green.webp" type="image/webp" />
     <title>Vitalis</title>
   </head>
   <body>

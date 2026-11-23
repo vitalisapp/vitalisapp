@@ -3,7 +3,7 @@ import { Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import { MemberRoute, ProtectedRoute, PublicRoute } from '../../hooks/useMiddleware.jsx';
 import { ErrorBoundary } from '../../components/ErrorBoundary.jsx';
-import BrandLoader from '../../components/ui/BrandLoader.jsx';
+import { FullPageLoader } from '../../components/feedback/LoadingState.jsx';
 
 const Dashboard = lazy(() => import('../../features/user/Dashboard/pages/Dashboard.jsx'));
 
@@ -39,15 +39,7 @@ const AdminAudit = lazy(() => import('../../features/admin/pages/AdminAudit.jsx'
 const AdminAccess = lazy(() => import('../../features/admin/pages/AdminAccess.jsx'));
 const AccessRedirect = lazy(() => import('../../pages/Go/AccessRedirect.jsx'));
 
-const RouteFallback = () => (
-  <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-[var(--bg-primary)]" role="status" aria-busy="true" aria-live="polite">
-    <BrandLoader size="lg" message="Loading Vitalis…" />
-    <div className="w-48 max-w-[60vw] space-y-2" aria-hidden="true">
-      <div className="h-2 rounded-full bg-[var(--bg-hover)] animate-pulse" />
-      <div className="h-2 rounded-full bg-[var(--bg-hover)] animate-pulse w-3/4 mx-auto" />
-    </div>
-  </div>
-);
+const RouteFallback = FullPageLoader;
 
 export default function AppRoutes() {
   const { user, loading } = useAuth();

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiGet, apiPost } from '../../../../lib/apiClient.js';
 import { useToastStore } from '../../../../stores/toastStore.js';
 import Button from '../../../../components/ui/Button.jsx';
-import Spinner from '../../../../components/ui/Spinner.jsx';
+import Modal from '../../../../components/ui/Modal.jsx';
 
 // MyFitnessPal-inspired quick log: one tap → the right logging surface.
 // Weight logs inline; everything else deep-links to its module.
@@ -61,8 +61,7 @@ const QuickLog = ({ userId = undefined, onWeightLogged = undefined }) => {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={close}>
-          <div className="glass-panel border border-[var(--border-light)] w-full max-w-[400px] rounded-[20px] p-4" onClick={(e) => e.stopPropagation()}>
+        <Modal isOpen onClose={close} size="md" hideClose>
             {mode === 'menu' ? (
               <>
                 <div className="flex justify-between items-center px-2 py-2">
@@ -73,7 +72,7 @@ const QuickLog = ({ userId = undefined, onWeightLogged = undefined }) => {
                   </button>
                 </div>
                 {items.map((it) => (
-                  <button key={it.label} onClick={() => { close(); it.action(); }}
+                  <button key={it.label} onClick={() => { if (it.label !== 'Log Weight') close(); it.action(); }}
                     className="w-full flex items-center gap-3 px-3 py-3 rounded-[12px] hover:bg-[var(--bg-hover)] transition-colors text-left">
                     <span className="w-9 h-9 rounded-full bg-[var(--bg-card)] border border-[var(--accent-border)] flex items-center justify-center shrink-0">
                       <span className="material-symbols-outlined text-[length:var(--fs-18)] text-[var(--accent)]">{it.icon}</span>
@@ -99,8 +98,7 @@ const QuickLog = ({ userId = undefined, onWeightLogged = undefined }) => {
                 </div>
               </form>
             )}
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );

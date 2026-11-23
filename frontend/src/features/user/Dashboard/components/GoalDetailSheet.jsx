@@ -4,6 +4,7 @@ import { GOAL_TYPES, goalLabel } from '../../Onboarding/constants/goals.js';
 import ChangeGoalModal from '../../Profile/components/ChangeGoalModal.jsx';
 import { useToastStore } from '../../../../stores/toastStore.js';
 import { apiPost } from '../../../../lib/apiClient.js';
+import Modal from '../../../../components/ui/Modal.jsx';
 
 const goalIcon = (goalType) => GOAL_TYPES.find((g) => g.key === goalType)?.icon || 'flag';
 
@@ -49,14 +50,8 @@ export default function GoalDetailSheet({ userId = undefined, goal = undefined, 
 
   return (
     <>
-      <div
-        className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      >
-        <div
-          className="glass-panel border border-[var(--border-light)] w-full max-w-[440px] rounded-[20px] p-6 max-h-[90vh] overflow-y-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
+      {!changeOpen && (
+      <Modal isOpen onClose={onClose} size="lg" hideClose>
           <div className="flex justify-between items-center mb-1">
             <div className="flex items-center gap-3">
               <span className="w-10 h-10 rounded-full bg-[var(--accent-bg)] text-[var(--accent)] flex items-center justify-center">
@@ -148,22 +143,22 @@ export default function GoalDetailSheet({ userId = undefined, goal = undefined, 
           )}
 
           {/* Actions */}
-          <div className="flex gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-4">
             <button
               onClick={() => setChangeOpen(true)}
-              className="flex-1 h-12 rounded-[12px] border border-[var(--border-light)] font-bold text-[length:var(--fs-13)] flex items-center justify-center gap-1.5"
+              className="flex-1 min-w-[140px] h-12 rounded-[12px] border border-[var(--border-light)] font-bold text-[length:var(--fs-13)] flex items-center justify-center gap-1.5"
             >
               <span className="material-symbols-outlined text-[length:var(--fs-18)]">edit</span> Change Goal
             </button>
             <button
               onClick={() => { onClose?.(); navigate('/dashboard/plans'); }}
-              className="flex-1 h-12 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[length:var(--fs-13)] flex items-center justify-center gap-1.5"
+              className="flex-1 min-w-[140px] h-12 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[length:var(--fs-13)] flex items-center justify-center gap-1.5"
             >
               <span className="material-symbols-outlined text-[length:var(--fs-18)]">book</span> View Plans
             </button>
           </div>
-        </div>
-      </div>
+      </Modal>
+      )}
 
       {changeOpen && (
         <ChangeGoalModal

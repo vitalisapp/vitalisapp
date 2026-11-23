@@ -332,7 +332,7 @@ const GoalPicker = ({ value = undefined, disabled = undefined, onPick = undefine
         type="button"
         id="pf-goal"
         disabled={disabled}
-        aria-haspopup="listbox"
+        aria-haspopup="dialog"
         aria-expanded={isOpen}
         onClick={() => setOpen((v) => !v)}
         className="mt-1 w-full h-12 min-h-[48px] rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] px-3 flex items-center gap-3 text-left outline-none focus:border-[var(--accent)] disabled:opacity-60 transition-colors"
@@ -354,9 +354,8 @@ const GoalPicker = ({ value = undefined, disabled = undefined, onPick = undefine
       </button>
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
-          <div role="listbox" aria-label="Choose your goal" className="absolute z-50 left-0 right-0 mt-2 rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-xl overflow-hidden">
-            <div className="max-h-[280px] overflow-y-auto p-1.5 space-y-1">
+          <Modal isOpen onClose={() => setOpen(false)} title="Choose your goal" size="lg" className="pf-goal-dialog">
+            <div role="listbox" aria-label="Choose your goal" className="space-y-2">
               {GOAL_TYPES.map((g) => {
                 const selected = g.key === value;
                 return (
@@ -383,7 +382,7 @@ const GoalPicker = ({ value = undefined, disabled = undefined, onPick = undefine
                 );
               })}
             </div>
-          </div>
+          </Modal>
         </>
       )}
     </div>
@@ -464,6 +463,7 @@ const Profile = ({ embedded = false }) => {
     showToast,
     phoneVerified,
   } = useProfile();
+  const isManagement = ['admin', 'super_admin', 'superadmin'].includes(user?.role);
 
   const {
     uploadPreview,
@@ -482,7 +482,7 @@ const Profile = ({ embedded = false }) => {
   // cached with the profile so returning to the page does not refetch it.
   const { data: streakDays = 0 } = useQuery({
     queryKey: ['profile-streak', USER_ID],
-    enabled: !!USER_ID,
+    enabled: !!USER_ID && !isManagement,
     staleTime: 1000 * 60 * 5,
     queryFn: async () => {
       const d = new Date();
@@ -647,7 +647,7 @@ const Profile = ({ embedded = false }) => {
         className="pf-page-head"
         eyebrow="Account"
         title={<>Your <em>Profile</em></>}
-        description="Identity, body metrics, goals and the settings tied to your account."
+        description={isManagement ? 'Manage your account details, security and active sessions.' : 'Identity, body metrics, goals and the settings tied to your account.'}
         actions={
           <button
             type="button"
@@ -662,7 +662,7 @@ const Profile = ({ embedded = false }) => {
         }
       />
 
-      {onboardingIncomplete && (
+      {!isManagement && onboardingIncomplete && (
         <div className="pf-setup">
           <span className="material-symbols-outlined" aria-hidden="true">warning</span>
           <div className="pf-setup-copy">
@@ -704,7 +704,7 @@ const Profile = ({ embedded = false }) => {
                 <div className="pf-identity-copy">
                   <h2 className="pf-name">{displayName}</h2>
                   <p className="pf-email">{emailText}</p>
-                  {memberSinceText && <p className="pf-member-since">Member since {memberSinceText}</p>}
+                   {!isManagement && memberSinceText && <p className="pf-member-since">Member since {memberSinceText}</p>}
                 </div>
               </div>
 
@@ -741,7 +741,7 @@ const Profile = ({ embedded = false }) => {
                 </div>
               )}
 
-              <div className="pf-mobile-summary" aria-label="At a glance">
+               {!isManagement && <div className="pf-mobile-summary" aria-label="At a glance">
                 <div className="pf-mobile-stat">
                   <span className="pf-mobile-stat-value">{streakDays}</span>
                   <span className="pf-mobile-stat-label">Day streak</span>
@@ -750,15 +750,15 @@ const Profile = ({ embedded = false }) => {
                   <span className="pf-mobile-stat-value">{progressTileValue}</span>
                   <span className="pf-mobile-stat-label">{progressTileLabel}</span>
                 </div>
-              </div>
+               </div>}
 
-              <div className="pf-rail-facts">
+               {!isManagement && <div className="pf-rail-facts">
                 {memberSinceText && <RailFact icon="calendar_month" label="Member since" value={memberSinceText} />}
                 <RailFact icon="local_fire_department" label="Day streak" value={`${streakDays} ${streakDays === 1 ? 'day' : 'days'}`} />
                 <RailFact icon="trending_up" label="Goal progress" value={progressFactValue} />
-              </div>
+               </div>}
 
-              <div className="pf-rail-about">
+               <div className="pf-rail-about">
                 <h3 className="pf-rail-about-title">About me</h3>
                 {aboutText
                   ? <p className="pf-rail-about-text">{aboutText}</p>
@@ -769,6 +769,7 @@ const Profile = ({ embedded = false }) => {
         </aside>
 
         <div className="pf-main">
+          {!isManagement && <>
           <section className="pf-goal-card" aria-labelledby="pf-goal-heading">
             <span className="pf-goal-icon" aria-hidden="true">
               <span className="material-symbols-outlined">flag</span>
@@ -800,6 +801,7 @@ const Profile = ({ embedded = false }) => {
             </div>
             <BodyMetricsPanel USER_ID={USER_ID} initialWeight={formData.weight_kg} initialHeight={formData.height_cm} onboarding={onboarding} showToast={showToast} editSignal={metricsEditSignal} onIdentitySaved={(g) => { if (g) setOnboarding(g); }} />
           </section>
+          </>}
 
           <section className="pf-section" aria-labelledby="pf-account-heading">
             <div className="pf-section-head">
@@ -813,7 +815,7 @@ const Profile = ({ embedded = false }) => {
             <div className="pf-list">
               {/* My Account */}
               <div className="pf-list-item" ref={accountSectionRef}>
-                <SectionRow icon="person" title="My Account" subtitle="Name, mobile, contact & bio" attention={needsOnboarding} expanded={openSection === 'account'} onClick={() => toggle('account')} />
+                <SectionRow icon="person" title="My Account" subtitle="Name, mobile, contact & bio" attention={!isManagement && needsOnboarding} expanded={openSection === 'account'} onClick={() => toggle('account')} />
                 {openSection === 'account' && (
                   <div className="pf-row-panel">
                     <div className={`pf-account-form ${isMasterEditing ? '' : 'is-readonly'}`}>
@@ -874,6 +876,7 @@ const Profile = ({ embedded = false }) => {
                         <label htmlFor="pf-bio" className="text-[length:var(--fs-10)] font-bold uppercase tracking-widest text-[var(--text-muted)]">Bio</label>
                         <textarea id="pf-bio" value={isGoalLikeBio(formData.bio) ? '' : formData.bio} disabled={!isMasterEditing} onChange={e => handleInputChange(e, 'bio')} rows={2} placeholder="Tell us about yourself" className="mt-1 w-full rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] px-3 py-3 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] disabled:opacity-60 resize-y min-h-[76px]" />
                       </div>
+                      {!isManagement && <>
                       <div className="pf-form-span min-w-0">
                         <label htmlFor="pf-goal" className="text-[length:var(--fs-10)] font-bold uppercase tracking-widest text-[var(--text-muted)]">Goal</label>
                         <GoalPicker
@@ -912,6 +915,7 @@ const Profile = ({ embedded = false }) => {
                       {!onboarding && (
                         <p className="pf-account-note pf-form-span">DOB / sex apply once your plan exists — create it in My Goals below without leaving this page.</p>
                       )}
+                      </>}
                       {isMasterEditing && isDirty && (
                         <div className="pf-account-actions pf-form-span">
                           <button type="button" onClick={() => { handleDiscard(); }} className="pf-account-discard">Discard</button>
@@ -924,6 +928,7 @@ const Profile = ({ embedded = false }) => {
               </div>
 
               {/* My Goals — full plan snapshot lives here (single home, no duplicate) */}
+              {!isManagement && <>
               <div className="pf-list-item" ref={goalsSectionRef}>
                 <SectionRow icon="flag" title="My Goals" subtitle={onboarding?.goalType ? goalLabel(onboarding.goalType) : 'Set your fitness goal'} attention={missingGoal} expanded={openSection === 'goals'} onClick={() => toggle('goals')} />
                 {openSection === 'goals' && (
@@ -950,6 +955,7 @@ const Profile = ({ embedded = false }) => {
                 )}
               </div>
 
+              </>}
               {/* Devices & Sessions */}
               <div className="pf-list-item">
                 <SectionRow icon="devices" title="Devices & Sessions" subtitle={sessionsSubtitle} expanded={openSection === 'devices'} onClick={() => toggle('devices')} />

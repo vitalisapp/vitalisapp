@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import Icon from "../../../../components/Icon.jsx";
 import { apiPatch } from "../../../../lib/apiClient.js";
 
@@ -42,9 +43,9 @@ export default function WorkoutFeedbackSheet({ logId = undefined, onClose = unde
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[90] bg-[var(--bg-overlay)] backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
+      className="fixed inset-0 z-[var(--z-modal)] bg-[var(--bg-overlay)] backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
       role="dialog" aria-modal="true" aria-label="Rate your workout"
     >
       <div className="w-full sm:max-w-md bg-[var(--bg-primary)] border border-[var(--border-light)] rounded-t-3xl sm:rounded-3xl p-6 sm:p-8 max-h-[90dvh] overflow-y-auto">
@@ -61,7 +62,7 @@ export default function WorkoutFeedbackSheet({ logId = undefined, onClose = unde
           </p>
         </div>
 
-        <div className="mt-5 grid grid-cols-5 gap-2">
+        <div className="mt-5 grid grid-cols-2 min-[420px]:grid-cols-5 gap-2">
           {LEVELS.map((l) => {
             const active = rating === l.value;
             return (
@@ -117,6 +118,7 @@ export default function WorkoutFeedbackSheet({ logId = undefined, onClose = unde
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

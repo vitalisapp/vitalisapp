@@ -20,6 +20,9 @@ import {
 import { useAuth } from "../../../../hooks/useAuth.jsx";
 import { useNutritionTracker } from "../hooks/useNutritionTracker.js";
 import { apiGet } from "../../../../lib/apiClient.js";
+import { useQuery } from "@tanstack/react-query";
+import { qk, queryFns, swr } from "../../../../lib/queries.js";
+import { useActiveGoal } from "../../Onboarding/hooks/useActiveGoal.js";
 import {
   kcalFromMacros,
   normalizeGrams,
@@ -716,35 +719,38 @@ export default function MealTracker() {
   }, []);
 
   // Real goals: nutrient-goals API + active goal dailyKcal (fall back to constants offline).
-  const [calorieGoal, setCalorieGoal] = useState(FALLBACK_CALORIE_GOAL);
-  const [macroTargets, setMacroTargets] = useState(FALLBACK_MACRO_TARGETS);
-  const [goalType, setGoalType] = useState(null);
-  useEffect(() => {
-    if (!userId) return undefined;
-    let cancelled = false;
-    Promise.all([
-      apiGet(`/api/nutrient-goals/${userId}`).catch(() => null),
-      apiGet(`/api/goals/active/${userId}`).catch(() => null),
-    ]).then(([nutrientGoals, activeGoal]) => {
-      if (cancelled) return;
-      const goals = nutrientGoals?.goals || [];
-      const find = (key) => {
-        const goal = goals.find((entry) => entry.nutrient === key);
-        return goal?.target_value != null ? Number(goal.target_value) : null;
-      };
-      const kcal = find("CALORIES") ?? activeGoal?.goal?.dailyKcal ?? FALLBACK_CALORIE_GOAL;
-      setCalorieGoal(Number(kcal) || FALLBACK_CALORIE_GOAL);
-      setGoalType(activeGoal?.goal?.goalType || null);
-      setMacroTargets({
-        protein: find("PROTEIN") ?? activeGoal?.goal?.proteinG ?? FALLBACK_MACRO_TARGETS.protein,
-        carbs: find("CARBOHYDRATES") ?? activeGoal?.goal?.carbsG ?? FALLBACK_MACRO_TARGETS.carbs,
-        fat: find("FAT") ?? activeGoal?.goal?.fatG ?? FALLBACK_MACRO_TARGETS.fat,
-      });
-    });
-    return () => {
-      cancelled = true;
+  // Shared cached queries: the active goal is the same request MacroCoachCard
+  // makes (deduped), and a revisit shows the real targets instantly.
+  const nutrientGoalsQuery = useQuery({
+    queryKey: qk.nutrientGoals(userId),
+    queryFn: queryFns.nutrientGoals(userId),
+    enabled: Boolean(userId),
+    ...swr,
+  });
+  const { goal: activeGoal, initialLoading: activeGoalLoading } = useActiveGoal(userId);
+  // Like the old Promise.all: only switch off the fallbacks once BOTH requests
+  // have settled (success or failure), so targets never flicker between sources.
+  const goalsSettled = !nutrientGoalsQuery.isLoading && !activeGoalLoading;
+  const { calorieGoal, macroTargets, goalType } = useMemo(() => {
+    if (!goalsSettled) {
+      return { calorieGoal: FALLBACK_CALORIE_GOAL, macroTargets: FALLBACK_MACRO_TARGETS, goalType: null };
+    }
+    const goals = nutrientGoalsQuery.data?.goals || [];
+    const find = (key) => {
+      const goal = goals.find((entry) => entry.nutrient === key);
+      return goal?.target_value != null ? Number(goal.target_value) : null;
     };
-  }, [userId]);
+    const kcal = find("CALORIES") ?? activeGoal?.dailyKcal ?? FALLBACK_CALORIE_GOAL;
+    return {
+      calorieGoal: Number(kcal) || FALLBACK_CALORIE_GOAL,
+      goalType: activeGoal?.goalType || null,
+      macroTargets: {
+        protein: find("PROTEIN") ?? activeGoal?.proteinG ?? FALLBACK_MACRO_TARGETS.protein,
+        carbs: find("CARBOHYDRATES") ?? activeGoal?.carbsG ?? FALLBACK_MACRO_TARGETS.carbs,
+        fat: find("FAT") ?? activeGoal?.fatG ?? FALLBACK_MACRO_TARGETS.fat,
+      },
+    };
+  }, [goalsSettled, nutrientGoalsQuery.data, activeGoal]);
 
   // Single pass over history for the selected day.
   const dayStats = useMemo(() => {

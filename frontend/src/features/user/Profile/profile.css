@@ -1932,3 +1932,21 @@
     transition: none;
   }
 }
+.pf-goal-dialog {
+  background: var(--bg-elevated);
+  isolation: isolate;
+}
+
+.profile-page .material-symbols-outlined,
+.pf-goal-dialog .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-feature-settings: 'liga';
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 1em;
+  overflow: hidden;
+}

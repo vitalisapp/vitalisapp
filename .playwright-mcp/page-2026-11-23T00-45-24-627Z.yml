@@ -1,0 +1,513 @@
+- generic [ref=f2e4]:
+  - banner [ref=f2e5]:
+    - generic [ref=f2e6]:
+      - link "Vitalis home" [ref=f2e7] [cursor=pointer]:
+        - /url: "#top"
+        - generic [ref=f2e10]: ITALIS
+      - navigation "Primary" [ref=f2e11]:
+        - link "Home" [ref=f2e12] [cursor=pointer]:
+          - /url: "#top"
+        - link "About" [ref=f2e13] [cursor=pointer]:
+          - /url: "#about"
+        - link "Features" [ref=f2e14] [cursor=pointer]:
+          - /url: "#features"
+        - link "Download" [ref=f2e15] [cursor=pointer]:
+          - /url: "#download"
+        - link "Pricing" [ref=f2e16] [cursor=pointer]:
+          - /url: "#pricing"
+      - generic [ref=f2e17]:
+        - button "Switch to dark mode" [ref=f2e18] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f2e19]:
+            - generic [aria-hidden] [ref=f2e21]: light_mode
+            - generic [aria-hidden] [ref=f2e23]: dark_mode
+        - button "Get Started" [ref=f2e24] [cursor=pointer]
+  - main [ref=f2e25]:
+    - region "Your Health, Our App" [ref=f2e26]:
+      - generic [ref=f2e28]:
+        - generic [ref=f2e29]:
+          - heading "Your Health, Our App" [level=1] [ref=f2e31]:
+            - generic [ref=f2e32]: Your Health,
+            - generic [ref=f2e33]: Our App
+          - paragraph [ref=f2e36]: Training, nutrition, and activity in one place. Vitalis turns the workouts, meals, and runs you log into clear trends and plans — free and manual-first.
+          - button "Join Us Now" [ref=f2e39] [cursor=pointer]:
+            - generic [aria-hidden] [ref=f2e42]: arrow_forward
+          - generic [ref=f2e44]:
+            - link "Open the Vitalis registration page" [ref=f2e45] [cursor=pointer]:
+              - /url: http://localhost:5174/register
+              - img "QR code linking to the Vitalis app" [ref=f2e46]
+            - generic [ref=f2e47]:
+              - heading "Install Our App" [level=3] [ref=f2e48]
+              - button "Create an account" [ref=f2e49] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f2e50]: arrow_forward
+            - generic [ref=f2e51]:
+              - paragraph [ref=f2e52]: Scan the code to create a free account and add Vitalis to your home screen.
+              - generic [ref=f2e53]:
+                - generic [ref=f2e54]:
+                  - strong [ref=f2e55]: —
+                  - generic [ref=f2e56]: Appmodules
+                - generic [ref=f2e57]:
+                  - strong [ref=f2e58]: Free
+                  - generic [ref=f2e59]: To getstarted
+        - generic [ref=f2e64]:
+          - generic [aria-hidden]:
+            - generic:
+              - generic:
+                - generic:
+                  - generic: 9:41
+                  - generic: ▮▮▮
+                - generic:
+                  - generic:
+                    - generic: Morning
+                    - strong: Welcome back
+                  - generic:
+                    - generic [aria-hidden]: notifications
+                - generic:
+                  - generic:
+                    - generic: Today · Goal
+                    - strong:
+                      - text: 1,960
+                      - generic: kcal remaining today
+                    - generic:
+                      - generic:
+                        - generic [aria-hidden]: restaurant
+                        - text: 450 eaten
+                      - generic:
+                        - generic [aria-hidden]: local_fire_department
+                        - text: 310 burned
+                    - generic:
+                      - text: Log activity
+                      - generic [aria-hidden]: arrow_forward
+                - generic:
+                  - generic:
+                    - strong: Weekly Activity
+                    - emphasis: 155 min
+                  - generic:
+                    - generic: M
+                    - generic: T
+                    - generic: W
+                    - generic: T
+                    - generic: F
+                    - generic: S
+                    - generic: S
+            - generic:
+              - generic:
+                - generic:
+                  - generic: 9:41
+                  - generic: ▮▮▮
+                - generic:
+                  - generic: Nutrition
+                  - generic:
+                    - generic [aria-hidden]: photo_camera
+                - generic:
+                  - generic:
+                    - generic: M
+                    - strong: "22"
+                  - generic:
+                    - generic: T
+                    - strong: "23"
+                  - generic:
+                    - generic: W
+                    - strong: "24"
+                  - generic:
+                    - generic: T
+                    - strong: "25"
+                  - generic:
+                    - generic: F
+                    - strong: "26"
+                  - generic:
+                    - generic: S
+                    - strong: "27"
+                  - generic:
+                    - generic: S
+                    - strong: "28"
+                - generic:
+                  - generic:
+                    - strong: "450"
+                    - generic: of 1,960 kcal
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: Protein
+                        - strong: 45 / 140g
+                    - generic:
+                      - generic:
+                        - generic: Carbs
+                        - strong: 52 / 220g
+                    - generic:
+                      - generic:
+                        - generic: Fat
+                        - strong: 14 / 65g
+                - generic:
+                  - generic:
+                    - generic [aria-hidden]: photo_camera
+                  - generic:
+                    - strong: Log a meal
+                    - generic: Scan or add by hand
+                  - generic:
+                    - generic [aria-hidden]: arrow_forward
+                - generic:
+                  - generic:
+                    - strong: Today's meals
+                    - emphasis: See all
+                  - generic:
+                    - generic:
+                      - strong: Breakfast
+                      - generic: Oats · berries · yogurt
+                    - strong: "420"
+          - button "See How It Works" [ref=f2e66] [cursor=pointer]:
+            - generic [aria-hidden] [ref=f2e68]: play_arrow
+          - paragraph [ref=f2e70]: Real-time reps and form feedback, right in your browser.
+          - generic [ref=f2e71]:
+            - paragraph [ref=f2e72]: Your health plan, on every device.
+            - link "Open Vitalis" [ref=f2e73] [cursor=pointer]:
+              - /url: "#download"
+              - text: Open Vitalis
+              - generic [aria-hidden] [ref=f2e75]: arrow_forward
+      - generic "Vitalis at a glance" [ref=f2e79]:
+        - generic [ref=f2e80]:
+          - strong [ref=f2e81]: —
+          - generic [ref=f2e82]: Site visits
+        - generic [ref=f2e83]:
+          - strong [ref=f2e84]: —
+          - generic [ref=f2e85]: Active members
+        - generic [ref=f2e86]:
+          - strong [ref=f2e87]: —
+          - generic [ref=f2e88]: Integrated modules
+        - generic [ref=f2e89]:
+          - strong [ref=f2e90]: —
+          - generic [ref=f2e91]: Manual-first logging
+    - region "Everything You Need To Keep Moving" [ref=f2e92]:
+      - generic [ref=f2e93]:
+        - generic [ref=f2e94]:
+          - heading "Everything You Need To Keep Moving" [level=2] [ref=f2e96]: Everything You NeedTo Keep Moving
+          - generic [ref=f2e97]:
+            - paragraph [ref=f2e99]: Four modules work as one system. Each reads from and writes to the same daily log, so nothing you track is ever wasted.
+            - generic [ref=f2e101]:
+              - button "Previous features" [disabled] [ref=f2e102]:
+                - generic [aria-hidden] [ref=f2e103]: arrow_back
+              - button "Next features" [ref=f2e104] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f2e105]: arrow_forward
+        - region "Vitalis features" [ref=f2e106]:
+          - article [ref=f2e107]:
+            - generic [aria-hidden] [ref=f2e109]: directions_run
+            - heading "GPS activity" [level=3] [ref=f2e111]
+            - paragraph [ref=f2e112]: Record runs and walks with a GPS route, distance, and pace, then share them on the feed for kudos.
+          - article [ref=f2e113]:
+            - generic [aria-hidden] [ref=f2e115]: fitness_center
+            - heading "Training plans" [level=3] [ref=f2e117]
+            - paragraph [ref=f2e118]: Follow structured plans day by day, enroll with one tap, and watch each completed session move you forward.
+          - article [ref=f2e119]:
+            - generic [aria-hidden] [ref=f2e121]: query_stats
+            - heading "Progress analytics" [level=3] [ref=f2e123]
+            - paragraph [ref=f2e124]: Weight, BMI, and training-volume trends drawn live from the workouts and meals you have already logged.
+            - button "Discover More" [ref=f2e125] [cursor=pointer]
+          - article [ref=f2e126]:
+            - generic [aria-hidden] [ref=f2e128]: forum
+            - heading "Community & chat" [level=3] [ref=f2e130]
+            - paragraph [ref=f2e131]: Share milestones on the community feed and keep your training partners close with private messages.
+    - region "The Whole Toolkit Inside Vitalis" [ref=f2e132]:
+      - generic [ref=f2e133]:
+        - generic [ref=f2e134]:
+          - heading "The Whole Toolkit Inside Vitalis" [level=2] [ref=f2e136]: The Whole ToolkitInside Vitalis
+          - paragraph [ref=f2e138]: Nutrition, movement, and training are treated as one routine. Every screen is built around the data you actually log, not a generic dashboard.
+        - generic [ref=f2e139]:
+          - link "Meal tracking — open in Vitalis" [ref=f2e141] [cursor=pointer]:
+            - /url: /dashboard/meal-tracker
+            - img "Athlete holding a green apple after a workout" [ref=f2e143]
+            - generic [ref=f2e144]:
+              - heading "Meal tracking" [level=3] [ref=f2e145]
+              - generic [aria-hidden] [ref=f2e147]: arrow_forward
+            - paragraph [ref=f2e148]: Log meals by hand or scan a plate for an AI macro estimate. Calories, protein, carbs, and fats stay in one daily view.
+          - link "Activity tracking — open in Vitalis" [ref=f2e150] [cursor=pointer]:
+            - /url: /dashboard/activity-map
+            - img "Athlete drinking water during a training session" [ref=f2e152]
+            - generic [ref=f2e153]:
+              - heading "Activity tracking" [level=3] [ref=f2e154]
+              - generic [aria-hidden] [ref=f2e156]: arrow_forward
+            - paragraph [ref=f2e157]: Capture GPS runs and daily movement. Your timeline keeps every entry together.
+          - link "Camera workouts — open in Vitalis" [ref=f2e159] [cursor=pointer]:
+            - /url: /dashboard/workouts
+            - img "Athlete training with a dumbbell in a bright studio" [ref=f2e161]
+            - generic [ref=f2e162]:
+              - heading "Camera workouts" [level=3] [ref=f2e163]
+              - generic [aria-hidden] [ref=f2e165]: arrow_forward
+            - paragraph [ref=f2e166]: Move with on-screen guidance, automatic rep counting, and live form feedback. No extra equipment required.
+    - region "One Simple Plan Free For Everyone" [ref=f2e167]:
+      - generic [ref=f2e168]:
+        - generic [ref=f2e169]:
+          - heading "One Simple Plan Free For Everyone" [level=2] [ref=f2e171]: One Simple PlanFree For Everyone
+          - paragraph [ref=f2e173]: No trial timer, no credit card, and no locked features. Start with everything Vitalis offers and keep every insight you earn.
+        - generic [ref=f2e174]:
+          - link "01 FREE FOREVER Every tracking module, plan, and insight. No trial timer and no paywall. Start from Free" [ref=f2e176] [cursor=pointer]:
+            - /url: /register
+            - generic [ref=f2e177]:
+              - generic [ref=f2e178]: "01"
+              - heading "FREE FOREVER" [level=3] [ref=f2e179]
+              - paragraph [ref=f2e180]: Every tracking module, plan, and insight. No trial timer and no paywall.
+            - generic [ref=f2e181]:
+              - generic [ref=f2e182]:
+                - generic [ref=f2e183]: Start from
+                - generic [ref=f2e184]: Free
+              - generic [aria-hidden] [ref=f2e186]: arrow_forward
+          - link "02 NO CARD NEEDED Create an account in under a minute with just your name and email. Always Free" [ref=f2e188] [cursor=pointer]:
+            - /url: /register
+            - generic [ref=f2e189]:
+              - generic [ref=f2e190]: "02"
+              - heading "NO CARD NEEDED" [level=3] [ref=f2e191]
+              - paragraph [ref=f2e192]: Create an account in under a minute with just your name and email.
+            - generic [ref=f2e193]:
+              - generic [ref=f2e194]:
+                - generic [ref=f2e195]: Always
+                - generic [ref=f2e196]: Free
+              - generic [aria-hidden] [ref=f2e198]: arrow_forward
+          - link "03 YOUR DATA Export your complete log history whenever you want. Nothing is locked in. Included Always" [ref=f2e200] [cursor=pointer]:
+            - /url: /dashboard/logs
+            - generic [ref=f2e201]:
+              - generic [ref=f2e202]: "03"
+              - heading "YOUR DATA" [level=3] [ref=f2e203]
+              - paragraph [ref=f2e204]: Export your complete log history whenever you want. Nothing is locked in.
+            - generic [ref=f2e205]:
+              - generic [ref=f2e206]:
+                - generic [ref=f2e207]: Included
+                - generic [ref=f2e208]: Always
+              - generic [aria-hidden] [ref=f2e210]: arrow_forward
+    - region "Available Wherever You Train" [ref=f2e211]:
+      - generic [ref=f2e214]:
+        - generic [ref=f2e215]:
+          - heading "Available Wherever You Train" [level=2] [ref=f2e216]: Available WhereverYou Train
+          - generic [ref=f2e217]:
+            - button "Download Vitalis app" [ref=f2e218] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f2e219]: download
+              - generic [ref=f2e220]:
+                - generic [ref=f2e221]: Download
+                - strong [ref=f2e222]: Vitalis app
+            - button "Works on Any browser" [ref=f2e223] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f2e224]: language
+              - generic [ref=f2e225]:
+                - generic [ref=f2e226]: Works on
+                - strong [ref=f2e227]: Any browser
+        - generic [aria-hidden] [ref=f2e229]:
+          - generic [ref=f2e231]:
+            - generic [ref=f2e232]:
+              - generic [ref=f2e233]: 9:41
+              - generic [ref=f2e234]: ▮▮▮
+            - generic [ref=f2e235]:
+              - generic [aria-hidden] [ref=f2e237]: arrow_back
+              - generic [ref=f2e238]: Meal Tracker
+              - generic [aria-hidden] [ref=f2e240]: notifications
+            - paragraph [ref=f2e241]: Nutrition
+            - generic [ref=f2e242]:
+              - generic [ref=f2e243]:
+                - generic [ref=f2e244]: M
+                - strong [ref=f2e245]: "22"
+              - generic [ref=f2e246]:
+                - generic [ref=f2e247]: T
+                - strong [ref=f2e248]: "23"
+              - generic [ref=f2e249]:
+                - generic [ref=f2e250]: W
+                - strong [ref=f2e251]: "24"
+              - generic [ref=f2e252]:
+                - generic [ref=f2e253]: T
+                - strong [ref=f2e254]: "25"
+              - generic [ref=f2e255]:
+                - generic [ref=f2e256]: F
+                - strong [ref=f2e257]: "26"
+              - generic [ref=f2e258]:
+                - generic [ref=f2e259]: S
+                - strong [ref=f2e260]: "27"
+              - generic [ref=f2e261]:
+                - generic [ref=f2e262]: S
+                - strong [ref=f2e263]: "28"
+            - generic [ref=f2e264]:
+              - generic [ref=f2e265]:
+                - strong [ref=f2e266]: "450"
+                - generic [ref=f2e267]: of 1,960 kcal
+              - generic [ref=f2e268]:
+                - generic [ref=f2e269]:
+                  - generic [ref=f2e270]: Protein
+                  - strong [ref=f2e271]: 45/140g
+                - generic [ref=f2e274]:
+                  - generic [ref=f2e275]: Carbs
+                  - strong [ref=f2e276]: 52/220g
+                - generic [ref=f2e279]:
+                  - generic [ref=f2e280]: Fat
+                  - strong [ref=f2e281]: 14/65g
+            - generic [ref=f2e284]:
+              - generic [aria-hidden] [ref=f2e286]: photo_camera
+              - generic [ref=f2e287]:
+                - strong [ref=f2e288]: Log a meal
+                - generic [ref=f2e289]: Camera scan or manual entry
+              - generic [aria-hidden] [ref=f2e291]: arrow_forward
+            - generic [ref=f2e292]:
+              - generic [ref=f2e293]: Today's meals
+              - generic [ref=f2e294]: See all
+            - generic [ref=f2e295]:
+              - generic [ref=f2e297]:
+                - strong [ref=f2e298]: Breakfast
+                - generic [ref=f2e299]: Oats · berries · yogurt
+              - strong [ref=f2e300]: "420"
+            - generic [ref=f2e301]:
+              - generic [ref=f2e303]:
+                - strong [ref=f2e304]: Lunch
+                - generic [ref=f2e305]: Chicken · rice · greens
+              - strong [ref=f2e306]: "610"
+          - generic [ref=f2e308]:
+            - generic [ref=f2e309]:
+              - generic [ref=f2e310]: 9:41
+              - generic [ref=f2e311]: ▮▮▮
+            - generic [ref=f2e312]:
+              - generic [ref=f2e314]:
+                - generic [ref=f2e315]: Morning
+                - strong [ref=f2e316]: Welcome back
+              - generic [aria-hidden] [ref=f2e318]: notifications
+            - generic [ref=f2e321]:
+              - generic [ref=f2e322]: Today · Goal
+              - strong [ref=f2e323]:
+                - text: 1,960
+                - generic [ref=f2e324]: kcal remaining today
+              - generic [ref=f2e325]:
+                - generic [ref=f2e326]:
+                  - generic [aria-hidden] [ref=f2e327]: restaurant
+                  - text: 450 eaten
+                - generic [ref=f2e328]:
+                  - generic [aria-hidden] [ref=f2e329]: local_fire_department
+                  - text: 310 burned
+                - generic [ref=f2e330]:
+                  - generic [aria-hidden] [ref=f2e331]: timer
+                  - text: 25 / 45 min
+              - generic [ref=f2e332]:
+                - generic [ref=f2e333]:
+                  - text: Log activity
+                  - generic [aria-hidden] [ref=f2e334]: arrow_forward
+                - generic [ref=f2e335]:
+                  - generic [aria-hidden] [ref=f2e336]: fitness_center
+                  - text: Start workout
+            - generic [ref=f2e337]:
+              - generic [ref=f2e338]:
+                - strong [ref=f2e339]: Weekly Activity
+                - emphasis [ref=f2e340]: 155 min
+              - generic [ref=f2e349]:
+                - generic [ref=f2e350]: M
+                - generic [ref=f2e351]: T
+                - generic [ref=f2e352]: W
+                - generic [ref=f2e353]: T
+                - generic [ref=f2e354]: F
+                - generic [ref=f2e355]: S
+                - generic [ref=f2e356]: S
+            - generic [ref=f2e357]:
+              - generic [ref=f2e358]: Today's Plan
+              - generic [ref=f2e359]: Goal
+            - generic [ref=f2e360]:
+              - generic [ref=f2e361]:
+                - generic [aria-hidden] [ref=f2e363]: restaurant
+                - generic [ref=f2e365]:
+                  - generic [ref=f2e366]: Calories
+                  - strong [ref=f2e367]: 450 / 2,410
+              - generic [ref=f2e370]:
+                - generic [aria-hidden] [ref=f2e372]: fitness_center
+                - generic [ref=f2e374]:
+                  - generic [ref=f2e375]: Workout
+                  - strong [ref=f2e376]: 25 / 45 min
+              - generic [ref=f2e379]:
+                - generic [aria-hidden] [ref=f2e381]: water_drop
+                - generic [ref=f2e383]:
+                  - generic [ref=f2e384]: Water
+                  - strong [ref=f2e385]: 1.8 / 2.5 L
+  - contentinfo [ref=f2e388]:
+    - generic [ref=f2e389]:
+      - generic [ref=f2e390]:
+        - generic [ref=f2e391]:
+          - link "Vitalis home" [ref=f2e392] [cursor=pointer]:
+            - /url: "#top"
+            - generic [ref=f2e395]: ITALIS
+          - paragraph [ref=f2e396]: A student-built fitness companion for training, nutrition, and activity. Every insight traces back to something you logged.
+        - navigation "Product" [ref=f2e397]:
+          - heading "Product" [level=3] [ref=f2e398]
+          - generic [ref=f2e399]:
+            - button "Overview" [ref=f2e400] [cursor=pointer]
+            - button "Features" [ref=f2e401] [cursor=pointer]
+            - button "Download" [ref=f2e402] [cursor=pointer]
+            - button "Pricing" [ref=f2e403] [cursor=pointer]
+        - navigation "Track" [ref=f2e404]:
+          - heading "Track" [level=3] [ref=f2e405]
+          - generic [ref=f2e406]:
+            - button "Nutrition" [ref=f2e407] [cursor=pointer]
+            - button "Workouts" [ref=f2e408] [cursor=pointer]
+            - button "Activity" [ref=f2e409] [cursor=pointer]
+            - button "Progress" [ref=f2e410] [cursor=pointer]
+        - navigation "Community" [ref=f2e411]:
+          - heading "Community" [level=3] [ref=f2e412]
+          - generic [ref=f2e413]:
+            - button "Feed" [ref=f2e414] [cursor=pointer]
+            - button "Messages" [ref=f2e415] [cursor=pointer]
+            - button "Plans" [ref=f2e416] [cursor=pointer]
+            - button "Notifications" [ref=f2e417] [cursor=pointer]
+        - navigation "Account" [ref=f2e418]:
+          - heading "Account" [level=3] [ref=f2e419]
+          - generic [ref=f2e420]:
+            - button "Profile" [ref=f2e421] [cursor=pointer]
+            - button "Preferences" [ref=f2e422] [cursor=pointer]
+            - button "Help & support" [ref=f2e423] [cursor=pointer]
+            - button "Sign in" [ref=f2e424] [cursor=pointer]
+        - generic [ref=f2e425]:
+          - button "Join Us Now" [ref=f2e426] [cursor=pointer]:
+            - generic [aria-hidden] [ref=f2e429]: arrow_forward
+          - generic [ref=f2e430]:
+            - button "Contact customer service" [ref=f2e431] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f2e432]: support_agent
+            - button "Terms of Use" [ref=f2e433] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f2e434]: description
+            - button "Privacy Policy" [ref=f2e435] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f2e436]: shield
+      - generic [ref=f2e437]:
+        - generic [ref=f2e438]:
+          - generic [ref=f2e439]: © 2026 Vitalis Labs
+          - button "Terms of Use" [ref=f2e440] [cursor=pointer]
+          - button "Privacy Policy" [ref=f2e441] [cursor=pointer]
+        - generic "Live backend status" [ref=f2e443]: Backend unreachable
+  - dialog "Install Vitalis" [ref=f2e446]:
+    - generic [ref=f2e447]:
+      - paragraph [ref=f2e448]: Vitalis · Add to home screen
+      - button "Close installation steps" [active] [ref=f2e449] [cursor=pointer]:
+        - generic [aria-hidden] [ref=f2e450]: close
+    - generic [ref=f2e451]:
+      - generic [aria-hidden] [ref=f2e453]: computer
+      - generic [ref=f2e454]:
+        - heading "Install Vitalis" [level=2] [ref=f2e455]
+        - paragraph [ref=f2e456]: Free, full screen, and one tap away.
+    - tablist "Choose your device" [ref=f2e457]:
+      - tab "iPhone / iPad" [ref=f2e458] [cursor=pointer]:
+        - generic [aria-hidden] [ref=f2e459]: phone_iphone
+      - tab "Android" [ref=f2e461] [cursor=pointer]:
+        - generic [aria-hidden] [ref=f2e462]: android
+      - tab "Computer" [selected] [ref=f2e464] [cursor=pointer]:
+        - generic [aria-hidden] [ref=f2e465]: computer
+    - list [ref=f2e467]:
+      - listitem [ref=f2e468]:
+        - generic [aria-hidden] [ref=f2e469]: "1"
+        - generic [aria-hidden] [ref=f2e471]: downloading
+        - generic [ref=f2e472]:
+          - strong [ref=f2e473]: Use the install icon
+          - generic [ref=f2e474]: In Chrome or Edge, look for the install icon in the address bar and click it.
+      - listitem [ref=f2e475]:
+        - generic [aria-hidden] [ref=f2e476]: "2"
+        - generic [aria-hidden] [ref=f2e478]: more_vert
+        - generic [ref=f2e479]:
+          - strong [ref=f2e480]: Or open the browser menu
+          - generic [ref=f2e481]: Choose “Install Vitalis” (or “Apps → Install this site as an app”) from the ⋮ / ⋯ menu.
+      - listitem [ref=f2e482]:
+        - generic [aria-hidden] [ref=f2e483]: "3"
+        - generic [aria-hidden] [ref=f2e485]: open_in_new
+        - generic [ref=f2e486]:
+          - strong [ref=f2e487]: Launch it like any app
+          - generic [ref=f2e488]: Vitalis opens in its own window from your desktop or Start menu. Other browsers work right here in the tab.
+    - generic [ref=f2e489]:
+      - button "Download Vitalis" [ref=f2e490] [cursor=pointer]:
+        - generic [ref=f2e491]:
+          - generic [aria-hidden] [ref=f2e492]: download
+          - generic [ref=f2e493]: Download Vitalis
+        - generic [aria-hidden] [ref=f2e495]: arrow_downward
+      - paragraph [ref=f2e496]: If your browser doesn't show the install prompt, follow the steps above.
+    - generic [ref=f2e497]:
+      - button "Close" [ref=f2e498] [cursor=pointer]
+      - button "Create free account" [ref=f2e499] [cursor=pointer]

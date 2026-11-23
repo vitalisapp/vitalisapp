@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import Icon from "../../../../components/Icon.jsx";
 import { getPickerOptions, resolveWorkout, frameUrl } from "../constants/workoutGuide.js";
 
@@ -61,9 +62,9 @@ export default function MobileWorkoutPills({ workoutType = undefined, onSelect =
       )}
 
       {/* ── Modal backdrop ── */}
-      {open && (
+      {open && createPortal(
         <div
-          className="fixed inset-0 z-50 bg-[var(--bg-overlay)] backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
+          className="fixed inset-0 z-[var(--z-modal)] bg-[var(--bg-overlay)] backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
           onClick={() => setOpen(false)}
         >
           {/* ── Bottom sheet (mobile) / dialog (desktop) ── */}
@@ -110,7 +111,7 @@ export default function MobileWorkoutPills({ workoutType = undefined, onSelect =
               )}
             </div>
 
-            <ul className="overflow-y-auto pb-1 -mx-1 px-1 flex flex-col gap-1.5">
+            <ul className="min-h-0 overflow-y-auto overscroll-contain pb-1 -mx-1 px-1 flex flex-col gap-1.5">
               {visible.map((opt) => {
                 const active = workoutType === opt.id;
                 const img = !brokenImgs[opt.id] && frameUrl(opt.id, 1);
@@ -170,7 +171,8 @@ export default function MobileWorkoutPills({ workoutType = undefined, onSelect =
               )}
             </ul>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

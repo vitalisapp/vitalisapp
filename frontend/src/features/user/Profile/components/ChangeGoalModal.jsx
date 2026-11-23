@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch, apiPost } from '../../../../lib/apiClient.js';
 import Icon from '../../../../components/Icon.jsx';
+import Modal from '../../../../components/ui/Modal.jsx';
 import { GOAL_TYPES, PACES, goalLabel } from '../../Onboarding/constants/goals.js';
 import { MAX_EXTRA_GOALS, extraGoalBlockReason, cleanExtraGoals, checkTargetDate, targetDateBounds } from '../../../../lib/goalSetup.js';
 
@@ -109,18 +110,14 @@ const ChangeGoalModal = ({ userId = undefined, currentGoal = undefined, identity
   const inputCls = 'mt-1 w-full h-11 rounded-[12px] bg-[var(--input-bg,var(--bg-hover))] border border-[var(--border-light)] px-3 outline-none focus:border-[var(--accent)]';
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass-panel border border-[var(--border-light)] w-full max-w-[440px] rounded-[20px] p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-center mb-1">
-          <h3 className="text-[length:var(--fs-17)] font-bold">{firstSetup ? 'Set Up Your Plan' : 'Change Goal'}</h3>
-          <button onClick={onClose} aria-label="Close"
-            className="w-8 h-8 rounded-full bg-[var(--bg-hover)] flex items-center justify-center text-[var(--text-muted)]">
-            <span className="material-symbols-outlined text-[length:var(--fs-18)]">close</span>
-          </button>
-        </div>
-        <p className="text-[length:var(--fs-12)] text-[var(--text-muted)] mb-4">
-          {firstSetup ? 'Done right here — no wizard needed. Pick a goal and confirm your body profile.' : 'What is your new primary goal?'}
-        </p>
+    <Modal
+      isOpen
+      onClose={onClose}
+      title={firstSetup ? 'Set Up Your Plan' : 'Change Goal'}
+      subtitle={firstSetup ? 'Pick a goal and confirm your body profile.' : 'What is your new primary goal?'}
+      size="lg"
+      className="pf-goal-dialog"
+    >
 
         {error && <p className="bg-[var(--error-bg)] border border-[var(--error)]/20 rounded-lg text-[var(--error)] text-[length:var(--fs-11)] font-semibold p-2.5 mb-3 text-center">{error}</p>}
 
@@ -135,7 +132,7 @@ const ChangeGoalModal = ({ userId = undefined, currentGoal = undefined, identity
                 <span className="block text-[length:var(--fs-13)] font-bold break-normal">{g.label}</span>
                 <span className="block text-[length:var(--fs-11)] text-[var(--text-muted)] break-normal text-pretty">{g.desc}</span>
               </span>
-              <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${goalType === g.key ? 'border-[var(--accent)]' : 'border-[var(--border-medium)]'}`}>
+              <span className={`w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center ${goalType === g.key ? 'border-[var(--accent)]' : 'border-[var(--border-medium)]'}`}>
                 {goalType === g.key && <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />}
               </span>
             </button>
@@ -240,8 +237,7 @@ const ChangeGoalModal = ({ userId = undefined, currentGoal = undefined, identity
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 };
 

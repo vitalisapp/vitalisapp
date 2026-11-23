@@ -570,6 +570,8 @@
 .vplans .p-actions-popup .p-actions-delete { color: var(--error); }
 .vplans .p-actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .vplans .p-active:has(.p-actions-popup) { position: relative; z-index: 6; }
+/* Firefox <121 has no :has(); the open menu holds focus, so lift on focus-within. */
+.vplans .p-active:focus-within { position: relative; z-index: 6; }
 .vplans .p-body {
   display: flex;
   flex: 1;

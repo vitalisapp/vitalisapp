@@ -1,4 +1,5 @@
 import Icon from "../../../../components/Icon.jsx";
+import { createPortal } from "react-dom";
 
 // Workout Complete summary sheet (reference screen 3).
 // Score = client-side average of sampled alignment/symmetry/tempo —
@@ -16,8 +17,8 @@ export default function WorkoutSummary({ summary = undefined, onDone = undefined
   const r = 52;
   const c = 2 * Math.PI * r;
 
-  return (
-    <div className="fixed inset-0 z-[90] bg-[var(--bg-overlay)] backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
+  return createPortal(
+    <div className="fixed inset-0 z-[var(--z-modal)] bg-[var(--bg-overlay)] backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
       role="dialog" aria-modal="true" aria-label="Workout complete">
       <div className="w-full sm:max-w-md bg-[var(--bg-primary)] border border-[var(--border-light)] rounded-t-3xl sm:rounded-3xl p-6 sm:p-8 max-h-[90dvh] overflow-y-auto">
         <div className="flex flex-col items-center text-center">
@@ -32,7 +33,7 @@ export default function WorkoutSummary({ summary = undefined, onDone = undefined
           <p className="text-[length:var(--fs-13)] text-[var(--text-muted)] tabular-nums">{summary.achieved}</p>
         </div>
 
-        <div className="mt-6 bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-5 flex items-center gap-5">
+        <div className="mt-6 bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-5 flex flex-wrap items-center gap-5">
           <div className="relative shrink-0" style={{ width: 96, height: 96 }}>
             <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
               <circle cx="60" cy="60" r={r} fill="none" strokeWidth="11" stroke="var(--bg-hover)" />
@@ -87,6 +88,7 @@ export default function WorkoutSummary({ summary = undefined, onDone = undefined
           Done
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

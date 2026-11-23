@@ -11,7 +11,7 @@ export const useRegister = () => {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
   const navigate = useNavigate();
-  const { setUser, refreshAuth } = useAuth();
+  const { refreshAuth } = useAuth();
 
   const clearError = () => setError('');
 
@@ -136,8 +136,8 @@ export const useRegister = () => {
         return;
       }
       const user = normalizeUser(data);
-      setUser(user);
-      if (!(await refreshAuth())) {
+      // Silent + set from the proven /me session (see useLogin.confirmSession).
+      if (!(await refreshAuth({ silent: true, fallbackUser: user }))) {
         setError(COOKIE_BLOCKED_MSG);
         return;
       }
@@ -162,8 +162,8 @@ export const useRegister = () => {
       }, { skipAuthRedirect: true });
       const user = normalizeUser(data);
       if (!user.id) throw new Error('Google response did not include a user ID.');
-      setUser(user);
-      if (!(await refreshAuth())) {
+      // Silent + set from the proven /me session (see useLogin.confirmSession).
+      if (!(await refreshAuth({ silent: true, fallbackUser: user }))) {
         setError(COOKIE_BLOCKED_MSG);
         return;
       }

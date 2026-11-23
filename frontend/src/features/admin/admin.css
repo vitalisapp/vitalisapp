@@ -252,6 +252,10 @@
   display: none;
   width: max-content;
   max-width: calc(100vw - 24px);
+  box-sizing: border-box;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
   align-items: center;
   gap: 3px;
   padding: 5px;
@@ -263,6 +267,7 @@
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
   transform: translateX(-50%);
 }
+.adm-bottomnav::-webkit-scrollbar { display: none; }
 .adm-bottomnav__item {
   display: flex;
   width: 44px;
@@ -296,8 +301,8 @@
 @media (max-width: 767px) {
   .adm-bottomnav { display: flex; }
 }
-/* Six destinations: hide the active label until there is room for it. */
-@media (max-width: 400px) {
+/* Seven destinations: keep touch targets intact and scroll on narrow phones. */
+@media (max-width: 480px) {
   .adm-bottomnav__item.is-active { width: 44px; padding: 0; }
   .adm-bottomnav__item.is-active .adm-bottomnav__label { display: none; }
 }

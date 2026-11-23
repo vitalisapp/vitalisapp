@@ -6,7 +6,6 @@ import Icon from '../../../../components/Icon.jsx';
 import { useAuth } from '../../../../hooks/useAuth.jsx';
 import { apiGet, apiFetch } from '../../../../lib/apiClient.js';
 import { useToastStore } from '../../../../stores/toastStore.js';
-import LoadingState from '../../../../components/feedback/LoadingState.jsx';
 import ErrorState from '../../../../components/feedback/ErrorState.jsx';
 import { NotificationCard, NotificationEmpty, NotificationSkeleton } from '../components/NotificationParts.jsx';
 import {
@@ -96,7 +95,7 @@ const Notifications = ({ embedded = false }) => {
   if (loading) {
     return (
       <AccountPageShell embedded={embedded} userId={user?.id} onLogout={handleLogout} contentClassName="app-container app-container--reading">
-          <div className="pt-2 pb-6"><LoadingState message="Loading notifications…" /></div>
+          <div className="pt-2 pb-6"><NotificationSkeleton rows={5} /></div>
       </AccountPageShell>
     );
   }

@@ -12,6 +12,8 @@ import { goalLabel } from '../../Onboarding/constants/goals.js';
 import QuickLog from '../components/QuickLog.jsx';
 import GoalDetailSheet from '../components/GoalDetailSheet.jsx';
 import { apiFetch, apiGet } from '../../../../lib/apiClient.js';
+import { useQuery } from '@tanstack/react-query';
+import { qk, queryFns, swr } from '../../../../lib/queries.js';
 import { safeGet } from '../../../../lib/storage.js';
 import ErrorState from '../../../../components/feedback/ErrorState.jsx';
 import {
@@ -60,6 +62,8 @@ const EMPTY_STATS = {
   steps: 0, calories_burned: 0, workout_duration_mins: 0,
 };
 const EMPTY_MEALS = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+// Stable empty array so memo deps don't change every render while loading.
+const EMPTY_LIST = [];
 
 const isoLongDate = (iso) => {
   const [y, m, d] = iso.split('-').map(Number);
@@ -107,7 +111,6 @@ const Dashboard = () => {
   // Bumped whenever something that lands in the week calendar changes.
   const [calendarKey, setCalendarKey] = useState(0);
   const bumpCalendar = () => setCalendarKey((k) => k + 1);
-  const [nutrientGoals, setNutrientGoals] = useState([]);
   const { data, workouts, dashboardError, loaded, setData, setAuthOverride, mergeData, refresh: refreshDashboard, generateFitnessInsight } = useDashboardData(USER_ID);
   const { goal, currentWeightKg, progressPct, refresh: refreshGoal } = useActiveGoal(USER_ID);
   const { meals, refreshMeals } = useTodayMeals(USER_ID);
@@ -137,63 +140,76 @@ const Dashboard = () => {
   const remaining = Math.max(0, tKcal - foodKcal + caloriesBurned);
 
   // Refetch when returning from other pages (MealTracker, etc.)
+  // One named handler so cleanup actually removes it (the inline visibility
+  // listener leaked one copy per mount), and a short guard so a tab return —
+  // which fires BOTH focus and visibilitychange — refetches once, not twice.
   useEffect(() => {
-    const onFocus = () => { refreshDashboard(); refreshMeals(); };
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') onFocus(); });
-    return () => { window.removeEventListener('focus', onFocus); document.removeEventListener('visibilitychange', onFocus); };
+    let last = 0;
+    const onReturn = () => {
+      if (document.visibilityState !== 'visible') return;
+      const now = Date.now();
+      if (now - last < 1000) return;
+      last = now;
+      refreshDashboard();
+      refreshMeals();
+    };
+    window.addEventListener('focus', onReturn);
+    document.addEventListener('visibilitychange', onReturn);
+    return () => {
+      window.removeEventListener('focus', onReturn);
+      document.removeEventListener('visibilitychange', onReturn);
+    };
   }, [refreshDashboard, refreshMeals]);
 
-  const [todayPlans, setTodayPlans] = useState([]);
-  const [todayPlansLoading, setTodayPlansLoading] = useState(true);
-  useEffect(() => {
-    if (!USER_ID) return;
-    let cancelled = false;
-    apiFetch(`/api/plans/${USER_ID}`)
-      .then((d) => {
-        if (cancelled) return;
-        const enrolled = Array.isArray(d) ? d.filter((p) => p.is_enrolled === 1) : [];
-        setTodayPlans(enrolled.slice(0, 2));
-      })
-      .catch(() => { if (!cancelled) setTodayPlans([]); })
-      .finally(() => { if (!cancelled) setTodayPlansLoading(false); });
-    return () => { cancelled = true; };
-  }, [USER_ID]);
+  // Cached (stale-while-revalidate) so returning to the dashboard paints the
+  // last known plans / targets / AI summary instantly, then refreshes.
+  const plansQuery = useQuery({
+    queryKey: qk.plans(USER_ID),
+    queryFn: () => apiFetch(`/api/plans/${USER_ID}`),
+    enabled: Boolean(USER_ID),
+    ...swr,
+  });
+  const todayPlans = useMemo(() => {
+    const d = plansQuery.data;
+    const enrolled = Array.isArray(d) ? d.filter((p) => p.is_enrolled === 1) : [];
+    return enrolled.slice(0, 2);
+  }, [plansQuery.data]);
+  const todayPlansLoading = plansQuery.isLoading;
 
-  const refreshNutrients = async () => {
-    if (!USER_ID) return;
-    try {
-      const d = await apiFetch(`/api/nutrient-goals/${USER_ID}`);
-      setNutrientGoals(d.goals || []);
-    } catch {
-      setNutrientGoals([]);
-    }
-  };
-  useEffect(() => { refreshNutrients(); }, [USER_ID]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Same query MealTracker uses for its targets (shared cache).
+  const nutrientGoalsQuery = useQuery({
+    queryKey: qk.nutrientGoals(USER_ID),
+    queryFn: queryFns.nutrientGoals(USER_ID),
+    enabled: Boolean(USER_ID),
+    ...swr,
+  });
+  const nutrientGoals = nutrientGoalsQuery.data?.goals || EMPTY_LIST;
+  const { refetch: refetchNutrients } = nutrientGoalsQuery;
+  const refreshNutrients = () => { if (USER_ID) refetchNutrients(); };
 
   const onboardingSkipped = useMemo(() => safeGet('vitalis:onboarding') === 'skipped', []);
   const showOnboardingBanner = user?.onboardingCompleted === false && !onboardingSkipped;
 
   // AI recommendations based on progress and goals
-  const [aiRec, setAiRec] = useState(null);
-  const [aiRecLoading, setAiRecLoading] = useState(false);
-  const [aiRecError, setAiRecError] = useState(false);
+  const aiQuery = useQuery({
+    queryKey: qk.aiSummary(USER_ID),
+    queryFn: () => apiGet('/api/ai/summary'),
+    enabled: Boolean(USER_ID),
+    ...swr,
+  });
+  // Spinner on first load and on an explicit refresh tap; background refreshes
+  // keep showing the cached summary instead of blanking the card.
+  const [aiManualRefresh, setAiManualRefresh] = useState(false);
+  const aiRec = aiQuery.data ?? null;
+  const aiRecLoading = aiQuery.isLoading || aiManualRefresh;
+  // Don't let a network/AI failure masquerade as "finish onboarding".
+  const aiRecError = Boolean(aiQuery.error) && !aiQuery.data;
+  const { refetch: refetchAi } = aiQuery;
   const fetchAiRec = async () => {
     if (!USER_ID) return;
-    setAiRecLoading(true);
-    setAiRecError(false);
-    try {
-      const res = await apiGet('/api/ai/summary');
-      setAiRec(res);
-    } catch {
-      setAiRec(null);
-      // Don't let a network/AI failure masquerade as "finish onboarding".
-      setAiRecError(true);
-    } finally {
-      setAiRecLoading(false);
-    }
+    setAiManualRefresh(true);
+    try { await refetchAi(); } finally { setAiManualRefresh(false); }
   };
-  useEffect(() => { fetchAiRec(); }, [USER_ID]); // eslint-disable-line react-hooks/exhaustive-deps
   const refreshAll = () => {
     refreshDashboard();
     refreshMeals();
@@ -490,7 +506,7 @@ const Dashboard = () => {
 
             {!isPastView && (
               <CoachCard
-                onOpenPlans={() => navigate('/dashboard/plans?mine=1')}
+                onOpenPlans={() => navigate('/dashboard/plans?tab=my-plans')}
                 onStartWorkout={(planId, day, fit) => navigate(`/dashboard/plans?planId=${planId}&startDay=${day}${fit ? `&fit=${fit}` : ''}`)}
               />
             )}

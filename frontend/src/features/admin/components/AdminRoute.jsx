@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import BrandLoader from '../../../components/ui/BrandLoader.jsx';
+import { FullPageLoader } from '../../../components/feedback/LoadingState.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import '../admin.css';
 
@@ -12,13 +12,7 @@ import '../admin.css';
 export default function AdminRoute({ children = undefined }) {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="min-h-dvh flex items-center justify-center bg-[var(--bg-primary)]">
-        <BrandLoader size="md" message="Checking clearance…" />
-      </div>
-    );
-  }
+  if (loading) return <FullPageLoader message="Checking clearance…" />;
   if (!user) return <Navigate to="/login" replace />;
   // Role middleware — members get their own dashboard, never the console.
   if (user.role !== 'admin') return <Navigate to="/dashboard" replace />;

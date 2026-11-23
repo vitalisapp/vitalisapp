@@ -136,7 +136,7 @@ export default function Modal({
             </div>
           )}
 
-          <div className="overflow-y-auto flex-1 p-5 sm:p-6" style={{ scrollbarWidth: 'thin' }}>
+          <div className="min-h-0 min-w-0 overflow-y-auto overscroll-contain flex-1 p-5 sm:p-6" style={{ scrollbarWidth: 'thin' }}>
             {children}
           </div>
 

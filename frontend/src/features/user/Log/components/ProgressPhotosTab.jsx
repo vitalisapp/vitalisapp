@@ -15,13 +15,23 @@ const POSES = [
   { key: 'back',  label: 'Back',  hint: 'Back to the camera, shoulders square' },
 ];
 
-const POSE_EMOJI = { front: '🧍', side: '🚶', back: '🚶‍♀️' };
+const poseTitle = (key) => key.charAt(0).toUpperCase() + key.slice(1);
+
+// Date-only values are treated as local midnight so the label never slips a day.
+const fmtShortDate = (value) => {
+  if (!value) return '';
+  const raw = String(value);
+  const d = new Date(raw.length <= 10 ? `${raw}T00:00:00` : raw);
+  if (Number.isNaN(d.getTime())) return raw.slice(0, 10);
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+};
 
 function RatingStars({ rating = undefined }) {
   if (!rating) return null;
   return (
-    <span className="text-[length:var(--fs-10)] font-black text-[var(--accent)] tabular-nums" title="Gemini photo-usability rating (1–5)">
-      {'★'.repeat(rating)}{'☆'.repeat(Math.max(0, 5 - rating))}
+    <span className="ps-rating" title="Photo usability rating (1–5)">
+      <span aria-hidden="true">{'★'.repeat(rating)}{'☆'.repeat(Math.max(0, 5 - rating))}</span>
+      <span className="sr-only">{rating} out of 5</span>
     </span>
   );
 }
@@ -52,7 +62,7 @@ export default function ProgressPhotosTab({ userId = undefined }) {
   // No rows yet → first photo of each pose is always allowed.
   const poseState = () => cadence?.poses?.[pose] || { nextAllowedAt: null, daysLeft: 0 };
   const poseBlocked = poseState().daysLeft > 0;
-  const poseLabel = pose.charAt(0).toUpperCase() + pose.slice(1);
+  const poseLabel = poseTitle(pose);
 
   const setCadence = async (next) => {
     if (cadenceBusy || cadence?.cadence === next) return;
@@ -154,121 +164,118 @@ export default function ProgressPhotosTab({ userId = undefined }) {
   const photoUrl = (id) => `/api/progress/photos/${id}/image`;
 
   return (
-    <div className="glass-card border border-[var(--border-light)] rounded-2xl sm:rounded-3xl p-4 sm:p-6 w-full space-y-4" data-user={userId}>
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="text-[length:var(--fs-15)] font-extrabold tracking-tight">Progress Photos</h3>
-          <p className="text-[length:var(--fs-11)] text-[var(--text-muted)]">
-            Front · Side · Back — private to you. Gemini reviews them; results are visual estimates only.
+    <div className="lg-card ps-card" data-user={userId}>
+      <header className="lg-card-head ps-head">
+        <div className="lg-card-titles">
+          <h2 className="lg-card-title">Progress photos</h2>
+          <p className="lg-card-sub">
+            Front, side and back — private to you. Gemini&rsquo;s notes are visual estimates, not measurements.
           </p>
         </div>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPhotoPicked} />
-        <button
+        <Button
+          size="sm"
+          icon="add_a_photo"
+          loading={busy}
+          disabled={poseBlocked}
           onClick={() => fileRef.current?.click()}
-          disabled={busy || poseBlocked}
-          className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-1.5 h-10 px-4 rounded-full bg-[var(--accent)] text-[var(--text-inverse)] text-[length:var(--fs-10)] font-black uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+          className="ps-add"
         >
-          <Icon name="add_a_photo" className="text-[length:var(--fs-14)]" /> {busy ? 'Uploading…' : poseBlocked ? 'Check-in done' : 'Add photo'}
-        </button>
-      </div>
+          {busy ? 'Uploading…' : poseBlocked ? 'Check-in done' : 'Add photo'}
+        </Button>
+      </header>
 
-      {/* Pose selector */}
-      <div className="grid grid-cols-3 gap-1 sm:gap-1.5 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-2xl p-1 sm:p-1.5">
-        {POSES.map((p) => (
-          <button
-            key={p.key}
-            onClick={() => setPose(p.key)}
-            aria-pressed={pose === p.key}
-            title={p.hint}
-            className={`flex w-full min-w-0 items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-3 h-10 rounded-xl text-[length:var(--fs-11)] font-black uppercase tracking-[0.06em] sm:tracking-widest whitespace-nowrap border-none cursor-pointer transition-all ${
-              pose === p.key
-                ? 'text-[var(--text-inverse)] bg-[var(--accent)] shadow-[var(--shadow-md)]'
-                : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
-            }`}
-          >
-            <span aria-hidden="true">{POSE_EMOJI[p.key]}</span> {p.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Check-in cadence — enforced server-side so before/after pairs stay fair */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 rounded-2xl border border-[var(--border-light)] bg-[var(--bg-hover)] px-3 py-2.5">
-        <div className="flex min-w-0 items-center gap-2">
-          <Icon name="event_repeat" className="text-[length:var(--fs-14)] text-[var(--accent)] shrink-0" />
-          <div className="min-w-0">
-            <p className="text-[length:var(--fs-11)] font-black uppercase tracking-widest">
-              {(cadence?.cadence || 'monthly') === 'weekly' ? 'Weekly' : 'Monthly'} check-in
-            </p>
-            <p className="text-[length:var(--fs-10)] text-[var(--text-muted)] truncate">
-              {poseBlocked
-                ? `${poseLabel} next check-in in ${poseState().daysLeft} ${poseState().daysLeft === 1 ? 'day' : 'days'} (${poseState().nextAllowedAt?.slice(0, 10)})`
-                : `${poseLabel} ready for a check-in`}
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-1 rounded-xl border border-[var(--border-light)] bg-[var(--bg-elevated)] p-1 w-full sm:w-auto">
-          {['weekly', 'monthly'].map((c) => (
+      {/* Pose + check-in controls */}
+      <div className="ps-toolbar">
+        <div className="lg-seg ps-poses" role="group" aria-label="Photo pose">
+          {POSES.map((p) => (
             <button
-              key={c}
-              onClick={() => setCadence(c)}
-              disabled={cadenceBusy || cadence?.cadence === c}
-              aria-pressed={cadence?.cadence === c}
-              className={`px-3 h-8 rounded-lg text-[length:var(--fs-10)] font-black uppercase tracking-widest border-none cursor-pointer transition-all ${
-                cadence?.cadence === c
-                  ? 'bg-[var(--accent)] text-[var(--text-inverse)]'
-                  : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
-              }`}
+              key={p.key}
+              type="button"
+              onClick={() => setPose(p.key)}
+              aria-pressed={pose === p.key}
+              title={p.hint}
+              className={pose === p.key ? 'is-active' : ''}
             >
-              {c}
+              {p.label}
             </button>
           ))}
+        </div>
+
+        <div className="ps-checkin">
+          <span className="ps-status">
+            <span className={`ps-status-dot${poseBlocked ? ' is-waiting' : ''}`} aria-hidden="true" />
+            <span className="ps-status-copy">
+              <span className="ps-status-label">
+                {(cadence?.cadence || 'monthly') === 'weekly' ? 'Weekly' : 'Monthly'} check-in
+              </span>
+              <span className="ps-status-value">
+                {poseBlocked
+                  ? `${poseLabel} next in ${poseState().daysLeft} ${poseState().daysLeft === 1 ? 'day' : 'days'} · ${fmtShortDate(poseState().nextAllowedAt)}`
+                  : `${poseLabel} ready for a check-in`}
+              </span>
+            </span>
+          </span>
+
+          <div className="lg-seg ps-cadence" role="group" aria-label="Check-in cadence">
+            {['weekly', 'monthly'].map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setCadence(c)}
+                disabled={cadenceBusy || cadence?.cadence === c}
+                aria-pressed={cadence?.cadence === c}
+                className={cadence?.cadence === c ? 'is-active' : ''}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {error && (
-        <p className="text-[length:var(--fs-11)] font-bold text-[var(--error)] bg-[var(--error-bg)] border border-[var(--error)]/25 rounded-xl px-3 py-2" role="alert">
-          {error}
+        <p className="lg-inline-error" role="alert">
+          <Icon name="error" /> {error}
         </p>
       )}
 
       {/* Gallery for the selected pose */}
       {photos === null ? (
-        <div className="py-10 text-center animate-pulse text-[var(--accent)] font-black uppercase tracking-widest text-[length:var(--fs-11)]">Loading photos…</div>
+        <div className="ps-loading" aria-busy="true">Loading photos…</div>
       ) : forPose.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)] py-8 text-center">
-          No {pose} photos yet — same pose, same lighting, roughly same distance gives the fairest comparisons.
-        </p>
+        <div className="ps-empty">
+          <Icon name="photo_camera" />
+          <strong>No {pose} photos yet</strong>
+          <p>Same pose, same lighting and roughly the same distance gives the fairest comparisons.</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-2 min-[360px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3">
+        <div className="ps-gallery">
           {forPose.map((p) => (
             <button
               key={p.id}
+              type="button"
               onClick={() => setViewing(p)}
-              className="group text-left"
-              title={`${p.pose}, ${p.captured_at}`}
+              className="ps-tile"
+              title={`${poseTitle(p.pose)} · ${new Date(p.captured_at).toLocaleString()}`}
             >
-              <span className="relative block aspect-[3/4] rounded-2xl overflow-hidden border border-[var(--border-light)] bg-[var(--bg-hover)]">
+              <span className="ps-tile-frame">
                 <img
                   src={photoUrl(p.id)}
-                  alt={`Progress photo (${p.pose})`}
+                  alt={`Progress photo, ${p.pose} view`}
                   loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 {analyzingId === p.id && (
-                  <span className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <span className="ps-tile-overlay">
                     <span className="vitalis-spinner" />
                   </span>
                 )}
-                <span className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1">
-                  <span className="block text-[length:var(--fs-8)] font-black text-white/90 uppercase tracking-widest">
-                    {new Date(p.captured_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                  </span>
-                </span>
                 {p.ai_rating != null && (
-                  <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/50 text-[length:var(--fs-8)] font-black text-[var(--accent)]">
-                    ★ {p.ai_rating}
-                  </span>
+                  <span className="ps-tile-rating" title="Photo usability rating">★ {p.ai_rating}</span>
                 )}
+              </span>
+              <span className="ps-tile-meta">
+                <span className="ps-tile-date">{fmtShortDate(p.captured_at)}</span>
               </span>
             </button>
           ))}
@@ -277,38 +284,43 @@ export default function ProgressPhotosTab({ userId = undefined }) {
 
       {/* Gemini latest-vs-previous comparison for this pose */}
       {forPose.length >= 2 && (
-        <Button
-          onClick={runCompare}
-          disabled={compare.busy}
-          loading={compare.busy}
-          variant="secondary"
-          icon="compare"
-          className="w-full min-w-0 !py-3 !text-[length:var(--fs-11)] !font-black !uppercase !tracking-widest"
-        >
-          <span className="sm:hidden">Compare latest two</span>
-          <span className="hidden sm:inline">Compare latest two {pose} photos</span>
-        </Button>
+        <div className="ps-compare-actions">
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="compare"
+            loading={compare.busy}
+            onClick={runCompare}
+          >
+            Compare latest two
+          </Button>
+        </div>
       )}
+
       {compare.open && (compare.busy || compare.result || compare.error) && (
-        <div className="rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] p-3.5 space-y-1.5">
-          <p className="flex items-center gap-1.5 text-[length:var(--fs-11)] font-black uppercase tracking-widest text-[var(--accent)]">
-            <Icon name="auto_awesome" className="text-[length:var(--fs-13)]" /> Gemini comparison
-          </p>
+        <div className="ps-compare">
+          <div className="ps-compare-head">
+            <span className="ps-compare-label">Gemini comparison</span>
+            <button
+              type="button"
+              onClick={() => setCompare({ open: false, busy: false, result: null, error: '' })}
+              className="ps-link-btn"
+            >
+              Hide
+            </button>
+          </div>
           {compare.busy ? (
-            <p className="text-sm text-[var(--text-muted)] animate-pulse">Reviewing both photos…</p>
+            <p className="ps-compare-note">Reviewing both photos…</p>
           ) : compare.error ? (
-            <p className="text-[length:var(--fs-12)] font-bold text-[var(--error)]" role="alert">{compare.error}</p>
+            <p className="ps-compare-error" role="alert">{compare.error}</p>
           ) : (
             <>
-              <p className="text-sm text-[var(--text-primary)] leading-relaxed">{compare.result?.summary}</p>
-              <p className="text-[length:var(--fs-10)] text-[var(--text-muted)]">
-                Confidence: <span className="font-bold uppercase">{compare.result?.confidence}</span> — visual estimate, not a measurement.
+              <p className="ps-compare-body">{compare.result?.summary}</p>
+              <p className="ps-compare-note">
+                Confidence: <strong>{compare.result?.confidence}</strong> — a visual estimate, not a measurement.
               </p>
             </>
           )}
-          <button onClick={() => setCompare({ open: false, busy: false, result: null, error: '' })} className="text-[length:var(--fs-10)] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
-            Hide
-          </button>
         </div>
       )}
 
@@ -317,41 +329,41 @@ export default function ProgressPhotosTab({ userId = undefined }) {
         <Modal
           isOpen
           onClose={() => setViewing(null)}
-          title={`${POSE_EMOJI[viewing.pose]} ${viewing.pose} photo`}
+          title={`${poseTitle(viewing.pose)} photo`}
           subtitle={new Date(viewing.captured_at).toLocaleString()}
           size="lg"
         >
-          <div className="space-y-3">
-            <img src={photoUrl(viewing.id)} alt={`Progress photo (${viewing.pose})`} className="w-full rounded-2xl border border-[var(--border-light)]" />
-            <div className="rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] p-3.5 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[length:var(--fs-11)] font-black uppercase tracking-widest text-[var(--accent)] flex items-center gap-1.5">
-                  <Icon name="auto_awesome" className="text-[length:var(--fs-13)]" /> Gemini review
-                </p>
+          <div className="ps-modal">
+            <img src={photoUrl(viewing.id)} alt={`Progress photo, ${viewing.pose} view`} className="ps-modal-img" />
+            <div className="ps-review">
+              <div className="ps-review-head">
+                <span className="ps-review-label">Gemini review</span>
                 <RatingStars rating={viewing.ai_rating} />
               </div>
               {viewing.ai_summary ? (
-                <p className="text-sm text-[var(--text-primary)] leading-relaxed">{viewing.ai_summary}</p>
+                <p className="ps-review-body">{viewing.ai_summary}</p>
               ) : (
-                <p className="text-sm text-[var(--text-muted)]">Not analyzed yet.</p>
+                <p className="ps-review-body is-muted">Not analyzed yet.</p>
               )}
-              <p className="text-[length:var(--fs-10)] text-[var(--text-muted)]">Visual estimate — not a measurement, not medical advice.</p>
+              <p className="ps-review-note">Visual estimate — not a measurement, not medical advice.</p>
             </div>
-            <div className="flex gap-2">
+            <div className="ps-modal-actions">
               <Button
-                variant="secondary"
+                variant="ghost"
+                size="sm"
                 onClick={() => analyze(viewing)}
                 loading={analyzingId === viewing.id}
                 icon="auto_awesome"
-                className="flex-1 !py-3 !text-[length:var(--fs-11)] !font-black !uppercase !tracking-widest"
+                className="ps-modal-btn"
               >
                 {viewing.ai_summary ? 'Re-analyze' : 'Analyze'}
               </Button>
               <Button
                 variant="danger"
+                size="sm"
                 onClick={() => remove(viewing.id)}
                 icon="delete"
-                className="flex-1 !py-3 !text-[length:var(--fs-11)] !font-black !uppercase !tracking-widest"
+                className="ps-modal-btn"
               >
                 Delete
               </Button>

@@ -103,7 +103,7 @@ const Register = () => {
   };
 
   return (
-    <div data-theme="dark" className="min-h-screen flex font-['DM_Sans',sans-serif] text-[#e5e2e1] overflow-x-hidden overflow-y-auto relative bg-[#0e0e0e]">
+    <div data-theme="dark" className="min-h-viewport flex font-['DM_Sans',sans-serif] text-[#e5e2e1] overflow-x-hidden overflow-y-auto relative bg-[#0e0e0e]">
       {/* Same hardcoded dark backdrop as Login (theme-var vignette washed white in light theme) */}
       <div className="fixed inset-0 z-0 bg-[url('/auth-gym.jpg')] bg-cover bg-[center_30%] brightness-[0.28] saturate-[0.7]" />
       <div className="fixed inset-0 z-[1]" style={{ background: 'radial-gradient(ellipse at center, transparent 30%, #0e0e0e 100%)' }} />
@@ -118,10 +118,10 @@ const Register = () => {
         <span className="text-[14px] leading-none">←</span> Back to Landing
       </button>
 
-      <div className="relative z-30 mx-auto grid w-full max-w-[1180px] min-h-screen grid-cols-1 px-4 sm:px-8 lg:px-12 min-[960px]:gap-16 min-[960px]:grid-cols-[minmax(0,1fr)_420px]">
+      <div className="relative z-30 mx-auto grid w-full max-w-[1180px] min-h-viewport grid-cols-1 px-4 sm:px-8 lg:px-12 min-[960px]:gap-16 min-[960px]:grid-cols-[minmax(0,1fr)_420px]">
 
         {/* ── Left hero ── (centered in the viewport, not the tall form row) ── */}
-        <div className="hidden min-[960px]:flex flex-col justify-center py-16 gap-4 min-[960px]:h-screen min-[960px]:self-start">
+        <div className="hidden min-[960px]:flex flex-col justify-center py-16 gap-4 min-[960px]:h-viewport min-[960px]:self-start">
           <span className="text-[11px] font-semibold tracking-[0.35em] uppercase text-[var(--accent)] opacity-80">AI-powered fitness &amp; nutrition</span>
           <h1 className="font-['Bebas_Neue',sans-serif] text-[clamp(52px,5.5vw,82px)] leading-[0.95] tracking-[0.02em]">
             BUILD<br />YOUR<br /><span className="text-[var(--accent)]">ATHLETE</span><br />PROFILE.

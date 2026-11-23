@@ -7,7 +7,7 @@ import NetworkStatus from "./components/NetworkStatus.jsx";
 export default function App() {
   return (
     <ErrorBoundary>
-    <div className="w-auto min-h-screen">
+    <div className="w-auto min-h-viewport">
       {ENV_ERROR ? (
         <p role="alert" style={{ background: '#7C1D1D', color: '#fff', padding: '8px 12px', fontSize: 12, textAlign: 'center' }}>
           {ENV_ERROR}

@@ -13,6 +13,7 @@ const { normEmail, DEV_VERIFY_FALLBACK } = service;
 
 // ─── COOKIE HELPER (single source: src/utils/cookies.js) ───
 function setSessionCookie(res, userId, email, req, tv = 0) {
+  require("../utils/deviceCookie").ensureDeviceCookie(req, res);
   const { signSession } = require("../config/jwt");
   const token = signSession(jwt, { id: userId, email, tv });
   const opts = getCookieOptions(req);

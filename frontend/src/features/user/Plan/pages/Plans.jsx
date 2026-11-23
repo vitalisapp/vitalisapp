@@ -27,17 +27,39 @@ import ExerciseGuideModal from '../components/ExerciseGuideModal.jsx';
 import { useTrainingPrefs, useTrainingInsights } from '../hooks/useTrainingPrefs.js';
 import { muscleFor, summarizeMuscles, suggestAlternatives } from '../utils/exerciseMatch.js';
 import { fitDayToMinutes } from '../utils/sessionFit.js';
+import { useUrlFilters } from '../../../../hooks/useUrlFilters.js';
 import '../plans.css';
+
+// URL-backed filters per tab (?tab=library&equipment=dumbbell, ?category=strength…).
+const GUIDE_OPTS = guideFilterOptions();
+const LIBRARY_FILTERS = {
+  q: {},
+  equipment: { options: GUIDE_OPTS.equipment },
+  muscle: { options: GUIDE_OPTS.muscles },
+  type: { options: GUIDE_OPTS.types },
+};
+const withoutAll = (opts) => opts.filter((o) => o !== 'All');
+const EXPLORE_FILTERS = {
+  q: {},
+  category: { options: CATEGORIES.map((c) => c.tag).filter(Boolean) },
+  intensity: { options: withoutAll(INTENSITY_OPTIONS) },
+  focus: { options: withoutAll(FOCUS_OPTIONS) },
+  duration: { options: withoutAll(DURATION_OPTIONS) },
+};
+// Every tab-scoped filter param; dropped when switching tabs.
+const TAB_FILTER_PARAMS = [...new Set([...Object.keys(LIBRARY_FILTERS), ...Object.keys(EXPLORE_FILTERS)])];
 
 
 const ExerciseLibrary = () => {
   const navigate = useNavigate();
-  const [query, setQuery] = useState('');
-  const [equipment, setEquipment] = useState('');
-  const [muscle, setMuscle] = useState('');
-  const [type, setType] = useState('');
+  const { values, setFilters } = useUrlFilters(LIBRARY_FILTERS);
+  const { q: query, equipment, muscle, type } = values;
+  const setQuery = (v) => setFilters({ q: v });
+  const setEquipment = (v) => setFilters({ equipment: v });
+  const setMuscle = (v) => setFilters({ muscle: v });
+  const setType = (v) => setFilters({ type: v });
   const [openSlug, setOpenSlug] = useState(null);
-  const filters = useMemo(() => guideFilterOptions(), []);
+  const filters = GUIDE_OPTS;
   const results = useMemo(
     () => searchGuideExercises(query, {
       ...(equipment ? { equipment } : {}),
@@ -1327,12 +1349,20 @@ const ContinueTrainingCard = ({ plan = undefined, onContinue = undefined }) => {
 };
 
 const Explore = ({ plans = undefined, onOpen = undefined, onEnroll = undefined, onContinue = undefined }) => {
-  const [query, setQuery] = useState('');
-  const [intensity, setIntensity] = useState('All');
-  const [focus, setFocus] = useState('All');
-  const [duration, setDuration] = useState('All');
-  const [activeCategory, setActiveCategory] = useState(null);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const { values, setFilters, clearFilters } = useUrlFilters(EXPLORE_FILTERS);
+  const query = values.q;
+  const intensity = values.intensity || 'All';
+  const focus = values.focus || 'All';
+  const duration = values.duration || 'All';
+  const activeCategory = values.category || null;
+  const setQuery = (v) => setFilters({ q: v });
+  const fromAll = (v) => (v === 'All' ? '' : v);
+  const setIntensity = (v) => setFilters({ intensity: fromAll(v) });
+  const setFocus = (v) => setFilters({ focus: fromAll(v) });
+  const setDuration = (v) => setFilters({ duration: fromAll(v) });
+  const setActiveCategory = (tag) => setFilters({ category: tag ?? '' });
+  // Opened shared links with advanced filters show the panel right away.
+  const [filtersOpen, setFiltersOpen] = useState(() => Boolean(values.intensity || values.focus || values.duration));
 
   const filtered = useMemo(() => plans.filter((p) => {
     const q = query.trim().toLowerCase();
@@ -1345,13 +1375,7 @@ const Explore = ({ plans = undefined, onOpen = undefined, onEnroll = undefined, 
     );
   }), [plans, query, activeCategory, intensity, focus, duration]);
 
-  const clearAll = () => {
-    setQuery('');
-    setIntensity('All');
-    setFocus('All');
-    setDuration('All');
-    setActiveCategory(null);
-  };
+  const clearAll = clearFilters;
   const advancedCount = [intensity, focus, duration].filter((v) => v !== 'All').length;
   const hasFilters = Boolean(query) || Boolean(activeCategory) || advancedCount > 0;
   const activePlan = plans.find((p) => p.is_enrolled === 1);
@@ -1482,10 +1506,21 @@ const Plans = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(() => {
-    const requested = searchParams.get('tab');
-    return TABS.some((tab) => tab.id === requested) ? requested : 'explore';
-  });
+  // Tab lives in the URL (?tab=library) so filters inside a tab are shareable.
+  // 'explore' is the default and is kept out of the URL.
+  const requestedTab = searchParams.get('tab');
+  const activeTab = TABS.some((tab) => tab.id === requestedTab) ? requestedTab : 'explore';
+  const setActiveTab = useCallback((tab) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if ((next.get('tab') || 'explore') === tab) return next;
+      // Filters belong to the tab they were set on.
+      TAB_FILTER_PARAMS.forEach((key) => next.delete(key));
+      if (tab === 'explore') next.delete('tab');
+      else next.set('tab', tab);
+      return next;
+    });
+  }, [setSearchParams]);
 
   const {
     userId, loading, authError, actionError, actionOk, acting, reload, trainingPlans, enrolledCount, goalStatus,
@@ -1554,26 +1589,16 @@ const Plans = () => {
     return saved;
   };
 
-  // Mount-only URL cleanup; reacting to searchParams identity would re-run on every navigation.
+  // Legacy deep link `?mine=1` (Dashboard, Onboarding) -> canonical `?tab=my-plans`.
   useEffect(() => {
-    if (searchParams.get('tab')) {
-      setSearchParams((params) => {
-        const next = new URLSearchParams(params);
-        next.delete('tab');
-        return next;
-      }, { replace: true });
-    }
-    if (searchParams.get('mine') === '1') {
-      setActiveTab('my-plans');
-      setSearchParams((params) => {
-        const next = new URLSearchParams(params);
-        next.delete('mine');
-        next.delete('tab');
-        return next;
-      }, { replace: true });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (searchParams.get('mine') !== '1') return;
+    setSearchParams((params) => {
+      const next = new URLSearchParams(params);
+      next.delete('mine');
+      next.set('tab', 'my-plans');
+      return next;
+    }, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // Consume router state through the router, before refreshes can replay it.
   const consumedTrackerEntry = useRef(null);
@@ -1582,13 +1607,17 @@ const Plans = () => {
     if (!openTrackerId || consumedTrackerEntry.current === location.key || loading || trainingPlans.length === 0) return;
     const plan = trainingPlans.find(p => String(p.id) === String(openTrackerId));
     if (plan) {
-      setActiveTab('my-plans');
       consumedTrackerEntry.current = location.key;
       setTrackerStart(null);
       loadTracker(plan);
       const nextState = { ...location.state };
       delete nextState.openTracker;
-      navigate({ pathname: location.pathname, search: location.search, hash: location.hash }, { replace: true, state: nextState });
+      // One navigation: switch to My Plans and drop the router state together
+      // (a separate setActiveTab would be overwritten by the stale search).
+      const search = new URLSearchParams(location.search);
+      TAB_FILTER_PARAMS.forEach((key) => search.delete(key));
+      search.set('tab', 'my-plans');
+      navigate({ pathname: location.pathname, search: `?${search}`, hash: location.hash }, { replace: true, state: nextState });
     }
   }, [location, trainingPlans, loading, loadTracker, navigate]);
 
@@ -1601,6 +1630,12 @@ const Plans = () => {
     loadTracker(plan);
   };
   const autoOpenedRef   = useRef(false);
+  // Consume ?planId=&startDay=&fit= without touching tab/filter params.
+  const clearPlanDeepLink = () => setSearchParams((params) => {
+    const next = new URLSearchParams(params);
+    ['planId', 'startDay', 'fit'].forEach((key) => next.delete(key));
+    return next;
+  }, { replace: true });
   useEffect(() => {
     if (!requestedPlanId) {
       autoOpenedRef.current = false;
@@ -1612,11 +1647,11 @@ const Plans = () => {
       setTrackerStart({ day: requestedDay, fit: requestedFit });
       loadTracker(match);
       autoOpenedRef.current = true;
-      setSearchParams({}, { replace: true });
+      clearPlanDeepLink();
     } else if (match) {
       setDetailPlan(match);
       autoOpenedRef.current = true;
-      setSearchParams({}, { replace: true });
+      clearPlanDeepLink();
     }
   }, [requestedPlanId, trainingPlans, loading, setDetailPlan, setSearchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 

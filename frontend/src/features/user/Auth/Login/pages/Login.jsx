@@ -14,7 +14,7 @@ const Login = () => {
   const googleEnabled = !!GOOGLE_CLIENT_ID;
 
   return (
-    <div data-theme="dark" className="relative min-h-screen w-full bg-[#0e0e0e] font-['DM_Sans'] text-[#e5e2e1] overflow-x-hidden overflow-y-auto flex">
+    <div data-theme="dark" className="relative min-h-viewport w-full bg-[#0e0e0e] font-['DM_Sans'] text-[#e5e2e1] overflow-x-hidden overflow-y-auto flex">
 
       <style>{`
         .vitalis-vignette {
@@ -109,7 +109,7 @@ const Login = () => {
         <span className="text-[14px] leading-none">←</span> Back to Landing
       </button>
 
-      <div className="relative z-10 mx-auto grid w-full max-w-[1180px] min-h-screen px-4 sm:px-8 lg:px-12 lg:gap-16 lg:grid-cols-[minmax(0,1fr)_400px]">
+      <div className="relative z-10 mx-auto grid w-full max-w-[1180px] min-h-viewport px-4 sm:px-8 lg:px-12 lg:gap-16 lg:grid-cols-[minmax(0,1fr)_400px]">
 
         {/* Left Hero Panel */}
         <div className="hidden lg:flex flex-col justify-center py-14 gap-4">

@@ -154,7 +154,7 @@ function checkRateLimit(email) {
 }
 
 // ─── SESSION LOGGING ───
-// One row per device (device type + browser + OS). A repeat login refreshes
+// One row per browser installation (persistent random cookie). A repeat login refreshes
 // that row instead of inserting a duplicate, so the Profile "Devices &
 // Sessions" list and the admin session counts stay meaningful.
 //
@@ -167,6 +167,8 @@ async function logUserSession(req, userId) {
   let conn;
   let deviceLabel = "Unknown device";
   try {
+    const deviceId = require('../utils/deviceCookie').getDeviceId(req);
+    if (!deviceId) throw new Error('Device cookie must be initialized before session logging');
     const parser = new UAParser(req.headers["user-agent"]);
     const result = parser.getResult();
 
@@ -188,6 +190,8 @@ async function logUserSession(req, userId) {
     // Transaction so concurrent logins can't leave two is_current=true rows.
     conn = await db.getConnection();
     await conn.beginTransaction();
+    // Serialize first sign-ins too (there may be no session row to lock yet).
+    await conn.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", [userId]);
 
     // Was the account already signed in anywhere before this request? A
     // first-ever login must not send a "new device" warning.
@@ -197,14 +201,13 @@ async function logUserSession(req, userId) {
     );
     const priorSessions = Number(priorRow?.prior) || 0;
 
-    // `<=>` matches NULLs too, so older rows with missing UA fields still map
-    // to the same device instead of creating a duplicate.
+    // Never guess identity from browser/OS: two PCs can have identical labels.
     const [existing] = await conn.execute(
       `SELECT id FROM user_sessions
-        WHERE user_id = ? AND device <=> ? AND browser <=> ? AND os <=> ?
+        WHERE user_id = ? AND device_id = ?
         ORDER BY created_at DESC
         LIMIT 1`,
-      [userId, device, browser, os],
+      [userId, deviceId],
     );
 
     await conn.execute(
@@ -217,16 +220,17 @@ async function logUserSession(req, userId) {
       // Refresh the existing device row (created_at doubles as "last active").
       await conn.execute(
         `UPDATE user_sessions
-            SET ip_address = ?, location = ?, is_current = true, created_at = NOW()
+            SET ip_address = ?, location = ?, is_current = true, created_at = NOW(),
+                device = ?, browser = ?, os = ?
           WHERE id = ? AND user_id = ?`,
-        [ip, location, existing[0].id, userId],
+        [ip, location, device, browser, os, existing[0].id, userId],
       );
     } else {
       await conn.execute(
         `INSERT INTO user_sessions
-         (user_id, device, browser, os, ip_address, location, is_current)
-         VALUES (?, ?, ?, ?, ?, ?, true)`,
-        [userId, device, browser, os, ip, location],
+         (user_id, device, browser, os, ip_address, location, device_id, is_current)
+          VALUES (?, ?, ?, ?, ?, ?, ?, true)`,
+        [userId, device, browser, os, ip, location, deviceId],
       );
       isNewDevice = true;
     }

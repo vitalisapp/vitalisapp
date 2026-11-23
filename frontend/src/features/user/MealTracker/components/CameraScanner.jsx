@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Icon from '../../../../components/Icon.jsx';
 
 // Live "Scan a Meal" camera: viewfinder + corner frame + capture.
@@ -72,7 +73,9 @@ export default function CameraScanner({ onCapture = undefined, onClose = undefin
     onCapture?.(canvas.toDataURL('image/jpeg', 0.85));
   };
 
-  return (
+  // Portal to <body>: the page wrapper's fade-in animation creates a stacking
+  // context, which would trap z-[100] beneath the mobile BottomNav.
+  return createPortal(
     <div className="fixed inset-0 z-[100] bg-black flex flex-col" role="dialog" aria-modal="true" aria-label="Scan a meal">
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3">
@@ -115,18 +118,33 @@ export default function CameraScanner({ onCapture = undefined, onClose = undefin
       {/* Capture bar */}
       <div className="shrink-0 px-6 pt-4 text-center" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
         {!error && !starting && (
-          <>
-            <p className="text-white/60 text-xs mb-4">Point at your meal, then tap to detect items with AI</p>
+          <p className="text-white/60 text-xs mb-4">Point at your meal, then tap to detect items with AI</p>
+        )}
+        {/* Cancel | Capture | spacer — keeps the shutter centred */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="justify-self-start min-h-[44px] px-4 rounded-full text-white text-sm font-semibold bg-white/10 hover:bg-white/20 active:scale-95 transition-all"
+          >
+            Cancel
+          </button>
+          {!error && !starting ? (
             <button
+              type="button"
               onClick={capture}
               aria-label="Capture meal photo"
-              className="mx-auto w-[72px] h-[72px] rounded-full bg-[var(--accent)] flex items-center justify-center ring-4 ring-[var(--accent)]/30 hover:brightness-110 active:scale-95 transition-all"
+              className="w-[72px] h-[72px] rounded-full bg-[var(--accent)] flex items-center justify-center ring-4 ring-[var(--accent)]/30 hover:brightness-110 active:scale-95 transition-all"
             >
               <Icon name="photo_camera" className="text-[length:var(--fs-28)] text-[var(--text-inverse)]" />
             </button>
-          </>
-        )}
+          ) : (
+            <span className="w-[72px] h-[72px]" aria-hidden="true" />
+          )}
+          <span aria-hidden="true" />
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

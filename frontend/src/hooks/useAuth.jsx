@@ -38,7 +38,16 @@ export const AuthProvider = ({ children = undefined }) => {
   const [user, setUser] = useState(() => {
     return safeGetJSON('vitalis_user', null);
   });
-  const [loading, setLoading] = useState(true);
+  // Instant reload: a cached user from the last 24h renders the app right away
+  // while /me verifies in the background (the API still enforces auth on every
+  // call; a 401 purges the session and the route guards redirect to /login).
+  // Only a stale cache blocks on /me. Captured at init because the sync effect
+  // below rewrites vitalis_user_ts before the probe effect runs.
+  const bootFromCacheRef = useRef(null);
+  if (bootFromCacheRef.current === null) {
+    bootFromCacheRef.current = Boolean(safeGetJSON('vitalis_user', null)) && isCacheFresh();
+  }
+  const [loading, setLoading] = useState(() => !bootFromCacheRef.current);
   // null = probing, true = proven via /me, false = no session.
   const [sessionValid, setSessionValid] = useState(null);
   // StrictMode double-mounts effects: probe /me only once per load.
@@ -56,8 +65,12 @@ export const AuthProvider = ({ children = undefined }) => {
   }, [user]);
 
   // True when the /me cookie probe succeeds (catches blocked third-party cookies).
-  // Silent refreshes keep the current screen mounted (used after profile saves).
-  const refreshAuth = async ({ silent = false } = {}) => {
+  // Silent refreshes keep the current screen mounted (used after profile saves
+  // and right after login/register, so the auth page stays mounted to show
+  // errors instead of flashing the full-screen loader).
+  // fallbackUser: the login/register response, used only to fill fields /me
+  // leaves empty (avatar) — the user is set from the PROVEN /me session.
+  const refreshAuth = async ({ silent = false, fallbackUser = null } = {}) => {
     if (!silent) setLoading(true);
     try {
       const data = await apiFetch('/api/auth/me', { timeoutMs: 5000, skipAuthRedirect: true });
@@ -69,11 +82,14 @@ export const AuthProvider = ({ children = undefined }) => {
       }
 
       // Merge so that avatar_url saved via profile update is never lost.
-      setUser(prev => ({
-        ...prev,
-        ...data.user,
-        avatar: data.user.avatar_url || data.user.avatar || prev?.avatar || null,
-      }));
+      setUser(prev => {
+        const base = prev ?? fallbackUser;
+        return {
+          ...base,
+          ...data.user,
+          avatar: data.user.avatar_url || data.user.avatar || base?.avatar || null,
+        };
+      });
       setSessionValid(true);
       return true;
     } catch (error) {
@@ -123,7 +139,7 @@ export const AuthProvider = ({ children = undefined }) => {
       setSessionValid(false);
     } else if (!probedRef.current) {
       probedRef.current = true;
-      refreshAuth();
+      refreshAuth({ silent: bootFromCacheRef.current });
     }
     // Central 401 → logout so every apiClient call converges on one path
     const onUnauthorized = () => {

@@ -3,7 +3,7 @@
 const db = require('../config/db');
 
 // All sessions for the logged in user.
-async function getSessions(userId) {
+async function getSessions(userId, deviceId) {
   try {
     const [rows] = await db.execute(`
                 SELECT
@@ -15,12 +15,12 @@ async function getSessions(userId) {
                     location    AS city,
                     ''          AS country,
                     created_at  AS last_active,
-                    is_current
+                    (device_id = ?) AS is_current
                 FROM user_sessions
-                WHERE user_id = ?
+                WHERE user_id = ? AND device_id IS NOT NULL
                 ORDER BY created_at DESC
                 LIMIT 50
-              `, [userId]);
+              `, [deviceId, userId]);
     return rows;
   } catch (e) {
     // Fallback for DBs where location column also missing (defensive)
@@ -35,12 +35,12 @@ async function getSessions(userId) {
                       ''          AS city,
                       ''          AS country,
                       created_at  AS last_active,
-                      is_current
+                      (device_id = ?) AS is_current
                   FROM user_sessions
-                  WHERE user_id = ?
+                  WHERE user_id = ? AND device_id IS NOT NULL
                   ORDER BY created_at DESC
                   LIMIT 50
-                `, [userId]);
+                `, [deviceId, userId]);
       return fallback;
     } else throw e;
   }

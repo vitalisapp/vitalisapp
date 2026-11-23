@@ -1483,3 +1483,8 @@ button[data-loading='true'] {
   object-position: center;
   display: block;
 }
+
+/* Full-height screens: 100vh fallback, then dynamic viewport height so iOS/Android
+   toolbars don't push content off-screen. Use instead of min-h-screen / h-screen. */
+@utility min-h-viewport { min-height: 100vh; min-height: 100dvh; }
+@utility h-viewport { height: 100vh; height: 100dvh; }

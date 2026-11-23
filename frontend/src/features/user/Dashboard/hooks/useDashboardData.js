@@ -1,14 +1,28 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch, apiPost } from '../../../../lib/apiClient.js';
+import { qk } from '../../../../lib/queries.js';
 import { acquireSocket, releaseSocket, joinUserRoom } from '../../../../lib/socket.js';
 import { localTodayIso } from '../lib/dashboardFormat.js';
 
 export const useDashboardData = (USER_ID) => {
-  const [data, setData]             = useState({ stats: {}, profile: {} });
-  const [insights, setInsights]     = useState([]);
-  const [workouts, setWorkouts]     = useState([]);
+  // Stale-while-revalidate without changing the fetch/socket logic below:
+  // state starts from the last snapshot cached in React Query (instant paint on
+  // a revisit, no skeleton), the fetch still runs on every mount, and every
+  // state change — including optimistic setData from the activity logger — is
+  // written back, so the next visit never shows older numbers than this one.
+  const qc = useQueryClient();
+  const [cached] = useState(() => (USER_ID ? qc.getQueryData(qk.dashboard(USER_ID)) : undefined));
+  const [data, setData]             = useState(() => cached?.data ?? { stats: {}, profile: {} });
+  const [insights, setInsights]     = useState(() => cached?.insights ?? []);
+  const [workouts, setWorkouts]     = useState(() => cached?.workouts ?? []);
   const [dashboardError, setDashboardError] = useState(null);
-  const [loaded, setLoaded]         = useState(false);
+  const [loaded, setLoaded]         = useState(() => Boolean(cached));
+
+  useEffect(() => {
+    if (!USER_ID || !loaded || dashboardError) return;
+    qc.setQueryData(qk.dashboard(USER_ID), { data, insights, workouts });
+  }, [qc, USER_ID, loaded, dashboardError, data, insights, workouts]);
   const [refreshKey, setRefreshKey] = useState(0);
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 

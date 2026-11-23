@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback, useMemo, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from '../../../../lib/apiClient.js';
-import { qk } from '../../../../lib/queries.js';
+import { qk, queryFns, swr } from '../../../../lib/queries.js';
 import { useToastStore } from '../../../../stores/toastStore.js';
 import { scalePortion } from '../../../../lib/nutrition.js';
 
@@ -120,10 +120,6 @@ async function apiEstimateFoodDensity(foodName, signal) {
   });
 }
 
-async function apiFetchFoodLogs(userId) {
-  return apiFetch(`/api/food-logs/${userId}`);
-}
-
 async function apiDeleteFoodLog(userId, mealId) {
   return apiFetch(`/api/food-logs/${userId}/${mealId}`, { method: 'DELETE' });
 }
@@ -181,10 +177,7 @@ export function useNutritionTracker(USER_ID) {
   const [result,          setResult]          = useState(null);
   const [isAnalyzing,     setIsAnalyzing]     = useState(false);
   const [isLogging,       setIsLogging]       = useState(false);
-  const [history,         setHistory]         = useState([]);
-  const [historyLoading,  setHistoryLoading]  = useState(false);
-  const [historyError,    setHistoryError]    = useState(null);
-  const [toast,           setToast]           = useState(null);
+  const [toast,          setToast]           = useState(null);
   const [summarySeed,     setSummarySeed]     = useState(0);
   const [lastLoggedMeal,  setLastLoggedMeal]  = useState(null);
   const [scanError,       setScanError]       = useState(null);
@@ -198,24 +191,31 @@ export function useNutritionTracker(USER_ID) {
     try { useToastStore.getState().addToast(String(msg).replace(/^[✓❌🗑️]\s*/u, ''), String(msg).startsWith('❌') ? 'error' : 'success'); } catch { /* noop */ }
   }, []);
 
+  // Meal history = the shared food-logs query (same key as useTodayMeals, so
+  // the diary and the Macro Coach card share one request). A revisit renders
+  // the cached diary instantly and refreshes in the background; the skeleton
+  // only shows when there is no data yet (not on every reload after a save).
+  const historyQuery = useQuery({
+    queryKey: qk.foodLogs(USER_ID),
+    queryFn: queryFns.foodLogs(USER_ID),
+    enabled: Boolean(USER_ID),
+    ...swr,
+  });
+  const historyData = historyQuery.data;
+  const history = useMemo(() => {
+    if (!historyData) return [];
+    if (historyData.records) return historyData.records;
+    return Array.isArray(historyData) ? historyData : [];
+  }, [historyData]);
+  const historyLoading = historyQuery.isLoading;
+  const historyError = historyQuery.error;
+  const { refetch: refetchHistory } = historyQuery;
+
   const loadHistory = useCallback(async () => {
     if (!USER_ID) return;
-    setHistoryLoading(true);
-    setHistoryError(null);
-    try {
-      const data = await apiFetchFoodLogs(USER_ID);
-      qc.setQueryData(qk.foodLogs(USER_ID), data);
-      if (data.records) setHistory(data.records);
-      else if (Array.isArray(data)) setHistory(data);
-    } catch (err) {
-      setHistoryError(err);
-      if (import.meta.env.DEV) console.error(err);
-    } finally {
-      setHistoryLoading(false);
-    }
-  }, [USER_ID, qc]);
-
-  useEffect(() => { loadHistory(); }, [loadHistory]);
+    const res = await refetchHistory();
+    if (res.error && import.meta.env.DEV) console.error(res.error);
+  }, [USER_ID, refetchHistory]);
 
   const handleAnalyze = async (dataUrl) => {
     if (dataUrl) lastScanRef.current = dataUrl;
@@ -442,7 +442,14 @@ export function useNutritionTracker(USER_ID) {
   const handleDeleteMeal = async (mealId) => {
     try {
       await apiDeleteFoodLog(USER_ID, mealId);
-      setHistory((prev) => prev.filter((m) => m.id !== mealId));
+      // Drop it from the shared cache: the diary AND today's macro totals
+      // (Macro Coach / Dashboard) update at once, same response shape kept.
+      qc.setQueryData(qk.foodLogs(USER_ID), (prev) => {
+        if (!prev) return prev;
+        if (Array.isArray(prev)) return prev.filter((m) => m.id !== mealId);
+        if (Array.isArray(prev.records)) return { ...prev, records: prev.records.filter((m) => m.id !== mealId) };
+        return prev;
+      });
       setSummarySeed((s) => s + 1);
       showToast("🗑️ Meal deleted");
     } catch (err) {

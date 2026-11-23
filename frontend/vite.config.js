@@ -2,12 +2,23 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import browserslist from 'browserslist';
+import { browserslistToTargets } from 'lightningcss';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 /* global process */
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Browser support floor lives in package.json "browserslist" (iOS/Safari 15.4+,
+// Chrome/Edge 99+, Firefox 97+, Samsung 18+). Tailwind v4 alone only emits CSS
+// for Safari 16.4+: range media queries (@media (width >= 48rem)) that older
+// Safari/Firefox/Edge ignore, and unprefixed backdrop-filter that Safari <18
+// drops. Lightning CSS lowers both (min-width queries, -webkit- prefixes) in
+// dev and build. @layer can't be polyfilled, which is why the floor is 15.4.
+const CSS_TARGETS = browserslistToTargets(browserslist(undefined, { path: __dirname }));
+const JS_TARGETS = ['chrome99', 'edge99', 'firefox97', 'safari15.4', 'ios15.4'];
 
 const proxyErrorHandler = (proxy) => {
   proxy.on('error', (err, req, res) => {
@@ -28,10 +39,73 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, '');
   const backendTarget = env.BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3000';
   const hmrPort = env.VITE_HMR_CLIENT_PORT || process.env.VITE_HMR_CLIENT_PORT;
+  // Windows Widgets Board: the service worker can't read import.meta.env, so the
+  // API origin is emitted as widgets/config.js and loaded before sw-widgets.js.
+  // Empty = same origin (dev/preview proxy), matching src/app/config/env.js.
+  const widgetApiBase = String(env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+  const widgetsConfigPlugin = {
+    name: 'vitalis-widgets-config',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'widgets/config.js',
+        source: `self.VITALIS_WIDGETS_CONFIG = ${JSON.stringify({ apiBase: widgetApiBase })};\n`,
+      });
+    },
+  };
+  // Shared by `npm run dev` and `npm run preview` (preview serves the built
+  // service worker, which Windows widgets need, so it must reach /api too).
+  const apiProxy = {
+    // Long-lived SSE must bypass the 15s /api timeout (else 504s). Listed first.
+    '/api/notifications/stream': {
+      target: backendTarget,
+      changeOrigin: true,
+      secure: false,
+      timeout: 660000,
+      configure: proxyErrorHandler,
+    },
+    // AI failover can take ~2min: 180s entries listed before '/api'.
+    ...Object.fromEntries(
+      ['/api/coach', '/api/ai', '/api/ai-chat', '/api/analyze-pose', '/api/food-logs'].map((p) => [
+        p,
+        {
+          target: backendTarget,
+          changeOrigin: true,
+          secure: false,
+          timeout: 180000,
+          configure: proxyErrorHandler,
+        },
+      ])
+    ),
+    // Multer-stored images (/uploads/<category>/<file>.jpg) referenced by
+    // food_logs.image_url — served by the backend in dev too.
+    '/uploads': {
+      target: backendTarget,
+      changeOrigin: true,
+      secure: false,
+      configure: proxyErrorHandler,
+    },
+    '/api': {
+      target: backendTarget,
+      changeOrigin: true,
+      secure: false,
+      timeout: 15000,
+      configure: proxyErrorHandler,
+    },
+    '/socket.io': {
+      target: backendTarget,
+      changeOrigin: true,
+      ws: true,
+      secure: false,
+      configure: proxyErrorHandler,
+    },
+  };
   return {
     plugins: [
       react(),
       tailwindcss(),
+      widgetsConfigPlugin,
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['offline.html', 'robots.txt', 'favicon.ico', 'apple-touch-icon.png'],
@@ -74,12 +148,51 @@ export default defineConfig(({ mode }) => {
               purpose: 'maskable',
             },
           ],
+          // Windows 11 Widgets Board (installed PWA in Microsoft Edge). Rendered
+          // by public/widgets/sw-widgets.js. Phase 0: Today's Activity only.
+          // `template` is informational per Microsoft but listed as required.
+          widgets: [
+            {
+              name: "Today's Activity",
+              short_name: 'Today',
+              description: 'Steps logged against your daily goal, with calories and active minutes.',
+              tag: 'vitalis-today',
+              template: 'vitalis-today',
+              ms_ac_template: '/widgets/today-activity.json',
+              // Initial "loading" card (same shape as Microsoft's PWAmp demo);
+              // sw-widgets.js replaces it with live data right after install.
+              data: '/widgets/today-activity-data.json',
+              type: 'application/json',
+              update: 1800, // seconds — user decision: refresh every 30 minutes
+              multiple: false,
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
+              screenshots: [
+                {
+                  src: '/widgets/screenshots/today-activity.png',
+                  sizes: '300x304',
+                  type: 'image/png',
+                  label: "VITALIS Today's Activity widget",
+                },
+              ],
+            },
+          ],
         },
         workbox: {
+          // Windows widget handlers, appended to the generated sw.js. Order
+          // matters: config + data helpers must load before sw-widgets.js.
+          importScripts: ['widgets/config.js', 'widgets/widget-data.js', 'widgets/sw-widgets.js'],
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-          globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg,woff2}'],
           // Hero/auth JPGs (~830KB) stay lazy-loaded online, not precached — offline shell uses offline.html.
-          globIgnores: ['hero-gym.jpg', 'auth-gym.jpg'],
+          // Loading_green.png: legacy 2.4MB source art (BrandLoader uses the 9KB webp).
+          // Non-Latin font subsets: the browser only fetches them via unicode-range
+          // when such glyphs appear, so precaching them wasted ~2MB per install.
+          globIgnores: [
+            'hero-gym.jpg',
+            'auth-gym.jpg',
+            'Loading_green.png',
+            '**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2',
+          ],
+          globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg,woff2,webp}'],
           // SPA fallback for route reloads: any navigation that isn't a
           // precached asset serves the app shell. If this points at
           // offline.html instead, every deployed deep-route reload shows the
@@ -115,7 +228,14 @@ export default defineConfig(({ mode }) => {
       },
     },
     optimizeDeps: { exclude: ['@mediapipe/pose'] },
+    css: {
+      transformer: 'lightningcss',
+      lightningcss: { targets: CSS_TARGETS },
+    },
     build: {
+      target: JS_TARGETS,
+      cssTarget: JS_TARGETS,
+      cssMinify: 'lightningcss',
       // 1000 hid bloat (Plans 48KB, Dropdown chunk 373KB flagged) — 500 surfaces it.
       chunkSizeWarningLimit: 500,
       rollupOptions: {
@@ -124,10 +244,12 @@ export default defineConfig(({ mode }) => {
           manualChunks: (id) => {
             if (!id.includes('node_modules')) return undefined;
             if (id.includes('@mediapipe')) return 'vendor-mediapipe';
-            // react-leaflet intentionally stays with leaflet (map chunk), not react.
-            if (id.includes('leaflet')) return 'vendor-map';
-            if (id.includes('chart.js') || id.includes('react-chartjs-2')) return 'vendor-chart';
-            if (id.includes('framer-motion')) return 'vendor-motion';
+            // No forced groups for leaflet / chart.js: Rolldown pulls a group's
+            // dependencies into it, so react + react-dom landed inside
+            // vendor-chart/vendor-map and every page (even /login) downloaded
+            // both libraries. Left unassigned, they split naturally into the
+            // lazy chunks of the pages that use them (ActivityMap, Log, admin).
+            // Same for framer-motion (Onboarding only).
             if (id.includes('@tanstack') || id.includes('zustand')) return 'vendor-query';
             // Narrow React match: '/react/' over-matched paths like '@bryllim/.../react/'.
             if (
@@ -148,57 +270,16 @@ export default defineConfig(({ mode }) => {
       host: true,
       allowedHosts: true,
       hmr: hmrPort ? { clientPort: Number(hmrPort) } : true,
-      proxy: {
-        // Long-lived SSE must bypass the 15s /api timeout (else 504s). Listed first.
-        '/api/notifications/stream': {
-          target: backendTarget,
-          changeOrigin: true,
-          secure: false,
-          timeout: 660000,
-          configure: proxyErrorHandler,
-        },
-        // AI failover can take ~2min: 180s entries listed before '/api'.
-        ...Object.fromEntries(
-          ['/api/coach', '/api/ai', '/api/ai-chat', '/api/analyze-pose', '/api/food-logs'].map(
-            (p) => [
-              p,
-              {
-                target: backendTarget,
-                changeOrigin: true,
-                secure: false,
-                timeout: 180000,
-                configure: proxyErrorHandler,
-              },
-            ]
-          )
-        ),
-        // Multer-stored images (/uploads/<category>/<file>.jpg) referenced by
-        // food_logs.image_url — served by the backend in dev too.
-        '/uploads': {
-          target: backendTarget,
-          changeOrigin: true,
-          secure: false,
-          configure: proxyErrorHandler,
-        },
-        '/api': {
-          target: backendTarget,
-          changeOrigin: true,
-          secure: false,
-          timeout: 15000,
-          configure: proxyErrorHandler,
-        },
-        '/socket.io': {
-          target: backendTarget,
-          changeOrigin: true,
-          ws: true,
-          secure: false,
-          configure: proxyErrorHandler,
-        },
-      },
+      proxy: apiProxy,
     },
     preview: {
       host: true,
       port: 4173,
+      // Local Windows-widget testing through an HTTPS tunnel (PWABuilder needs
+      // a public URL). Same setting the dev server already uses.
+      allowedHosts: true,
+      // Same proxy as dev so login + /api work on the built app (service worker).
+      proxy: apiProxy,
     },
   };
 });

@@ -53,6 +53,21 @@
   .vcom-right { display: flex; }
 }
 
+/* Fallback for browsers without container queries (Safari <16, Chrome <105,
+   Firefox <110): approximate the container widths with viewport widths
+   (container ~ viewport minus the 260px desktop sidebar). */
+@supports not (container-type: inline-size) {
+  @media (min-width: 1024px) {
+    .vcom-grid { grid-template-columns: 200px minmax(0, 1fr); gap: 22px; }
+    .vcom-left { display: block; }
+    .vcom-scopes-inline { display: none; }
+  }
+  @media (min-width: 1360px) {
+    .vcom-grid { grid-template-columns: 220px minmax(0, 1fr) 268px; gap: 24px; }
+    .vcom-right { display: flex; }
+  }
+}
+
 /* Side panels: stay in view while the feed scrolls (only when tall enough). */
 .vcom-left,
 .vcom-right {
@@ -546,6 +561,20 @@
   .vcom-comments { margin: 0 14px; padding-bottom: 14px; }
   .vcom-feed { gap: 14px; }
   .vcom-composer-actions { width: 100%; justify-content: space-between; margin-left: 0; }
+}
+@supports not (container-type: inline-size) {
+  @media (max-width: 520px) {
+  .vcom-composer { padding: 14px; border-radius: 14px; }
+  .vcom-post { border-radius: 14px; }
+  .vcom-post-head { padding: 14px 14px 0; }
+  .vcom-caption { padding: 0 14px; margin-top: 12px; }
+  .vcom-more { margin-inline: 14px; }
+  .vcom-summary { margin-inline: 14px; }
+  .vcom-actions { padding: 4px 8px; }
+  .vcom-comments { margin: 0 14px; padding-bottom: 14px; }
+  .vcom-feed { gap: 14px; }
+  .vcom-composer-actions { width: 100%; justify-content: space-between; margin-left: 0; }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

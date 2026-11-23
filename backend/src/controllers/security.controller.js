@@ -1,4 +1,6 @@
 const service = require('../services/security.service');
+const { ensureDeviceCookie } = require('../utils/deviceCookie');
+const { logUserSession } = require('../services/auth.service');
 
 // GET /api/security - fetch all sessions for the logged in user
 async function get(req,res,next){
@@ -7,7 +9,10 @@ async function get(req,res,next){
         if (!userId) return res.status(401).json({ error: 'Not authenticated' });
     
         try {
-            const rows = await service.getSessions(userId);
+            // Enroll already-signed-in browsers without guessing a legacy row.
+            const deviceId = ensureDeviceCookie(req, res);
+            await logUserSession(req, userId);
+            const rows = await service.getSessions(userId, deviceId);
     
             res.json(rows);
     
