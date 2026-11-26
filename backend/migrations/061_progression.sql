@@ -33,11 +33,11 @@ CREATE TABLE IF NOT EXISTS `user_challenges` (
 
 -- ── Seed: advanced / extreme curated plans ─────────────────────────────
 DROP TEMPORARY TABLE IF EXISTS seed_level_plans;
-CREATE TEMPORARY TABLE seed_level_plans (
+CREATE TEMPORARY TABLE seed_level_plans (seed_pk INT AUTO_INCREMENT PRIMARY KEY, 
   title VARCHAR(200), tag VARCHAR(100), intensity VARCHAR(50), weeks INT,
   minutes INT, session_key VARCHAR(30), description TEXT
 );
-INSERT INTO seed_level_plans VALUES
+INSERT INTO seed_level_plans (title, tag, intensity, weeks, minutes, session_key, description) VALUES
 ('Advanced Strength Builder', 'Strength', 'Advanced', 4, 45, 'adv_strength',
  'Unlocked at Level 2. Higher-volume bodyweight strength with tempo work and longer holds. Warm up fully and keep perfect form on every rep.'),
 ('Elite Strength Block', 'Strength', 'Extreme', 4, 55, 'elite_strength',
@@ -79,11 +79,11 @@ FROM seed_level_plans s JOIN plans p ON p.title = s.title
 JOIN seed_level_days d ON d.n <= s.weeks * 7;
 
 DROP TEMPORARY TABLE IF EXISTS seed_level_exercises;
-CREATE TEMPORARY TABLE seed_level_exercises (
+CREATE TEMPORARY TABLE seed_level_exercises (seed_pk INT AUTO_INCREMENT PRIMARY KEY, 
   session_key VARCHAR(30), exercise_order INT, exercise_name VARCHAR(150),
   sets INT, reps VARCHAR(50), seconds INT, rest INT, notes VARCHAR(255)
 );
-INSERT INTO seed_level_exercises VALUES
+INSERT INTO seed_level_exercises (session_key, exercise_order, exercise_name, sets, reps, seconds, rest, notes) VALUES
 ('adv_strength',1,'Bodyweight Squats',4,'20',NULL,60,'3-second lowering phase.'),
 ('adv_strength',2,'Push-Ups',4,'15',NULL,60,'Chest to fist height; full lockout.'),
 ('adv_strength',3,'Reverse Lunges',3,'12 each side',NULL,60,'Front knee tracks over the toes.'),

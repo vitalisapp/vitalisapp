@@ -12,12 +12,12 @@ INSERT IGNORE INTO `plans` (`id`, `name`, `title`, `tag`, `intensity`, `duration
 -- New catalog entries use generated IDs; never overwrite existing or personal plans.
 -- Temporary tables are connection-local and contain only this seed's new programs.
 DROP TEMPORARY TABLE IF EXISTS seed_plan_catalog;
-CREATE TEMPORARY TABLE seed_plan_catalog (
+CREATE TEMPORARY TABLE seed_plan_catalog (seed_pk INT AUTO_INCREMENT PRIMARY KEY, 
   title VARCHAR(200), tag VARCHAR(100), intensity VARCHAR(50),
   weeks INT, focus VARCHAR(100), session_key VARCHAR(30), minutes INT,
   description TEXT
 );
-INSERT INTO seed_plan_catalog VALUES
+INSERT INTO seed_plan_catalog (title, tag, intensity, weeks, focus, session_key, minutes, description) VALUES
 ('Bodyweight Basics', 'Strength', 'Beginner', 4, 'Full Body', 'balanced', 25, 'Build a bodyweight routine with squats, scaled push-ups, bridges and core work. Three training days, two mobility days and two rest days per week.'),
 ('Upper Body Foundations', 'Strength', 'Beginner', 4, 'Upper Body', 'upper', 25, 'Practice pushing and trunk control without weights. Use knee push-ups as needed and keep every repetition controlled.'),
 ('Lower Body Builder', 'Strength', 'Moderate', 4, 'Lower Body', 'lower', 30, 'Develop leg strength with squats, reverse lunges, glute bridges and calf raises. Alternate training with mobility and rest.'),
@@ -36,7 +36,7 @@ INSERT INTO seed_plan_catalog VALUES
 
 -- Check both fields with whitespace/case normalization; existing data stays untouched.
 DROP TEMPORARY TABLE IF EXISTS seed_new_plans;
-CREATE TEMPORARY TABLE seed_new_plans AS
+CREATE TEMPORARY TABLE seed_new_plans (PRIMARY KEY (seed_pk)) AS
 SELECT c.* FROM seed_plan_catalog c
 WHERE NOT EXISTS (
   SELECT 1 FROM plans p
@@ -74,11 +74,11 @@ FROM seed_new_plans c JOIN plans p ON p.title = c.title
 JOIN seed_day_numbers d ON d.n <= c.weeks * 7;
 
 DROP TEMPORARY TABLE IF EXISTS seed_session_exercises;
-CREATE TEMPORARY TABLE seed_session_exercises (
+CREATE TEMPORARY TABLE seed_session_exercises (seed_pk INT AUTO_INCREMENT PRIMARY KEY, 
   session_key VARCHAR(30), exercise_order INT, exercise_name VARCHAR(150),
   reps VARCHAR(50), seconds INT, notes VARCHAR(255)
 );
-INSERT INTO seed_session_exercises VALUES
+INSERT INTO seed_session_exercises (session_key, exercise_order, exercise_name, reps, seconds, notes) VALUES
 ('balanced',1,'Bodyweight Squats','10',NULL,'Use a comfortable depth.'),
 ('balanced',2,'Push-Ups','8',NULL,'Knees down to scale.'),
 ('balanced',3,'Glute Bridge','12',NULL,'Squeeze gently at the top.'),
@@ -143,8 +143,8 @@ DROP TEMPORARY TABLE seed_plan_catalog;
 -- Public assets are served from /plans/, not /public/plans/.
 -- Apply on every seed run, including plans that already exist.
 DROP TEMPORARY TABLE IF EXISTS seed_plan_images;
-CREATE TEMPORARY TABLE seed_plan_images (title VARCHAR(200), image_url VARCHAR(500));
-INSERT INTO seed_plan_images VALUES
+CREATE TEMPORARY TABLE seed_plan_images (seed_pk INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(200), image_url VARCHAR(500));
+INSERT INTO seed_plan_images (title, image_url) VALUES
 ('Foundations of Strength', '/plans/lucid-origin_Filename_foundations-of-strength.png_Beginner-focused_controlled_bodyweight_squa-0.jpg'),
 ('Iron Forge Protocol', '/plans/lucid-origin_02_Iron_Forge_Protocol_Filename_iron-forge-protocol.png_Powerful_strength_traini-0.jpg'),
 ('Fat Loss Sprint', '/plans/lucid-origin_03_Fat_Loss_Sprint_Filename_fat-loss-sprint.png_writing_variant_standard_id_8200-0.jpg'),
