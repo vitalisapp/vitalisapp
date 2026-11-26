@@ -24,8 +24,10 @@ import { installGlobalButtonLoading } from './lib/buttonLoading.js';
 // boot so an install prompt firing before hydration is never missed.
 import './lib/pwaInstall.js';
 import { installServiceWorkerUpdate } from './lib/pwaUpdate.js';
+import { installChunkErrorRecovery } from './lib/lazyWithReload.js';
 
 installGlobalButtonLoading();
+installChunkErrorRecovery();
 installServiceWorkerUpdate();
 
 if (!GOOGLE_CLIENT_ID && import.meta.env.DEV) {

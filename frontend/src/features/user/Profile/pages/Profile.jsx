@@ -1,5 +1,6 @@
 // pages/Profile.jsx — redesigned to match reference image (dark + green header + 3 stats + accordion)
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { lazyWithReload as lazy } from '../../../../lib/lazyWithReload.js';
 import { MIN_AGE, MAX_AGE } from '../../../../lib/age.js';
 import { classifyBmi } from '../../../../lib/bmi.js';
 import BmiInsight from '../../../../components/health/BmiInsight.jsx';
