@@ -90,10 +90,33 @@ function totalsBasis(item, stated, counted) {
  */
 function reconcilePieceCount(item) {
   if (!item || typeof item !== 'object') return item;
-  const counted = validCount(item.piece_count);
+  let counted = validCount(item.piece_count);
+  // The prompt asks for one short location per piece ("top-left", …). A
+  // written-out list is grounded in the image; a bare number is not, and the
+  // model drifts both ways (3 empanadas reported as 2 or as 5). When the two
+  // disagree, trust the list and rescale the totals that were built for the
+  // bare number.
+  const listed = Array.isArray(item.piece_locations)
+    ? validCount(item.piece_locations.filter((x) => typeof x === 'string' && x.trim()).length)
+    : null;
+  let base = item;
+  if (listed && counted && listed !== counted) {
+    const per = Number(item.per_piece_g);
+    const total = Number(item.estimated_weight_g);
+    // Only rescale when the totals were demonstrably sized for the bare count.
+    if (per > 0 && total > 0 && Math.abs(per * counted - total) <= Math.max(2, total * 0.05)) {
+      base = scaleTotals(item, listed / counted);
+    }
+    counted = listed;
+  } else if (listed && !counted) {
+    counted = listed;
+  }
   if (!counted) return item;
 
-  let out = { ...item, piece_count: counted };
+  let out = { ...base, piece_count: counted };
+  delete out.piece_locations;
+  // The model disagreed with itself; worth a look by the user.
+  if (listed && validCount(item.piece_count) && listed !== validCount(item.piece_count)) out.low_confidence = true;
   const name = String(item.food_name || '');
   const serving = String(item.serving || '');
   const nameFound = findStatedCount(name);
@@ -104,7 +127,8 @@ function reconcilePieceCount(item) {
 
   if (stated && stated !== counted) {
     // Totals were sized for the stated number → bring them to the real count.
-    if (totalsBasis(item, stated, counted) === 'stated') {
+    // `base` already carries any list-based rescale, so it is never applied twice.
+    if (totalsBasis(base, stated, counted) === 'stated') {
       out = scaleTotals(out, counted / stated);
     }
     out.low_confidence = true; // the model disagreed with itself; worth a look

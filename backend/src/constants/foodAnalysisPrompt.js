@@ -8,7 +8,8 @@ FOOD CHECK FIRST: only analyze food or drink meant to be eaten. If the photo doe
   "items": [
     {
       food_name  – string: specific name of this item (include portion/piece count when visible),
-      piece_count – integer: how many separate pieces of this item you counted (COUNTING PROTOCOL below); null for non-countable food (rice, soup, sauce, salad, drinks),
+      piece_locations – array of short strings, ONE per piece you can see, saying where it is (e.g. ["left","middle","right"] or ["top row 1","top row 2","front"]); [] for non-countable food. Write this list BEFORE piece_count,
+      piece_count – integer: how many separate pieces of this item you counted = the length of piece_locations (COUNTING PROTOCOL below); null for non-countable food (rice, soup, sauce, salad, drinks),
       per_piece_g – integer: estimated grams of ONE piece; null when piece_count is null,
       serving    – string: estimated serving size (e.g. "1 cup", "0.5 cup cooked", "3 pcs") — must use the same count as piece_count,
       estimated_weight_g – integer: total visible grams of THIS item (e.g. 180) — for countable food = piece_count × per_piece_g,
@@ -37,25 +38,33 @@ B. Maximum 8 items — merge tiny garnishes/sauces into the nearest main item.
 C. Every item independently follows the PORTION, MACRO, and FAT BREAKDOWN rules below.
 
 COUNTING PROTOCOL (do this BEFORE estimating any weight or calories)
-Undercounting is the most common error — e.g. reporting 2 empanadas when 3 are on the plate.
-For every countable food (empanadas, lumpia, siomai, dumplings, nuggets, wings, drumsticks,
-eggs, pandesal/bread rolls, cookies, pizza slices, sushi, skewers, fish balls, fruit pieces…):
-  a. Scan the WHOLE image in a fixed order: left → right, top → bottom, then the edges, the
-     background, other plates, containers, hands and anything stacked on top.
-  b. Count EVERY individual piece, including pieces that are partly hidden, overlapping,
-     stacked, cut open, half-eaten, or cut off by the photo edge. A piece only partly visible
-     still counts as 1 if it is clearly a separate piece.
-  c. Use visible boundaries — separate crimped edges, tips, shadows, gaps — to split pieces
-     that touch. Two touching pieces are 2, not 1.
-  d. Count a second time in the opposite order. If the two counts differ, look again and use
-     the number that matches the separate pieces you can actually see.
-  e. Never default to 1 or 2. Write the final number in piece_count, in food_name
-     (e.g. "Empanada (3 pcs)") and in serving (e.g. "3 pcs"), all identical.
-  f. THEN estimate the VISIBLE edible weight, excluding bones, wrappers and missing bites.
+The goal is the EXACT number — count accurately, not high and not low. Both errors happen:
+reporting 2 empanadas when 3 are on the plate, AND reporting 5 when there are only 3.
+For every countable food (empanada, lumpia, siomai, siopao, puto, kutsinta, pandesal,
+fish ball, kikiam, kwek-kwek, BBQ/isaw sticks, banana cue, turon, eggs, nuggets, wings,
+drumsticks, cookies, pizza slices, sushi, fruit pieces…):
+  a. Look at the serving being logged: the plate, bowl, box, tray or hand that holds this
+     food. Food on a different plate further back (someone else's meal) is NOT counted.
+  b. Point at each piece ONCE, in a fixed order (left → right, then back → front), and write
+     one short location per piece in piece_locations. piece_count = the length of that list.
+  c. Count a piece once only. These are NOT extra pieces:
+       – the two halves of ONE piece that was cut or bitten open (count 1),
+       – the filling, sauce, garnish or crumbs that spilled out of a piece,
+       – a shadow, reflection, the plate pattern, or a wrapper/paper liner,
+       – the same piece seen again in a second look.
+  d. These ARE separate pieces: two pieces that touch or overlap but each show their own
+     outline (own crimped edge, own tip, own ends), a partly hidden piece under or behind
+     another, and a piece partly cut off by the photo edge that is clearly a different piece.
+  e. Check: go over the list again and confirm every entry points at a DIFFERENT piece.
+     If two entries are the same piece, remove one. If the count is honestly uncertain
+     (heavy stacking, blur), give your best count and set low_confidence:true.
+  f. Write the same number in piece_count, in food_name (e.g. "Empanada (3 pcs)") and in
+     serving (e.g. "3 pcs").
+  g. THEN estimate the VISIBLE edible weight, excluding bones, wrappers and missing bites.
      per_piece_g is the average visible edible grams per counted piece, NOT a whole-piece
      default. Set estimated_weight_g = piece_count × per_piece_g and size every nutrient
      for that visible weight. Never reconstruct hidden or off-screen portions.
-  g. If boundaries, food identity or scale are unclear, set low_confidence:true and use
+  h. If boundaries, food identity or scale are unclear, set low_confidence:true and use
      a generic food name rather than inventing an exact recipe, brand or hidden filling.
 
 PORTION ESTIMATION RULES
@@ -86,6 +95,19 @@ MACRO RULES (non-negotiable)
    Zero is valid for nutrients absent from a food; never add minimum quantities
    just to make a nutrient nonzero. References are approximate, not minimums.
 
+FOOD NAMES (users are in the Philippines)
+- Use the name Filipinos actually call the food: "Pritong tilapia", "Ginisang monggo",
+  "Tortang talong", "Pork BBQ (2 sticks)", "Lumpiang shanghai", "Sinangag", "Kanin".
+  Add the English in parentheses only when it helps: "Tuyo (dried fish)", "Taho (soy pudding)".
+- Silog plates: log the parts as separate items — e.g. Tapa, Sinangag, Pritong itlog —
+  never one "Tapsilog" item, so each part can be checked and edited.
+- Local brands/chains are fine when the packaging or plating clearly shows them
+  (Jollibee, Mang Inasal, Chowking, Greenwich, Max's, Andok's, Lucky Me, 7-Eleven);
+  never guess a brand from a plain plate.
+- Common local terms: kanin = rice, ulam = viand, sabaw = soup/broth, prito/pritong = fried,
+  inihaw = grilled, ginisa/ginisang = sautéed, nilaga = boiled, ginataan = in coconut milk,
+  paksiw = cooked in vinegar, torta = omelette, merienda = snack, kakanin = rice cakes.
+
 FILIPINO DISH IDENTIFICATION (decide the dish from these visual cues BEFORE using anchors)
 Many Filipino dishes look alike in photos. Name the dish from what you SEE, not the most famous name:
 - Dark brown soy-vinegar glaze, garlic, bay leaf, little or no vegetables → ADOBO
@@ -104,6 +126,29 @@ Many Filipino dishes look alike in photos. Name the dish from what you SEE, not 
 - Creamy white/beige coconut sauce → GINATAAN; with chili and pork → BICOL EXPRESS; shredded dark taro leaves → LAING.
 - Very dark (almost black) thick pork stew → DINUGUAN.
 - Crispy fried pork with blistered skin: cubes → LECHON KAWALI; whole leg/knuckle → CRISPY PATA; chopped on sizzling plate → SISIG.
+- Grilled chicken, orange-yellow from annatto, char marks → CHICKEN INASAL; whole roasted brown chicken → LECHON MANOK.
+  Sweet red-brown glazed pork on a stick → PORK BBQ; coiled grilled intestines on a stick → ISAW.
+- Fried fish: flat, round, grey-pink skin → TILAPIA; small, slim, silvery-blue → GALUNGGONG;
+  butterflied with many fine bones → BANGUS; tiny, flat, very dry and brown → TUYO; smoked golden-brown → TINAPA.
+- Eggplant flattened into an egg omelette → TORTANG TALONG. Yellow-green mung bean stew → GINISANG MONGGO.
+  Mixed stir-fried vegetables (cabbage, carrot, cauliflower, quail eggs) → CHOP SUEY.
+- Noodles: thick yellow egg noodles, dry → PANCIT CANTON; thin white rice noodles → BIHON;
+  thick orange shrimp sauce + egg + chicharon on top → PALABOK (MALABON if noodles are thick);
+  clear glass noodles → SOTANGHON; thick noodles in thick egg broth → LOMI; noodle soup → MAMI / BATCHOY (pork, liver, chicharon).
+  Glossy instant noodles from a pack → INSTANT PANCIT CANTON (e.g. Lucky Me).
+- Creamy macaroni + chicken in milky broth → SOPAS. Chocolate rice porridge → CHAMPORADO. Soft tofu + syrup + sago → TAHO.
+- Kakanin: small round steamed cakes, white → PUTO; brown, chewy, often with grated coconut → KUTSINTA;
+  flat sticky brown cake with latik → BIKO; wrapped in banana leaf → SUMAN; round, banana-leaf lined, browned top → BIBINGKA;
+  purple tube-shaped with coconut → PUTO BUMBONG; flat white disks rolled in coconut and sugar → PALITAW;
+  white coconut pudding squares with corn → MAJA BLANCA; deep purple jam → UBE HALAYA.
+- Fried merienda: banana in a long spring-roll wrapper, caramelized → TURON; skewered caramelized saba → BANANA CUE;
+  skewered caramelized sweet potato → CAMOTE CUE; orange batter-coated eggs → KWEK-KWEK (quail) / TOKNENENG (chicken egg);
+  flat round fritter with shrimp/bean sprouts → OKOY; thin fried spring rolls, ground meat → LUMPIANG SHANGHAI;
+  thick fried rolls with vegetables → LUMPIANG GULAY; fresh (unfried) crepe roll with sauce → LUMPIANG SARIWA.
+- Bread: small round crumb-coated roll → PANDESAL; coiled buttery bun with sugar/cheese → ENSAYMADA;
+  rolled bun with sugary filling → SPANISH BREAD; white fluffy bun → SIOPAO (asado / bola-bola);
+  flaky round pastry with mung bean or ube filling → HOPIA.
+- Raw fish cubes in vinegar with onion, ginger, chili → KINILAW. Fertilized duck egg in shell → BALUT.
 If two dishes fit, pick the closer one, set dish_confidence "medium" or "low" and list the others in alternatives.
 Never invent a regional name you are not sure of — a generic name ("Pork stew in tomato sauce") with alternatives is better.
 
@@ -139,6 +184,26 @@ FILIPINO HOME-COOKED MEALS (standard 1-serving portions):
   Bicol express (1 serving ~150g):              340 kcal | P: 16g | C: 10g | F: 26g
   Pork belly liempo grilled (1 slab ~150g):     420 kcal | P: 22g | C: 2g  | F: 36g
   Binagoongang baboy (1 serving ~150g):         380 kcal | P: 20g | C: 6g  | F: 30g
+  Chicken inasal (1 pc leg-thigh ~180g):        340 kcal | P: 43g | C: 4g  | F: 18g
+  Lechon manok (1/4 chicken ~200g):             430 kcal | P: 50g | C: 0g  | F: 25g
+  Lechon (roast pig, 1 serving ~150g):          495 kcal | P: 27g | C: 0g  | F: 42g
+  Pork BBQ (1 stick ~50g):                      125 kcal | P: 9g  | C: 5g  | F: 7.5g
+  Pritong tilapia (1 pc ~150g edible):          285 kcal | P: 33g | C: 3g  | F: 15g
+  Pritong galunggong (1 pc ~80g edible):        170 kcal | P: 19g | C: 0g  | F: 10g
+  Tuyo (fried, 1 pc ~15g):                       45 kcal | P: 7.5g| C: 0g  | F: 1.5g
+  Inihaw na bangus (1 serving ~200g):           320 kcal | P: 40g | C: 0g  | F: 17g
+  Adobong pusit (1 serving ~150g):              210 kcal | P: 22g | C: 8g  | F: 10g
+  Kinilaw (1 serving ~150g):                    150 kcal | P: 27g | C: 4.5g| F: 2.3g
+  Tortang talong (1 pc ~150g):                  195 kcal | P: 9g  | C: 9g  | F: 13.5g
+  Ginisang monggo (1 cup ~200g):                180 kcal | P: 12g | C: 24g | F: 5g
+  Chop suey (1 serving ~200g):                  140 kcal | P: 8g  | C: 12g | F: 7g
+  Ginataang kalabasa at sitaw (~200g):          220 kcal | P: 6g  | C: 18g | F: 14g
+  Adobong kangkong (1 serving ~150g):           105 kcal | P: 4.5g| C: 7.5g| F: 7g
+  Embutido (2 slices ~100g):                    230 kcal | P: 13g | C: 8g  | F: 16g
+  Corned beef, sautéed (1 serving ~100g):       210 kcal | P: 18g | C: 3g  | F: 14g
+  Luncheon meat, fried (2 slices ~60g):         180 kcal | P: 7g  | C: 2.4g| F: 16g
+  Filipino red hotdog (1 pc ~45g):              130 kcal | P: 4.5g| C: 2.7g| F: 11g
+  Pritong itlog / fried egg (1 pc ~46g):         90 kcal | P: 6g  | C: 0.4g| F: 7g
 
 RICE & NOODLES:
   Steamed white rice (1 cup cooked ~180g):      206 kcal | P: 4g  | C: 45g | F: 0g
@@ -151,6 +216,14 @@ RICE & NOODLES:
   Lomi (1 bowl ~350ml):                         380 kcal | P: 16g | C: 48g | F: 12g
   Lugaw/arroz caldo (1 bowl ~300ml):            220 kcal | P: 10g | C: 38g | F: 4g
   Goto (1 bowl ~300ml):                         260 kcal | P: 14g | C: 36g | F: 6g
+  Pancit palabok (1 serving ~250g):             400 kcal | P: 15g | C: 58g | F: 12.5g
+  Pancit malabon (1 serving ~250g):             425 kcal | P: 20g | C: 55g | F: 15g
+  Sotanghon soup (1 bowl ~300ml):               210 kcal | P: 12g | C: 30g | F: 4.5g
+  La Paz batchoy (1 bowl ~400ml):               360 kcal | P: 24g | C: 36g | F: 14g
+  Sopas (1 bowl ~300ml):                        225 kcal | P: 12g | C: 27g | F: 7.5g
+  Champorado (1 bowl ~250g):                    325 kcal | P: 7.5g| C: 62g | F: 6g
+  Instant pancit canton (1 pack cooked ~150g):  380 kcal | P: 7g  | C: 50g | F: 21g
+  Instant noodle soup (1 pack in broth ~350ml): 250 kcal | P: 5g  | C: 33g | F: 10.5g
   Spaghetti Filipino-style (1 serving ~250g):   480 kcal | P: 18g | C: 62g | F: 16g
   Pasta carbonara (1 serving ~250g):            520 kcal | P: 18g | C: 52g | F: 26g
   Pasta bolognese (1 serving ~250g):            460 kcal | P: 22g | C: 54g | F: 16g
@@ -207,6 +280,18 @@ BREAD, SNACKS & STREET FOOD:
   Siomai 1pc (~20g):                             45 kcal | P: 3g  | C: 3g  | F: 2.5g
   Steamed dumpling 1pc (~25g):                   45 kcal | P: 2.5g| C: 5g  | F: 1.5g
   Chicken nugget 1pc (~18g):                     50 kcal | P: 2.5g| C: 3g  | F: 3g
+  Tokneneng 1pc (~60g):                         140 kcal | P: 6g  | C: 9g  | F: 8.5g
+  Camote cue 1 stick (~100g):                   220 kcal | P: 1.5g| C: 45g | F: 5g
+  Okoy 1pc (~70g):                              180 kcal | P: 6g  | C: 15g | F: 10.5g
+  Lumpiang sariwa 1pc (~150g):                  180 kcal | P: 6g  | C: 24g | F: 6.8g
+  Balut 1pc (~70g):                             130 kcal | P: 10g | C: 1g  | F: 9g
+  Chicharon (pork rind, ~30g):                  160 kcal | P: 18g | C: 0g  | F: 9.6g
+  Siopao asado 1pc (~120g):                     300 kcal | P: 11g | C: 48g | F: 7g
+  Spanish bread 1pc (~50g):                     165 kcal | P: 3.5g| C: 25g | F: 5.5g
+  Pan de coco 1pc (~60g):                       200 kcal | P: 4g  | C: 31g | F: 6g
+  Hopia 1pc (~50g):                             190 kcal | P: 3.5g| C: 30g | F: 6.5g
+  SkyFlakes crackers 1 pack (~25g):             110 kcal | P: 2.5g| C: 17.5g| F: 3.5g
+  Dried mango (~40g):                           135 kcal | P: 0.6g| C: 33g | F: 0.4g
 
 WESTERN & INTERNATIONAL:
   Grilled chicken breast 200g (no coating):     330 kcal | P: 62g | C: 0g  | F: 7g
@@ -250,6 +335,14 @@ DESSERTS:
   Biko 1 piece (~100g):                         240 kcal | P: 3g  | C: 48g | F: 4g
   Puto 2pcs (~80g):                             180 kcal | P: 4g  | C: 36g | F: 2g
   Kutsinta 2pcs (~80g):                         160 kcal | P: 2g  | C: 36g | F: 0g
+  Bibingka 1pc (~120g):                         300 kcal | P: 6g  | C: 50g | F: 8.4g
+  Puto bumbong 1 serving (~100g):               230 kcal | P: 3g  | C: 45g | F: 4g
+  Suman 1pc (~80g):                             145 kcal | P: 2.4g| C: 30g | F: 1.6g
+  Palitaw 1pc (~30g):                            70 kcal | P: 1g  | C: 13.5g| F: 1.4g
+  Maja blanca 1 slice (~100g):                  160 kcal | P: 2g  | C: 28g | F: 5g
+  Ube halaya (~100g):                           200 kcal | P: 2g  | C: 40g | F: 4g
+  Buko pie 1 slice (~120g):                     350 kcal | P: 5g  | C: 46g | F: 17g
+  Taho 1 cup (~250g):                           200 kcal | P: 7.5g| C: 37.5g| F: 2.5g
   Chocolate cake 1 slice (~100g):               350 kcal | P: 4g  | C: 52g | F: 14g
   Cheesecake 1 slice (~100g):                   320 kcal | P: 6g  | C: 32g | F: 18g
   Ice cream 1 scoop (~80g):                     160 kcal | P: 3g  | C: 22g | F: 6g
@@ -288,7 +381,8 @@ DAIRY & EGGS:
 ─── END OF CALIBRATION ANCHORS ────────────────────────────────────────────────
 
 CRITICAL MISTAKES TO AVOID
-- Undercounting pieces: re-check partly hidden, overlapping, stacked and edge pieces
+- Wrong piece count in EITHER direction: missing hidden/edge pieces, or counting one piece
+  twice (cut halves, spilled filling, reflections, a second look, food on another plate)
 - food_name, serving and piece_count showing different numbers
 - Calories sized for fewer pieces than piece_count (per-piece anchor × piece_count is the sanity check)
 - Do not add arbitrary minimum carbs or fat to small portions
@@ -302,7 +396,7 @@ FAT BREAKDOWN RULES
 11. If unsure, split remaining fat after saturated/trans as 40% mono, 35% poly, remainder.
 
 OUTPUT FORMAT (raw JSON only — no markdown, no prose, no code fences):
-{"items":[{"food_name":"...","piece_count":null,"per_piece_g":null,"serving":"...","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"sugar":0,"sodium":0,"possible_allergens":[],"dish_confidence":"high","alternatives":[]}],"suggestion":"..."}`;
+{"items":[{"food_name":"...","piece_locations":[],"piece_count":null,"per_piece_g":null,"serving":"...","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"sugar":0,"sodium":0,"possible_allergens":[],"dish_confidence":"high","alternatives":[]}],"suggestion":"..."}`;
 
 // Compact variant for providers with tight input budgets (Groq free tier:
 // 7,000 tokens/minute). Keeps the rules that drive accuracy — visible-portion
@@ -315,12 +409,13 @@ TASK
 List EVERY distinct food as its own item. Maximum 8. Group identical pieces (e.g. "3 pcs nuggets").
 FOOD CHECK FIRST: only analyze food or drink meant to be eaten. If the photo does NOT clearly show real food or drink — e.g. a person, face or selfie, body part, pet/animal, screen, document, room, scenery, vehicle, everyday object, empty plate/packaging, toy or fake food, or a blank/blurry image — return ONLY {"items":[],"not_food":true,"subject":"<2-5 words: what the photo shows>","suggestion":"This doesn't look like food."} — never invent a dish and never guess food from a person, logo or object. A person holding or eating real food still counts as food: analyze the food only.
 Output ONLY raw JSON, no markdown or prose:
-{"items":[{"food_name":"...","piece_count":null,"per_piece_g":null,"serving":"1 cup","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"sugar":0,"sodium":0,"possible_allergens":[],"dish_confidence":"high","alternatives":[]}],"suggestion":"one short tip"}
+{"items":[{"food_name":"...","piece_locations":[],"piece_count":null,"per_piece_g":null,"serving":"1 cup","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"sugar":0,"sodium":0,"possible_allergens":[],"dish_confidence":"high","alternatives":[]}],"suggestion":"one short tip"}
 dish_confidence = how sure you are of the dish identity (high/medium/low); alternatives = up to 3 other dishes it could be ([] when high).
 
-COUNTING (before any weight or calories) — undercounting is the #1 error (e.g. 2 empanadas reported when 3 are visible):
-- For countable food (empanada, lumpia, siomai, dumplings, nuggets, wings, eggs, rolls, cookies, slices, skewers) scan left→right, top→bottom, then edges, background, other plates and stacked pieces.
-- Count every separate piece, including partly hidden, overlapping, cut-off or half-eaten ones. Touching pieces are separate. Count again in reverse order; never default to 1 or 2.
+COUNTING (before any weight or calories) — count EXACTLY, not high and not low (3 empanadas must not become 2 or 5):
+- For countable food (empanada, lumpia, siomai, siopao, puto, kutsinta, pandesal, fish ball, kwek-kwek, BBQ sticks, banana cue, turon, eggs, nuggets, wings, slices) count only the serving being logged (its plate, box or hand), not food on another plate.
+- Point at each piece once (left→right, back→front) and write one short location per piece in piece_locations, e.g. ["left","middle","right"]. piece_count = length of that list.
+- One piece cut or bitten in two is 1. Spilled filling, sauce, crumbs, shadows, reflections and wrappers are not pieces. Touching pieces that each show their own outline are separate, and a partly hidden piece still counts. Re-check that no two entries are the same piece.
 - piece_count = that number (null for rice, soup, sauce, drinks). per_piece_g = average VISIBLE edible grams per piece, excluding bones, wrappers and missing bites, not a whole-piece default. estimated_weight_g = piece_count × per_piece_g. food_name ("Empanada (3 pcs)") and serving ("3 pcs") use the same number; nutrients cover only that visible weight.
 - If boundaries, identity or scale are unclear, set low_confidence:true and use a generic name. Never invent hidden portions, fillings or brands.
 
@@ -350,12 +445,29 @@ PHILIPPINE / COMMON ANCHORS (scale to the visible portion, never assume a whole 
 - Kare-kare ~250g: 420 kcal | P30 C14 F26
 - Pork menudo ~200g: 300 kcal | P20 C18 F14
 - Bulalo 1 bowl ~400ml: 450 kcal | P35 C10 F30
+- Chicken inasal 1 pc ~180g: 340 kcal | P43 C4 F18
+- Pork BBQ 1 stick ~50g: 125 kcal | P9 C5 F7.5
+- Pritong tilapia 1 pc ~150g: 285 kcal | P33 C3 F15
+- Ginisang monggo 1 cup ~200g: 180 kcal | P12 C24 F5
+- Tortang talong 1 pc ~150g: 195 kcal | P9 C9 F13.5
+- Fried egg 1 pc ~46g: 90 kcal | P6 C0.4 F7
+- Pancit palabok ~250g: 400 kcal | P15 C58 F12.5
+- Siopao asado 1 pc ~120g: 300 kcal | P11 C48 F7
+- Puto 1 pc ~40g: 90 kcal | P2 C18 F1
+- Turon 1 pc ~80g: 180 kcal | P2 C34 F4
+- Fish ball 1 pc ~15g: 26 kcal | P1.2 C3.6 F0.8
+- Halo-halo ~350ml: 310 kcal | P4 C60 F6
 Use the closest anchor when a dish is not listed.
+
+NAMES: use the name Filipinos use ("Pritong tilapia", "Ginisang monggo", "Sinangag", "Pork BBQ (2 sticks)", "Lumpiang shanghai"); English in parentheses only if it helps. Silog plates = separate items (tapa / sinangag / pritong itlog). Name a brand (Jollibee, Mang Inasal, Chowking, Lucky Me…) only when packaging shows it.
 
 FILIPINO LOOK-ALIKES (name from what you see; if unsure set dish_confidence "low" and list alternatives):
 - Dark soy-vinegar glaze → adobo. Red tomato stew → menudo (diced pork+liver+potato), caldereta (big chunks+bell pepper+liver spread), mechado (big beef chunks with fat strips).
 - Peanut sauce + oxtail/eggplant/sitaw → kare-kare. Sour clear soup + kangkong/labanos → sinigang. Ginger broth + sayote/papaya → tinola. Plain broth + cabbage/corn → nilaga; with marrow bone → bulalo.
-- Coconut cream → ginataan / bicol express (chili) / laing (taro leaves). Near-black stew → dinuguan.`;
+- Coconut cream → ginataan / bicol express (chili) / laing (taro leaves). Near-black stew → dinuguan.
+- Annatto-orange grilled chicken → chicken inasal; whole roast chicken → lechon manok. Flat grey fried fish → tilapia; small slim silvery → galunggong; tiny dry brown → tuyo.
+- Thick yellow noodles → canton; thin white → bihon; orange shrimp sauce + egg → palabok; clear glass noodles → sotanghon.
+- White steamed cakes → puto; brown chewy → kutsinta; banana-leaf wrapped → suman; sticky brown cake → biko. Banana in fried wrapper → turon; skewered caramelized banana → banana cue.`;
 
 
 // Per-100 g density for ONE named food. Used by the manual meal form's

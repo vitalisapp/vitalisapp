@@ -30,6 +30,13 @@ installGlobalButtonLoading();
 installChunkErrorRecovery();
 installServiceWorkerUpdate();
 
+// Only clear the boot retry guard once the entry module has actually loaded.
+const bootUrl = new URL(window.location.href);
+if (bootUrl.searchParams.has('__vitalis_asset_retry')) {
+  bootUrl.searchParams.delete('__vitalis_asset_retry');
+  window.history.replaceState(window.history.state, '', bootUrl.href);
+}
+
 if (!GOOGLE_CLIENT_ID && import.meta.env.DEV) {
   console.warn('[env] VITE_GOOGLE_CLIENT_ID not set — Google login disabled');
 }
