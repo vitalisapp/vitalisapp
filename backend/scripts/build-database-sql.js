@@ -42,6 +42,27 @@ const portable = (ddl) => ddl
   .replace(/ AUTO_INCREMENT=\d+/, '')
   .replace(/^CREATE TABLE `/, 'CREATE TABLE IF NOT EXISTS `');
 
+// CREATE TABLE IF NOT EXISTS skips a table that already exists, so an older
+// copy would lack newer columns and the INSERTs below would fail with 1054.
+// For every column, add it only when information_schema says it is missing.
+// Prepared statements keep this portable (MySQL 8 has no ADD COLUMN IF NOT EXISTS)
+// and need no DELIMITER, so it pastes cleanly into phpMyAdmin.
+function addMissingColumns(table, createSql) {
+  const lines = [];
+  for (const raw of createSql.split('\n')) {
+    const m = raw.match(/^\s+`([^`]+)`\s+(.+?),?$/);
+    if (!m) continue;
+    const [, col, def] = m;
+    if (/AUTO_INCREMENT/i.test(def)) continue; // the id column always exists with its table
+    const alter = `ALTER TABLE \`${table}\` ADD COLUMN \`${col}\` ${def}`.replace(/'/g, "''");
+    lines.push(
+      `SET @s = (SELECT IF(COUNT(*) = 0, '${alter}', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = '${table}' AND column_name = '${col}');`,
+      'PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;',
+    );
+  }
+  return lines.length ? ['', `-- Add any columns an older \`${table}\` is missing`, ...lines] : [];
+}
+
 async function dump(srcDb, outFile) {
   const c = await mysql.createConnection({ ...conn, database: srcDb, dateStrings: true, supportBigNumbers: true, bigNumberStrings: true });
   const [tables] = await c.query(
@@ -58,15 +79,19 @@ async function dump(srcDb, outFile) {
 -- Built by applying every migration to an EMPTY database and exporting it,
 -- so this file holds the schema plus seed data and no real user records.
 -- Dataset: ${DEMO ? 'DEMO: user5@gmail.com through user9@gmail.com + admin@gmail.com; all passwords: 12345678.' : 'Clean: plans, food catalog and default admin account.'}
-${DEMO ? '-- Demo photos are placeholder PNGs. Verification/reset records are used and expired.\n-- Demo email-delivery entries are fixtures; no messages were sent.\n' : ''}-- Importing this file ERASES existing application data in fitnessapp.
+${DEMO ? '-- Demo photos are placeholder PNGs. Verification/reset records are used and expired.\n-- Demo email-delivery entries are fixtures; no messages were sent.\n' : ''}-- Non-destructive: nothing is dropped. Existing tables and rows are kept.
 -- Rebuild: npm run db:sql${DEMO ? ' -- --demo' : ''} (from backend/).
 -- Regenerated: ${new Date().toISOString().slice(0, 10)}.
 --
 -- What this does:
 --   1. Creates database \`fitnessapp\` and selects it.
---   2. Drops and recreates all ${names.length - 1} application tables + \`_migrations\` (clean reset).
---   3. Loads the seed data.
---   4. Fills \`_migrations\` so \`npm run db:migrate\` reports nothing pending.
+--   2. Creates each of the ${names.length - 1} application tables + \`_migrations\` only if
+--      it does not exist yet (CREATE TABLE IF NOT EXISTS).
+--   3. Loads seed rows with INSERT IGNORE: a row whose id/unique key already
+--      exists is skipped, so existing data is never overwritten.
+--   4. Fills \`_migrations\` ONLY when it is empty (fresh install). On an
+--      existing database its history is left alone, so afterwards run
+--      \`npm run db:migrate\` to add any columns/tables that copy is missing.
 --
 -- Default admin (from 040_admin_seed.sql): admin@gmail.com / 12345678.
 -- Change that password after the first sign-in.
@@ -80,27 +105,32 @@ SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';
 
 CREATE DATABASE IF NOT EXISTS \`fitnessapp\`
   DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE \`fitnessapp\`;
-
--- --------------------------------------------------------
--- Drop existing tables (clean reset)
--- --------------------------------------------------------`);
-  for (const t of names) out.push(`DROP TABLE IF EXISTS \`${t}\`;`);
+USE \`fitnessapp\`;`);
 
   let rowsTotal = 0;
   const seeded = [];
   for (const t of names) {
     const [[ddl]] = await c.query(`SHOW CREATE TABLE \`${t}\``);
     out.push('', '-- --------------------------------------------------------', `-- Table \`${t}\``, '-- --------------------------------------------------------');
-    out.push(`${portable(ddl['Create Table'])};`);
+    const createSql = portable(ddl['Create Table']);
+    out.push(`${createSql};`);
+    out.push(...addMissingColumns(t, createSql));
     const [rows] = await c.query(`SELECT * FROM \`${t}\``);
     if (!rows.length) continue;
     rowsTotal += rows.length;
     seeded.push(`${t} (${rows.length})`);
+    if (t === '_migrations') {
+      // Mark migrations applied only on a fresh install. An existing DB keeps
+      // its own history so `npm run db:migrate` still applies what it lacks.
+      const sel = rows.map((r) => `SELECT ${esc(r.name)} AS name, ${esc(r.applied_at)} AS applied_at`).join('\n  UNION ALL ');
+      out.push('', 'SET @vitalis_fresh = (SELECT COUNT(*) = 0 FROM `_migrations`);',
+        `INSERT IGNORE INTO \`_migrations\` (\`name\`, \`applied_at\`)\nSELECT m.name, m.applied_at FROM (\n  ${sel}\n) m WHERE @vitalis_fresh = 1;`);
+      continue;
+    }
     const cols = Object.keys(rows[0]).map((k) => `\`${k}\``).join(', ');
     for (let i = 0; i < rows.length; i += 100) {
       const chunk = rows.slice(i, i + 100).map((r) => `(${Object.values(r).map(esc).join(', ')})`).join(',\n');
-      out.push('', `INSERT INTO \`${t}\` (${cols}) VALUES\n${chunk};`);
+      out.push('', `INSERT IGNORE INTO \`${t}\` (${cols}) VALUES\n${chunk};`);
     }
   }
 

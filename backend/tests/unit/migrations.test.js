@@ -36,6 +36,7 @@ const EXPECTED = [
   '060_password_weak_flag.sql',
   '061_progression.sql',
   '062_activity_calories.sql',
+  '063_normalize_activity_level.sql',
 ];
 
 describe('migrations per-table baseline', () => {

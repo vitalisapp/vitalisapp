@@ -448,6 +448,48 @@ describe('UniSMS provider responses', () => {
     );
   });
 
+  it('does not infer a SIM network from carrier names in provider help text', async () => {
+    global.fetch = async () => jsonResponse(422, {
+      errors: 'Invalid sender ID. Contact support for Smart, TNT or Sun coverage.',
+    });
+    await assert.rejects(
+      sms.sendSms({ to: '+639051234567', content: 'x' }),
+      (err) => err.code === 'SMS_REJECTED',
+    );
+  });
+
+  it('reports sender routing restrictions without claiming the SIM is Smart', async () => {
+    global.fetch = async () => jsonResponse(422, {
+      errors: { recipient: ["This Sender ID can't send to Smart, TNT or Sun numbers."] },
+    });
+    await assert.rejects(
+      sms.sendSms({ to: '+639051234567', content: 'x' }),
+      (err) => err.code === 'SMS_UNSUPPORTED_NETWORK'
+        && /sender ID/.test(err.message)
+        && !/This number's network/.test(err.message),
+    );
+  });
+
+  it('maps exhausted credits to a service failure rather than blaming the SIM', async () => {
+    global.fetch = async () => jsonResponse(422, {
+      errors: 'Insufficient SMS credits. Smart, TNT or Sun coverage depends on your sender.',
+    });
+    await assert.rejects(
+      sms.sendSms({ to: '+639951234567', content: 'x' }),
+      (err) => err.code === 'SMS_INSUFFICIENT_CREDITS' && err.status === 503,
+    );
+  });
+
+  it('passes TM and DITO-format numbers to the provider without prefix blocking', async () => {
+    for (const to of ['+639051234567', '+639911234567']) {
+      global.fetch = async (_url, options) => {
+        assert.equal(JSON.parse(options.body).recipient, to);
+        return jsonResponse(201, { message: { status: 'pending', reference_id: 'ref_test' } });
+      };
+      assert.equal((await sms.sendSms({ to, content: 'x' })).accepted, true);
+    }
+  });
+
   it('maps a network failure to SMS_UNAVAILABLE', async () => {
     global.fetch = async () => { throw new Error('ECONNRESET'); };
     await assert.rejects(

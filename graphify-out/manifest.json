@@ -354,9 +354,9 @@
     "semantic_hash": ""
   },
   "backend/src/controllers/goals.controller.js": {
-    "mtime": 1795311205.2802107,
-    "seen": 1795311886.0896456,
-    "ast_hash": "b359d4a7d27aa19c2cccbf4a48f0bb3b",
+    "mtime": 1795678697.151901,
+    "seen": 1795678858.1820626,
+    "ast_hash": "6e3024093a2ff23f941942a0f313f950",
     "semantic_hash": ""
   },
   "backend/src/controllers/logs.controller.js": {
@@ -834,9 +834,9 @@
     "semantic_hash": ""
   },
   "backend/src/services/goals.service.js": {
-    "mtime": 1795657137.4946985,
-    "seen": 1795659493.395566,
-    "ast_hash": "2c16de9e94bbf7e622484f2a91a7b7be",
+    "mtime": 1795678686.0235794,
+    "seen": 1795678858.234315,
+    "ast_hash": "cec310705417c74819ab7ac46bd0ec0d",
     "semantic_hash": ""
   },
   "backend/src/services/logs.service.js": {
@@ -906,9 +906,9 @@
     "semantic_hash": ""
   },
   "backend/src/services/sms.service.js": {
-    "mtime": 1795317639.961988,
-    "seen": 1795317790.877532,
-    "ast_hash": "9f85d4f38b207343b5e1036ccad245eb",
+    "mtime": 1795669806.0581975,
+    "seen": 1795669852.3156343,
+    "ast_hash": "47bee6c21a0c1400c136e5d1debff053",
     "semantic_hash": ""
   },
   "backend/src/services/stats.service.js": {
@@ -1104,9 +1104,9 @@
     "semantic_hash": ""
   },
   "backend/tests/unit/migrations.test.js": {
-    "mtime": 1795662362.7532527,
-    "seen": 1795663191.837187,
-    "ast_hash": "4ab2fa84b2e271a61086165d38e922e3",
+    "mtime": 1795678748.7777545,
+    "seen": 1795678858.2785466,
+    "ast_hash": "1617288aebf832b09e474b9fd2d35dbb",
     "semantic_hash": ""
   },
   "backend/tests/unit/nutrition.test.js": {
@@ -1128,9 +1128,9 @@
     "semantic_hash": ""
   },
   "backend/tests/unit/sms-verification.test.js": {
-    "mtime": 1795068594.2883072,
-    "seen": 1795221113.1623218,
-    "ast_hash": "7ab2d6a4ee75e713850090ecb464abe3",
+    "mtime": 1795669806.0617948,
+    "seen": 1795669852.4193296,
+    "ast_hash": "14b450b43834a58bc0e527d67d7dbf04",
     "semantic_hash": ""
   },
   "backend/tests/unit/streaks.test.js": {
@@ -3306,9 +3306,9 @@
     "semantic_hash": ""
   },
   "backend/scripts/seed-demo-data.js": {
-    "mtime": 1795311205.2300456,
-    "seen": 1795311886.0869844,
-    "ast_hash": "ce55c39458909a1413e5242813028cfa",
+    "mtime": 1795678697.295633,
+    "seen": 1795678858.1681147,
+    "ast_hash": "a166f4d319a318c8990ffa67a0715aa0",
     "semantic_hash": ""
   },
   "backend/scripts/verify-demo-sql.js": {
@@ -4101,6 +4101,12 @@
     "mtime": 1795666998.9295113,
     "seen": 1795668325.4926171,
     "ast_hash": "e987df81a7610877892ff602be346602",
+    "semantic_hash": ""
+  },
+  "backend/tests/unit/goal-activity-carry.test.js": {
+    "mtime": 1795678720.294004,
+    "seen": 1795678858.2761407,
+    "ast_hash": "717280e637218732799b2a983f396df2",
     "semantic_hash": ""
   },
   "backend/package-lock.json": {

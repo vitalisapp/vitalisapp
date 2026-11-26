@@ -77,7 +77,7 @@ module.exports = async function seedDemoData(db) {
         user_id: id, dob: `199${index}-06-15`, sex: index % 2 ? 'female' : 'male',
         height_cm: 170, weight_kg: weight, bmi, goal_type: goals[index],
         target_weight_kg: weight + (index === 0 ? -4 : index === 4 ? 3 : 0),
-        target_date: day(120), activity_level: 'MODERATE', experience_level: 'BEGINNER',
+        target_date: day(120), activity_level: 'MODERATELY_ACTIVE', experience_level: 'BEGINNER',
         exercise_freq: '3', sleep_hours: 7.5, daily_kcal: 2200, protein_g: 140, carbs_g: 275, fat_g: 60,
         source_plan_id: planId, calibrated_weight_kg: weight, calibrated_at: at(-1), created_at: at(-30),
       });

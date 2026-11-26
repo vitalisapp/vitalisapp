@@ -7,6 +7,7 @@ const {
   SEXES,
   PACES,
   ACTIVITY_LEVELS,
+  normalizeActivity,
   enumField,
   numOrNull,
   validDob,
@@ -68,7 +69,7 @@ async function postUserId(req, res, next) {
         SEXES.map((s) => s.toUpperCase())
       ),
       pace: enumField(pace, PACES),
-      activity: enumField(activityLevel ?? activity_level, ACTIVITY_LEVELS),
+      activity: enumField(normalizeActivity(activityLevel ?? activity_level), ACTIVITY_LEVELS),
       target: numOrNull(targetWeightKg ?? target_weight_kg, {
         min: 10,
         max: 1000,
@@ -76,6 +77,9 @@ async function postUserId(req, res, next) {
       }),
       dob: validDob(dob),
     };
+    // A stale activity level carried from the old goal must not block a goal
+    // change the user made elsewhere: drop it (TDEE falls back to sedentary).
+    if (checks.activity.error && carried.activityLevel) checks.activity = { value: null };
     const LABELS = { sex: 'sex', pace: 'progress pace', activity: 'activity level', target: 'target weight' };
     for (const [k, f] of Object.entries(checks)) {
       if (!f.error) continue;

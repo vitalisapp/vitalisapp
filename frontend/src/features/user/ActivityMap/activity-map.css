@@ -13,6 +13,10 @@
   min-height: 0;
   font-family: var(--font-sans);
   background: var(--bg-primary);
+  /* Own stacking context: the map chips, scrims and dock use z-index
+     400–1100, which otherwise paint over portalled modals (z 100) such as
+     Send Feedback. Inside here they still layer correctly against each other. */
+  isolation: isolate;
 }
 
 /* ── Status banners ───────────────────────────────────────────────────────── */

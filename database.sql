@@ -1,19 +1,23 @@
 -- database.sql - Vitalis full schema + seed data
 -- Generated for a clean XAMPP (MariaDB 10.4) / MySQL 8 phpMyAdmin import.
 --
--- Source of truth: backend/migrations/001..061 (60 files).
+-- Source of truth: backend/migrations/001..063 (62 files).
 -- Built by applying every migration to an EMPTY database and exporting it,
 -- so this file holds the schema plus seed data and no real user records.
 -- Dataset: Clean: plans, food catalog and default admin account.
--- Importing this file ERASES existing application data in fitnessapp.
+-- Non-destructive: nothing is dropped. Existing tables and rows are kept.
 -- Rebuild: npm run db:sql (from backend/).
 -- Regenerated: 2026-11-26.
 --
 -- What this does:
 --   1. Creates database `fitnessapp` and selects it.
---   2. Drops and recreates all 44 application tables + `_migrations` (clean reset).
---   3. Loads the seed data.
---   4. Fills `_migrations` so `npm run db:migrate` reports nothing pending.
+--   2. Creates each of the 44 application tables + `_migrations` only if
+--      it does not exist yet (CREATE TABLE IF NOT EXISTS).
+--   3. Loads seed rows with INSERT IGNORE: a row whose id/unique key already
+--      exists is skipped, so existing data is never overwritten.
+--   4. Fills `_migrations` ONLY when it is empty (fresh install). On an
+--      existing database its history is left alone, so afterwards run
+--      `npm run db:migrate` to add any columns/tables that copy is missing.
 --
 -- Default admin (from 040_admin_seed.sql): admin@gmail.com / 12345678.
 -- Change that password after the first sign-in.
@@ -30,55 +34,6 @@ CREATE DATABASE IF NOT EXISTS `fitnessapp`
 USE `fitnessapp`;
 
 -- --------------------------------------------------------
--- Drop existing tables (clean reset)
--- --------------------------------------------------------
-DROP TABLE IF EXISTS `_migrations`;
-DROP TABLE IF EXISTS `access_groups`;
-DROP TABLE IF EXISTS `activity_kudos`;
-DROP TABLE IF EXISTS `activity_logs`;
-DROP TABLE IF EXISTS `admin_actions`;
-DROP TABLE IF EXISTS `ai_daily_usage`;
-DROP TABLE IF EXISTS `ai_insight_cache`;
-DROP TABLE IF EXISTS `bmi_records`;
-DROP TABLE IF EXISTS `body_measurements`;
-DROP TABLE IF EXISTS `coach_weeks`;
-DROP TABLE IF EXISTS `community_comments`;
-DROP TABLE IF EXISTS `community_likes`;
-DROP TABLE IF EXISTS `community_posts`;
-DROP TABLE IF EXISTS `daily_stats`;
-DROP TABLE IF EXISTS `email_delivery_events`;
-DROP TABLE IF EXISTS `email_verifications`;
-DROP TABLE IF EXISTS `fitness_goals`;
-DROP TABLE IF EXISTS `food_catalog`;
-DROP TABLE IF EXISTS `food_logs`;
-DROP TABLE IF EXISTS `food_nutrition_cache`;
-DROP TABLE IF EXISTS `friendships`;
-DROP TABLE IF EXISTS `landing_visits`;
-DROP TABLE IF EXISTS `messages`;
-DROP TABLE IF EXISTS `notifications`;
-DROP TABLE IF EXISTS `password_reset_otps`;
-DROP TABLE IF EXISTS `phone_verifications`;
-DROP TABLE IF EXISTS `plan_contents`;
-DROP TABLE IF EXISTS `plan_exercises`;
-DROP TABLE IF EXISTS `plans`;
-DROP TABLE IF EXISTS `progress_photos`;
-DROP TABLE IF EXISTS `progress_settings`;
-DROP TABLE IF EXISTS `reminder_log`;
-DROP TABLE IF EXISTS `reminder_prefs`;
-DROP TABLE IF EXISTS `training_preferences`;
-DROP TABLE IF EXISTS `user_allergies`;
-DROP TABLE IF EXISTS `user_challenges`;
-DROP TABLE IF EXISTS `user_nutrient_goals`;
-DROP TABLE IF EXISTS `user_plan_progress`;
-DROP TABLE IF EXISTS `user_plans`;
-DROP TABLE IF EXISTS `user_profiles`;
-DROP TABLE IF EXISTS `user_sessions`;
-DROP TABLE IF EXISTS `user_settings`;
-DROP TABLE IF EXISTS `users`;
-DROP TABLE IF EXISTS `workout_logs`;
-DROP TABLE IF EXISTS `workout_sets`;
-
--- --------------------------------------------------------
 -- Table `_migrations`
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `_migrations` (
@@ -89,67 +44,78 @@ CREATE TABLE IF NOT EXISTS `_migrations` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `_migrations` (`id`, `name`, `applied_at`) VALUES
-(1, '001_users.sql', '2026-11-26 10:35:10'),
-(2, '002_plans.sql', '2026-11-26 10:35:10'),
-(3, '003_plan_contents.sql', '2026-11-26 10:35:10'),
-(4, '004_plan_exercises.sql', '2026-11-26 10:35:10'),
-(5, '005_activity_logs.sql', '2026-11-26 10:35:10'),
-(6, '006_activity_kudos.sql', '2026-11-26 10:35:11'),
-(7, '007_ai_daily_usage.sql', '2026-11-26 10:35:11'),
-(8, '008_ai_insight_cache.sql', '2026-11-26 10:35:11'),
-(9, '009_bmi_records.sql', '2026-11-26 10:35:11'),
-(10, '010_community_posts.sql', '2026-11-26 10:35:11'),
-(11, '011_community_likes.sql', '2026-11-26 10:35:11'),
-(12, '012_community_comments.sql', '2026-11-26 10:35:11'),
-(13, '013_daily_checkins.sql', '2026-11-26 10:35:11'),
-(14, '014_daily_stats.sql', '2026-11-26 10:35:11'),
-(15, '015_email_verifications.sql', '2026-11-26 10:35:11'),
-(16, '016_fitness_goals.sql', '2026-11-26 10:35:11'),
-(17, '017_food_logs.sql', '2026-11-26 10:35:12'),
-(18, '018_friendships.sql', '2026-11-26 10:35:12'),
-(19, '019_messages.sql', '2026-11-26 10:35:12'),
-(20, '020_notifications.sql', '2026-11-26 10:35:12'),
-(21, '021_password_reset_otps.sql', '2026-11-26 10:35:12'),
-(22, '022_sleep_logs.sql', '2026-11-26 10:35:12'),
-(23, '023_user_nutrient_goals.sql', '2026-11-26 10:35:12'),
-(24, '024_user_plan_progress.sql', '2026-11-26 10:35:12'),
-(25, '025_user_plans.sql', '2026-11-26 10:35:13'),
-(26, '026_user_profiles.sql', '2026-11-26 10:35:13'),
-(27, '027_user_sessions.sql', '2026-11-26 10:35:13'),
-(28, '028_user_settings.sql', '2026-11-26 10:35:13'),
-(29, '029_workout_logs.sql', '2026-11-26 10:35:13'),
-(30, '030_seeds.sql', '2026-11-26 10:35:13'),
-(31, '031_landing_visits.sql', '2026-11-26 10:35:13'),
-(32, '032_personal_plans.sql', '2026-11-26 10:35:14'),
-(33, '033_user_allergies.sql', '2026-11-26 10:35:14'),
-(34, '034_workout_sets.sql', '2026-11-26 10:35:14'),
-(35, '035_training_preferences.sql', '2026-11-26 10:35:14'),
-(36, '036_account_governance.sql', '2026-11-26 10:35:14'),
-(37, '037_meal_type_food_catalog.sql', '2026-11-26 10:35:14'),
-(38, '038_progress_module.sql', '2026-11-26 10:35:14'),
-(39, '039_admin_audit.sql', '2026-11-26 10:35:14'),
-(40, '040_admin_seed.sql', '2026-11-26 10:35:14'),
-(41, '041_goal_recalibration.sql', '2026-11-26 10:35:14'),
-(42, '042_progress_cadence.sql', '2026-11-26 10:35:15'),
-(43, '043_food_grams.sql', '2026-11-26 10:35:15'),
-(44, '044_food_density_cache.sql', '2026-11-26 10:35:15'),
-(45, '045_email_delivery.sql', '2026-11-26 10:35:15'),
-(46, '046_phone_verifications.sql', '2026-11-26 10:35:15'),
-(47, '047_remove_sleep_recovery.sql', '2026-11-26 10:35:16'),
-(48, '048_access_groups.sql', '2026-11-26 10:35:16'),
-(49, '049_sleep_hours.sql', '2026-11-26 10:35:16'),
-(50, '050_goal_personalization.sql', '2026-11-26 10:35:17'),
-(51, '051_coach_weeks.sql', '2026-11-26 10:35:17'),
-(52, '052_smart_reminders.sql', '2026-11-26 10:35:17'),
-(53, '053_food_details.sql', '2026-11-26 10:35:17'),
-(54, '054_free_plans.sql', '2026-11-26 10:35:17'),
-(55, '055_dedupe_user_sessions.sql', '2026-11-26 10:35:17'),
-(56, '056_plan_images.sql', '2026-11-26 10:35:17'),
-(57, '058_browser_device_identity.sql', '2026-11-26 10:35:17'),
-(58, '059_workout_calories.sql', '2026-11-26 10:35:17'),
-(59, '060_password_weak_flag.sql', '2026-11-26 10:35:18'),
-(60, '061_progression.sql', '2026-11-26 10:35:18');
+-- Add any columns an older `_migrations` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `_migrations` ADD COLUMN `name` varchar(255) NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = '_migrations' AND column_name = 'name');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `_migrations` ADD COLUMN `applied_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = '_migrations' AND column_name = 'applied_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+SET @vitalis_fresh = (SELECT COUNT(*) = 0 FROM `_migrations`);
+INSERT IGNORE INTO `_migrations` (`name`, `applied_at`)
+SELECT m.name, m.applied_at FROM (
+  SELECT '001_users.sql' AS name, '2026-11-26 15:49:06' AS applied_at
+  UNION ALL SELECT '002_plans.sql' AS name, '2026-11-26 15:49:06' AS applied_at
+  UNION ALL SELECT '003_plan_contents.sql' AS name, '2026-11-26 15:49:07' AS applied_at
+  UNION ALL SELECT '004_plan_exercises.sql' AS name, '2026-11-26 15:49:07' AS applied_at
+  UNION ALL SELECT '005_activity_logs.sql' AS name, '2026-11-26 15:49:07' AS applied_at
+  UNION ALL SELECT '006_activity_kudos.sql' AS name, '2026-11-26 15:49:07' AS applied_at
+  UNION ALL SELECT '007_ai_daily_usage.sql' AS name, '2026-11-26 15:49:07' AS applied_at
+  UNION ALL SELECT '008_ai_insight_cache.sql' AS name, '2026-11-26 15:49:07' AS applied_at
+  UNION ALL SELECT '009_bmi_records.sql' AS name, '2026-11-26 15:49:07' AS applied_at
+  UNION ALL SELECT '010_community_posts.sql' AS name, '2026-11-26 15:49:08' AS applied_at
+  UNION ALL SELECT '011_community_likes.sql' AS name, '2026-11-26 15:49:08' AS applied_at
+  UNION ALL SELECT '012_community_comments.sql' AS name, '2026-11-26 15:49:08' AS applied_at
+  UNION ALL SELECT '013_daily_checkins.sql' AS name, '2026-11-26 15:49:08' AS applied_at
+  UNION ALL SELECT '014_daily_stats.sql' AS name, '2026-11-26 15:49:08' AS applied_at
+  UNION ALL SELECT '015_email_verifications.sql' AS name, '2026-11-26 15:49:08' AS applied_at
+  UNION ALL SELECT '016_fitness_goals.sql' AS name, '2026-11-26 15:49:08' AS applied_at
+  UNION ALL SELECT '017_food_logs.sql' AS name, '2026-11-26 15:49:09' AS applied_at
+  UNION ALL SELECT '018_friendships.sql' AS name, '2026-11-26 15:49:09' AS applied_at
+  UNION ALL SELECT '019_messages.sql' AS name, '2026-11-26 15:49:09' AS applied_at
+  UNION ALL SELECT '020_notifications.sql' AS name, '2026-11-26 15:49:09' AS applied_at
+  UNION ALL SELECT '021_password_reset_otps.sql' AS name, '2026-11-26 15:49:09' AS applied_at
+  UNION ALL SELECT '022_sleep_logs.sql' AS name, '2026-11-26 15:49:09' AS applied_at
+  UNION ALL SELECT '023_user_nutrient_goals.sql' AS name, '2026-11-26 15:49:09' AS applied_at
+  UNION ALL SELECT '024_user_plan_progress.sql' AS name, '2026-11-26 15:49:10' AS applied_at
+  UNION ALL SELECT '025_user_plans.sql' AS name, '2026-11-26 15:49:10' AS applied_at
+  UNION ALL SELECT '026_user_profiles.sql' AS name, '2026-11-26 15:49:10' AS applied_at
+  UNION ALL SELECT '027_user_sessions.sql' AS name, '2026-11-26 15:49:10' AS applied_at
+  UNION ALL SELECT '028_user_settings.sql' AS name, '2026-11-26 15:49:10' AS applied_at
+  UNION ALL SELECT '029_workout_logs.sql' AS name, '2026-11-26 15:49:10' AS applied_at
+  UNION ALL SELECT '030_seeds.sql' AS name, '2026-11-26 15:49:10' AS applied_at
+  UNION ALL SELECT '031_landing_visits.sql' AS name, '2026-11-26 15:49:11' AS applied_at
+  UNION ALL SELECT '032_personal_plans.sql' AS name, '2026-11-26 15:49:11' AS applied_at
+  UNION ALL SELECT '033_user_allergies.sql' AS name, '2026-11-26 15:49:11' AS applied_at
+  UNION ALL SELECT '034_workout_sets.sql' AS name, '2026-11-26 15:49:11' AS applied_at
+  UNION ALL SELECT '035_training_preferences.sql' AS name, '2026-11-26 15:49:12' AS applied_at
+  UNION ALL SELECT '036_account_governance.sql' AS name, '2026-11-26 15:49:12' AS applied_at
+  UNION ALL SELECT '037_meal_type_food_catalog.sql' AS name, '2026-11-26 15:49:12' AS applied_at
+  UNION ALL SELECT '038_progress_module.sql' AS name, '2026-11-26 15:49:12' AS applied_at
+  UNION ALL SELECT '039_admin_audit.sql' AS name, '2026-11-26 15:49:12' AS applied_at
+  UNION ALL SELECT '040_admin_seed.sql' AS name, '2026-11-26 15:49:12' AS applied_at
+  UNION ALL SELECT '041_goal_recalibration.sql' AS name, '2026-11-26 15:49:13' AS applied_at
+  UNION ALL SELECT '042_progress_cadence.sql' AS name, '2026-11-26 15:49:13' AS applied_at
+  UNION ALL SELECT '043_food_grams.sql' AS name, '2026-11-26 15:49:13' AS applied_at
+  UNION ALL SELECT '044_food_density_cache.sql' AS name, '2026-11-26 15:49:13' AS applied_at
+  UNION ALL SELECT '045_email_delivery.sql' AS name, '2026-11-26 15:49:13' AS applied_at
+  UNION ALL SELECT '046_phone_verifications.sql' AS name, '2026-11-26 15:49:14' AS applied_at
+  UNION ALL SELECT '047_remove_sleep_recovery.sql' AS name, '2026-11-26 15:49:14' AS applied_at
+  UNION ALL SELECT '048_access_groups.sql' AS name, '2026-11-26 15:49:15' AS applied_at
+  UNION ALL SELECT '049_sleep_hours.sql' AS name, '2026-11-26 15:49:15' AS applied_at
+  UNION ALL SELECT '050_goal_personalization.sql' AS name, '2026-11-26 15:49:16' AS applied_at
+  UNION ALL SELECT '051_coach_weeks.sql' AS name, '2026-11-26 15:49:16' AS applied_at
+  UNION ALL SELECT '052_smart_reminders.sql' AS name, '2026-11-26 15:49:16' AS applied_at
+  UNION ALL SELECT '053_food_details.sql' AS name, '2026-11-26 15:49:17' AS applied_at
+  UNION ALL SELECT '054_free_plans.sql' AS name, '2026-11-26 15:49:17' AS applied_at
+  UNION ALL SELECT '055_dedupe_user_sessions.sql' AS name, '2026-11-26 15:49:17' AS applied_at
+  UNION ALL SELECT '056_plan_images.sql' AS name, '2026-11-26 15:49:17' AS applied_at
+  UNION ALL SELECT '058_browser_device_identity.sql' AS name, '2026-11-26 15:49:17' AS applied_at
+  UNION ALL SELECT '059_workout_calories.sql' AS name, '2026-11-26 15:49:17' AS applied_at
+  UNION ALL SELECT '060_password_weak_flag.sql' AS name, '2026-11-26 15:49:18' AS applied_at
+  UNION ALL SELECT '061_progression.sql' AS name, '2026-11-26 15:49:19' AS applied_at
+  UNION ALL SELECT '062_activity_calories.sql' AS name, '2026-11-26 15:49:19' AS applied_at
+  UNION ALL SELECT '063_normalize_activity_level.sql' AS name, '2026-11-26 15:49:19' AS applied_at
+) m WHERE @vitalis_fresh = 1;
 
 -- --------------------------------------------------------
 -- Table `access_groups`
@@ -173,6 +139,28 @@ CREATE TABLE IF NOT EXISTS `access_groups` (
   CONSTRAINT `access_groups_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `access_groups` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `access_groups` ADD COLUMN `code` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'access_groups' AND column_name = 'code');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `access_groups` ADD COLUMN `label` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'access_groups' AND column_name = 'label');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `access_groups` ADD COLUMN `description` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'access_groups' AND column_name = 'description');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `access_groups` ADD COLUMN `kind` enum(''register'',''link'') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''register''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'access_groups' AND column_name = 'kind');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `access_groups` ADD COLUMN `link_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'access_groups' AND column_name = 'link_url');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `access_groups` ADD COLUMN `expires_at` datetime DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'access_groups' AND column_name = 'expires_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `access_groups` ADD COLUMN `is_active` tinyint(1) NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'access_groups' AND column_name = 'is_active');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `access_groups` ADD COLUMN `scan_count` int unsigned NOT NULL DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'access_groups' AND column_name = 'scan_count');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `access_groups` ADD COLUMN `created_by` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'access_groups' AND column_name = 'created_by');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `access_groups` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'access_groups' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `activity_kudos`
 -- --------------------------------------------------------
@@ -189,6 +177,14 @@ CREATE TABLE IF NOT EXISTS `activity_kudos` (
   CONSTRAINT `fk_kudos_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `activity_kudos` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_kudos` ADD COLUMN `activity_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_kudos' AND column_name = 'activity_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_kudos` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_kudos' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_kudos` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_kudos' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `activity_logs`
 -- --------------------------------------------------------
@@ -202,12 +198,37 @@ CREATE TABLE IF NOT EXISTS `activity_logs` (
   `is_gps` tinyint(1) NOT NULL DEFAULT '1',
   `route` longtext COLLATE utf8mb4_unicode_ci,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `local_date` date DEFAULT NULL,
+  `calories_source` enum('estimated','measured') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'estimated',
   PRIMARY KEY (`id`),
   KEY `idx_user_id` (`user_id`),
   KEY `idx_created_at` (`created_at`),
   KEY `idx_user_created` (`user_id`,`created_at`),
+  KEY `idx_activity_logs_user_local_date` (`user_id`,`local_date`),
   CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `activity_logs` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_logs` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_logs' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_logs` ADD COLUMN `duration` int DEFAULT NULL COMMENT ''in seconds''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_logs' AND column_name = 'duration');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_logs` ADD COLUMN `distance` decimal(10,2) DEFAULT NULL COMMENT ''in kilometers''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_logs' AND column_name = 'distance');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_logs` ADD COLUMN `pace` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_logs' AND column_name = 'pace');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_logs` ADD COLUMN `calories` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_logs' AND column_name = 'calories');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_logs` ADD COLUMN `is_gps` tinyint(1) NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_logs' AND column_name = 'is_gps');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_logs` ADD COLUMN `route` longtext COLLATE utf8mb4_unicode_ci', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_logs' AND column_name = 'route');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_logs` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_logs' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_logs` ADD COLUMN `local_date` date DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_logs' AND column_name = 'local_date');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_logs` ADD COLUMN `calories_source` enum(''estimated'',''measured'') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''estimated''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_logs' AND column_name = 'calories_source');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `admin_actions`
@@ -227,6 +248,18 @@ CREATE TABLE IF NOT EXISTS `admin_actions` (
   CONSTRAINT `admin_actions_ibfk_2` FOREIGN KEY (`target_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Add any columns an older `admin_actions` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `admin_actions` ADD COLUMN `admin_user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'admin_actions' AND column_name = 'admin_user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `admin_actions` ADD COLUMN `action` varchar(50) COLLATE utf8mb4_general_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'admin_actions' AND column_name = 'action');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `admin_actions` ADD COLUMN `target_user_id` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'admin_actions' AND column_name = 'target_user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `admin_actions` ADD COLUMN `details` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'admin_actions' AND column_name = 'details');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `admin_actions` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'admin_actions' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `ai_daily_usage`
 -- --------------------------------------------------------
@@ -237,6 +270,14 @@ CREATE TABLE IF NOT EXISTS `ai_daily_usage` (
   PRIMARY KEY (`user_id`,`usage_day`),
   CONSTRAINT `fk_ai_usage_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `ai_daily_usage` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_daily_usage` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_daily_usage' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_daily_usage` ADD COLUMN `usage_day` date NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_daily_usage' AND column_name = 'usage_day');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_daily_usage` ADD COLUMN `count` int NOT NULL DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_daily_usage' AND column_name = 'count');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `ai_insight_cache`
@@ -255,6 +296,18 @@ CREATE TABLE IF NOT EXISTS `ai_insight_cache` (
   CONSTRAINT `ai_insight_cache_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `ai_insight_cache` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_insight_cache` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_insight_cache' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_insight_cache` ADD COLUMN `data_signature` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_insight_cache' AND column_name = 'data_signature');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_insight_cache` ADD COLUMN `activity_suggestion` text COLLATE utf8mb4_unicode_ci', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_insight_cache' AND column_name = 'activity_suggestion');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_insight_cache` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_insight_cache' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_insight_cache` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_insight_cache' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `bmi_records`
 -- --------------------------------------------------------
@@ -272,6 +325,20 @@ CREATE TABLE IF NOT EXISTS `bmi_records` (
   KEY `idx_user_recorded` (`user_id`,`recorded_at`),
   CONSTRAINT `bmi_records_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `bmi_records` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `bmi_records` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'bmi_records' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `bmi_records` ADD COLUMN `weight_kg` decimal(5,2) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'bmi_records' AND column_name = 'weight_kg');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `bmi_records` ADD COLUMN `height_cm` decimal(5,2) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'bmi_records' AND column_name = 'height_cm');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `bmi_records` ADD COLUMN `bmi` decimal(5,2) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'bmi_records' AND column_name = 'bmi');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `bmi_records` ADD COLUMN `bmi_category` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'bmi_records' AND column_name = 'bmi_category');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `bmi_records` ADD COLUMN `recorded_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'bmi_records' AND column_name = 'recorded_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `body_measurements`
@@ -296,6 +363,30 @@ CREATE TABLE IF NOT EXISTS `body_measurements` (
   CONSTRAINT `body_measurements_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Add any columns an older `body_measurements` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD COLUMN `recorded_at` date NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND column_name = 'recorded_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD COLUMN `weight_kg` decimal(5,2) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND column_name = 'weight_kg');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD COLUMN `body_fat_pct` decimal(4,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND column_name = 'body_fat_pct');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD COLUMN `chest_cm` decimal(5,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND column_name = 'chest_cm');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD COLUMN `waist_cm` decimal(5,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND column_name = 'waist_cm');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD COLUMN `hips_cm` decimal(5,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND column_name = 'hips_cm');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD COLUMN `arm_cm` decimal(5,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND column_name = 'arm_cm');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD COLUMN `thigh_cm` decimal(5,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND column_name = 'thigh_cm');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD COLUMN `notes` varchar(300) COLLATE utf8mb4_general_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND column_name = 'notes');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `coach_weeks`
 -- --------------------------------------------------------
@@ -316,6 +407,24 @@ CREATE TABLE IF NOT EXISTS `coach_weeks` (
   CONSTRAINT `coach_weeks_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `coach_weeks` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `coach_weeks` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coach_weeks' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `coach_weeks` ADD COLUMN `plan_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coach_weeks' AND column_name = 'plan_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `coach_weeks` ADD COLUMN `week_start` date NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coach_weeks' AND column_name = 'week_start');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `coach_weeks` ADD COLUMN `schedule` json NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coach_weeks' AND column_name = 'schedule');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `coach_weeks` ADD COLUMN `handled` json DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coach_weeks' AND column_name = 'handled');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `coach_weeks` ADD COLUMN `choice` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coach_weeks' AND column_name = 'choice');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `coach_weeks` ADD COLUMN `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coach_weeks' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `coach_weeks` ADD COLUMN `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coach_weeks' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `community_comments`
 -- --------------------------------------------------------
@@ -334,6 +443,18 @@ CREATE TABLE IF NOT EXISTS `community_comments` (
   CONSTRAINT `fk_community_comments_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `community_comments` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_comments` ADD COLUMN `post_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_comments' AND column_name = 'post_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_comments` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_comments' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_comments` ADD COLUMN `author_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_comments' AND column_name = 'author_name');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_comments` ADD COLUMN `text` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_comments' AND column_name = 'text');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_comments` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_comments' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `community_likes`
 -- --------------------------------------------------------
@@ -349,6 +470,14 @@ CREATE TABLE IF NOT EXISTS `community_likes` (
   CONSTRAINT `fk_community_likes_post` FOREIGN KEY (`post_id`) REFERENCES `community_posts` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_community_likes_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `community_likes` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_likes` ADD COLUMN `post_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_likes' AND column_name = 'post_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_likes` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_likes' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_likes` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_likes' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `community_posts`
@@ -368,6 +497,20 @@ CREATE TABLE IF NOT EXISTS `community_posts` (
   KEY `idx_tag_created` (`tag`,`created_at`),
   CONSTRAINT `fk_community_posts_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `community_posts` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_posts` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_posts' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_posts` ADD COLUMN `author_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_posts' AND column_name = 'author_name');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_posts` ADD COLUMN `text` varchar(1000) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_posts' AND column_name = 'text');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_posts` ADD COLUMN `tag` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''General''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_posts' AND column_name = 'tag');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_posts` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_posts' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_posts` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_posts' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `daily_stats`
@@ -389,6 +532,22 @@ CREATE TABLE IF NOT EXISTS `daily_stats` (
   CONSTRAINT `daily_stats_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `daily_stats` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `daily_stats` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'daily_stats' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `daily_stats` ADD COLUMN `stat_date` date NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'daily_stats' AND column_name = 'stat_date');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `daily_stats` ADD COLUMN `calories_burned` int DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'daily_stats' AND column_name = 'calories_burned');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `daily_stats` ADD COLUMN `steps` int DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'daily_stats' AND column_name = 'steps');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `daily_stats` ADD COLUMN `workout_duration_mins` int DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'daily_stats' AND column_name = 'workout_duration_mins');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `daily_stats` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'daily_stats' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `daily_stats` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'daily_stats' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `email_delivery_events`
 -- --------------------------------------------------------
@@ -398,6 +557,14 @@ CREATE TABLE IF NOT EXISTS `email_delivery_events` (
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`message_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `email_delivery_events` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `email_delivery_events` ADD COLUMN `message_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'email_delivery_events' AND column_name = 'message_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `email_delivery_events` ADD COLUMN `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'email_delivery_events' AND column_name = 'status');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `email_delivery_events` ADD COLUMN `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'email_delivery_events' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `email_verifications`
@@ -414,6 +581,18 @@ CREATE TABLE IF NOT EXISTS `email_verifications` (
   KEY `idx_user_used_expires` (`user_id`,`used`,`expires_at`),
   CONSTRAINT `email_verifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `email_verifications` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `email_verifications` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'email_verifications' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `email_verifications` ADD COLUMN `token_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'email_verifications' AND column_name = 'token_hash');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `email_verifications` ADD COLUMN `expires_at` datetime NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'email_verifications' AND column_name = 'expires_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `email_verifications` ADD COLUMN `used` tinyint(1) DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'email_verifications' AND column_name = 'used');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `email_verifications` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'email_verifications' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `fitness_goals`
@@ -453,6 +632,60 @@ CREATE TABLE IF NOT EXISTS `fitness_goals` (
   CONSTRAINT `fitness_goals_ibfk_plan` FOREIGN KEY (`source_plan_id`) REFERENCES `plans` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `fitness_goals` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `dob` date DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'dob');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `sex` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'sex');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `height_cm` decimal(5,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'height_cm');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `weight_kg` decimal(5,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'weight_kg');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `bmi` decimal(4,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'bmi');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `goal_type` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''MAINTAIN_WEIGHT''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'goal_type');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `secondary_goals` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'secondary_goals');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `target_weight_kg` decimal(5,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'target_weight_kg');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `target_date` date DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'target_date');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `pace` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'pace');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `focus` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'focus');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `activity_level` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'activity_level');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `experience_level` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'experience_level');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `exercise_freq` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'exercise_freq');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `sleep_hours` decimal(3,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'sleep_hours');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `daily_kcal` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'daily_kcal');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `protein_g` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'protein_g');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `carbs_g` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'carbs_g');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `fat_g` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'fat_g');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''active''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'status');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `source_plan_id` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'source_plan_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `calibrated_weight_kg` double DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'calibrated_weight_kg');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `calibrated_at` datetime DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'calibrated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `food_catalog`
 -- --------------------------------------------------------
@@ -479,7 +712,41 @@ CREATE TABLE IF NOT EXISTS `food_catalog` (
   KEY `idx_food_catalog_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `food_catalog` (`id`, `name`, `serving_label`, `serving_grams`, `calories`, `protein`, `carbs`, `fat`, `sugar`, `sodium`, `category`, `prep_method`, `description`, `image_url`, `image_credit`, `image_link`, `image_checked_at`) VALUES
+-- Add any columns an older `food_catalog` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `name` varchar(120) COLLATE utf8mb4_general_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'name');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `serving_label` varchar(60) COLLATE utf8mb4_general_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'serving_label');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `serving_grams` decimal(7,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'serving_grams');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `calories` int DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'calories');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `protein` decimal(10,2) DEFAULT ''0.00''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'protein');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `carbs` decimal(10,2) DEFAULT ''0.00''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'carbs');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `fat` decimal(10,2) DEFAULT ''0.00''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'fat');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `sugar` decimal(10,2) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'sugar');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `sodium` decimal(10,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'sodium');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `category` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'category');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `prep_method` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'prep_method');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `description` varchar(400) COLLATE utf8mb4_general_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'description');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `image_url` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'image_url');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `image_credit` varchar(120) COLLATE utf8mb4_general_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'image_credit');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `image_link` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'image_link');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_catalog` ADD COLUMN `image_checked_at` datetime DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_catalog' AND column_name = 'image_checked_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+INSERT IGNORE INTO `food_catalog` (`id`, `name`, `serving_label`, `serving_grams`, `calories`, `protein`, `carbs`, `fat`, `sugar`, `sodium`, `category`, `prep_method`, `description`, `image_url`, `image_credit`, `image_link`, `image_checked_at`) VALUES
 (1, 'Banana', '1 medium', '118.0', 105, '1.30', '27.00', '0.40', '14.40', '1.0', 'fruit', 'raw', 'Soft, sweet fruit rich in potassium. Quick energy before a workout.', NULL, NULL, NULL, NULL),
 (2, 'Apple', '1 medium', '182.0', 95, '0.50', '25.00', '0.30', '19.00', '2.0', 'fruit', 'raw', 'Crisp fruit with fiber in the skin that keeps you full longer.', NULL, NULL, NULL, NULL),
 (3, 'Orange', '1 medium', '131.0', 62, '1.20', '15.40', '0.20', '12.20', '0.0', 'fruit', 'raw', 'Juicy citrus fruit high in vitamin C.', NULL, NULL, NULL, NULL),
@@ -581,7 +848,7 @@ INSERT INTO `food_catalog` (`id`, `name`, `serving_label`, `serving_grams`, `cal
 (99, 'Donut, glazed', '1 donut', '60.0', 269, '3.90', '31.00', '15.00', '13.00', '260.0', 'dessert', 'deep_fried', 'Fried dough with sugar glaze. Oily and sugary.', NULL, NULL, NULL, NULL),
 (100, 'Muffin, blueberry', '1 medium', '113.0', 377, '5.30', '54.00', '15.00', '30.00', '340.0', 'dessert', 'baked', 'Bakery muffin. Closer to cake than bread.', NULL, NULL, NULL, NULL);
 
-INSERT INTO `food_catalog` (`id`, `name`, `serving_label`, `serving_grams`, `calories`, `protein`, `carbs`, `fat`, `sugar`, `sodium`, `category`, `prep_method`, `description`, `image_url`, `image_credit`, `image_link`, `image_checked_at`) VALUES
+INSERT IGNORE INTO `food_catalog` (`id`, `name`, `serving_label`, `serving_grams`, `calories`, `protein`, `carbs`, `fat`, `sugar`, `sodium`, `category`, `prep_method`, `description`, `image_url`, `image_credit`, `image_link`, `image_checked_at`) VALUES
 (101, 'Cake, chocolate', '1 slice', '95.0', 352, '4.30', '51.00', '15.00', '35.00', '300.0', 'dessert', 'baked', 'Frosted chocolate cake. High in sugar.', NULL, NULL, NULL, NULL),
 (102, 'Energy bar', '1 bar', '45.0', 180, '6.00', '22.00', '8.00', '12.00', '120.0', 'snack', 'packaged', 'Packaged bar for quick energy.', NULL, NULL, NULL, NULL),
 (103, 'Protein shake, whey', '1 scoop in water', '32.0', 130, '25.00', '3.00', '1.50', '1.50', '100.0', 'supplement', 'blended', 'Whey protein mixed with water. Fast protein after training.', NULL, NULL, NULL, NULL),
@@ -702,6 +969,42 @@ CREATE TABLE IF NOT EXISTS `food_logs` (
   CONSTRAINT `food_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `food_logs` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `food_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'food_name');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `serving` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'serving');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `grams` decimal(7,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'grams');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `meal_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'meal_type');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `calories` int DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'calories');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `protein` decimal(10,2) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'protein');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `carbs` decimal(10,2) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'carbs');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `fat` decimal(10,2) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'fat');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `sugar` decimal(10,2) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'sugar');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `sodium` decimal(10,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'sodium');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `saturated_fat` decimal(10,2) DEFAULT ''0.00''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'saturated_fat');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `trans_fat` decimal(10,2) DEFAULT ''0.00''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'trans_fat');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `polyunsaturated_fat` decimal(10,2) DEFAULT ''0.00''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'polyunsaturated_fat');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `monounsaturated_fat` decimal(10,2) DEFAULT ''0.00''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'monounsaturated_fat');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'image_url');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `logged_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'logged_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `food_nutrition_cache`
 -- --------------------------------------------------------
@@ -722,6 +1025,30 @@ CREATE TABLE IF NOT EXISTS `food_nutrition_cache` (
   UNIQUE KEY `uniq_food_density_name` (`name_normalized`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Add any columns an older `food_nutrition_cache` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_nutrition_cache` ADD COLUMN `name_normalized` varchar(160) COLLATE utf8mb4_general_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_nutrition_cache' AND column_name = 'name_normalized');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_nutrition_cache` ADD COLUMN `display_name` varchar(150) COLLATE utf8mb4_general_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_nutrition_cache' AND column_name = 'display_name');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_nutrition_cache` ADD COLUMN `calories` int NOT NULL DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_nutrition_cache' AND column_name = 'calories');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_nutrition_cache` ADD COLUMN `protein` decimal(6,2) NOT NULL DEFAULT ''0.00''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_nutrition_cache' AND column_name = 'protein');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_nutrition_cache` ADD COLUMN `carbs` decimal(6,2) NOT NULL DEFAULT ''0.00''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_nutrition_cache' AND column_name = 'carbs');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_nutrition_cache` ADD COLUMN `fat` decimal(6,2) NOT NULL DEFAULT ''0.00''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_nutrition_cache' AND column_name = 'fat');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_nutrition_cache` ADD COLUMN `source` varchar(20) COLLATE utf8mb4_general_ci NOT NULL DEFAULT ''ai''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_nutrition_cache' AND column_name = 'source');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_nutrition_cache` ADD COLUMN `model` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_nutrition_cache' AND column_name = 'model');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_nutrition_cache` ADD COLUMN `hit_count` int NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_nutrition_cache' AND column_name = 'hit_count');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_nutrition_cache` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_nutrition_cache' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_nutrition_cache` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_nutrition_cache' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `friendships`
 -- --------------------------------------------------------
@@ -740,6 +1067,16 @@ CREATE TABLE IF NOT EXISTS `friendships` (
   CONSTRAINT `friendships_ibfk_2` FOREIGN KEY (`friend_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `friendships` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `friendships` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'friendships' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `friendships` ADD COLUMN `friend_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'friendships' AND column_name = 'friend_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `friendships` ADD COLUMN `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT ''pending''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'friendships' AND column_name = 'status');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `friendships` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'friendships' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `landing_visits`
 -- --------------------------------------------------------
@@ -752,6 +1089,14 @@ CREATE TABLE IF NOT EXISTS `landing_visits` (
   UNIQUE KEY `uq_landing_visits_hash_date` (`ip_hash`,`visit_date`),
   KEY `idx_landing_visits_date` (`visit_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `landing_visits` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `landing_visits` ADD COLUMN `ip_hash` char(64) NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'landing_visits' AND column_name = 'ip_hash');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `landing_visits` ADD COLUMN `visit_date` date NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'landing_visits' AND column_name = 'visit_date');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `landing_visits` ADD COLUMN `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'landing_visits' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `messages`
@@ -775,6 +1120,22 @@ CREATE TABLE IF NOT EXISTS `messages` (
   CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `messages` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `messages` ADD COLUMN `sender_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'messages' AND column_name = 'sender_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `messages` ADD COLUMN `receiver_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'messages' AND column_name = 'receiver_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `messages` ADD COLUMN `content` text COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'messages' AND column_name = 'content');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `messages` ADD COLUMN `latitude` decimal(10,8) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'messages' AND column_name = 'latitude');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `messages` ADD COLUMN `longitude` decimal(10,8) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'messages' AND column_name = 'longitude');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `messages` ADD COLUMN `is_read` tinyint(1) DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'messages' AND column_name = 'is_read');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `messages` ADD COLUMN `sent_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'messages' AND column_name = 'sent_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `notifications`
 -- --------------------------------------------------------
@@ -795,6 +1156,22 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `notifications` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `notifications` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'notifications' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `notifications` ADD COLUMN `message` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'notifications' AND column_name = 'message');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `notifications` ADD COLUMN `type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT ''info''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'notifications' AND column_name = 'type');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `notifications` ADD COLUMN `is_read` tinyint(1) DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'notifications' AND column_name = 'is_read');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `notifications` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'notifications' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `notifications` ADD COLUMN `category` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''SYSTEM''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'notifications' AND column_name = 'category');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `notifications` ADD COLUMN `source` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'notifications' AND column_name = 'source');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `password_reset_otps`
 -- --------------------------------------------------------
@@ -812,6 +1189,18 @@ CREATE TABLE IF NOT EXISTS `password_reset_otps` (
   KEY `idx_user_used_expires` (`user_id`,`used`,`expires_at`),
   CONSTRAINT `password_reset_otps_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `password_reset_otps` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `password_reset_otps` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'password_reset_otps' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `password_reset_otps` ADD COLUMN `otp_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'password_reset_otps' AND column_name = 'otp_hash');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `password_reset_otps` ADD COLUMN `expires_at` datetime NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'password_reset_otps' AND column_name = 'expires_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `password_reset_otps` ADD COLUMN `used` tinyint(1) DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'password_reset_otps' AND column_name = 'used');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `password_reset_otps` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'password_reset_otps' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `phone_verifications`
@@ -833,6 +1222,26 @@ CREATE TABLE IF NOT EXISTS `phone_verifications` (
   CONSTRAINT `phone_verifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `phone_verifications` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `phone_verifications` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'phone_verifications' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `phone_verifications` ADD COLUMN `phone` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'phone_verifications' AND column_name = 'phone');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `phone_verifications` ADD COLUMN `otp_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'phone_verifications' AND column_name = 'otp_hash');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `phone_verifications` ADD COLUMN `expires_at` datetime NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'phone_verifications' AND column_name = 'expires_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `phone_verifications` ADD COLUMN `attempts` tinyint unsigned NOT NULL DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'phone_verifications' AND column_name = 'attempts');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `phone_verifications` ADD COLUMN `used` tinyint(1) NOT NULL DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'phone_verifications' AND column_name = 'used');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `phone_verifications` ADD COLUMN `last_sent_at` datetime NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'phone_verifications' AND column_name = 'last_sent_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `phone_verifications` ADD COLUMN `reference_id` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'phone_verifications' AND column_name = 'reference_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `phone_verifications` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'phone_verifications' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `plan_contents`
 -- --------------------------------------------------------
@@ -852,391 +1261,407 @@ CREATE TABLE IF NOT EXISTS `plan_contents` (
   CONSTRAINT `plan_contents_ibfk_1` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
-(1, 46, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(2, 46, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(3, 46, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(4, 46, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(5, 46, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(6, 46, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(7, 46, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(8, 46, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(9, 46, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(10, 46, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(11, 46, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(12, 46, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(13, 46, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(14, 46, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(15, 46, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(16, 46, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(17, 46, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(18, 46, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(19, 46, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(20, 46, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(21, 46, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(22, 46, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(23, 46, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(24, 46, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(25, 46, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(26, 46, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(27, 46, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(28, 46, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(29, 47, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(30, 47, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(31, 47, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(32, 47, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(33, 47, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(34, 47, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(35, 47, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(36, 47, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(37, 47, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(38, 47, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(39, 47, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(40, 47, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(41, 47, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(42, 47, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(43, 47, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(44, 47, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(45, 47, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(46, 47, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(47, 47, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(48, 47, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(49, 47, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(50, 47, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(51, 47, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(52, 47, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(53, 47, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(54, 47, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(55, 47, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(56, 47, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(57, 48, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(58, 48, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(59, 48, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(60, 48, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(61, 48, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(62, 48, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(63, 48, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(64, 48, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(65, 48, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(66, 48, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(67, 48, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(68, 48, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(69, 48, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(70, 48, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(71, 48, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(72, 48, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(73, 48, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(74, 48, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(75, 48, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(76, 48, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(77, 48, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(78, 48, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(79, 48, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(80, 48, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(81, 48, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(82, 48, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(83, 48, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(84, 48, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(85, 49, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(86, 49, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(87, 49, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(88, 49, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(89, 49, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(90, 49, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(91, 49, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(92, 49, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(93, 49, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(94, 49, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(95, 49, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(96, 49, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(97, 49, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(98, 49, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(99, 50, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(100, 50, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13');
+-- Add any columns an older `plan_contents` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_contents` ADD COLUMN `plan_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_contents' AND column_name = 'plan_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_contents` ADD COLUMN `day_number` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_contents' AND column_name = 'day_number');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_contents` ADD COLUMN `title` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_contents' AND column_name = 'title');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_contents` ADD COLUMN `activity_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_contents' AND column_name = 'activity_type');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_contents` ADD COLUMN `description` text COLLATE utf8mb4_unicode_ci', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_contents' AND column_name = 'description');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_contents` ADD COLUMN `duration_mins` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_contents' AND column_name = 'duration_mins');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_contents` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_contents' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
-INSERT INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
-(101, 50, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(102, 50, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(103, 50, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(104, 50, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(105, 50, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(106, 50, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(107, 50, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(108, 50, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(109, 50, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(110, 50, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(111, 50, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(112, 50, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(113, 50, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(114, 50, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(115, 50, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(116, 50, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(117, 50, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(118, 50, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(119, 50, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(120, 50, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(121, 50, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(122, 50, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(123, 50, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(124, 50, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(125, 50, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(126, 50, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(127, 51, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(128, 51, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(129, 51, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(130, 51, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(131, 51, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(132, 51, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(133, 51, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(134, 51, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(135, 51, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(136, 51, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(137, 51, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(138, 51, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(139, 51, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(140, 51, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(141, 52, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(142, 52, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(143, 52, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(144, 52, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(145, 52, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(146, 52, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(147, 52, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(148, 52, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(149, 52, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(150, 52, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(151, 52, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(152, 52, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(153, 52, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(154, 52, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(155, 52, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(156, 52, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(157, 52, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(158, 52, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(159, 52, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(160, 52, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(161, 52, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(162, 52, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(163, 52, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(164, 52, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(165, 52, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(166, 52, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(167, 52, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(168, 52, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(169, 53, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(170, 53, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(171, 53, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(172, 53, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(173, 53, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(174, 53, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(175, 53, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(176, 53, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(177, 53, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(178, 53, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(179, 53, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(180, 53, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(181, 53, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(182, 53, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(183, 53, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(184, 53, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(185, 53, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(186, 53, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(187, 53, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(188, 53, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(189, 53, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(190, 53, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(191, 53, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(192, 53, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(193, 53, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(194, 53, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 10:35:13'),
-(195, 53, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(196, 53, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(197, 54, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(198, 54, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(199, 54, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(200, 54, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13');
+INSERT IGNORE INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
+(1, 46, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(2, 46, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(3, 46, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(4, 46, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(5, 46, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(6, 46, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(7, 46, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(8, 46, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(9, 46, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(10, 46, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(11, 46, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(12, 46, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(13, 46, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(14, 46, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(15, 46, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(16, 46, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(17, 46, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(18, 46, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(19, 46, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(20, 46, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(21, 46, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(22, 46, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(23, 46, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(24, 46, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(25, 46, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(26, 46, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(27, 46, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(28, 46, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(29, 47, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(30, 47, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(31, 47, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(32, 47, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(33, 47, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(34, 47, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(35, 47, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(36, 47, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(37, 47, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(38, 47, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(39, 47, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(40, 47, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(41, 47, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(42, 47, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(43, 47, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(44, 47, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(45, 47, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(46, 47, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(47, 47, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(48, 47, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(49, 47, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(50, 47, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(51, 47, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(52, 47, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(53, 47, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(54, 47, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(55, 47, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(56, 47, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(57, 48, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(58, 48, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(59, 48, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(60, 48, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(61, 48, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(62, 48, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(63, 48, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(64, 48, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(65, 48, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(66, 48, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(67, 48, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(68, 48, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(69, 48, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(70, 48, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(71, 48, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(72, 48, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(73, 48, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(74, 48, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(75, 48, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(76, 48, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(77, 48, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(78, 48, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(79, 48, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(80, 48, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(81, 48, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(82, 48, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(83, 48, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(84, 48, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(85, 49, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(86, 49, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(87, 49, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(88, 49, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(89, 49, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(90, 49, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(91, 49, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(92, 49, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(93, 49, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(94, 49, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(95, 49, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(96, 49, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(97, 49, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(98, 49, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(99, 50, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(100, 50, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10');
 
-INSERT INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
-(201, 54, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(202, 54, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(203, 54, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(204, 54, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(205, 54, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(206, 54, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(207, 54, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(208, 54, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(209, 54, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(210, 54, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(211, 54, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(212, 54, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(213, 54, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(214, 54, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(215, 54, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(216, 54, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(217, 54, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(218, 54, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(219, 54, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(220, 54, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(221, 54, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(222, 54, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(223, 54, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(224, 54, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(225, 55, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(226, 55, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(227, 55, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(228, 55, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(229, 55, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(230, 55, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(231, 55, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(232, 55, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(233, 55, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(234, 55, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(235, 55, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(236, 55, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 10:35:13'),
-(237, 55, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(238, 55, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(239, 56, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(240, 56, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(241, 56, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(242, 56, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(243, 56, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(244, 56, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(245, 56, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(246, 57, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(247, 57, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(248, 57, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(249, 57, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(250, 57, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(251, 57, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(252, 57, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(253, 58, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 10:35:13'),
-(254, 58, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(255, 58, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 10:35:13'),
-(256, 58, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(257, 58, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 10:35:13'),
-(258, 58, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(259, 58, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(260, 58, 8, 'Day 8 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 10:35:13'),
-(261, 58, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(262, 58, 10, 'Day 10 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 10:35:13'),
-(263, 58, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(264, 58, 12, 'Day 12 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 10:35:13'),
-(265, 58, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(266, 58, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(267, 59, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(268, 59, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(269, 59, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(270, 59, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(271, 59, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(272, 59, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(273, 59, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(274, 59, 8, 'Day 8 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(275, 59, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(276, 59, 10, 'Day 10 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(277, 59, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(278, 59, 12, 'Day 12 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(279, 59, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(280, 59, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(281, 60, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(282, 60, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(283, 60, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(284, 60, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(285, 60, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(286, 60, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(287, 60, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(288, 60, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(289, 60, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(290, 60, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(291, 60, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(292, 60, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(293, 60, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(294, 60, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(295, 60, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(296, 60, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(297, 60, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(298, 60, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(299, 60, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(300, 60, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13');
+INSERT IGNORE INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
+(101, 50, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(102, 50, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(103, 50, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(104, 50, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(105, 50, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(106, 50, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(107, 50, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(108, 50, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(109, 50, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(110, 50, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(111, 50, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(112, 50, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(113, 50, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(114, 50, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(115, 50, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(116, 50, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(117, 50, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(118, 50, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(119, 50, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(120, 50, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(121, 50, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(122, 50, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(123, 50, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(124, 50, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(125, 50, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(126, 50, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(127, 51, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(128, 51, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(129, 51, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(130, 51, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(131, 51, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(132, 51, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(133, 51, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(134, 51, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(135, 51, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(136, 51, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(137, 51, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(138, 51, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(139, 51, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(140, 51, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(141, 52, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(142, 52, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(143, 52, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(144, 52, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(145, 52, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(146, 52, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(147, 52, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(148, 52, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(149, 52, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(150, 52, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(151, 52, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(152, 52, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(153, 52, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(154, 52, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(155, 52, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(156, 52, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(157, 52, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(158, 52, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(159, 52, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(160, 52, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(161, 52, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(162, 52, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(163, 52, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(164, 52, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(165, 52, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(166, 52, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(167, 52, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(168, 52, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(169, 53, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(170, 53, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(171, 53, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(172, 53, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(173, 53, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(174, 53, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(175, 53, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(176, 53, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(177, 53, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(178, 53, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(179, 53, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(180, 53, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(181, 53, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(182, 53, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(183, 53, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(184, 53, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(185, 53, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(186, 53, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(187, 53, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(188, 53, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(189, 53, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(190, 53, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(191, 53, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(192, 53, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(193, 53, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(194, 53, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 15:49:10'),
+(195, 53, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(196, 53, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(197, 54, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(198, 54, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(199, 54, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(200, 54, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10');
 
-INSERT INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
-(301, 60, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(302, 60, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(303, 60, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(304, 60, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(305, 60, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(306, 60, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 10:35:13'),
-(307, 60, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 10:35:13'),
-(308, 60, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 10:35:13'),
-(512, 61, 1, 'Day 1 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 10:35:18'),
-(513, 61, 2, 'Day 2 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(514, 61, 3, 'Day 3 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 10:35:18'),
-(515, 61, 4, 'Day 4 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(516, 61, 5, 'Day 5 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 10:35:18'),
-(517, 61, 6, 'Day 6 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(518, 61, 7, 'Day 7 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(519, 61, 8, 'Day 8 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 10:35:18'),
-(520, 61, 9, 'Day 9 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(521, 61, 10, 'Day 10 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 10:35:18'),
-(522, 61, 11, 'Day 11 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(523, 61, 12, 'Day 12 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 10:35:18'),
-(524, 61, 13, 'Day 13 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(525, 61, 14, 'Day 14 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(526, 61, 15, 'Day 15 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 10:35:18'),
-(527, 61, 16, 'Day 16 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(528, 61, 17, 'Day 17 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 10:35:18'),
-(529, 61, 18, 'Day 18 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(530, 61, 19, 'Day 19 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 10:35:18'),
-(531, 61, 20, 'Day 20 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(532, 61, 21, 'Day 21 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(533, 61, 22, 'Day 22 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 10:35:18'),
-(534, 61, 23, 'Day 23 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(535, 61, 24, 'Day 24 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 10:35:18'),
-(536, 61, 25, 'Day 25 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(537, 61, 26, 'Day 26 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 10:35:18'),
-(538, 61, 27, 'Day 27 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(539, 61, 28, 'Day 28 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(540, 62, 1, 'Day 1 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 10:35:18'),
-(541, 62, 2, 'Day 2 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(542, 62, 3, 'Day 3 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 10:35:18'),
-(543, 62, 4, 'Day 4 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(544, 62, 5, 'Day 5 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 10:35:18'),
-(545, 62, 6, 'Day 6 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(546, 62, 7, 'Day 7 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(547, 62, 8, 'Day 8 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 10:35:18'),
-(548, 62, 9, 'Day 9 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(549, 62, 10, 'Day 10 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 10:35:18'),
-(550, 62, 11, 'Day 11 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(551, 62, 12, 'Day 12 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 10:35:18'),
-(552, 62, 13, 'Day 13 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(553, 62, 14, 'Day 14 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(554, 62, 15, 'Day 15 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 10:35:18'),
-(555, 62, 16, 'Day 16 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(556, 62, 17, 'Day 17 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 10:35:18'),
-(557, 62, 18, 'Day 18 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(558, 62, 19, 'Day 19 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 10:35:18'),
-(559, 62, 20, 'Day 20 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(560, 62, 21, 'Day 21 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(561, 62, 22, 'Day 22 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 10:35:18'),
-(562, 62, 23, 'Day 23 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(563, 62, 24, 'Day 24 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 10:35:18'),
-(564, 62, 25, 'Day 25 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(565, 62, 26, 'Day 26 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 10:35:18'),
-(566, 62, 27, 'Day 27 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(567, 62, 28, 'Day 28 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(568, 63, 1, 'Day 1 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 10:35:18'),
-(569, 63, 2, 'Day 2 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(570, 63, 3, 'Day 3 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 10:35:18'),
-(571, 63, 4, 'Day 4 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(572, 63, 5, 'Day 5 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 10:35:18'),
-(573, 63, 6, 'Day 6 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(574, 63, 7, 'Day 7 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(575, 63, 8, 'Day 8 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 10:35:18'),
-(576, 63, 9, 'Day 9 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(577, 63, 10, 'Day 10 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 10:35:18'),
-(578, 63, 11, 'Day 11 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18'),
-(579, 63, 12, 'Day 12 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 10:35:18'),
-(580, 63, 13, 'Day 13 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 10:35:18'),
-(581, 63, 14, 'Day 14 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 10:35:18');
+INSERT IGNORE INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
+(201, 54, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(202, 54, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(203, 54, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(204, 54, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(205, 54, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(206, 54, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(207, 54, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(208, 54, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(209, 54, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(210, 54, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(211, 54, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(212, 54, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(213, 54, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(214, 54, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(215, 54, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(216, 54, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(217, 54, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(218, 54, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(219, 54, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(220, 54, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(221, 54, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(222, 54, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(223, 54, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(224, 54, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(225, 55, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(226, 55, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(227, 55, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(228, 55, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(229, 55, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(230, 55, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(231, 55, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(232, 55, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(233, 55, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(234, 55, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(235, 55, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(236, 55, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 15:49:10'),
+(237, 55, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(238, 55, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(239, 56, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(240, 56, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(241, 56, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(242, 56, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(243, 56, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(244, 56, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(245, 56, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(246, 57, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(247, 57, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(248, 57, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(249, 57, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(250, 57, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(251, 57, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(252, 57, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(253, 58, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 15:49:10'),
+(254, 58, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(255, 58, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 15:49:10'),
+(256, 58, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(257, 58, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 15:49:10'),
+(258, 58, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(259, 58, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(260, 58, 8, 'Day 8 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 15:49:10'),
+(261, 58, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(262, 58, 10, 'Day 10 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 15:49:10'),
+(263, 58, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(264, 58, 12, 'Day 12 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 15:49:10'),
+(265, 58, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(266, 58, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(267, 59, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(268, 59, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(269, 59, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(270, 59, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(271, 59, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(272, 59, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(273, 59, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(274, 59, 8, 'Day 8 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(275, 59, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(276, 59, 10, 'Day 10 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(277, 59, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(278, 59, 12, 'Day 12 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(279, 59, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(280, 59, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(281, 60, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(282, 60, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(283, 60, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(284, 60, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(285, 60, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(286, 60, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(287, 60, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(288, 60, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(289, 60, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(290, 60, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(291, 60, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(292, 60, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(293, 60, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(294, 60, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(295, 60, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(296, 60, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(297, 60, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(298, 60, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(299, 60, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(300, 60, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10');
+
+INSERT IGNORE INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
+(301, 60, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(302, 60, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(303, 60, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(304, 60, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(305, 60, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(306, 60, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 15:49:10'),
+(307, 60, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 15:49:10'),
+(308, 60, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 15:49:10'),
+(512, 61, 1, 'Day 1 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 15:49:19'),
+(513, 61, 2, 'Day 2 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(514, 61, 3, 'Day 3 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 15:49:19'),
+(515, 61, 4, 'Day 4 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(516, 61, 5, 'Day 5 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 15:49:19'),
+(517, 61, 6, 'Day 6 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(518, 61, 7, 'Day 7 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(519, 61, 8, 'Day 8 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 15:49:19'),
+(520, 61, 9, 'Day 9 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(521, 61, 10, 'Day 10 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 15:49:19'),
+(522, 61, 11, 'Day 11 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(523, 61, 12, 'Day 12 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 15:49:19'),
+(524, 61, 13, 'Day 13 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(525, 61, 14, 'Day 14 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(526, 61, 15, 'Day 15 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 15:49:19'),
+(527, 61, 16, 'Day 16 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(528, 61, 17, 'Day 17 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 15:49:19'),
+(529, 61, 18, 'Day 18 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(530, 61, 19, 'Day 19 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 15:49:19'),
+(531, 61, 20, 'Day 20 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(532, 61, 21, 'Day 21 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(533, 61, 22, 'Day 22 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 15:49:19'),
+(534, 61, 23, 'Day 23 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(535, 61, 24, 'Day 24 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 15:49:19'),
+(536, 61, 25, 'Day 25 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(537, 61, 26, 'Day 26 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 15:49:19'),
+(538, 61, 27, 'Day 27 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(539, 61, 28, 'Day 28 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(540, 62, 1, 'Day 1 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 15:49:19'),
+(541, 62, 2, 'Day 2 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(542, 62, 3, 'Day 3 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 15:49:19'),
+(543, 62, 4, 'Day 4 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(544, 62, 5, 'Day 5 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 15:49:19'),
+(545, 62, 6, 'Day 6 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(546, 62, 7, 'Day 7 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(547, 62, 8, 'Day 8 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 15:49:19'),
+(548, 62, 9, 'Day 9 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(549, 62, 10, 'Day 10 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 15:49:19'),
+(550, 62, 11, 'Day 11 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(551, 62, 12, 'Day 12 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 15:49:19'),
+(552, 62, 13, 'Day 13 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(553, 62, 14, 'Day 14 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(554, 62, 15, 'Day 15 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 15:49:19'),
+(555, 62, 16, 'Day 16 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(556, 62, 17, 'Day 17 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 15:49:19'),
+(557, 62, 18, 'Day 18 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(558, 62, 19, 'Day 19 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 15:49:19'),
+(559, 62, 20, 'Day 20 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(560, 62, 21, 'Day 21 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(561, 62, 22, 'Day 22 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 15:49:19'),
+(562, 62, 23, 'Day 23 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(563, 62, 24, 'Day 24 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 15:49:19'),
+(564, 62, 25, 'Day 25 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(565, 62, 26, 'Day 26 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 15:49:19'),
+(566, 62, 27, 'Day 27 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(567, 62, 28, 'Day 28 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(568, 63, 1, 'Day 1 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 15:49:19'),
+(569, 63, 2, 'Day 2 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(570, 63, 3, 'Day 3 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 15:49:19'),
+(571, 63, 4, 'Day 4 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(572, 63, 5, 'Day 5 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 15:49:19'),
+(573, 63, 6, 'Day 6 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(574, 63, 7, 'Day 7 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(575, 63, 8, 'Day 8 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 15:49:19'),
+(576, 63, 9, 'Day 9 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(577, 63, 10, 'Day 10 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 15:49:19'),
+(578, 63, 11, 'Day 11 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19'),
+(579, 63, 12, 'Day 12 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 15:49:19'),
+(580, 63, 13, 'Day 13 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 15:49:19'),
+(581, 63, 14, 'Day 14 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 15:49:19');
 
 -- --------------------------------------------------------
 -- Table `plan_exercises`
@@ -1256,7 +1681,25 @@ CREATE TABLE IF NOT EXISTS `plan_exercises` (
   CONSTRAINT `plan_exercises_ibfk_1` FOREIGN KEY (`plan_content_id`) REFERENCES `plan_contents` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+-- Add any columns an older `plan_exercises` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_exercises` ADD COLUMN `plan_content_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_exercises' AND column_name = 'plan_content_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_exercises` ADD COLUMN `exercise_order` int NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_exercises' AND column_name = 'exercise_order');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_exercises` ADD COLUMN `exercise_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_exercises' AND column_name = 'exercise_name');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_exercises` ADD COLUMN `sets` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_exercises' AND column_name = 'sets');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_exercises` ADD COLUMN `reps` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_exercises' AND column_name = 'reps');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_exercises` ADD COLUMN `duration_seconds` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_exercises' AND column_name = 'duration_seconds');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_exercises` ADD COLUMN `rest_seconds` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_exercises' AND column_name = 'rest_seconds');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_exercises` ADD COLUMN `notes` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_exercises' AND column_name = 'notes');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (1, 99, 1, 'Bodyweight Squats', 3, '10', NULL, 45, 'Use a comfortable depth.'),
 (2, 101, 1, 'Bodyweight Squats', 3, '10', NULL, 45, 'Use a comfortable depth.'),
 (3, 103, 1, 'Bodyweight Squats', 3, '10', NULL, 45, 'Use a comfortable depth.'),
@@ -1358,7 +1801,7 @@ INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exerci
 (99, 33, 1, 'Push-Ups', 2, '8', NULL, 45, 'Knees down to scale.'),
 (100, 36, 1, 'Push-Ups', 2, '8', NULL, 45, 'Knees down to scale.');
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (101, 38, 1, 'Push-Ups', 2, '8', NULL, 45, 'Knees down to scale.'),
 (102, 40, 1, 'Push-Ups', 2, '8', NULL, 45, 'Knees down to scale.'),
 (103, 43, 1, 'Push-Ups', 2, '8', NULL, 45, 'Knees down to scale.'),
@@ -1460,7 +1903,7 @@ INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exerci
 (199, 85, 2, 'Bird Dog', 2, '8 each side', NULL, 45, 'Pause briefly at extension.'),
 (200, 87, 2, 'Bird Dog', 2, '8 each side', NULL, 45, 'Pause briefly at extension.');
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (201, 89, 2, 'Bird Dog', 2, '8 each side', NULL, 45, 'Pause briefly at extension.'),
 (202, 92, 2, 'Bird Dog', 2, '8 each side', NULL, 45, 'Pause briefly at extension.'),
 (203, 94, 2, 'Bird Dog', 2, '8 each side', NULL, 45, 'Pause briefly at extension.'),
@@ -1562,7 +2005,7 @@ INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exerci
 (299, 164, 1, 'Jumping Jacks', 3, NULL, 30, 45, 'Use step jacks to reduce impact.'),
 (300, 166, 1, 'Jumping Jacks', 3, NULL, 30, 45, 'Use step jacks to reduce impact.');
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (301, 141, 2, 'High Knees', 3, NULL, 30, 45, 'March instead of running to scale.'),
 (302, 143, 2, 'High Knees', 3, NULL, 30, 45, 'March instead of running to scale.'),
 (303, 145, 2, 'High Knees', 3, NULL, 30, 45, 'March instead of running to scale.'),
@@ -1664,7 +2107,7 @@ INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exerci
 (399, 201, 4, 'Mountain Climbers', 3, NULL, 20, 45, 'Step rather than run to scale.'),
 (400, 204, 4, 'Mountain Climbers', 3, NULL, 20, 45, 'Step rather than run to scale.');
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (401, 206, 4, 'Mountain Climbers', 3, NULL, 20, 45, 'Step rather than run to scale.'),
 (402, 208, 4, 'Mountain Climbers', 3, NULL, 20, 45, 'Step rather than run to scale.'),
 (403, 211, 4, 'Mountain Climbers', 3, NULL, 20, 45, 'Step rather than run to scale.'),
@@ -1766,7 +2209,7 @@ INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exerci
 (499, 296, 2, 'Hip Circles', 2, '8 each direction', NULL, 20, 'Use a comfortable range.'),
 (500, 300, 2, 'Hip Circles', 2, '8 each direction', NULL, 20, 'Use a comfortable range.');
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (501, 303, 2, 'Hip Circles', 2, '8 each direction', NULL, 20, 'Use a comfortable range.'),
 (502, 307, 2, 'Hip Circles', 2, '8 each direction', NULL, 20, 'Use a comfortable range.'),
 (503, 246, 2, 'Hip Circles', 2, '8 each direction', NULL, 20, 'Use a comfortable range.'),
@@ -1868,7 +2311,7 @@ INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exerci
 (599, 226, 3, 'Child\'s Pose Hold', 2, NULL, 30, 20, 'Keep the stretch gentle.'),
 (600, 230, 3, 'Child\'s Pose Hold', 2, NULL, 30, 20, 'Keep the stretch gentle.');
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (601, 233, 3, 'Child\'s Pose Hold', 2, NULL, 30, 20, 'Keep the stretch gentle.'),
 (602, 237, 3, 'Child\'s Pose Hold', 2, NULL, 30, 20, 'Keep the stretch gentle.'),
 (603, 198, 3, 'Child\'s Pose Hold', 2, NULL, 30, 20, 'Keep the stretch gentle.'),
@@ -1970,7 +2413,7 @@ INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exerci
 (699, 177, 4, 'Deep Breathing', 2, NULL, 60, 20, 'Breathe slowly and comfortably.'),
 (700, 181, 4, 'Deep Breathing', 2, NULL, 60, 20, 'Breathe slowly and comfortably.');
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (701, 184, 4, 'Deep Breathing', 2, NULL, 60, 20, 'Breathe slowly and comfortably.'),
 (702, 188, 4, 'Deep Breathing', 2, NULL, 60, 20, 'Breathe slowly and comfortably.'),
 (703, 191, 4, 'Deep Breathing', 2, NULL, 60, 20, 'Breathe slowly and comfortably.'),
@@ -2072,7 +2515,7 @@ INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exerci
 (799, 275, 1, 'Hamstring Stretch', 2, NULL, 30, 20, 'Hold each side without bouncing.'),
 (800, 276, 1, 'Hamstring Stretch', 2, NULL, 30, 20, 'Hold each side without bouncing.');
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (801, 278, 1, 'Hamstring Stretch', 2, NULL, 30, 20, 'Hold each side without bouncing.'),
 (802, 279, 1, 'Hamstring Stretch', 2, NULL, 30, 20, 'Hold each side without bouncing.'),
 (803, 267, 2, 'Calf Stretch', 2, NULL, 30, 20, 'Hold each side.'),
@@ -2174,7 +2617,7 @@ INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exerci
 (1042, 523, 2, 'Push-Ups', 4, '15', NULL, 60, 'Chest to fist height; full lockout.'),
 (1043, 521, 2, 'Push-Ups', 4, '15', NULL, 60, 'Chest to fist height; full lockout.');
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (1044, 519, 2, 'Push-Ups', 4, '15', NULL, 60, 'Chest to fist height; full lockout.'),
 (1045, 516, 2, 'Push-Ups', 4, '15', NULL, 60, 'Chest to fist height; full lockout.'),
 (1046, 514, 2, 'Push-Ups', 4, '15', NULL, 60, 'Chest to fist height; full lockout.'),
@@ -2276,7 +2719,7 @@ INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exerci
 (1142, 542, 5, 'Plank', 4, NULL, 90, 60, 'Stop if your lower back aches.'),
 (1143, 540, 5, 'Plank', 4, NULL, 90, 60, 'Stop if your lower back aches.');
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (1144, 565, 6, 'Side Plank', 3, NULL, 45, 45, 'Each side.'),
 (1145, 563, 6, 'Side Plank', 3, NULL, 45, 45, 'Each side.'),
 (1146, 561, 6, 'Side Plank', 3, NULL, 45, 45, 'Each side.'),
@@ -2378,7 +2821,7 @@ INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exerci
 (1242, 524, 3, 'Hamstring Stretch', 2, NULL, 30, 20, 'Hold each side without bouncing.'),
 (1243, 520, 3, 'Hamstring Stretch', 2, NULL, 30, 20, 'Hold each side without bouncing.');
 
-INSERT INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
 (1244, 517, 3, 'Hamstring Stretch', 2, NULL, 30, 20, 'Hold each side without bouncing.'),
 (1245, 513, 3, 'Hamstring Stretch', 2, NULL, 30, 20, 'Hold each side without bouncing.'),
 (1246, 580, 4, 'Deep Breathing', 1, NULL, 60, NULL, 'Breathe slowly and comfortably.'),
@@ -2432,31 +2875,67 @@ CREATE TABLE IF NOT EXISTS `plans` (
   CONSTRAINT `plans_ibfk_owner` FOREIGN KEY (`owner_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `plans` (`id`, `name`, `title`, `tag`, `intensity`, `duration`, `target_focus`, `price`, `image_seed`, `description`, `duration_days`, `difficulty`, `image_url`, `created_at`, `owner_user_id`, `is_template`, `goal_type`, `rationale`) VALUES
-(40, '', 'Foundations of Strength', 'Strength', 'Beginner', '4 Weeks', 'Full-Body Strength & Power', '0.00', 'foundations', 'Beginner progressive program', 28, NULL, '/plans/foundations-of-strength.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(41, '', 'Iron Forge Protocol', 'Strength', 'Advanced', '8 Weeks', 'Hypertrophy & Max Strength', '0.00', 'ironforge', 'Advanced 8-week hypertrophy block', 56, NULL, '/plans/iron-forge-protocol.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(42, '', 'Fat Loss Sprint', 'Fat Loss', 'Moderate', '2 Weeks', 'Fat Loss', '0.00', 'fatloss', 'High-intensity 2-week block', 14, NULL, '/plans/fat-loss-sprint.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(43, '', 'Cardio Surge', 'Cardio', 'Moderate', '4 Weeks', 'Cardio Endurance', '0.00', 'cardiosurge', '4-week aerobic base', 28, NULL, '/plans/cardio-surge.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(44, '', 'Mobility Reset', 'Recovery', 'Beginner', '1 Week', 'Recovery', '0.00', 'mobilityreset', '7-day mobility reset', 7, NULL, '/plans/mobility-reset.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(45, '', 'Total Flexibility Flow', 'Flexibility', 'Beginner', '2 Weeks', 'Flexibility', '0.00', 'flexflow', '2-week flexibility routine', 14, NULL, '/plans/total-flexibility-flow.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(46, 'Bodyweight Basics', 'Bodyweight Basics', 'Strength', 'Beginner', '4 Weeks', 'Full Body', '0.00', 'bodyweight-basics', 'Build a bodyweight routine with squats, scaled push-ups, bridges and core work. Three training days, two mobility days and two rest days per week.', 28, 'Beginner', '/plans/bodyweight-basics.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(47, 'Upper Body Foundations', 'Upper Body Foundations', 'Strength', 'Beginner', '4 Weeks', 'Upper Body', '0.00', 'upper-body-foundations', 'Practice pushing and trunk control without weights. Use knee push-ups as needed and keep every repetition controlled.', 28, 'Beginner', '/plans/upper-body-foundations.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(48, 'Lower Body Builder', 'Lower Body Builder', 'Strength', 'Moderate', '4 Weeks', 'Lower Body', '0.00', 'lower-body-builder', 'Develop leg strength with squats, reverse lunges, glute bridges and calf raises. Alternate training with mobility and rest.', 28, 'Moderate', '/plans/lower-body-builder.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(49, 'Core Control', 'Core Control', 'Strength', 'Beginner', '2 Weeks', 'Core', '0.00', 'core-control', 'Build trunk stability with dead bugs, bird dogs, planks and side planks. Short sessions emphasize steady breathing and control.', 14, 'Beginner', '/plans/core-control.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(50, 'Everyday Strength Circuit', 'Everyday Strength Circuit', 'Strength', 'Moderate', '4 Weeks', 'Full Body', '0.00', 'everyday-strength-circuit', 'Repeat a balanced bodyweight circuit three times weekly, with dedicated mobility and rest days between sessions.', 28, 'Moderate', '/plans/everyday-strength-circuit.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(51, 'Low Impact Cardio Start', 'Low Impact Cardio Start', 'Cardio', 'Beginner', '2 Weeks', 'Cardio Endurance', '0.00', 'low-impact-cardio-start', 'Build an aerobic habit with marching, step jacks, side steps and standing knee lifts. No jumping or equipment required.', 14, 'Beginner', '/plans/low-impact-cardio-start.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(52, 'Cardio Rhythm', 'Cardio Rhythm', 'Cardio', 'Moderate', '4 Weeks', 'Cardio Endurance', '0.00', 'cardio-rhythm', 'Practice timed bodyweight cardio intervals with recovery between sets. Keep a pace you can maintain throughout the session.', 28, 'Moderate', '/plans/cardio-rhythm.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(53, 'Steady Movement Habit', 'Steady Movement Habit', 'Cardio', 'Beginner', '4 Weeks', 'Full Body', '0.00', 'steady-movement-habit', 'Establish a regular movement routine with low-impact intervals, gentle mobility and scheduled rest days.', 28, 'Beginner', '/plans/steady-movement-habit.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(54, 'Full Body Conditioning', 'Full Body Conditioning', 'Fat Loss', 'Moderate', '4 Weeks', 'Full Body', '0.00', 'full-body-conditioning', 'Combine bodyweight strength and timed cardio to support general conditioning. Includes mobility sessions and rest days.', 28, 'Moderate', '/plans/full-body-conditioning.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(55, 'Quick Conditioning Circuit', 'Quick Conditioning Circuit', 'Fat Loss', 'Moderate', '2 Weeks', 'Full Body', '0.00', 'quick-conditioning-circuit', 'Short strength-and-cardio sessions for a busy schedule. Use controlled repetitions and take the prescribed rest between sets.', 14, 'Moderate', '/plans/quick-conditioning-circuit.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(56, 'Desk Break Mobility', 'Desk Break Mobility', 'Recovery', 'Beginner', '1 Week', 'Mobility', '0.00', 'desk-break-mobility', 'Gentle cat-cow, hip circles, child pose and breathing sessions for breaks from sitting. Stay within a comfortable range.', 7, 'Beginner', '/plans/desk-break-mobility.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(57, 'Gentle Recovery Week', 'Gentle Recovery Week', 'Recovery', 'Beginner', '1 Week', 'Recovery', '0.00', 'gentle-recovery-week', 'A week of easy mobility and breathing with two full rest days. Keep the sessions relaxed rather than strenuous.', 7, 'Beginner', '/plans/gentle-recovery-week.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(58, 'Hip Mobility Practice', 'Hip Mobility Practice', 'Flexibility', 'Beginner', '2 Weeks', 'Lower Body', '0.00', 'hip-mobility-practice', 'Practice comfortable hip and lower-body mobility with controlled stretches. Avoid bouncing and never force the range.', 14, 'Beginner', '/plans/hip-mobility-practice.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(59, 'Evening Stretch Routine', 'Evening Stretch Routine', 'Flexibility', 'Beginner', '2 Weeks', 'Flexibility', '0.00', 'evening-stretch-routine', 'Wind down with gentle hamstring, calf, hip-flexor and child-pose holds. Includes two rest days per week.', 14, 'Beginner', '/plans/evening-stretch-routine.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(60, 'Athletic Bodyweight Prep', 'Athletic Bodyweight Prep', 'Strength', 'Moderate', '4 Weeks', 'Full Body', '0.00', 'athletic-bodyweight-prep', 'Build a base of leg strength and trunk control using reverse lunges, squats, shoulder taps and bird dogs.', 28, 'Moderate', '/plans/athletic-bodyweight-prep.jpg', '2026-11-26 10:35:13', NULL, 1, NULL, NULL),
-(61, 'Advanced Strength Builder', 'Advanced Strength Builder', 'Strength', 'Advanced', '4 Weeks', 'Strength', '0.00', 'advanced-strength-builder', 'Unlocked at Level 2. Higher-volume bodyweight strength with tempo work and longer holds. Warm up fully and keep perfect form on every rep.', 28, 'Advanced', NULL, '2026-11-26 10:35:18', NULL, 1, NULL, NULL),
-(62, 'Elite Strength Block', 'Elite Strength Block', 'Strength', 'Extreme', '4 Weeks', 'Strength', '0.00', 'elite-strength-block', 'Unlocked at Level 3. Demanding strength sessions with high volume and slow eccentrics. Stop a set early if your form breaks down.', 28, 'Extreme', NULL, '2026-11-26 10:35:18', NULL, 1, NULL, NULL),
-(63, 'Elite Conditioning', 'Elite Conditioning', 'Performance', 'Extreme', '2 Weeks', 'Performance', '0.00', 'elite-conditioning', 'Unlocked at Level 3. Hard conditioning intervals for experienced trainees. Includes jumping; swap in step-based versions if impact bothers your joints.', 14, 'Extreme', NULL, '2026-11-26 10:35:18', NULL, 1, NULL, NULL);
+-- Add any columns an older `plans` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'name');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'title');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `tag` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'tag');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `intensity` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'intensity');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `duration` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'duration');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `target_focus` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'target_focus');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `price` decimal(8,2) DEFAULT ''0.00''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'price');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `image_seed` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'image_seed');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `description` text COLLATE utf8mb4_unicode_ci', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'description');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `duration_days` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'duration_days');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `difficulty` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'difficulty');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'image_url');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `owner_user_id` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'owner_user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `is_template` tinyint(1) DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'is_template');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `goal_type` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'goal_type');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `rationale` text COLLATE utf8mb4_unicode_ci', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'rationale');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+INSERT IGNORE INTO `plans` (`id`, `name`, `title`, `tag`, `intensity`, `duration`, `target_focus`, `price`, `image_seed`, `description`, `duration_days`, `difficulty`, `image_url`, `created_at`, `owner_user_id`, `is_template`, `goal_type`, `rationale`) VALUES
+(40, '', 'Foundations of Strength', 'Strength', 'Beginner', '4 Weeks', 'Full-Body Strength & Power', '0.00', 'foundations', 'Beginner progressive program', 28, NULL, '/plans/foundations-of-strength.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(41, '', 'Iron Forge Protocol', 'Strength', 'Advanced', '8 Weeks', 'Hypertrophy & Max Strength', '0.00', 'ironforge', 'Advanced 8-week hypertrophy block', 56, NULL, '/plans/iron-forge-protocol.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(42, '', 'Fat Loss Sprint', 'Fat Loss', 'Moderate', '2 Weeks', 'Fat Loss', '0.00', 'fatloss', 'High-intensity 2-week block', 14, NULL, '/plans/fat-loss-sprint.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(43, '', 'Cardio Surge', 'Cardio', 'Moderate', '4 Weeks', 'Cardio Endurance', '0.00', 'cardiosurge', '4-week aerobic base', 28, NULL, '/plans/cardio-surge.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(44, '', 'Mobility Reset', 'Recovery', 'Beginner', '1 Week', 'Recovery', '0.00', 'mobilityreset', '7-day mobility reset', 7, NULL, '/plans/mobility-reset.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(45, '', 'Total Flexibility Flow', 'Flexibility', 'Beginner', '2 Weeks', 'Flexibility', '0.00', 'flexflow', '2-week flexibility routine', 14, NULL, '/plans/total-flexibility-flow.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(46, 'Bodyweight Basics', 'Bodyweight Basics', 'Strength', 'Beginner', '4 Weeks', 'Full Body', '0.00', 'bodyweight-basics', 'Build a bodyweight routine with squats, scaled push-ups, bridges and core work. Three training days, two mobility days and two rest days per week.', 28, 'Beginner', '/plans/bodyweight-basics.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(47, 'Upper Body Foundations', 'Upper Body Foundations', 'Strength', 'Beginner', '4 Weeks', 'Upper Body', '0.00', 'upper-body-foundations', 'Practice pushing and trunk control without weights. Use knee push-ups as needed and keep every repetition controlled.', 28, 'Beginner', '/plans/upper-body-foundations.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(48, 'Lower Body Builder', 'Lower Body Builder', 'Strength', 'Moderate', '4 Weeks', 'Lower Body', '0.00', 'lower-body-builder', 'Develop leg strength with squats, reverse lunges, glute bridges and calf raises. Alternate training with mobility and rest.', 28, 'Moderate', '/plans/lower-body-builder.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(49, 'Core Control', 'Core Control', 'Strength', 'Beginner', '2 Weeks', 'Core', '0.00', 'core-control', 'Build trunk stability with dead bugs, bird dogs, planks and side planks. Short sessions emphasize steady breathing and control.', 14, 'Beginner', '/plans/core-control.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(50, 'Everyday Strength Circuit', 'Everyday Strength Circuit', 'Strength', 'Moderate', '4 Weeks', 'Full Body', '0.00', 'everyday-strength-circuit', 'Repeat a balanced bodyweight circuit three times weekly, with dedicated mobility and rest days between sessions.', 28, 'Moderate', '/plans/everyday-strength-circuit.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(51, 'Low Impact Cardio Start', 'Low Impact Cardio Start', 'Cardio', 'Beginner', '2 Weeks', 'Cardio Endurance', '0.00', 'low-impact-cardio-start', 'Build an aerobic habit with marching, step jacks, side steps and standing knee lifts. No jumping or equipment required.', 14, 'Beginner', '/plans/low-impact-cardio-start.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(52, 'Cardio Rhythm', 'Cardio Rhythm', 'Cardio', 'Moderate', '4 Weeks', 'Cardio Endurance', '0.00', 'cardio-rhythm', 'Practice timed bodyweight cardio intervals with recovery between sets. Keep a pace you can maintain throughout the session.', 28, 'Moderate', '/plans/cardio-rhythm.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(53, 'Steady Movement Habit', 'Steady Movement Habit', 'Cardio', 'Beginner', '4 Weeks', 'Full Body', '0.00', 'steady-movement-habit', 'Establish a regular movement routine with low-impact intervals, gentle mobility and scheduled rest days.', 28, 'Beginner', '/plans/steady-movement-habit.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(54, 'Full Body Conditioning', 'Full Body Conditioning', 'Fat Loss', 'Moderate', '4 Weeks', 'Full Body', '0.00', 'full-body-conditioning', 'Combine bodyweight strength and timed cardio to support general conditioning. Includes mobility sessions and rest days.', 28, 'Moderate', '/plans/full-body-conditioning.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(55, 'Quick Conditioning Circuit', 'Quick Conditioning Circuit', 'Fat Loss', 'Moderate', '2 Weeks', 'Full Body', '0.00', 'quick-conditioning-circuit', 'Short strength-and-cardio sessions for a busy schedule. Use controlled repetitions and take the prescribed rest between sets.', 14, 'Moderate', '/plans/quick-conditioning-circuit.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(56, 'Desk Break Mobility', 'Desk Break Mobility', 'Recovery', 'Beginner', '1 Week', 'Mobility', '0.00', 'desk-break-mobility', 'Gentle cat-cow, hip circles, child pose and breathing sessions for breaks from sitting. Stay within a comfortable range.', 7, 'Beginner', '/plans/desk-break-mobility.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(57, 'Gentle Recovery Week', 'Gentle Recovery Week', 'Recovery', 'Beginner', '1 Week', 'Recovery', '0.00', 'gentle-recovery-week', 'A week of easy mobility and breathing with two full rest days. Keep the sessions relaxed rather than strenuous.', 7, 'Beginner', '/plans/gentle-recovery-week.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(58, 'Hip Mobility Practice', 'Hip Mobility Practice', 'Flexibility', 'Beginner', '2 Weeks', 'Lower Body', '0.00', 'hip-mobility-practice', 'Practice comfortable hip and lower-body mobility with controlled stretches. Avoid bouncing and never force the range.', 14, 'Beginner', '/plans/hip-mobility-practice.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(59, 'Evening Stretch Routine', 'Evening Stretch Routine', 'Flexibility', 'Beginner', '2 Weeks', 'Flexibility', '0.00', 'evening-stretch-routine', 'Wind down with gentle hamstring, calf, hip-flexor and child-pose holds. Includes two rest days per week.', 14, 'Beginner', '/plans/evening-stretch-routine.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(60, 'Athletic Bodyweight Prep', 'Athletic Bodyweight Prep', 'Strength', 'Moderate', '4 Weeks', 'Full Body', '0.00', 'athletic-bodyweight-prep', 'Build a base of leg strength and trunk control using reverse lunges, squats, shoulder taps and bird dogs.', 28, 'Moderate', '/plans/athletic-bodyweight-prep.jpg', '2026-11-26 15:49:10', NULL, 1, NULL, NULL),
+(61, 'Advanced Strength Builder', 'Advanced Strength Builder', 'Strength', 'Advanced', '4 Weeks', 'Strength', '0.00', 'advanced-strength-builder', 'Unlocked at Level 2. Higher-volume bodyweight strength with tempo work and longer holds. Warm up fully and keep perfect form on every rep.', 28, 'Advanced', NULL, '2026-11-26 15:49:19', NULL, 1, NULL, NULL),
+(62, 'Elite Strength Block', 'Elite Strength Block', 'Strength', 'Extreme', '4 Weeks', 'Strength', '0.00', 'elite-strength-block', 'Unlocked at Level 3. Demanding strength sessions with high volume and slow eccentrics. Stop a set early if your form breaks down.', 28, 'Extreme', NULL, '2026-11-26 15:49:19', NULL, 1, NULL, NULL),
+(63, 'Elite Conditioning', 'Elite Conditioning', 'Performance', 'Extreme', '2 Weeks', 'Performance', '0.00', 'elite-conditioning', 'Unlocked at Level 3. Hard conditioning intervals for experienced trainees. Includes jumping; swap in step-based versions if impact bothers your joints.', 14, 'Extreme', NULL, '2026-11-26 15:49:19', NULL, 1, NULL, NULL);
 
 -- --------------------------------------------------------
 -- Table `progress_photos`
@@ -2477,6 +2956,22 @@ CREATE TABLE IF NOT EXISTS `progress_photos` (
   CONSTRAINT `progress_photos_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Add any columns an older `progress_photos` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_photos` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_photos' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_photos` ADD COLUMN `pose` varchar(10) COLLATE utf8mb4_general_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_photos' AND column_name = 'pose');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_photos` ADD COLUMN `image_data` mediumtext COLLATE utf8mb4_general_ci', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_photos' AND column_name = 'image_data');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_photos` ADD COLUMN `ai_rating` tinyint DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_photos' AND column_name = 'ai_rating');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_photos` ADD COLUMN `ai_quality` text COLLATE utf8mb4_general_ci', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_photos' AND column_name = 'ai_quality');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_photos` ADD COLUMN `ai_summary` text COLLATE utf8mb4_general_ci', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_photos' AND column_name = 'ai_summary');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_photos` ADD COLUMN `captured_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_photos' AND column_name = 'captured_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `progress_settings`
 -- --------------------------------------------------------
@@ -2488,6 +2983,16 @@ CREATE TABLE IF NOT EXISTS `progress_settings` (
   PRIMARY KEY (`user_id`),
   CONSTRAINT `fk_progress_settings_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `progress_settings` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_settings` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_settings' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_settings` ADD COLUMN `cadence_days` tinyint unsigned NOT NULL DEFAULT ''30''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_settings' AND column_name = 'cadence_days');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_settings` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_settings' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_settings` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_settings' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `reminder_log`
@@ -2506,6 +3011,20 @@ CREATE TABLE IF NOT EXISTS `reminder_log` (
   CONSTRAINT `reminder_log_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `reminder_log` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_log` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_log' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_log` ADD COLUMN `kind` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_log' AND column_name = 'kind');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_log` ADD COLUMN `channel` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''inapp''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_log' AND column_name = 'channel');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_log` ADD COLUMN `sent_on` date NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_log' AND column_name = 'sent_on');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_log` ADD COLUMN `variant` tinyint DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_log' AND column_name = 'variant');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_log` ADD COLUMN `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_log' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `reminder_prefs`
 -- --------------------------------------------------------
@@ -2520,6 +3039,22 @@ CREATE TABLE IF NOT EXISTS `reminder_prefs` (
   PRIMARY KEY (`user_id`),
   CONSTRAINT `reminder_prefs_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `reminder_prefs` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_prefs` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_prefs' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_prefs` ADD COLUMN `log_reminders` tinyint(1) NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_prefs' AND column_name = 'log_reminders');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_prefs` ADD COLUMN `workout_reminders` tinyint(1) NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_prefs' AND column_name = 'workout_reminders');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_prefs` ADD COLUMN `motivation` tinyint(1) NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_prefs' AND column_name = 'motivation');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_prefs` ADD COLUMN `progress` tinyint(1) NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_prefs' AND column_name = 'progress');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_prefs` ADD COLUMN `email_weekly` tinyint(1) NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_prefs' AND column_name = 'email_weekly');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_prefs` ADD COLUMN `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_prefs' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `training_preferences`
@@ -2540,6 +3075,26 @@ CREATE TABLE IF NOT EXISTS `training_preferences` (
   CONSTRAINT `training_preferences_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `training_preferences` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `training_preferences` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'training_preferences' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `training_preferences` ADD COLUMN `equipment` json DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'training_preferences' AND column_name = 'equipment');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `training_preferences` ADD COLUMN `preferred_days` json DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'training_preferences' AND column_name = 'preferred_days');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `training_preferences` ADD COLUMN `session_duration_mins` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'training_preferences' AND column_name = 'session_duration_mins');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `training_preferences` ADD COLUMN `workout_location` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'training_preferences' AND column_name = 'workout_location');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `training_preferences` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'training_preferences' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `training_preferences` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'training_preferences' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `training_preferences` ADD COLUMN `excluded_categories` json DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'training_preferences' AND column_name = 'excluded_categories');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `training_preferences` ADD COLUMN `excluded_exercises` json DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'training_preferences' AND column_name = 'excluded_exercises');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `user_allergies`
 -- --------------------------------------------------------
@@ -2553,6 +3108,14 @@ CREATE TABLE IF NOT EXISTS `user_allergies` (
   KEY `idx_user_id` (`user_id`),
   CONSTRAINT `user_allergies_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `user_allergies` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_allergies` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_allergies' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_allergies` ADD COLUMN `allergy_name` varchar(60) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_allergies' AND column_name = 'allergy_name');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_allergies` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_allergies' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `user_challenges`
@@ -2572,6 +3135,18 @@ CREATE TABLE IF NOT EXISTS `user_challenges` (
   CONSTRAINT `user_challenges_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `user_challenges` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_challenges` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_challenges' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_challenges` ADD COLUMN `challenge_key` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_challenges' AND column_name = 'challenge_key');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_challenges` ADD COLUMN `workout_log_id` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_challenges' AND column_name = 'workout_log_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_challenges` ADD COLUMN `best_value` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_challenges' AND column_name = 'best_value');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_challenges` ADD COLUMN `completed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_challenges' AND column_name = 'completed_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `user_nutrient_goals`
 -- --------------------------------------------------------
@@ -2589,6 +3164,20 @@ CREATE TABLE IF NOT EXISTS `user_nutrient_goals` (
   KEY `idx_user_active` (`user_id`,`is_active`),
   CONSTRAINT `fk_nutrient_goals_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `user_nutrient_goals` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_nutrient_goals` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_nutrient_goals' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_nutrient_goals` ADD COLUMN `nutrient` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT ''PROTEIN, CARBOHYDRATES, FAT, TRANS_FAT, SATURATED_FAT, POLYUNSATURATED_FAT, MONOUNSATURATED_FAT''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_nutrient_goals' AND column_name = 'nutrient');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_nutrient_goals` ADD COLUMN `target_value` decimal(10,2) DEFAULT NULL COMMENT ''user goal amount (e.g. grams)''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_nutrient_goals' AND column_name = 'target_value');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_nutrient_goals` ADD COLUMN `is_active` tinyint(1) DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_nutrient_goals' AND column_name = 'is_active');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_nutrient_goals` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_nutrient_goals' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_nutrient_goals` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_nutrient_goals' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `user_plan_progress`
@@ -2610,6 +3199,20 @@ CREATE TABLE IF NOT EXISTS `user_plan_progress` (
   CONSTRAINT `user_plan_progress_ibfk_2` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `user_plan_progress` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plan_progress` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_plan_progress' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plan_progress` ADD COLUMN `plan_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_plan_progress' AND column_name = 'plan_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plan_progress` ADD COLUMN `day_number` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_plan_progress' AND column_name = 'day_number');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plan_progress` ADD COLUMN `is_completed` tinyint(1) DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_plan_progress' AND column_name = 'is_completed');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plan_progress` ADD COLUMN `completed_at` datetime DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_plan_progress' AND column_name = 'completed_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plan_progress` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_plan_progress' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `user_plans`
 -- --------------------------------------------------------
@@ -2625,6 +3228,14 @@ CREATE TABLE IF NOT EXISTS `user_plans` (
   CONSTRAINT `user_plans_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `user_plans_ibfk_2` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `user_plans` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plans` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_plans' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plans` ADD COLUMN `plan_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_plans' AND column_name = 'plan_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plans` ADD COLUMN `enrolled_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_plans' AND column_name = 'enrolled_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `user_profiles`
@@ -2644,6 +3255,24 @@ CREATE TABLE IF NOT EXISTS `user_profiles` (
   KEY `idx_user_id` (`user_id`),
   CONSTRAINT `user_profiles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `user_profiles` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_profiles` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_profiles' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_profiles` ADD COLUMN `contact` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_profiles' AND column_name = 'contact');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_profiles` ADD COLUMN `bio` text COLLATE utf8mb4_unicode_ci', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_profiles' AND column_name = 'bio');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_profiles` ADD COLUMN `avatar_url` longtext COLLATE utf8mb4_unicode_ci', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_profiles' AND column_name = 'avatar_url');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_profiles` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_profiles' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_profiles` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_profiles' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_profiles` ADD COLUMN `height_cm` decimal(5,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_profiles' AND column_name = 'height_cm');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_profiles` ADD COLUMN `weight_kg` decimal(5,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_profiles' AND column_name = 'weight_kg');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `user_sessions`
@@ -2668,6 +3297,26 @@ CREATE TABLE IF NOT EXISTS `user_sessions` (
   CONSTRAINT `user_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `user_sessions` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_sessions` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_sessions' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_sessions` ADD COLUMN `device` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_sessions' AND column_name = 'device');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_sessions` ADD COLUMN `browser` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_sessions' AND column_name = 'browser');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_sessions` ADD COLUMN `os` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_sessions' AND column_name = 'os');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_sessions` ADD COLUMN `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_sessions' AND column_name = 'ip_address');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_sessions` ADD COLUMN `location` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_sessions' AND column_name = 'location');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_sessions` ADD COLUMN `is_current` tinyint(1) DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_sessions' AND column_name = 'is_current');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_sessions` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_sessions' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_sessions` ADD COLUMN `device_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_sessions' AND column_name = 'device_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `user_settings`
 -- --------------------------------------------------------
@@ -2681,6 +3330,20 @@ CREATE TABLE IF NOT EXISTS `user_settings` (
   PRIMARY KEY (`user_id`),
   CONSTRAINT `fk_user_settings_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `user_settings` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_settings` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_settings' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_settings` ADD COLUMN `units` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''metric''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_settings' AND column_name = 'units');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_settings` ADD COLUMN `step_goal` int NOT NULL DEFAULT ''8000''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_settings' AND column_name = 'step_goal');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_settings` ADD COLUMN `theme` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''system''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_settings' AND column_name = 'theme');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_settings` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_settings' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_settings` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_settings' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `users`
@@ -2717,8 +3380,52 @@ CREATE TABLE IF NOT EXISTS `users` (
   CONSTRAINT `users_access_group_fk` FOREIGN KEY (`access_group_id`) REFERENCES `access_groups` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `users` (`id`, `name`, `email`, `phone`, `phone_verified_at`, `password`, `fitness_goal`, `avatar_url`, `is_online`, `created_at`, `updated_at`, `is_verified`, `onboarding_completed`, `accepted_terms_at`, `accepted_terms_version`, `status`, `role`, `token_version`, `access_group_id`, `password_weak`, `progression_level`, `progression_seen`) VALUES
-(1, 'Vitalis Admin', 'admin@gmail.com', NULL, NULL, '$2b$10$nRmo/jnklbzPAdBuIFRqJu3b69VdhC6yyiFWq0gDc9wkg1agFnJU6', NULL, NULL, 0, '2026-11-26 10:35:14', '2026-11-26 10:35:14', 1, 1, '2026-11-26 10:35:14', '1.0', 'active', 'admin', 0, NULL, NULL, 1, 1);
+-- Add any columns an older `users` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'name');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'email');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'phone');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `phone_verified_at` datetime DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'phone_verified_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'password');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `fitness_goal` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'fitness_goal');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `avatar_url` longtext COLLATE utf8mb4_unicode_ci', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'avatar_url');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `is_online` tinyint(1) DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'is_online');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `is_verified` tinyint(1) NOT NULL DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'is_verified');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `onboarding_completed` tinyint(1) NOT NULL DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'onboarding_completed');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `accepted_terms_at` datetime DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'accepted_terms_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `accepted_terms_version` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'accepted_terms_version');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''active''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'status');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `role` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''member''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'role');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `token_version` int NOT NULL DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'token_version');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `access_group_id` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'access_group_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `password_weak` tinyint(1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'password_weak');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `progression_level` tinyint unsigned NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'progression_level');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `progression_seen` tinyint unsigned NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'progression_seen');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+INSERT IGNORE INTO `users` (`id`, `name`, `email`, `phone`, `phone_verified_at`, `password`, `fitness_goal`, `avatar_url`, `is_online`, `created_at`, `updated_at`, `is_verified`, `onboarding_completed`, `accepted_terms_at`, `accepted_terms_version`, `status`, `role`, `token_version`, `access_group_id`, `password_weak`, `progression_level`, `progression_seen`) VALUES
+(1, 'Vitalis Admin', 'admin@gmail.com', NULL, NULL, '$2b$10$nRmo/jnklbzPAdBuIFRqJu3b69VdhC6yyiFWq0gDc9wkg1agFnJU6', NULL, NULL, 0, '2026-11-26 15:49:12', '2026-11-26 15:49:12', 1, 1, '2026-11-26 15:49:12', '1.0', 'active', 'admin', 0, NULL, NULL, 1, 1);
 
 -- --------------------------------------------------------
 -- Table `workout_logs`
@@ -2739,13 +3446,47 @@ CREATE TABLE IF NOT EXISTS `workout_logs` (
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `calories_burned` int DEFAULT NULL,
   `form_score` tinyint unsigned DEFAULT NULL,
+  `local_date` date DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_user_id` (`user_id`),
   KEY `idx_status` (`status`),
   KEY `idx_start_time` (`start_time`),
   KEY `idx_user_status_start` (`user_id`,`status`,`start_time`),
+  KEY `idx_workout_logs_user_local_date` (`user_id`,`local_date`),
   CONSTRAINT `workout_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add any columns an older `workout_logs` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `workout_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'workout_type');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'status');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `rep_count` int DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'rep_count');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `start_time` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'start_time');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `end_time` datetime DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'end_time');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `duration_seconds` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'duration_seconds');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `paused_seconds` int DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'paused_seconds');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `pause_started_at` datetime DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'pause_started_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `difficulty_rating` tinyint DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'difficulty_rating');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `session_notes` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'session_notes');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `calories_burned` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'calories_burned');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `form_score` tinyint unsigned DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'form_score');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `local_date` date DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'local_date');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
 -- Table `workout_sets`
@@ -2768,7 +3509,27 @@ CREATE TABLE IF NOT EXISTS `workout_sets` (
   CONSTRAINT `workout_sets_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add any columns an older `workout_sets` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_sets` ADD COLUMN `workout_log_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_sets' AND column_name = 'workout_log_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_sets` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_sets' AND column_name = 'user_id');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_sets` ADD COLUMN `exercise_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_sets' AND column_name = 'exercise_name');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_sets` ADD COLUMN `set_number` int NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_sets' AND column_name = 'set_number');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_sets` ADD COLUMN `reps` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_sets' AND column_name = 'reps');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_sets` ADD COLUMN `weight_kg` decimal(6,2) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_sets' AND column_name = 'weight_kg');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_sets` ADD COLUMN `duration_seconds` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_sets' AND column_name = 'duration_seconds');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_sets` ADD COLUMN `distance_meters` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_sets' AND column_name = 'distance_meters');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_sets` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_sets' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 SET SQL_MODE = @OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- Done. Tables: 44 + _migrations. Seeded: _migrations (60), food_catalog (190), plan_contents (378), plan_exercises (1122), plans (24), users (1).
+-- Done. Tables: 44 + _migrations. Seeded: _migrations (62), food_catalog (190), plan_contents (378), plan_exercises (1122), plans (24), users (1).

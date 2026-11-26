@@ -16,6 +16,25 @@ const ACTIVITY_LEVELS = [
 ];
 const LEVELS = ['LOW', 'MODERATE', 'HIGH', 'GOOD'];
 
+// Older rows (and the demo seed) stored short names like 'MODERATE'. Map them
+// to the current keys so a goal change never fails on a value the user can't see.
+const ACTIVITY_ALIASES = {
+  LIGHT: 'LIGHTLY_ACTIVE',
+  MODERATE: 'MODERATELY_ACTIVE',
+  ACTIVE: 'VERY_ACTIVE',
+  VERY: 'VERY_ACTIVE',
+  HIGH: 'HIGHLY_ACTIVE',
+  EXTRA_ACTIVE: 'HIGHLY_ACTIVE',
+  EXTREMELY_ACTIVE: 'HIGHLY_ACTIVE',
+};
+
+/** 'Moderately Active' / 'moderate' → 'MODERATELY_ACTIVE'; anything else passes through. */
+function normalizeActivity(v) {
+  if (v === undefined || v === null || v === '') return v;
+  const key = String(v).trim().toUpperCase().replace(/[\s-]+/g, '_');
+  return ACTIVITY_ALIASES[key] || key;
+}
+
 function enumField(v, list) {
   if (v === undefined || v === null || v === '') return { value: null };
   const norm = String(v).trim().toUpperCase();
@@ -80,7 +99,7 @@ function carriedBody(prev, overrides) {
     targetWeightKg: prev.target_weight_kg,
     pace: prev.pace,
     focus: prev.focus,
-    activityLevel: prev.activity_level,
+    activityLevel: normalizeActivity(prev.activity_level),
     exerciseFreq: prev.exercise_freq,
     sleepHours: prev.sleep_hours != null ? Number(prev.sleep_hours) : null,
     secondaryGoals: splitGoals(prev.secondary_goals),
@@ -91,6 +110,7 @@ function carriedBody(prev, overrides) {
     _carried: {
       secondaryGoals: overrides?.secondaryGoals === undefined,
       targetDate: overrides?.targetDate === undefined,
+      activityLevel: overrides?.activityLevel === undefined && overrides?.activity_level === undefined,
     },
     ...(overrides || {}),
   };
@@ -269,7 +289,7 @@ async function updateActiveGoalIdentity(prev, dobVal, sexVal) {
     heightCm: Number(prev.height_cm),
     dob: dobVal,
     sex: sexVal,
-    activityLevel: prev.activity_level,
+    activityLevel: normalizeActivity(prev.activity_level),
     goalType: prev.goal_type,
     pace: prev.pace,
     // Keep multi-goal targets (recomposition, protein) on identity edits.
@@ -344,7 +364,7 @@ async function recalibrateGoal(userId, { force = false } = {}) {
     heightCm: Number(prev.height_cm),
     dob: prev.dob,
     sex: prev.sex,
-    activityLevel: prev.activity_level,
+    activityLevel: normalizeActivity(prev.activity_level),
     goalType: prev.goal_type,
     pace: prev.pace,
     // Recalibration must not drop the extra goals' nutrition effects.
@@ -380,6 +400,7 @@ module.exports = {
   SEXES,
   PACES,
   ACTIVITY_LEVELS,
+  normalizeActivity,
   LEVELS,
   enumField,
   numOrNull,

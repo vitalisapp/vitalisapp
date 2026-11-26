@@ -63,8 +63,9 @@ function providerDetail(body) {
 }
 
 function isUnsupportedNetwork(detail) {
-  // UniSMS reports the default Sender ID cannot reach Smart / TNT / Sun.
-  return /\b(smart|tnt|sun)\b/i.test(detail);
+  // A mention of a carrier alone is not a rejection (it may be help text).
+  return /\b(?:network|carrier)\b[^.!?\n]*\b(?:not supported|unsupported)\b/i.test(detail)
+    || /\b(?:can't|cannot|can not|does not)\s+(?:send|deliver)\s+to\s+(?:smart|tnt|sun)\b/i.test(detail);
 }
 
 async function readJson(res) {
@@ -166,9 +167,16 @@ async function sendSms({ to, content, metadata }) {
 
   if (res.status === 422) {
     const detail = providerDetail(body);
+    if (/\b(?:insufficient|not enough|no|zero)\s+(?:sms\s+)?(?:credits?|balance)\b|\b(?:credits?|balance)\b[^.!?\n]*\b(?:insufficient|exhausted|depleted)\b/i.test(detail)) {
+      throw new SmsError(
+        'SMS verification is temporarily unavailable because the SMS service has no available credits. Please use email verification or contact support.',
+        'SMS_INSUFFICIENT_CREDITS',
+        503,
+      );
+    }
     if (isUnsupportedNetwork(detail)) {
       throw new SmsError(
-        `This number's network (Smart, TNT, or Sun) can't receive our SMS codes. ${SUPPORTED_NETWORKS_MSG}`,
+        'The SMS provider rejected delivery to this number for the configured sender ID. This does not confirm your SIM network. If you use Globe, TM, or DITO, please use email verification or contact support to check the sender ID and routing.',
         'SMS_UNSUPPORTED_NETWORK',
         422,
       );
