@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUrlFilters } from '../../../../hooks/useUrlFilters.js';
 import AccountPageShell from '../../../../components/app/AccountPageShell.jsx';
 import { useAccountBasePath } from '../../../../hooks/useAccountBasePath.js';
 import PageHeader from '../../../../components/app/PageHeader.jsx';
@@ -38,11 +39,15 @@ const FAQS = [
   },
 ];
 
+const URL_FILTERS = { q: {} };
+
 const HelpSupport = ({ embedded = false }) => {
   const navigate = useNavigate();
   const accountBase = useAccountBasePath();
   const { user, logout } = useAuth();
-  const [query, setQuery] = useState('');
+  const { values, setFilters } = useUrlFilters(URL_FILTERS);
+  const query = values.q;
+  const setQuery = (q) => setFilters({ q });
   const [openIdx, setOpenIdx] = useState(0);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 

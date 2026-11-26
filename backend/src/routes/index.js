@@ -23,6 +23,7 @@ const communityRoutes = require('./community.routes');
 const settingsRoutes = require('./settings.routes');
 const trainingPrefsRoutes = require('./trainingPrefs.routes');
 const trainingInsightsRoutes = require('./trainingInsights.routes');
+const progressionRoutes = require('./progression.routes');
 const progressRoutes = require('./progress.routes');
 const adminRoutes = require('./admin.routes');
 const publicRoutes = require('./public.routes');
@@ -39,6 +40,8 @@ function mountRoutes(app) {
   // Module 5: training preferences (recommendation inputs) + rule-based insights.
   app.use('/api/training-preferences', requireMember, trainingPrefsRoutes);
   app.use('/api/training-insights', requireMember, trainingInsightsRoutes);
+  // Revision #4: levels, unlock requirements and challenges.
+  app.use('/api/progression', requireMember, progressionRoutes);
   // Section 5: smart reminder settings (scheduler: src/jobs/reminderScheduler.js).
   app.use('/api/reminders', requireMember, reminderRoutes);
   // Module 6: progress photos (Gemini-analyzed), body measurements, activity analytics, export.
@@ -47,12 +50,15 @@ function mountRoutes(app) {
   app.use('/api/admin', adminRoutes);
   app.use('/api/bmi', bmiRoutes);
   app.use('/api/auth', authRoutes);
-  app.use('/api', requireMember, messengerRoutes); // /contacts, /messages, /users/search, /friends
-  app.use('/api', requireMember, dashboardRoutes); // /dashboard
+  // These routers own specific sub-paths under /api. The member gate lives
+  // inside each router (after verifyUser) so it cannot intercept unrelated
+  // public /api routes such as /api/_routes or the removed-module 410s.
+  app.use('/api', messengerRoutes); // /contacts, /messages, /users/search, /friends
+  app.use('/api', dashboardRoutes); // /dashboard
   app.use('/api/logs', requireMember, logsRoutes);
   app.use('/api/plans', requireMember, plansRoutes);
   app.use('/api/profile', profileRoutes);
-  app.use('/api', requireMember, aiRoutes);
+  app.use('/api', aiRoutes);
   // Meal tracker must work for admins too (scans + logs). Route-level
   // verifyUser/requireOwner already guards every user-scoped endpoint here.
   app.use('/api/food-logs', foodLogs);

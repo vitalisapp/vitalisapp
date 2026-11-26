@@ -6,6 +6,7 @@ import { GOOGLE_CLIENT_ID } from '../../../../../app/config/env.js';
 import { isValidPhMobile, PHONE_INVALID_MSG } from '../../../../../lib/phone.js';
 import { useAuth } from '../../../../../hooks/useAuth.jsx';
 import { getAccessCode } from './useAccessInvite.js';
+import { checkPassword } from '../../../../../lib/passwordPolicy.js';
 
 export const useRegister = () => {
   const [loading, setLoading] = useState(false);
@@ -73,8 +74,9 @@ export const useRegister = () => {
       setError('Enter a valid email address.');
       return;
     }
-    if (!formData.password || formData.password.length < 8) {
-      setError('Password must be at least 8 characters.');
+    const policy = checkPassword(formData.password);
+    if (!policy.ok) {
+      setError(policy.message);
       return;
     }
     if (formData.password !== formData.confirm) {

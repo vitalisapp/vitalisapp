@@ -59,27 +59,31 @@ export function useWorkoutSession() {
     }
   }, []);
 
-  const endSession = useCallback(async (status = 'completed', repCount = 0, sets = undefined) => {
+  // Resolves to the ended log (or null) so callers can chain follow-ups such as
+  // challenge verification. `extra` carries optional fields like form_score.
+  const endSession = useCallback(async (status = 'completed', repCount = 0, sets = undefined, extra = undefined) => {
     const id = sessionIdRef.current || (startPromiseRef.current ? await startPromiseRef.current : null);
     if (!id) {
       if (import.meta.env.DEV) console.warn('[useWorkoutSession] endSession called with no active session');
-      return;
+      return null;
     }
 
     setSessionError(null);
 
     try {
-      const body = { status, rep_count: repCount };
+      const body = { ...(extra || {}), status, rep_count: repCount };
       // Only include sets when the caller supplies them — legacy shape stays
       // identical on the wire otherwise.
       if (sets !== undefined) body.sets = sets;
       const data = await apiPatch(`/api/workout-logs/${id}/end`, body);
       setSessionResult(data);
       if (import.meta.env.DEV) console.info('[useWorkoutSession] ended → duration:', data.duration_seconds, 's');
+      return data;
     } catch (err) {
       if (import.meta.env.DEV) console.error('[useWorkoutSession] endSession failed:', err.message);
       setSessionError(err.message);
       // Don't rethrow — caller is fire-and-forget
+      return null;
     } finally {
       sessionIdRef.current = null;
       startPromiseRef.current = null;

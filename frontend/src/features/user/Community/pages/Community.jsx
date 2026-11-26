@@ -7,8 +7,8 @@ import CommunityFeed from '../components/CommunityFeed.jsx';
 import MessengerPanel from '../../Social/components/MessengerPanel.jsx';
 import '../community-hub.css';
 
-const COMMUNITY_FEED_PATH = '/dashboard/community';
-const COMMUNITY_MESSAGES_PATH = '/dashboard/community/messages';
+const COMMUNITY_FEED_PATH = '/community';
+const COMMUNITY_MESSAGES_PATH = '/community/messages';
 
 const SECTIONS = [
   { key: 'feed', label: 'Feed', icon: 'dynamic_feed', to: COMMUNITY_FEED_PATH },
@@ -36,9 +36,9 @@ const SectionTabs = ({ active = undefined }) => (
 
 /**
  * Community hub — one page, two sections:
- *  - Feed      (/dashboard/community)          public posts, likes, comments
- *  - Messages  (/dashboard/community/messages) private 1:1 chats + friends
- * /dashboard/messenger redirects to the Messages section.
+ *  - Feed      (/community)          public posts, likes, comments
+ *  - Messages  (/community/messages) private 1:1 chats + friends
+ * /messenger redirects to the Messages section.
  */
 const Community = () => {
   const { user, loading } = useAuth();

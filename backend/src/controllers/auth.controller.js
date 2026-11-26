@@ -2,6 +2,7 @@
 const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit");
 const { z } = require("zod");
+const { checkPassword, strongPassword } = require("../utils/passwordPolicy");
 const { COOKIE_NAME, getCookieOptions, getClearCookieOptions } = require("../utils/cookies");
 const service = require("../services/auth.service");
 const emailService = require("../services/email.service");
@@ -55,7 +56,7 @@ const loginIpLimiter = rateLimit({
 const registerSchema = z.object({
   name: z.string().trim().min(2, "Name too short").max(100),
   email: z.string().trim().toLowerCase().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters").max(128),
+  password: strongPassword(z),
   // Module 1 — explicit consent flag must survive schema validation.
   agreed: z.boolean().optional().default(false),
   // Registration verification channel. 'email' keeps the existing link flow.
@@ -90,7 +91,7 @@ const googleLoginSchema = z.object({
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required").max(128),
-  newPassword: z.string().min(8, "New password must be at least 8 characters").max(128),
+  newPassword: strongPassword(z),
 });
 
 const changeEmailSchema = z.object({
@@ -156,6 +157,8 @@ async function getme(req, res, next) {
           status: user.status,
           acceptedTermsAt: user.accepted_terms_at,
           acceptedTermsVersion: user.accepted_terms_version,
+          // Old weak passwords still sign in — Profile shows "needs attention".
+          passwordNeedsAttention: Number(user.password_weak) === 1,
         },
       });
     } catch (err) {
@@ -221,7 +224,7 @@ async function postregister(req, res, next) {
         await service.logUserSession(req, user.id);
       }
 
-      /** @type {{ success: boolean, message: string, id: number, name: string, email: string, avatar: string|null, goal: string, isVerified: boolean, onboardingCompleted: boolean, role: string, status: string, acceptedTermsAt: string|null, acceptedTermsVersion: number|null, needsVerification: boolean, verificationMethod: string, phoneMasked?: string, devVerificationLink?: string }} */
+      /** @type {{ success: boolean, message: string, id: number, name: string, email: string, avatar: string|null, goal: string, isVerified: boolean, onboardingCompleted: boolean, role: string, status: string, acceptedTermsAt: string|null, acceptedTermsVersion: number|null, passwordNeedsAttention: boolean, needsVerification: boolean, verificationMethod: string, phoneMasked?: string, devVerificationLink?: string }} */
       const payload = {
         success: true,
         message: autoVerified
@@ -241,6 +244,7 @@ async function postregister(req, res, next) {
         status: user.status,
         acceptedTermsAt: user.accepted_terms_at,
         acceptedTermsVersion: user.accepted_terms_version,
+        passwordNeedsAttention: false,
         // true → no session was issued; the client opens the verify screen.
         needsVerification: !autoVerified,
         verificationMethod: autoVerified ? null : verificationMethod,
@@ -294,6 +298,7 @@ async function postlogin(req, res, next) {
         status: user.status,
         acceptedTermsAt: user.accepted_terms_at,
         acceptedTermsVersion: user.accepted_terms_version,
+        passwordNeedsAttention: Number(user.password_weak) === 1,
       });
     } catch (err) {
       if (err.isOperational) {
@@ -376,8 +381,10 @@ async function postchangePassword(req, res, next) {
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ error: "Missing required fields" });
     }
-    if (newPassword.length < 8) {
-      return res.status(400).json({ error: "New password must be at least 8 characters" });
+    // Defense in depth: the route's zod schema already enforces this.
+    const policy = checkPassword(newPassword);
+    if (!policy.ok) {
+      return res.status(400).json({ error: policy.message, code: "WEAK_PASSWORD", failed: policy.failed });
     }
 
     try {
@@ -518,6 +525,7 @@ async function startVerifiedSession(req, res, user) {
     status: user.status,
     acceptedTermsAt: user.accepted_terms_at,
     acceptedTermsVersion: user.accepted_terms_version,
+    passwordNeedsAttention: Number(user.password_weak) === 1,
   };
 }
 

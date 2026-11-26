@@ -2,6 +2,7 @@ const express=require('express');
 const { makeLimiter }=require('../middleware/rateLimits');
 const router=express.Router();
 const verifyUser=require('../middleware/verifyUser');
+const { requireMember }=require('../middleware/verifyUser');
 const { requireOwner }=require('../utils/owner');
 const aiQuota=require('../middleware/aiQuota');
 const controller=require('../controllers/ai.controller');
@@ -13,14 +14,14 @@ const aiRouteLimiter = makeLimiter({
   message: 'AI is busy. Slow down and try again in a bit.',
 });
 
-router.post('/analyze-pose', verifyUser, aiRouteLimiter, aiQuota, controller.postanalyzePose);
-router.post('/ai/analysis', verifyUser, aiRouteLimiter, aiQuota, controller.postaiFitnessAnalysis);
+router.post('/analyze-pose', verifyUser, requireMember, aiRouteLimiter, aiQuota, controller.postanalyzePose);
+router.post('/ai/analysis', verifyUser, requireMember, aiRouteLimiter, aiQuota, controller.postaiFitnessAnalysis);
 // Backward-compatible alias — older clients still call the clinical-analysis path
-router.post('/ai/clinical-analysis', verifyUser, aiRouteLimiter, aiQuota, controller.postaiFitnessAnalysis);
-router.post('/ai/coach', verifyUser, aiRouteLimiter, aiQuota, controller.postaiCoach);
-router.get('/ai/history/:userId', verifyUser, requireOwner('userId'), controller.getaiHistoryUserId);
-router.get('/logs/latest/:userId', verifyUser, requireOwner('userId'), controller.getlogsLatestUserId);
-router.post('/ai/run-analysis', verifyUser, aiRouteLimiter, aiQuota, controller.postaiRunAnalysis);
+router.post('/ai/clinical-analysis', verifyUser, requireMember, aiRouteLimiter, aiQuota, controller.postaiFitnessAnalysis);
+router.post('/ai/coach', verifyUser, requireMember, aiRouteLimiter, aiQuota, controller.postaiCoach);
+router.get('/ai/history/:userId', verifyUser, requireMember, requireOwner('userId'), controller.getaiHistoryUserId);
+router.get('/logs/latest/:userId', verifyUser, requireMember, requireOwner('userId'), controller.getlogsLatestUserId);
+router.post('/ai/run-analysis', verifyUser, requireMember, aiRouteLimiter, aiQuota, controller.postaiRunAnalysis);
 // Dashboard summary: cached, but a cache miss calls Gemini. Own bucket (no
 // aiQuota — cache hits must not burn the daily AI budget).
 const aiSummaryLimiter = makeLimiter({
@@ -28,6 +29,6 @@ const aiSummaryLimiter = makeLimiter({
   limit: 60,
   message: 'Too many summary refreshes. Try again in a few minutes.',
 });
-router.get('/ai/summary', verifyUser, aiSummaryLimiter, controller.getaiDailySummary);
+router.get('/ai/summary', verifyUser, requireMember, aiSummaryLimiter, controller.getaiDailySummary);
 
 module.exports=router;

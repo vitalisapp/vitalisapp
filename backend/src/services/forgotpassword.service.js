@@ -1,8 +1,9 @@
 // Password reset (email OTP) — business logic + DB access.
 // Flow: POST /send-otp → POST /verify-otp → POST /reset-password
 const db = require("../config/db");
-const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const { hashPassword } = require("../utils/passwordPolicy");
+const { executeCompat } = require("../utils/schemaCompat");
 const { AppError } = require("../utils/errors");
 const { sendPasswordResetOtpEmail } = require("./email.service");
 
@@ -137,14 +138,13 @@ async function resetPassword(email, resetToken, newPassword) {
     throw new AppError("Reset session expired. Please start over.", 400, "RESET_EXPIRED");
   }
 
-  const salt = await bcrypt.genSalt(10);
-  const hashed = await bcrypt.hash(newPassword, salt);
+  const hashed = await hashPassword(newPassword);
 
   // Bump token_version: a password reset kills every existing session.
-  await db.execute(
-    "UPDATE users SET password = ?, token_version = token_version + 1 WHERE id = ?",
-    [hashed, user.id],
-  );
+  // The new password passed the policy, so the weak warning clears.
+  await executeCompat(db, "password_weak",
+    ["UPDATE users SET password = ?, password_weak = 0, token_version = token_version + 1 WHERE id = ?", [hashed, user.id]],
+    ["UPDATE users SET password = ?, token_version = token_version + 1 WHERE id = ?"]);
 
   // Consume the reset token
   await db.execute("UPDATE password_reset_otps SET used = 1 WHERE id = ?", [otps[0].id]);

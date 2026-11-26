@@ -3,9 +3,9 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
-  metForWorkout, estimateWorkoutKcal, sanitizeWeight, DEFAULT_MET, DEFAULT_WEIGHT_KG,
+  metForWorkout, estimateWorkoutKcal, estimateActivityKcal, sanitizeWeight, DEFAULT_MET, DEFAULT_WEIGHT_KG,
 } = require('../../src/utils/energyBurn');
-const { workoutKcal, addDaysISO } = require('../../src/services/energy.service');
+const { workoutKcal, activityKcal, addDaysISO, getBurnByDay } = require('../../src/services/energy.service');
 
 describe('metForWorkout', () => {
   it('maps common workout types', () => {
@@ -72,6 +72,13 @@ describe('energy.service helpers', () => {
     assert.equal(workoutKcal({ calories_burned: null, workout_type: 'run', duration_seconds: 1800 }, 70), 308);
   });
 
+  it('keeps measured activity kcal and re-estimates zero/legacy rows', () => {
+    assert.equal(activityKcal({ calories: 240, duration: 1800, distance: 5 }, 70), 240);
+    const estimated = activityKcal({ calories: 0, duration: 1800, distance: 5 }, 70);
+    assert.equal(estimated, estimateActivityKcal({ durationSeconds: 1800, distanceKm: 5, weightKg: 70 }));
+    assert.ok(estimated > 0);
+  });
+
   it('addDaysISO crosses month boundaries', () => {
     assert.equal(addDaysISO('2026-01-31', 1), '2026-02-01');
   });
@@ -92,5 +99,36 @@ describe('goal-aware eat-back', () => {
     assert.equal(eatBackFactor(null), 0.75);
     assert.equal(eatBackFactor('lose_weight'), 0.5);
     assert.equal(creditedKcal(-50, 'GAIN_WEIGHT'), 0);
+  });
+});
+
+describe('getBurnByDay (stubbed db)', () => {
+  it('buckets estimated activity kcal on the local date with valid bindings', async () => {
+    const db = require('../../src/config/db');
+    const original = db.execute;
+    const calls = [];
+    db.execute = async (sql, params) => {
+      calls.push({ sql, params });
+      if (sql.includes('FROM daily_stats')) return [[], []];
+      if (sql.includes('FROM workout_logs')) return [[], []];
+      if (sql.includes('FROM activity_logs')) {
+        return [[{ d: '2026-11-26', duration: 1800, distance: 5, calories: 0 }], []];
+      }
+      if (sql.includes('AS weight_kg')) return [[{ weight_kg: 70 }], []];
+      if (sql.includes('FROM fitness_goals')) return [[null], []];
+      return [[], []];
+    };
+    try {
+      const map = await getBurnByDay(1, '2026-11-26', '2026-11-27');
+      const bucket = map.get('2026-11-26');
+      assert.ok(bucket, 'local-date bucket exists');
+      assert.equal(bucket.activities,
+        estimateActivityKcal({ durationSeconds: 1800, distanceKm: 5, weightKg: 70 }));
+      const activityCall = calls.find((c) => c.sql.includes('FROM activity_logs'));
+      assert.equal((activityCall.sql.match(/\?/g) || []).length, activityCall.params.length);
+      assert.equal(activityCall.params[1], '2026-11-26');
+    } finally {
+      db.execute = original;
+    }
   });
 });

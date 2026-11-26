@@ -148,7 +148,7 @@ const VerifyPhone = () => {
             placeholder="you@example.com"
             value={email}
             onChange={(event) => { setEmail(event.target.value); if (error) setError(''); }}
-            className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-[16px] text-[#e5e2e1] outline-none transition-colors placeholder:text-white/20 focus:border-[var(--accent)]/50"
+            className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-[16px] text-[#e5e2e1] outline-none transition-colors placeholder:text-white/50 focus:border-[var(--accent)]/50"
           />
         </div>
       )}
@@ -202,7 +202,7 @@ const VerifyPhone = () => {
       )}
 
       {!verified && (
-        <div className="mt-1 space-y-2 text-[12px] text-[#c4c9b0]/50">
+        <div className="mt-1 space-y-2 text-[12px] text-[#c4c9b0]/70">
           <p>
             {phoneMasked ? <>Didn&apos;t receive it?</> : 'Need a code?'}{' '}
             <button
@@ -241,7 +241,7 @@ const VerifyPhone = () => {
             value={phoneInput}
             aria-invalid={phoneError ? true : undefined}
             onChange={(event) => { setPhoneInput(event.target.value); setPhoneError(livePhoneError(event.target.value)); }}
-            className={`w-full rounded-xl border bg-white/5 p-3 text-[16px] text-[#e5e2e1] outline-none transition-colors placeholder:text-white/20 ${phoneError ? 'border-red-500/60' : 'border-white/10 focus:border-[var(--accent)]/50'}`}
+            className={`w-full rounded-xl border bg-white/5 p-3 text-[16px] text-[#e5e2e1] outline-none transition-colors placeholder:text-white/50 ${phoneError ? 'border-red-500/60' : 'border-white/10 focus:border-[var(--accent)]/50'}`}
           />
           {phoneError && <p className="mt-1.5 px-1 text-[11px] text-red-400">{phoneError}</p>}
           <NetworkNotice senderId={SMS_SENDER_ID} className="mt-2.5" />

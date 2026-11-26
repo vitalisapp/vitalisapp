@@ -34,7 +34,7 @@ const KudosButton = ({ active = undefined, count = undefined, onToggle = undefin
 );
 
 // Static SVG route thumbnail — route shape with zero map cost
-// (no extra Leaflet instances). Downsamples long GPS tracks to ≤120 points.
+// (no extra map instances). Downsamples long GPS tracks to ≤120 points.
 const MAX_THUMB_POINTS = 120;
 
 const RouteThumbnail = ({ route = undefined }) => {
@@ -152,7 +152,14 @@ const ActivityCard = ({
 
       <div className="am-activity__title-row">
         <h3 className="am-activity__title">{activityTitle(activity.created_at)}</h3>
-        {calories > 0 && <span className="am-activity__kcal">{calories} kcal</span>}
+        {calories > 0 && (
+          <span className="am-activity__kcal">
+            {calories} kcal
+            {activity.calories_source !== 'measured' && (
+              <span className="am-activity__kcal-source" title="Estimated from duration, distance and body weight">est.</span>
+            )}
+          </span>
+        )}
       </div>
 
       <div className="am-activity__stats">

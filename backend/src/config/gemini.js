@@ -308,6 +308,8 @@ const {
   FOOD_ANALYSIS_PROMPT,
   FOOD_ANALYSIS_PROMPT_COMPACT,
 } = require("../constants/foodAnalysisPrompt");
+const { reconcilePieceCount } = require("../utils/pieceCount");
+const { reviewDish } = require("../utils/dishReview");
 
 // ─── FOOD CATEGORY DETECTION ──────────────────────────────────────────────────
 
@@ -511,6 +513,9 @@ const ANCHOR_DB = [
   { keys: ["scrambled egg"], unit: "serving", qty: 1, calories: 180, protein: 12, carbs: 2, fat: 14 },
   { keys: ["banana"], unit: "pc", qty: 1, calories: 105, protein: 1, carbs: 27, fat: 0 },
   { keys: ["pandesal"], unit: "pc", qty: 1, calories: 150, protein: 4, carbs: 28, fat: 2 },
+  { keys: ["empanada"], unit: "pc", qty: 1, calories: 270, protein: 8, carbs: 28, fat: 14 },
+  { keys: ["lumpia shanghai", "shanghai"], unit: "pc", qty: 1, calories: 60, protein: 2.5, carbs: 4, fat: 4 },
+  { keys: ["siomai"], unit: "pc", qty: 1, calories: 45, protein: 3, carbs: 3, fat: 2.5 },
   { keys: ["peach mango pie"], unit: "pc", qty: 1, calories: 240, protein: 2, carbs: 36, fat: 10 },
   { keys: ["cola", "softdrink", "soft drink", "soda"], unit: "serving", qty: 1, calories: 140, protein: 0, carbs: 36, fat: 0 },
   { keys: ["milk tea", "milktea", "boba"], unit: "serving", qty: 1, calories: 380, protein: 4, carbs: 72, fat: 8 },
@@ -573,7 +578,10 @@ function anchorExpected(foodName = "", serving = "") {
 
 // ─── MACRO VALIDATION & CORRECTION ───────────────────────────────────────────
 
-function validateAndCorrectMacros(parsed) {
+function validateAndCorrectMacros(input) {
+  // Make name/serving/totals agree with the model's explicit piece_count
+  // first, so every check below sees the corrected portion.
+  const parsed = reconcilePieceCount(input);
   let { calories, protein, carbs, fat, food_name = "" } = parsed;
   let saturated_fat = Math.max(0, Number(parsed.saturated_fat ?? 0));
   let trans_fat = Math.max(0, Number(parsed.trans_fat ?? 0));
@@ -609,8 +617,11 @@ function validateAndCorrectMacros(parsed) {
   }
 
   // Missing nutrients are uncertain, not evidence for inventing extra food.
-  let low_confidence = Boolean(parsed.low_confidence) ||
-    (protein === 0 && isMeatyFood(food_name));
+  // Every flag records WHY, so the result screen can tell the user what to check.
+  const reasons = new Set();
+  const flag = (reason) => reasons.add(reason);
+  if (parsed.low_confidence) flag("model_unsure");
+  if (protein === 0 && isMeatyFood(food_name)) flag("macros_incomplete");
 
   // Both calories and macros are estimates. A disagreement must not silently
   // replace portion calories with a larger, equally uncertain macro estimate.
@@ -618,17 +629,17 @@ function validateAndCorrectMacros(parsed) {
 
   if (!hasCalories) {
     calories = Math.round(macroCalories);
-    low_confidence = true;
+    flag("macros_incomplete");
   } else {
     const diff = Math.abs(macroCalories - calories) / Math.max(calories, 1);
     if (diff > 0.05) {
-      low_confidence = true;
+      flag("macro_mismatch");
     }
   }
 
   // Shared meals can legitimately exceed 2500 kcal; flag rather than truncate.
   if (calories > 2500) {
-    low_confidence = true;
+    flag("portion_unusual");
   }
 
   // Serving is free text from AI — cap length so it fits the DB column
@@ -640,7 +651,7 @@ function validateAndCorrectMacros(parsed) {
   // Small main-dish estimates need review, but may be legitimate small portions.
   const totalMacros = protein + carbs + fat;
   if (isMainDish(food_name) && calories < 120 && totalMacros < 30) {
-    low_confidence = true;
+    flag("portion_unusual");
   }
 
   // Weight plausibility: when the model supplies estimated_weight_g,
@@ -650,22 +661,24 @@ function validateAndCorrectMacros(parsed) {
   if (estW > 0 && Number.isFinite(estW)) {
     const perGram = calories / estW;
     if (perGram < 0.05 || perGram > 9.5) {
-      low_confidence = true;
+      flag("portion_unusual");
     }
   }
   // Compare references only for compatible units, without overriding calories.
   const expected = anchorExpected(food_name, serving);
   if (expected && expected.calories > 0) {
-    if (calories < expected.calories * 0.4) {
-      low_confidence = true;
-    }
-    if (calories > expected.calories * 2.5) {
-      low_confidence = true;
+    if (calories < expected.calories * 0.4 || calories > expected.calories * 2.5) {
+      flag("calories_unusual");
     }
   }
 
-  return {
-    ...parsed,
+  // The model's own flag is already captured as "model_unsure".
+  const rest = { ...parsed };
+  delete rest.low_confidence;
+  // Attach the Filipino/common dish reference, "Did you mean…" alternatives
+  // and the review reasons (sets low_confidence when any reason exists).
+  return reviewDish({
+    ...rest,
     serving,
     calories,
     protein,
@@ -675,8 +688,7 @@ function validateAndCorrectMacros(parsed) {
     trans_fat,
     polyunsaturated_fat,
     monounsaturated_fat,
-    ...(low_confidence ? { low_confidence: true } : {}),
-  };
+  }, [...reasons]);
 }
 
 // ─── JSON PARSER ──────────────────────────────────────────────────────────────

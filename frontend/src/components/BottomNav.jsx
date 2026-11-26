@@ -80,7 +80,7 @@ const BottomNav = ({
 
   const isActivePath = (path) => {
     if (location.pathname === path) return true;
-    // Highlight parent for nested views (e.g. /dashboard/logs/123) and
+    // Highlight parent for nested views (e.g. /community/messages) and
     // query views (pathname match covers ?planId=). Root only exact.
     if (path !== '/dashboard' && location.pathname.startsWith(path + '/')) return true;
     if (path === '/dashboard' && location.pathname === '/dashboard') return true;

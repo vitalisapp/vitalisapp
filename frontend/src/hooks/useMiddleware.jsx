@@ -43,7 +43,7 @@ export const PublicRoute = ({ children = undefined }) => {
   return children;
 };
 
-// Member-only wrapper: an admin typing any /dashboard/* URL straight into the
+// Member-only wrapper: an admin typing any member page URL straight into the
 // address bar is redirected to their own console. Members pass through to
 // ProtectedRoute (onboarding check still applies).
 export const MemberRoute = ({ children = undefined, requireOnboarding = true }) => {

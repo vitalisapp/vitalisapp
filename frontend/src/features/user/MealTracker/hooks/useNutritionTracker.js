@@ -67,6 +67,8 @@ async function apiSaveFoodLog(userId, meal, imageBlob) {
     for (const [k, v] of Object.entries({
       food_name: meal.food_name,
       serving: meal.serving || "",
+      // Visible weight from the scan (or the user's correction).
+      grams: meal.grams ?? "",
       meal_type: meal.meal_type || "",
       calories: meal.calories ?? 0,
       protein: meal.protein ?? 0,
@@ -152,6 +154,17 @@ function toScanResult(data) {
         sugar: it.sugar == null ? null : Math.max(0, Math.round((Number(it.sugar) || 0) * 10) / 10),
         sodium: it.sodium == null ? null : Math.max(0, Math.round(Number(it.sodium) || 0)),
         low_confidence: Boolean(it.low_confidence),
+        // Confirm/correct (Revision #2): visible weight, matched dish reference,
+        // "Did you mean…" alternatives and why the item is uncertain.
+        grams: Number(it.estimated_weight_g) > 0 ? Math.round(Number(it.estimated_weight_g)) : null,
+        piece_count: Number.isInteger(it.piece_count) ? it.piece_count : null,
+        dish_confidence: typeof it.dish_confidence === 'string' ? it.dish_confidence : null,
+        reference: it.reference && it.reference.per100 ? it.reference : null,
+        alternatives: Array.isArray(it.alternatives)
+          ? it.alternatives.filter((a) => a && typeof a.name === 'string' && a.name)
+          : [],
+        review_reasons: Array.isArray(it.review_reasons) ? it.review_reasons : [],
+        reviewed: false,
         // Allergen flag from analyze-pic: matches against your onboarding list
         allergy_matches: Array.isArray(it.allergy_matches)
           ? it.allergy_matches.filter((x) => typeof x === 'string' && x)
@@ -329,13 +342,28 @@ export function useNutritionTracker(USER_ID) {
           const carbs = clampG(next.carbs);
           const fat = clampG(next.fat);
           const kcalGiven = patch.calories !== undefined;
-          next.calories = Math.round(kcalGiven ? clampG(next.calories) : protein * 4 + carbs * 4 + fat * 9);
+          const macroGiven = ['protein', 'carbs', 'fat'].some((k) => patch[k] !== undefined);
+          // Name/serving/weight-only edits keep the current kcal; macro edits
+          // without a kcal re-derive it; an explicit kcal always wins.
+          next.calories = Math.round(kcalGiven ? clampG(next.calories) : macroGiven ? protein * 4 + carbs * 4 + fat * 9 : clampG(it.calories));
           next.protein = protein; next.carbs = carbs; next.fat = fat;
+          if (patch.food_name !== undefined) next.food_name = String(patch.food_name).trim().slice(0, 150) || it.food_name;
+          if (patch.serving !== undefined) next.serving = String(patch.serving).trim().slice(0, 100);
+          if (patch.grams !== undefined) next.grams = Number(patch.grams) > 0 ? Math.min(10000, Math.round(Number(patch.grams))) : null;
           next.corrected = true;
+          next.reviewed = true; // the user looked at it and saved their version
           delete next.portionBase;
           return next;
         }),
       };
+    });
+  }, []);
+
+  // "Looks right": the user checked a flagged item and keeps the AI values.
+  const confirmItem = useCallback((key) => {
+    setResult(prev => {
+      if (!prev) return prev;
+      return { ...prev, items: prev.items.map(it => (it.key === key ? { ...it, reviewed: true } : it)) };
     });
   }, []);
 
@@ -463,7 +491,7 @@ export function useNutritionTracker(USER_ID) {
     history, historyLoading, historyError, loadHistory,
     toast, summarySeed,
     lastLoggedMeal,
-    handleAnalyze, handleLog, handleLogSelected, toggleItem, scaleSelected, editItem, addCustomItem, clearResult, handleDeleteMeal, setToast,
+    handleAnalyze, handleLog, handleLogSelected, toggleItem, scaleSelected, editItem, confirmItem, addCustomItem, clearResult, handleDeleteMeal, setToast,
     estimateFoodDensity,
   };
 }

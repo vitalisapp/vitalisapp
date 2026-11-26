@@ -19,7 +19,7 @@ export const Brand = ({ href = "#top" }) => (
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <path d="M0 0H10.7L16 21.1L21.3 0H32L20.9 36H11.1L0 0Z" fill="#CDFB47" />
+      <path d="M0 0H10.7L16 21.1L21.3 0H32L20.9 36H11.1L0 0Z" fill="currentColor" />
     </svg>
     <span className="nn-brand-word">ITALIS</span>
   </a>

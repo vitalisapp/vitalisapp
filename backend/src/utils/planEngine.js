@@ -18,6 +18,13 @@ const PROTEIN_PER_KG = {
   PERFORMANCE: 1.8,
 };
 
+/** Highest protein need (g/kg) among the main goal and the extra goals. */
+function proteinPerKgFor(goalType, extras = []) {
+  const all = [goalType, ...(Array.isArray(extras) ? extras : [])];
+  const values = all.map((g) => PROTEIN_PER_KG[g]).filter((n) => Number.isFinite(n));
+  return values.length ? Math.max(...values) : 1.6;
+}
+
 function calcBmi(weightKg, heightCm) {
   const h = Number(heightCm) / 100;
   const w = Number(weightKg);
@@ -107,7 +114,9 @@ function generatePlan(input = {}) {
     carbsG = null,
     fatG = null;
   if (dailyKcal && weightKg) {
-    const perKg = recomposition ? 2.2 : PROTEIN_PER_KG[goalType] || 1.6;
+    // Revision #5: calories follow the MAIN goal; protein covers the most
+    // demanding of ALL selected goals (e.g. Maintain + Build Muscle → 2.2).
+    const perKg = recomposition ? 2.2 : proteinPerKgFor(goalType, extras);
     proteinG = Math.round(perKg * Number(weightKg));
     fatG = Math.round((dailyKcal * 0.25) / 9);
     carbsG = Math.max(0, Math.round((dailyKcal - proteinG * 4 - fatG * 9) / 4));
@@ -124,6 +133,7 @@ function generatePlan(input = {}) {
     carbsG,
     fatG,
     recomposition,
+    proteinPerKg: dailyKcal && weightKg ? (recomposition ? 2.2 : proteinPerKgFor(goalType, extras)) : null,
   };
 }
 
@@ -134,4 +144,6 @@ module.exports = {
   ageFromDob,
   calcBmr,
   generatePlan,
+  proteinPerKgFor,
+  PROTEIN_PER_KG,
 };

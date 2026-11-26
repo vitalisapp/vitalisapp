@@ -4,11 +4,28 @@
   "description": "Vitalis backend — Express + MySQL + Socket.io API",
   "main": "server.js",
   "scripts": {
-    "test": "node --test \"tests/**/*.test.js\"",
-    "test:unit": "node --test \"tests/unit/**/*.test.js\"",
-    "test:integration": "node --test \"tests/integration/**/*.test.js\"",
-    "test:watch": "node --test --watch \"tests/**/*.test.js\"",
-    "test:coverage": "node --test --experimental-test-coverage \"tests/**/*.test.js\"",
+    "test": "node scripts/run-tests.js",
+    "test:list": "node scripts/run-tests.js --list",
+    "test:jest": "node scripts/run-tests.js --jest-only",
+    "test:node": "node scripts/run-tests.js --node-only",
+    "test:api": "node scripts/run-tests.js --suite api",
+    "test:auth": "node scripts/run-tests.js --suite auth",
+    "test:authorization": "node scripts/run-tests.js --suite authorization",
+    "test:security": "node scripts/run-tests.js --suite security",
+    "test:db": "node scripts/run-tests.js --suite db",
+    "test:external": "node scripts/run-tests.js --suite external",
+    "test:modules": "node scripts/run-tests.js --suite modules",
+    "test:unit": "node scripts/run-tests.js --suite unit",
+    "test:integration": "node scripts/run-tests.js --suite integration",
+    "test:smoke": "node scripts/run-tests.js --suite smoke",
+    "test:coverage": "node scripts/run-tests.js --suite coverage",
+    "test:node:unit": "node scripts/run-tests.js --node-only --suite unit",
+    "test:node:integration": "node scripts/run-tests.js --node-only --suite integration",
+    "test:watch": "jest --watch",
+    "test:failed": "jest --runInBand --onlyFailures",
+    "test:debug": "node --inspect-brk ./node_modules/jest/bin/jest.js --runInBand",
+    "test:endpoints:generate": "node scripts/generate-endpoint-manifest.js",
+    "test:endpoints:check": "node scripts/generate-endpoint-manifest.js --check",
     "lint": "node scripts/check-syntax.js",
     "start": "node server.js",
     "start:prod": "node start-prod.js",
@@ -19,7 +36,8 @@
     "db:create": "node src/db/create-migration.js",
     "db:sql": "node scripts/build-database-sql.js",
     "seed:plans": "node src/db/migrate.js --seed-plans",
-    "foods:images": "node scripts/fillFoodImages.js"
+    "foods:images": "node scripts/fillFoodImages.js",
+    "eval:filipino": "node scripts/eval-filipino-scans.js"
   },
   "engines": {
     "node": ">=20"
@@ -54,6 +72,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.4",
+    "jest": "^30.5.2",
     "supertest": "^6.3.4"
   }
 }

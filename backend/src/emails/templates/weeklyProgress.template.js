@@ -28,8 +28,8 @@ function weeklyProgressEmail({ name, stats, interpretation } = {}) {
     { label: "Days with logs", value: `${s.logDays} of 7`, color: BRAND.accent2 },
     { label: "Weight change", value: weight, color: BRAND.warning },
   ];
-  const progressUrl = appUrl("/dashboard/logs");
-  const prefsUrl = appUrl("/dashboard/preferences");
+  const progressUrl = appUrl("/logs");
+  const prefsUrl = appUrl("/preferences");
   const note = interpretation ? escapeHtml(interpretation) : "";
   const body = `
     ${renderEyebrow("Your week in review")}

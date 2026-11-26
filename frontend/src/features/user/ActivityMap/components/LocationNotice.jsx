@@ -37,8 +37,8 @@ const LocationNotice = ({ status = undefined, error = undefined, onRetry = undef
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-bold text-white">{copy.title}</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-white/55">{copy.body}</p>
-            {error && <p className="mt-1.5 text-[10px] leading-relaxed text-white/30">{error}</p>}
+            <p className="mt-1 text-[11px] leading-relaxed text-white/70">{copy.body}</p>
+            {error && <p className="mt-1.5 text-[10px] leading-relaxed text-white/60">{error}</p>}
             <button
               type="button"
               onClick={onRetry}

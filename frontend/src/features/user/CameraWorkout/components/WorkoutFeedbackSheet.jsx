@@ -93,7 +93,7 @@ export default function WorkoutFeedbackSheet({ logId = undefined, onClose = unde
           maxLength={500}
           rows={3}
           placeholder="Optional — anything to remember about this session (injuries, tweaks, how it went)…"
-          className="mt-4 w-full rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 py-3 text-[length:var(--fs-13)] text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[var(--accent-border)] resize-none"
+          className="mt-4 w-full rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 py-3 text-[length:var(--fs-13)] text-[var(--text-primary)] placeholder:text-[var(--input-placeholder)] focus:outline-none focus:border-[var(--accent-border)] resize-none"
           aria-label="Session notes"
         />
 

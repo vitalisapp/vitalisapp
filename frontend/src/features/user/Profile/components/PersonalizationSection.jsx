@@ -21,7 +21,7 @@ const MAX_CUSTOM = 40;
 const FieldLabel = ({ children = undefined, hint = undefined }) => (
   <div className="flex items-baseline justify-between gap-2">
     <span className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">{children}</span>
-    {hint && <span className="text-[length:var(--fs-9)] text-[var(--text-disabled)] shrink-0">{hint}</span>}
+    {hint && <span className="text-[length:var(--fs-9)] text-[var(--text-muted)] shrink-0">{hint}</span>}
   </div>
 );
 
@@ -249,7 +249,7 @@ export default function PersonalizationSection({ userId = undefined, onboarding 
         <Button type="button" onClick={save} loading={saving} fullWidth className="h-12">
           {saving ? 'Saving…' : 'Save Personalization'}
         </Button>
-        <p className="text-[length:var(--fs-10)] text-[var(--text-disabled)] text-center mt-2.5 leading-relaxed">
+        <p className="text-[length:var(--fs-10)] text-[var(--text-muted)] text-center mt-2.5 leading-relaxed">
           Updating activity, sleep or exercise frequency recalculates your calorie targets and regenerates your workout plan.
         </p>
       </div>

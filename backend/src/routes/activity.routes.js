@@ -13,6 +13,7 @@ router.get('/stats/:userId', verifyUser, requireOwner('userId'), controller.stat
 router.get('/detail/:id', verifyUser, controller.detail);
 router.get('/:userId', verifyUser, requireOwner('userId'), controller.list);
 router.post('/:id/kudos', verifyUser, write, controller.toggleKudos);
+router.patch('/:id', verifyUser, write, controller.update);
 router.delete('/:id', verifyUser, write, controller.remove);
 
 module.exports = router;

@@ -1,13 +1,15 @@
 import { useEffect } from "react";
-import { useMap } from 'react-leaflet';
-import L from 'leaflet';
+import { useVitalisMap } from "../hooks/useVitalisMap.js";
+import { boundsOf } from "../utils/mapAdapter.js";
 
+// Frame the finished route. maxZoom stops a tiny / single-spot route from
+// zooming to street-level noise.
 const FitRoute = ({ path = undefined }) => {
-  const map = useMap();
+  const map = useVitalisMap();
   useEffect(() => {
-    if (path.length > 1) {
-      map.fitBounds(L.latLngBounds(path), { padding: [60, 60], animate: true, duration: 1.2 });
-    }
+    if (!map || !Array.isArray(path) || path.length < 2) return;
+    const bounds = boundsOf(path);
+    if (bounds) map.fitBounds(bounds, { padding: 60, duration: 1200, maxZoom: 17 });
   }, [path, map]);
   return null;
 };

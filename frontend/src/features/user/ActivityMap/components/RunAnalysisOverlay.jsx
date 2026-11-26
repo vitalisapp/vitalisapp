@@ -2,7 +2,7 @@ import Modal from '../../../../components/ui/Modal.jsx';
 
 // Shared Modal: Escape-to-close, focus trap, scroll lock and the app's modal
 // z-index (was a hand-rolled z-[9999] layer that buried toasts underneath).
-// The Leaflet map sits in its own stacking context (.leaflet-container
+// The MapLibre map sits in its own stacking context (.vitalis-map
 // z-index: 0), so its panes never paint over the modal.
 const RunAnalysisOverlay = ({ analysis = undefined, onClose = undefined }) => {
   if (!analysis) return null;

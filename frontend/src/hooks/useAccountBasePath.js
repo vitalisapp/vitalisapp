@@ -7,5 +7,5 @@ import { useLocation } from 'react-router-dom';
  */
 export function useAccountBasePath() {
   const { pathname } = useLocation();
-  return pathname.startsWith('/admin') ? '/admin' : '/dashboard';
+  return pathname === '/admin' || pathname.startsWith('/admin/') ? '/admin' : '';
 }

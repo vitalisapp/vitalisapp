@@ -15,9 +15,9 @@ import './app-ui.css';
 const QUICK_LINKS = [
   ...NAV_ITEMS.map(({ label, path, icon }) => ({ label, path, icon })),
   ...SIDEBAR_BOTTOM_NAV.map(({ label, path, icon }) => ({ label, path, icon })),
-  { label: 'Preferences', path: '/dashboard/preferences', icon: 'tune' },
-  { label: 'Notifications', path: '/dashboard/notifications', icon: 'notifications' },
-  { label: 'Help & Support', path: '/dashboard/help-support', icon: 'help' },
+  { label: 'Preferences', path: '/preferences', icon: 'tune' },
+  { label: 'Notifications', path: '/notifications', icon: 'notifications' },
+  { label: 'Help & Support', path: '/help-support', icon: 'help' },
 ];
 
 const SHORTCUT_LABEL = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform)
@@ -154,17 +154,17 @@ export function AppMobileTitle({ title = undefined }) {
 }
 
 const TITLES = [
-  ['/dashboard/meal-tracker', 'Nutrition'],
-  ['/dashboard/workouts', 'Training'],
-  ['/dashboard/activity-map', 'Activity'],
-  ['/dashboard/logs', 'Progress'],
-  ['/dashboard/plans', 'Plans'],
-  ['/dashboard/community/messages', 'Messages'],
-  ['/dashboard/community', 'Community'],
-  ['/dashboard/profile', 'Profile'],
-  ['/dashboard/preferences', 'Preferences'],
-  ['/dashboard/notifications', 'Notifications'],
-  ['/dashboard/help-support', 'Help & Support'],
+  ['/meal-tracker', 'Nutrition'],
+  ['/workouts', 'Training'],
+  ['/activity-map', 'Activity'],
+  ['/logs', 'Progress'],
+  ['/plans', 'Plans'],
+  ['/community/messages', 'Messages'],
+  ['/community', 'Community'],
+  ['/profile', 'Profile'],
+  ['/preferences', 'Preferences'],
+  ['/notifications', 'Notifications'],
+  ['/help-support', 'Help & Support'],
   ['/dashboard', 'Dashboard'],
 ];
 

@@ -701,8 +701,8 @@
 .adm-kpi.is-featured .adm-kpi__hint {
   color: var(--text-inverse);
 }
-.adm-kpi.is-featured .adm-kpi__label { opacity: 0.72; }
-.adm-kpi.is-featured .adm-kpi__hint { opacity: 0.82; }
+.adm-kpi.is-featured .adm-kpi__label { opacity: 0.9; }
+.adm-kpi.is-featured .adm-kpi__hint { opacity: 0.92; }
 .adm-kpi.is-featured .adm-kpi__icon {
   background: color-mix(in srgb, var(--text-inverse) 14%, transparent);
   color: var(--text-inverse);
@@ -1159,7 +1159,7 @@
   transition: background-color 130ms ease, color 130ms ease, box-shadow 130ms ease;
 }
 .adm-cal__day:hover { background: var(--bg-hover); color: var(--text-primary); }
-.adm-cal__day.is-out { color: var(--text-disabled); font-weight: 500; }
+.adm-cal__day.is-out { color: var(--text-muted); font-weight: 500; }
 .adm-cal__day.is-today {
   color: var(--accent);
   font-weight: 900;
@@ -1406,7 +1406,7 @@
   transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
 }
 .adm-search .adm-input { padding-left: 39px; }
-.adm-input::placeholder { color: var(--text-disabled); }
+.adm-input::placeholder { color: var(--input-placeholder); }
 .adm-input:focus,
 .adm-select:focus {
   border-color: var(--accent);

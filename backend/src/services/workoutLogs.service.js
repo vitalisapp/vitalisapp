@@ -193,7 +193,7 @@ async function resumeWorkout(userId, logId) {
  * first). When `sets` is provided (even an empty array), existing set rows
  * are replaced. duration_seconds = wall time minus pause time.
  */
-async function endWorkout(userId, logId, status, reps, sets) {
+async function endWorkout(userId, logId, status, reps, sets, formScore = null) {
   const validated = validateSets(sets);
 
   const [[existing]] = await db.execute(
@@ -240,6 +240,10 @@ async function endWorkout(userId, logId, status, reps, sets) {
     );
     await conn.query('COMMIT');
     if (!updated) return { outcome: 'not_found' };
+    if (updated.status === 'completed' && formScore !== null) {
+      await saveFormScore(userId, logId, formScore);
+      updated.form_score = formScore;
+    }
     if (updated.status === 'completed') {
       tasks.notifyTask(userId, { category: 'TRAINING', message: tasks.workoutMessage(updated) });
     }
@@ -249,6 +253,16 @@ async function endWorkout(userId, logId, status, reps, sets) {
     throw err;
   } finally {
     try { conn.release(); } catch { /* noop */ }
+  }
+}
+
+// Revision #4: technique signal for progression. Best effort — a database
+// without migration 061 (no form_score column) must never fail a workout.
+async function saveFormScore(userId, logId, formScore) {
+  try {
+    await db.execute('UPDATE workout_logs SET form_score = ? WHERE id = ? AND user_id = ?', [formScore, logId, userId]);
+  } catch (err) {
+    if (err?.errno !== 1054) console.warn('[workoutLogs] form_score not saved:', err?.message);
   }
 }
 

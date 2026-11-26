@@ -33,6 +33,9 @@ const EXPECTED = [
   '056_plan_images.sql',
   '058_browser_device_identity.sql',
   '059_workout_calories.sql',
+  '060_password_weak_flag.sql',
+  '061_progression.sql',
+  '062_activity_calories.sql',
 ];
 
 describe('migrations per-table baseline', () => {

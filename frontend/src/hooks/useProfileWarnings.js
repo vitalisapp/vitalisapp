@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { apiGet } from '../lib/apiClient.js';
+import { collectProfileIssues } from '../lib/profileIssues.js';
+
+export { collectProfileIssues };
 
 // 30s in-memory cache — the header remounts on every dashboard/* navigation,
 // so a short cache stops this from refiring a GET on every nav.
@@ -15,18 +18,13 @@ const setCached = (uid, data) => {
 };
 
 /**
- * "Profile setup incomplete" warnings for the header/avatar.
- *
- * Rule (broadest variant): unfinished onboarding OR missing body metrics
- * (height/weight) OR no active fitness goal.
- *
- * Onboarding + goal live on the auth user, so those reasons appear
- * immediately. Metrics/goal come from GET /api/profile/:id — read-only,
- * best-effort: the header never blocks or errors on this call.
+ * Profile attention warnings for the header avatar, the account menu and the
+ * Profile page. The rules live in lib/profileIssues.js so both the hook and
+ * the page can use the exact same list.
  *
  * @param {number|string|null} authedUserId only pass a proven session user id
- * @param {{ onboardingCompleted?: boolean, fitness_goal?: unknown, goalType?: unknown, goal?: unknown } | null} user
- * @returns {{ hasWarning: boolean, reasons: string[] }}
+ * @param {object|null} user auth-context user
+ * @returns {{ hasWarning: boolean, issues: Array<{section: string, message: string}>, reasons: string[] }}
  */
 export function useProfileWarnings(authedUserId, user) {
   const [profile, setProfile] = useState(() => (authedUserId ? getCached(authedUserId) : null));
@@ -51,16 +49,12 @@ export function useProfileWarnings(authedUserId, user) {
     return () => { alive = false; };
   }, [authedUserId]);
 
-  const hasHeight = Boolean(profile?.height_cm || profile?.onboarding?.heightCm);
-  const hasWeight = Boolean(profile?.weight_kg || profile?.onboarding?.weightKg);
-  const hasGoal = Boolean(
-    profile?.onboarding?.goalType || user?.fitness_goal || user?.goalType || user?.goal,
-  );
+  const issues = collectProfileIssues(user, profile);
 
-  const reasons = [];
-  if (user?.onboardingCompleted === false) reasons.push('finish onboarding');
-  if (profile && (!hasHeight || !hasWeight)) reasons.push('add your body metrics');
-  if (profile && !hasGoal) reasons.push('set a fitness goal');
-
-  return { hasWarning: reasons.length > 0, reasons };
+  return {
+    hasWarning: issues.length > 0,
+    issues,
+    // Kept for callers that only want readable phrases.
+    reasons: issues.map((issue) => issue.message.toLowerCase()),
+  };
 }

@@ -1,18 +1,17 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MapContainer, TileLayer, Polyline, Marker } from 'react-leaflet';
-import L from 'leaflet';
+import { useQueryClient } from '@tanstack/react-query';
 import { BottomNav } from '../../../../components/index.js';
 import AppShell from '../../../../components/AppShell.jsx';
 import Icon from '../../../../components/Icon.jsx';
 import { useAuth } from '../../../../hooks/useAuth.jsx';
-import 'leaflet/dist/leaflet.css';
 import '../activity-map.css';
 import {
   RecenterMap, FitRoute, GpsBadge, HistoryTab, RouteReplay,
   RunAnalysisOverlay, RunControls, RunSummaryOverlay, StatsPanel, StatsTab,
-  MapResizer, RecenterButton, LocationNotice,
+  VitalisMap, RouteLayer, AccuracyCircle, MapMarker, MapZoomControls, RecenterButton, LocationNotice,
 } from '../components/index.js';
+import { LIVE_ROUTE_LAYERS } from '../utils/mapAdapter.js';
 
 import { useToast }       from './../hooks/useToast.js';
 import { useGeolocation, DEFAULT_MAP_CENTER } from "./../hooks/useGeoLocation.js";
@@ -22,25 +21,14 @@ import { useActivityApi } from './../hooks/useActivityApi.js';
 import { useWindowWidth } from './../hooks/useWindowWidth.js';
 import { useTheme } from '../../../../hooks/useTheme.js';
 import { apiPost } from '../../../../lib/apiClient.js';
+import { qk } from '../../../../lib/queries.js';
 import { safeGetJSON, safeSetJSON, safeRemove } from '../../../../lib/storage.js';
+import { localTodayIso } from '../../Dashboard/lib/dashboardFormat.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-// Esri World_*_Gray_Base only serves native tiles up to zoom 16. Beyond that
-// Leaflet upscales (maxNativeZoom) instead of requesting 404s → no grey tiles.
-const TILE_MAX_NATIVE_ZOOM = 16;
-const TILE_MAX_ZOOM        = 19;
-// Keyless providers: Esri Light Gray Canvas for light (the pale twin of the
-// dark canvas — minimal gray streets), Esri Dark Gray Canvas
-// for dark.
-const TILE_URL_DARK     = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
-const TILE_URL_LIGHT    = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
-const TILE_ATTRIBUTION_DARK  = 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ';
-const TILE_ATTRIBUTION_LIGHT = 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ';
-// Vitalis identity for the activity section: green route + blue location dot.
-// Route green (#43C85F) reads on both light and dark map tiles.
-const ROUTE_GREEN = '#43C85F';
-const STRAVA_BLUE = '#007AFF';
+// Map provider (OpenFreeMap styles), route styling and the [lat,lng] →
+// [lng,lat] conversion live in utils/mapAdapter.js; markers in MapMarker.jsx.
 const OFFLINE_QUEUE_KEY = 'vitalis_offline_queue';
 
 const ACTIVITY_TABS = [
@@ -63,19 +51,6 @@ const clearOfflineQueue = () => safeRemove(OFFLINE_QUEUE_KEY);
 
 // ─── Stable helpers (defined outside component to avoid re-creation) ──────────
 
-const createUserIcon = () =>
-  L.divIcon({
-    className: '',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-    html: `
-      <div style="width:20px;height:20px;border-radius:50%;background:${STRAVA_BLUE};border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,0.4);position:relative;">
-        <div style="position:absolute;inset:-6px;border-radius:50%;background:rgba(0,122,255,0.2);animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>
-      </div>
-      <style>@keyframes ping{0%{transform:scale(1);opacity:1}75%{transform:scale(2);opacity:0}100%{transform:scale(2.5);opacity:0}}</style>
-    `,
-  });
-
 const formatTime = (seconds) => {
   const s  = parseInt(seconds) || 0;
   const h  = Math.floor(s / 3600);
@@ -88,6 +63,7 @@ const formatTime = (seconds) => {
 
 const ActivityMap = () => {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const USER_ID  = user?.id ?? null;
 
   const [activeTab,       setActiveTabState]   = useState(() => {
@@ -115,16 +91,16 @@ const ActivityMap = () => {
   const { showToast } = useToast();
   const { isDark } = useTheme();
 
-  // Theme-aware map: Esri street map in light mode, Esri dark canvas in dark.
-  // `key` on TileLayer forces Leaflet to swap the tile set on theme toggle.
-  const tileUrl = isDark ? TILE_URL_DARK : TILE_URL_LIGHT;
-  const tileAttribution = isDark ? TILE_ATTRIBUTION_DARK : TILE_ATTRIBUTION_LIGHT;
-  const routeColor = ROUTE_GREEN;
+  // Theme-aware map: VitalisMap swaps the OpenFreeMap style in place on
+  // toggle (positron ↔ dark), keeping camera, route and run state.
 
   const {
     userLocation, startCoords, locationStatus, locationAccuracy, locationError,
-    mapCenter, path, setPath, retry: retryLocation,
-  } = useGeolocation(isRecordingState);
+    mapCenter, path, setPath, routeBreaks, retry: retryLocation,
+  } = useGeolocation(isRecordingState, {
+    // Live dot only matters on the Run tab; recording keeps GPS on regardless.
+    watchWhenIdle: activeTab === 'run',
+  });
 
   const { metrics, splits, resetMetrics } =
     useRunTimer(isRecordingState, locationStatus, path);
@@ -145,9 +121,6 @@ const ActivityMap = () => {
   // Auto-follow the camera during a run; a manual pan turns it off.
   const [follow, setFollow] = useState(true);
   const handleMapInteract = useCallback(() => setFollow(false), []);
-
-  // User location marker icon is stable — build it once.
-  const userIcon = useMemo(() => createUserIcon(), []);
 
   // GPS-gated start: recording without location would fabricate distance,
   // so we refuse to start and explain why instead of simulating movement.
@@ -219,12 +192,13 @@ const ActivityMap = () => {
       clearOfflineQueue();
       setPendingCount(0);
       const synced = queue.length;
+      qc.invalidateQueries({ queryKey: qk.dashboard(USER_ID) });
       showToast(`✓ ${synced} offline run${synced > 1 ? 's' : ''} synced!`);
     } else {
       safeSetJSON(OFFLINE_QUEUE_KEY, remaining);
       setPendingCount(remaining.length);
     }
-  }, [USER_ID, showToast]);
+  }, [USER_ID, showToast, qc]);
 
   // ─── Online / offline listeners ────────────────────────────────────────────
 
@@ -259,6 +233,7 @@ const ActivityMap = () => {
       calories: m.calories,
       route,
       is_gps: isGps,
+      local_date: localTodayIso(),
     };
 
     if (!isOnline) {
@@ -372,24 +347,16 @@ const ActivityMap = () => {
           {/* ── Replay / summary mode ── */}
           {rc_runFinished && finishedRun && (
             <div className="relative h-full w-full">
-              <MapContainer
+              <VitalisMap
                 center={finishedRun.path[0] ?? DEFAULT_MAP_CENTER}
                 zoom={15}
-                zoomControl={false}
-                className="h-full w-full z-0"
+                isDark={isDark}
+                className="h-full w-full"
                 style={{ background: 'var(--bg-secondary)' }}
               >
-                <TileLayer
-                  key={isDark ? 'dark' : 'light'}
-                  url={tileUrl}
-                  attribution={tileAttribution}
-                  maxNativeZoom={TILE_MAX_NATIVE_ZOOM}
-                  maxZoom={TILE_MAX_ZOOM}
-                />
-                <MapResizer />
                 <FitRoute path={finishedRun.path} />
-                <RouteReplay fullPath={finishedRun.path} />
-              </MapContainer>
+                <RouteReplay fullPath={finishedRun.path} breaks={routeBreaks} />
+              </VitalisMap>
 
               <RunSummaryOverlay
                 metrics={finishedRun.metrics}
@@ -407,40 +374,19 @@ const ActivityMap = () => {
           {!rc_runFinished && activeTab === 'run' && (
             <div className="am-workspace">
               <div className="am-map-card">
-                <MapContainer
-                  center={/** @type {any} */ (mapCenter)}
+                <VitalisMap
+                  center={mapCenter}
                   zoom={userLocation ? 16 : 3}
-                  zoomControl={false}
-                  className="z-0"
+                  isDark={isDark}
                   style={{ background: 'var(--bg-secondary)' }}
                 >
-                  <TileLayer
-                    key={isDark ? 'dark' : 'light'}
-                    url={tileUrl}
-                    attribution={tileAttribution}
-                    maxNativeZoom={TILE_MAX_NATIVE_ZOOM}
-                    maxZoom={TILE_MAX_ZOOM}
-                  />
-                  <MapResizer />
-                  {path.length > 1 && (
-                    <>
-                      {/* Soft glow beneath the line makes the route feel alive. */}
-                      <Polyline
-                        positions={path}
-                        pathOptions={{ color: routeColor, weight: 16, opacity: 0.16, lineCap: 'round' }}
-                      />
-                      {/* White casing under the route for pop */}
-                      <Polyline
-                        positions={path}
-                        pathOptions={{ color: '#ffffff', weight: 9, opacity: 0.9, lineCap: 'round' }}
-                      />
-                      <Polyline
-                        positions={path}
-                        pathOptions={{ color: routeColor, weight: 5, opacity: 1, lineCap: 'round' }}
-                      />
-                    </>
-                  )}
-                  {userLocation && <Marker position={userLocation} icon={userIcon} />}
+                  {/* Glow → white casing → green core, one GeoJSON source.
+                      Fewer than 2 fixes renders nothing (as before). */}
+                  {/* Under the route: how certain the live fix is. Always
+                      mounted (empty until a fix) so it stays below the route. */}
+                  <AccuracyCircle position={userLocation} accuracy={locationAccuracy} />
+                  <RouteLayer id="live-route" path={path} layers={LIVE_ROUTE_LAYERS} breaks={routeBreaks} />
+                  {userLocation && <MapMarker position={userLocation} variant="user" />}
                   <RecenterMap
                     lastPoint={userLocation}
                     isRecording={rc_isRecording}
@@ -451,7 +397,8 @@ const ActivityMap = () => {
                     userLocation={userLocation}
                     onRecenter={() => setFollow(true)}
                   />
-                </MapContainer>
+                  <MapZoomControls />
+                </VitalisMap>
 
                 <div className="am-map-scrim am-map-scrim--top" aria-hidden="true" />
                 <div className="am-map-scrim am-map-scrim--bottom" aria-hidden="true" />

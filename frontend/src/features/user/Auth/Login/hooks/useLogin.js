@@ -57,6 +57,8 @@ export const useLogin = () => {
     status:              data.status              ?? data.user?.status ?? 'active',
     acceptedTermsAt:     data.acceptedTermsAt     ?? data.user?.acceptedTermsAt ?? null,
     acceptedTermsVersion: data.acceptedTermsVersion ?? data.user?.acceptedTermsVersion ?? null,
+    // Old weak passwords still sign in; Profile → Security shows a warning.
+    passwordNeedsAttention: Boolean(data.passwordNeedsAttention ?? data.user?.passwordNeedsAttention),
   });
 
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

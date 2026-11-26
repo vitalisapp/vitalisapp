@@ -35,6 +35,7 @@ import StreakJourney from '../components/StreakJourney.jsx';
 import CoachCard from '../components/CoachCard.jsx';
 import { clampPct, minutesFromSeconds, workoutLabel, isToday } from '../lib/dashboardFormat.js';
 import '../dashboard.css';
+import UnlockCelebration from '../../Progression/components/UnlockCelebration.jsx';
 
 // Live date/time line — kept from the previous dashboard (1s tick).
 const LiveClock = () => {
@@ -373,7 +374,7 @@ const Dashboard = () => {
         ? 'Camera session running'
         : `${minutesFromSeconds(latestSession.duration_seconds)} min${Number(latestSession.rep_count) > 0 ? ` · ${latestSession.rep_count} reps` : ''}`,
       time: new Date(latestSession.start_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-      onClick: () => navigate('/dashboard/workouts'),
+      onClick: () => navigate('/workouts'),
     }
     : !isPastView && selectedPlan
       ? {
@@ -381,20 +382,20 @@ const Dashboard = () => {
         title: selectedPlan.title || selectedPlan.name || 'Training plan',
         sub: [selectedPlan.tag, selectedPlan.intensity].filter(Boolean).join(' · ') || 'Enrolled plan',
         time: '',
-        onClick: () => navigate('/dashboard/plans'),
+        onClick: () => navigate('/plans'),
       }
       : {
         kicker: isPastView ? 'Past day' : 'Get started',
         title: isPastView ? 'No workout logged' : 'No workout yet today',
         sub: isPastView ? 'Nothing was recorded on this day' : 'Start a session or log your activity',
         time: '',
-        onClick: () => navigate('/dashboard/workouts'),
+        onClick: () => navigate('/workouts'),
       };
 
   const handleQuickAction = (key) => {
-    if (key === 'meal') navigate('/dashboard/meal-tracker?manual=1');
-    else if (key === 'workout') navigate('/dashboard/workouts');
-    else if (key === 'activity') navigate('/dashboard/activity-map');
+    if (key === 'meal') navigate('/meal-tracker?manual=1');
+    else if (key === 'workout') navigate('/workouts');
+    else if (key === 'activity') navigate('/activity-map');
   };
 
   if (loading) return null;
@@ -506,15 +507,15 @@ const Dashboard = () => {
               workoutMinToday={workoutMinToday}
               workoutGoalMin={workoutGoalMin}
               onLogActivity={() => setLogOpen(true)}
-              onStartWorkout={() => navigate('/dashboard/workouts')}
+              onStartWorkout={() => navigate('/workouts')}
               eyebrow={isPastView ? 'Reviewing' : 'Today'}
               readOnly={isPastView}
             />
 
             {!isPastView && (
               <CoachCard
-                onOpenPlans={() => navigate('/dashboard/plans?tab=my-plans')}
-                onStartWorkout={(planId, day, fit) => navigate(`/dashboard/plans?planId=${planId}&startDay=${day}${fit ? `&fit=${fit}` : ''}`)}
+                onOpenPlans={() => navigate('/plans?tab=my-plans')}
+                onStartWorkout={(planId, day, fit) => navigate(`/plans?planId=${planId}&startDay=${day}${fit ? `&fit=${fit}` : ''}`)}
               />
             )}
 
@@ -526,9 +527,9 @@ const Dashboard = () => {
               readOnly={isPastView}
               workoutCount={isPastView ? 0 : todayWorkouts.length}
               mealCount={isPastView ? 0 : todayMealCount}
-              onStartWorkout={() => navigate('/dashboard/workouts')}
-              onLogMeal={() => navigate('/dashboard/meal-tracker?manual=1')}
-              onViewMeals={() => navigate('/dashboard/meal-tracker')}
+              onStartWorkout={() => navigate('/workouts')}
+              onLogMeal={() => navigate('/meal-tracker?manual=1')}
+              onViewMeals={() => navigate('/meal-tracker')}
               onRetry={refreshAll}
             />
 
@@ -554,8 +555,8 @@ const Dashboard = () => {
                 plan={selectedPlan}
                 plansLoading={todayPlansLoading}
                 onLogActivity={() => setLogOpen(true)}
-                onOpenPlan={() => navigate('/dashboard/plans')}
-                onOpenPlans={() => navigate('/dashboard/plans')}
+                onOpenPlan={() => navigate('/plans')}
+                onOpenPlans={() => navigate('/plans')}
                 title={isPastView ? 'Daily Targets' : "Today's Plan"}
                 sub={isPastView ? 'Targets applied to this day' : 'Your targets for today'}
                 readOnly={isPastView}
@@ -611,7 +612,7 @@ const Dashboard = () => {
                 <MacroFocusCard
                   macroPct={macroPct}
                   rows={macroRows}
-                  onAddFood={() => navigate('/dashboard/meal-tracker?manual=1')}
+                  onAddFood={() => navigate('/meal-tracker?manual=1')}
                   onSetGoal={() => navigate('/onboarding?edit=1')}
                   readOnly={isPastView}
                 />
@@ -623,9 +624,9 @@ const Dashboard = () => {
                 <WorkoutProgressCard
                   pct={workoutGoalMin ? (workoutMinToday / workoutGoalMin) * 100 : 0}
                   rows={workoutProgressRows}
-                  onOpen={() => navigate('/dashboard/workouts')}
+                  onOpen={() => navigate('/workouts')}
                 />
-                <MotivationCard onOpenWorkouts={() => navigate('/dashboard/workouts')} />
+                <MotivationCard onOpenWorkouts={() => navigate('/workouts')} />
                 <ThisWeekCard
                   rows={thisWeekRows}
                   goal={goal}
@@ -648,7 +649,7 @@ const Dashboard = () => {
                   : (todayWorkouts.length > 0
                     ? `${todayWorkouts.length} logged today`
                     : 'No sessions logged today yet')}
-                onOpenWorkouts={() => navigate('/dashboard/workouts')}
+                onOpenWorkouts={() => navigate('/workouts')}
               />
               <AiCoachCard
                 aiRec={aiRec}
@@ -675,6 +676,8 @@ const Dashboard = () => {
           onUpdated={() => { refreshGoal(); refreshDashboard(); }}
         />
       )}
+      {/* Revision #4 — one-time "you unlocked the next level" message */}
+      <UnlockCelebration suppressed={goalDetailOpen} />
     </div>
   );
 };

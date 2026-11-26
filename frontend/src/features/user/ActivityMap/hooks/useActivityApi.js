@@ -1,5 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
-import { apiGet, apiPost, apiDelete } from '../../../../lib/apiClient.js';
+import { useQueryClient } from '@tanstack/react-query';
+import { apiGet, apiPost, apiPatch, apiDelete } from '../../../../lib/apiClient.js';
+import { qk } from '../../../../lib/queries.js';
+import { localTodayIso } from '../../Dashboard/lib/dashboardFormat.js';
 
 const formatTime = (seconds) => {
   const s = parseInt(seconds) || 0;
@@ -10,6 +13,7 @@ const formatTime = (seconds) => {
 };
 
 export const useActivityApi = ({ userId, activeTab, showToast, setRunAnalysis, onSaveSuccess }) => {
+  const qc = useQueryClient();
   const [isSaving, setIsSaving]             = useState(false);
   const [history, setHistory]               = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -60,6 +64,7 @@ export const useActivityApi = ({ userId, activeTab, showToast, setRunAnalysis, o
         calories: m.calories,
         route: finishedPathRef.current,
         is_gps: isGps,
+        local_date: localTodayIso(),
       });
       if (!data.success) throw new Error(data.error || 'Save failed');
 
@@ -80,6 +85,9 @@ export const useActivityApi = ({ userId, activeTab, showToast, setRunAnalysis, o
       showToast('✓ Run saved!');
       fetchHistory(true);
       fetchStats(true);
+      // Daily burn is derived on read; drop the cached dashboard snapshot so
+      // the next visit re-fetches today's totals instead of showing stale 0.
+      qc.invalidateQueries({ queryKey: qk.dashboard(userId) });
 
       // ✅ Reset the map/run view after successful save
       onSaveSuccess?.();
@@ -98,9 +106,22 @@ export const useActivityApi = ({ userId, activeTab, showToast, setRunAnalysis, o
       showToast('Activity deleted');
       fetchHistory();
       fetchStats(true);
+      qc.invalidateQueries({ queryKey: qk.dashboard(userId) });
     } catch (err) {
       showToast(`⚠ Delete failed — ${err.message}`, 'error');
     }
+  };
+
+  // Edit path for the PATCH endpoint. Totals are derived on read, so the
+  // dashboard cache is dropped here just like on save/delete.
+  const handleUpdateActivity = async (id, patch) => {
+    const data = await apiPatch(`/api/activity/${id}`, patch);
+    if (!data.success) throw new Error(data.error || 'Update failed');
+    fetchHistory(true);
+    fetchStats(true);
+    qc.invalidateQueries({ queryKey: qk.dashboard(userId) });
+    showToast('Activity updated');
+    return data.activity;
   };
 
   // Persisted kudos: optimistic flip, reconcile with server, revert on error.
@@ -145,6 +166,7 @@ export const useActivityApi = ({ userId, activeTab, showToast, setRunAnalysis, o
     fetchHistory,
     fetchStats,
     handleSaveActivity,
+    handleUpdateActivity,
     handleDelete,
     toggleKudos,
   };

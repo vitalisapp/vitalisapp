@@ -69,6 +69,37 @@ function estimateWorkoutKcal({ workoutType, durationSeconds, weightKg, difficult
   return Math.min(Math.max(Math.round(kcal), 0), MAX_SESSION_KCAL);
 }
 
+// GPS / manual activities (walk · run · ride) — MET from average speed
+// (Compendium of Physical Activities). Speed picks the activity: under
+// 6.5 km/h is walking, up to 25 km/h running, faster is cycling.
+const WALK_RUN_METS = [ // [max km/h, MET]
+  [3.2, 2.8], [4.0, 3.0], [4.8, 3.5], [5.6, 4.3], [6.5, 5.0],
+  [8.0, 8.3], [8.4, 9.0], [9.7, 9.8], [10.8, 10.5], [11.3, 11.0],
+  [12.1, 11.5], [12.9, 11.8], [13.8, 12.3], [14.5, 12.8], [16.1, 14.5], [25, 16.0],
+];
+const CYCLE_MET = 8.0; // ~25+ km/h average on GPS = riding
+const STATIONARY_MET = 4.5; // time but no distance (manual entry) — moderate
+
+function metForSpeed(kmh) {
+  const v = Number(kmh);
+  if (!Number.isFinite(v) || v <= 0) return STATIONARY_MET;
+  for (const [max, met] of WALK_RUN_METS) if (v <= max) return met;
+  return CYCLE_MET;
+}
+
+/**
+ * Net kcal for one activity from its duration (s) and distance (km).
+ * Returns an integer ≥ 0; 0 when there is no duration to go on.
+ */
+function estimateActivityKcal({ durationSeconds, distanceKm, weightKg } = {}) {
+  const secs = Math.min(Math.max(Number(durationSeconds) || 0, 0), MAX_SESSION_SECONDS);
+  if (secs <= 0) return 0;
+  const km = Math.max(Number(distanceKm) || 0, 0);
+  const met = metForSpeed(km > 0 ? km / (secs / 3600) : 0);
+  const kcal = (met - 1) * sanitizeWeight(weightKg) * (secs / 3600);
+  return Math.min(Math.max(Math.round(kcal), 0), MAX_SESSION_KCAL);
+}
+
 // How much exercise burn is added back to the day's calorie budget, by goal.
 // Wearables and MET tables overestimate burn by roughly 20–40%, so eating it
 // all back quietly erases a weight-loss deficit. Gainers need the full credit
@@ -93,6 +124,9 @@ function creditedKcal(burnedKcal, goalType) {
 }
 
 module.exports = {
+  estimateActivityKcal,
+  metForSpeed,
+  MAX_SESSION_KCAL,
   EAT_BACK_FACTOR,
   eatBackFactor,
   creditedKcal,

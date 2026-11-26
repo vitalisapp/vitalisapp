@@ -21,6 +21,7 @@ router.post('/progress/complete', verifyUser, write, validate(controller.progres
 router.get('/goal-status/:userId', verifyUser, requireOwner('userId'), controller.getGoalStatusUserId);
 router.get('/progress/:userId/:planId', verifyUser, requireOwner('userId'), controller.getprogressUserIdPlanId);
 router.get('/content/:planId', verifyUser, controller.getcontentPlanId);
+router.get('/:planId/days/:dayNumber/routine', verifyUser, controller.getDayRoutine);
 router.get('/:userId', verifyUser, requireOwner('userId'), controller.getUserId);
 
 module.exports=router;

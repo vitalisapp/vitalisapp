@@ -43,7 +43,7 @@ export const SERVICES = [
     img: "/landing/service-nutrition.jpg",
     alt: "Athlete holding a green apple after a workout",
     tone: "lime",
-    to: "/dashboard/meal-tracker",
+    to: "/meal-tracker",
   },
   {
     title: "Activity tracking",
@@ -51,7 +51,7 @@ export const SERVICES = [
     img: "/landing/service-hydration.jpg",
     alt: "Athlete drinking water during a training session",
     tone: "grey",
-    to: "/dashboard/activity-map",
+    to: "/activity-map",
   },
   {
     title: "Camera workouts",
@@ -59,7 +59,7 @@ export const SERVICES = [
     img: "/landing/service-training.jpg",
     alt: "Athlete training with a dumbbell in a bright studio",
     tone: "white",
-    to: "/dashboard/workouts",
+    to: "/workouts",
   },
 ];
 
@@ -88,7 +88,7 @@ export const PLANS = [
     desc: "Export your complete log history whenever you want. Nothing is locked in.",
     label: "Included",
     price: "Always",
-    to: "/dashboard/logs",
+    to: "/logs",
   },
 ];
 
@@ -105,26 +105,26 @@ export const FOOTER_LINKS = [
   {
     title: "Track",
     links: [
-      { label: "Nutrition", to: "/dashboard/meal-tracker" },
-      { label: "Workouts", to: "/dashboard/workouts" },
-      { label: "Activity", to: "/dashboard/activity-map" },
-      { label: "Progress", to: "/dashboard/logs" },
+      { label: "Nutrition", to: "/meal-tracker" },
+      { label: "Workouts", to: "/workouts" },
+      { label: "Activity", to: "/activity-map" },
+      { label: "Progress", to: "/logs" },
     ],
   },
   {
     title: "Community",
     links: [
-      { label: "Feed", to: "/dashboard/community" },
-      { label: "Messages", to: "/dashboard/messenger" },
-      { label: "Plans", to: "/dashboard/plans" },
-      { label: "Notifications", to: "/dashboard/notifications" },
+      { label: "Feed", to: "/community" },
+      { label: "Messages", to: "/community/messages" },
+      { label: "Plans", to: "/plans" },
+      { label: "Notifications", to: "/notifications" },
     ],
   },
   {
     title: "Account",
     links: [
-      { label: "Profile", to: "/dashboard/profile" },
-      { label: "Preferences", to: "/dashboard/preferences" },
+      { label: "Profile", to: "/profile" },
+      { label: "Preferences", to: "/preferences" },
       { label: "Help & support", contact: true },
       { label: "Sign in", to: "/login" },
     ],
@@ -200,7 +200,7 @@ export const FOOTER_INFO = {
       "Log food by hand or scan a plate for an AI-assisted macro estimate. Calories, protein, carbs, and fats stay together in your daily log.",
     points: ["Photo-assisted meal estimates", "Daily calorie and macro targets", "Breakfast-to-dinner history"],
     ctaLabel: "Open nutrition",
-    to: "/dashboard/meal-tracker",
+    to: "/meal-tracker",
   },
   Workouts: {
     group: "Track",
@@ -210,7 +210,7 @@ export const FOOTER_INFO = {
       "Follow structured plans, log each set and rep, or move through a camera-guided session with live feedback.",
     points: ["Structured weekly plans", "Set and rep logging", "Camera-guided form cues"],
     ctaLabel: "Open workouts",
-    to: "/dashboard/workouts",
+    to: "/workouts",
   },
   Activity: {
     group: "Track",
@@ -220,7 +220,7 @@ export const FOOTER_INFO = {
       "Capture GPS runs and daily movement. Routes, distance, and pace stay in one timeline.",
     points: ["GPS run tracking", "Route, distance, and pace", "Kudos from the community"],
     ctaLabel: "Open activity",
-    to: "/dashboard/activity-map",
+    to: "/activity-map",
   },
   Progress: {
     group: "Track",
@@ -230,7 +230,7 @@ export const FOOTER_INFO = {
       "See weight, BMI, training volume, and your complete timeline without building a report by hand.",
     points: ["Weight and BMI trends", "Training-volume history", "A complete, exportable log"],
     ctaLabel: "Open progress",
-    to: "/dashboard/logs",
+    to: "/logs",
   },
   Feed: {
     group: "Community",
@@ -240,7 +240,7 @@ export const FOOTER_INFO = {
       "Post milestones, follow other members, and keep the encouragement close. Your feed is built around real activity, not vanity metrics.",
     points: ["Share milestones", "Follow other members", "A supportive training community"],
     ctaLabel: "Open the feed",
-    to: "/dashboard/community",
+    to: "/community",
   },
   Messages: {
     group: "Community",
@@ -250,7 +250,7 @@ export const FOOTER_INFO = {
       "Private conversations with training partners, accountability friends, and the people who keep you moving.",
     points: ["Private one-to-one chats", "Training-partner accountability", "Notification controls"],
     ctaLabel: "Open messages",
-    to: "/dashboard/messenger",
+    to: "/community/messages",
   },
   Plans: {
     group: "Community",
@@ -260,7 +260,7 @@ export const FOOTER_INFO = {
       "Browse shared plans, enroll in a structured programme, and keep every session aligned with your goal.",
     points: ["Structured weekly plans", "Enrol with one tap", "Sessions saved to your history"],
     ctaLabel: "Explore plans",
-    to: "/dashboard/plans",
+    to: "/plans",
   },
   Notifications: {
     group: "Community",
@@ -270,7 +270,7 @@ export const FOOTER_INFO = {
       "Messages, plan updates, and community activity arrive in one calm place. Read what matters and clear the rest.",
     points: ["Messages and plan updates", "Community activity", "Mark one or all as read"],
     ctaLabel: "Open notifications",
-    to: "/dashboard/notifications",
+    to: "/notifications",
   },
   Profile: {
     group: "Account",
@@ -280,7 +280,7 @@ export const FOOTER_INFO = {
       "Manage your profile, avatar, and personal details so your plans and insights stay relevant to you.",
     points: ["Profile and avatar", "Account details", "Privacy controls"],
     ctaLabel: "Open profile",
-    to: "/dashboard/profile",
+    to: "/profile",
   },
   Preferences: {
     group: "Account",
@@ -290,7 +290,7 @@ export const FOOTER_INFO = {
       "Choose your theme, units, and reminder preferences. Your setup follows you across devices.",
     points: ["Light or dark theme", "Metric or imperial units", "Notification preferences"],
     ctaLabel: "Open preferences",
-    to: "/dashboard/preferences",
+    to: "/preferences",
   },
   "Help & support": SUPPORT_INFO,
   "Sign in": {

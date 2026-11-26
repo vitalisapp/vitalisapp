@@ -1,38 +1,23 @@
-import { useEffect, useRef } from 'react';
-import { useMap } from 'react-leaflet';
-import L from 'leaflet';
 import Icon from '../../../../components/Icon.jsx';
+import { useVitalisMap } from '../hooks/useVitalisMap.js';
+import { toLngLat } from '../utils/mapAdapter.js';
 
 // Explicit "back to me": auto-follow pauses once the user pans the map, so
 // this is the reliable way to snap the camera back to the current GPS fix.
+// Rendered outside the MapLibre canvas container, so clicks never start a drag.
 const RecenterButton = ({ userLocation = undefined, onRecenter = undefined }) => {
-  const map = useMap();
-  const btnRef = useRef(null);
-  const disabled = !userLocation;
-
-  // Keep button clicks from starting a map drag (canonical Leaflet pattern).
-  useEffect(() => {
-    const el = btnRef.current;
-    if (!el) return undefined;
-    L.DomEvent.disableClickPropagation(el);
-    L.DomEvent.disableScrollPropagation(el);
-    return () => {
-      L.DomEvent.off(el);
-    };
-  }, []);
+  const map = useVitalisMap();
+  const center = toLngLat(userLocation);
+  const disabled = !center;
 
   const handleClick = () => {
-    if (!userLocation) return;
-    map.flyTo(userLocation, Math.max(map.getZoom(), 16), {
-      animate: true,
-      duration: 0.8,
-    });
+    if (!map || !center) return;
+    map.flyTo({ center, zoom: Math.max(map.getZoom(), 16), duration: 800 });
     onRecenter?.();
   };
 
   return (
     <button
-      ref={btnRef}
       type="button"
       onClick={handleClick}
       disabled={disabled}

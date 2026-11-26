@@ -17,6 +17,8 @@ import LogoutConfirmDialog from '../../../../components/ui/LogoutConfirmDialog.j
 import ConfirmDialog from '../../../../components/ui/ConfirmDialog.jsx';
 import { LegalCenterModal } from '../../Auth/Register/components/LegalModals.jsx';
 import { useAuth } from '../../../../hooks/useAuth.jsx';
+import { collectProfileIssues } from '../../../../lib/profileIssues.js';
+import WarningBadge from '../../../../components/WarningBadge.jsx';
 import { resolveAvatar, capitalizeName } from '../../../../lib/avatar.js';
 import { apiFetch } from '../../../../lib/apiClient.js';
 import { goalLabel, activityLabel, GOAL_TYPES } from '../../Onboarding/constants/goals.js';
@@ -73,8 +75,11 @@ const GoalSnapshotCard = ({ onboarding = undefined, onChangeGoal = undefined, on
       <Eyebrow>Your Plan</Eyebrow>
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] p-3">
-          <p className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Goal</p>
+          <p className="text-[length:var(--fs-10)] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">{onboarding.secondaryGoals?.length ? 'Main goal' : 'Goal'}</p>
           <p className="text-[length:var(--fs-13)] font-bold text-[var(--accent)] mt-1">{goalLabel(onboarding.goalType)}</p>
+          {onboarding.secondaryGoals?.length > 0 && (
+            <p className="text-[length:var(--fs-11)] text-[var(--text-secondary)] mt-0.5">Also: {onboarding.secondaryGoals.map(goalLabel).join(' · ')}</p>
+          )}
           {onboarding.focus && <p className="text-[length:var(--fs-11)] text-[var(--text-muted)] mt-0.5">{humanize(onboarding.focus)}</p>}
           {onboarding.targetWeightKg != null && <p className="text-[length:var(--fs-11)] text-[var(--text-muted)] mt-0.5 tabular-nums">Target: {Number(onboarding.targetWeightKg).toFixed(1)} kg</p>}
         </div>
@@ -288,7 +293,7 @@ const BodyMetricsPanel = ({ USER_ID = undefined, initialWeight = undefined, init
                 <div className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] p-3 text-center"><p className="text-[length:var(--fs-10)] font-bold tracking-[0.12em] text-[var(--accent)]">FAT</p><p className="text-[length:var(--fs-14)] font-black text-[var(--text-primary)] break-words tabular-nums">{macros.fat.g}g</p><p className="text-[length:var(--fs-9)] text-[var(--text-muted)] tabular-nums">{macros.fat.kcal} kcal · {macros.fat.pct}%</p></div>
                 <div className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-[12px] p-3 text-center"><p className="text-[length:var(--fs-10)] font-bold tracking-[0.12em] text-[var(--accent)]">CARBS</p><p className="text-[length:var(--fs-14)] font-black text-[var(--text-primary)] break-words tabular-nums">{macros.carbs.g}g</p><p className="text-[length:var(--fs-9)] text-[var(--text-muted)] tabular-nums">{macros.carbs.kcal} kcal · {macros.carbs.pct}%</p></div>
               </div>
-              <p className="flex justify-between text-[length:var(--fs-9)] text-[var(--text-disabled)]"><span>{activity}</span><span>{new Date().toISOString().slice(0,10)} · {new Date().toLocaleTimeString()}</span></p>
+              <p className="flex justify-between text-[length:var(--fs-9)] text-[var(--text-muted)]"><span>{activity}</span><span>{new Date().toISOString().slice(0,10)} · {new Date().toLocaleTimeString()}</span></p>
             </div>
           )}
         </>
@@ -389,7 +394,7 @@ const GoalPicker = ({ value = undefined, disabled = undefined, onPick = undefine
   );
 };
 
-const SectionRow = ({ icon = undefined, title = undefined, subtitle = undefined, expanded = undefined, onClick = undefined, danger = undefined, rightIcon = undefined, attention = undefined }) => (
+const SectionRow = ({ icon = undefined, title = undefined, subtitle = undefined, expanded = undefined, onClick = undefined, danger = undefined, rightIcon = undefined, attention = undefined, attentionLabel = 'Needs attention' }) => (
   <button
     type="button"
     onClick={onClick}
@@ -398,7 +403,14 @@ const SectionRow = ({ icon = undefined, title = undefined, subtitle = undefined,
   >
     <span className="pf-row-icon">
       <span className="material-symbols-outlined">{icon}</span>
-      {attention && <span aria-hidden="true" title="Setup incomplete" className="pf-attention" />}
+      {attention && (
+        <WarningBadge
+          label={attentionLabel}
+          size={15}
+          ring="var(--bg-card)"
+          style={{ position: 'absolute', top: -3, right: -3 }}
+        />
+      )}
     </span>
     <span className="pf-row-copy">
       <span className="pf-row-title">{title}</span>
@@ -499,9 +511,16 @@ const Profile = ({ embedded = false }) => {
   const [deactivateOpen, setDeactivateOpen] = useState(false);
   const [legalOpen, setLegalOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
-  const { logout } = useAuth();
+  const { logout, setUser } = useAuth();
   const [pendingGoalType, setPendingGoalType] = useState(null);
   const [metricsEditSignal, setMetricsEditSignal] = useState(0);
+  // The weak-password notice is dismissible for the session (modern-app style);
+  // the row badge keeps flagging it until the password is actually updated.
+  const pwNoticeKey = USER_ID ? `vitalis:pw-warning-dismissed:${USER_ID}` : null;
+  const [pwNoticeDismissed, setPwNoticeDismissed] = useState(() => {
+    if (!pwNoticeKey) return false;
+    try { return sessionStorage.getItem(pwNoticeKey) === '1'; } catch { return false; }
+  });
   const [isMasterEditing, setIsMasterEditing] = useState(false);
   const accountSectionRef = useRef(null);
   const goalsSectionRef = useRef(null);
@@ -524,6 +543,13 @@ const Profile = ({ embedded = false }) => {
 
   const handleMasterDone = () => {
     setIsMasterEditing(false);
+  };
+
+  const dismissPwNotice = () => {
+    setPwNoticeDismissed(true);
+    try {
+      if (pwNoticeKey) sessionStorage.setItem(pwNoticeKey, '1');
+    } catch { /* private mode — dismissal stays in memory only */ }
   };
 
   const handleConfirmAvatar = async () => {
@@ -590,11 +616,21 @@ const Profile = ({ embedded = false }) => {
   // (e.g. the user chose "Skip" during the wizard).
   const onboardingIncomplete = !onboarding || user?.onboardingCompleted === false;
 
-  // Per-section attention flags — same rules the header avatar uses, but
-  // surfaced on the row that actually needs the edit. Static dots, no pulse.
-  const missingMetrics = !formData?.weight_kg || !formData?.height_cm;
-  const missingGoal = !onboarding?.goalType;
-  const needsOnboarding = user?.onboardingCompleted === false;
+  // One shared rule set (useProfileWarnings) drives the header avatar, the
+  // account menu and these rows, so a weak password is flagged in the exact
+  // section that fixes it instead of as a generic "profile" dot.
+  const issues = collectProfileIssues(user, {
+    height_cm: formData?.height_cm,
+    weight_kg: formData?.weight_kg,
+    onboarding,
+  });
+  const issueFor = (section) => issues.find((issue) => issue.section === section);
+  const missingMetrics = Boolean(issueFor('metrics'));
+  const missingGoal = Boolean(issueFor('goal'));
+  const needsOnboarding = Boolean(issueFor('onboarding'));
+  // Set at login / /me when the (still valid) password fails today's policy.
+  const securityIssue = issueFor('security');
+  const passwordNeedsAttention = Boolean(securityIssue);
 
   const avatar = resolveAvatar(avatarSrc, formData.fullName);
   const displayName = capitalizeName(formData.fullName) || 'Athlete';
@@ -797,7 +833,13 @@ const Profile = ({ embedded = false }) => {
                 <h2 className="pf-card-title" id="pf-metrics-heading">Measurements &amp; targets</h2>
                 <p className="pf-card-sub">Your latest measurements and the targets calculated from them.</p>
               </div>
-              {missingMetrics && <span className="pf-missing-dot" title="Add weight and height" aria-label="Metrics incomplete" />}
+              {missingMetrics && (
+                <WarningBadge
+                  label={issueFor('metrics')?.message || 'Add your weight and height'}
+                  size={16}
+                  ring="var(--bg-card)"
+                />
+              )}
             </div>
             <BodyMetricsPanel USER_ID={USER_ID} initialWeight={formData.weight_kg} initialHeight={formData.height_cm} onboarding={onboarding} showToast={showToast} editSignal={metricsEditSignal} onIdentitySaved={(g) => { if (g) setOnboarding(g); }} />
           </section>
@@ -815,7 +857,7 @@ const Profile = ({ embedded = false }) => {
             <div className="pf-list">
               {/* My Account */}
               <div className="pf-list-item" ref={accountSectionRef}>
-                <SectionRow icon="person" title="My Account" subtitle="Name, mobile, contact & bio" attention={!isManagement && needsOnboarding} expanded={openSection === 'account'} onClick={() => toggle('account')} />
+                <SectionRow icon="person" title="My Account" subtitle="Name, mobile, contact & bio" attention={!isManagement && needsOnboarding} attentionLabel={issueFor('onboarding')?.message || 'Finish your setup'} expanded={openSection === 'account'} onClick={() => toggle('account')} />
                 {openSection === 'account' && (
                   <div className="pf-row-panel">
                     <div className={`pf-account-form ${isMasterEditing ? '' : 'is-readonly'}`}>
@@ -930,7 +972,7 @@ const Profile = ({ embedded = false }) => {
               {/* My Goals — full plan snapshot lives here (single home, no duplicate) */}
               {!isManagement && <>
               <div className="pf-list-item" ref={goalsSectionRef}>
-                <SectionRow icon="flag" title="My Goals" subtitle={onboarding?.goalType ? goalLabel(onboarding.goalType) : 'Set your fitness goal'} attention={missingGoal} expanded={openSection === 'goals'} onClick={() => toggle('goals')} />
+                <SectionRow icon="flag" title="My Goals" subtitle={onboarding?.goalType ? goalLabel(onboarding.goalType) : 'Set your fitness goal'} attention={missingGoal} attentionLabel={issueFor('goal')?.message || 'Set a fitness goal'} expanded={openSection === 'goals'} onClick={() => toggle('goals')} />
                 {openSection === 'goals' && (
                   <div className="pf-row-panel">
                     <GoalSnapshotCard onboarding={onboarding} onChangeGoal={() => setChangeGoalOpen(true)} onSetupPlan={() => setChangeGoalOpen(true)} />
@@ -1011,7 +1053,34 @@ const Profile = ({ embedded = false }) => {
 
             <div className="pf-list">
               <div className="pf-list-item">
-                <SectionRow icon="key" title="Change Password" subtitle="Keep your account secure" onClick={() => setChangePwOpen(true)} />
+                <SectionRow
+                  icon="key"
+                  title="Change Password"
+                  subtitle={passwordNeedsAttention ? 'Needs attention — your password is weak' : 'Keep your account secure'}
+                  attention={passwordNeedsAttention}
+                  attentionLabel={securityIssue?.message || 'Your password is weak'}
+                  onClick={() => setChangePwOpen(true)}
+                />
+                {passwordNeedsAttention && !pwNoticeDismissed && (
+                  <div className="pf-pw-alert is-compact" role="status" aria-live="polite">
+                    <span className="pf-pw-alert-icon material-symbols-outlined" aria-hidden="true">warning</span>
+                    <div className="pf-pw-alert-copy">
+                      <strong>{securityIssue?.message || 'Your password is weak'}</strong>
+                      <p>Update it to 12+ characters with mixed case, a number and a symbol.</p>
+                    </div>
+                    <button type="button" className="pf-pw-alert-btn" onClick={() => setChangePwOpen(true)}>
+                      Update
+                    </button>
+                    <button
+                      type="button"
+                      className="pf-pw-alert-close"
+                      onClick={dismissPwNotice}
+                      aria-label="Dismiss password warning"
+                    >
+                      <span className="material-symbols-outlined" aria-hidden="true">close</span>
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="pf-list-item">
                 <SectionRow
@@ -1059,7 +1128,11 @@ const Profile = ({ embedded = false }) => {
         {changePwOpen && (
           <ChangePasswordModal
             onClose={() => setChangePwOpen(false)}
-            onSuccess={() => showToast('Password changed — security email & notification sent')}
+            onSuccess={() => {
+              // The new password passed the policy server-side (flag cleared there too).
+              setUser((prev) => (prev ? { ...prev, passwordNeedsAttention: false } : prev));
+              showToast('Password changed — security email & notification sent');
+            }}
             // Same email-OTP flow as auth — but as a modal, never a redirect.
             onForgotPassword={() => { setChangePwOpen(false); setForgotPwOpen(true); }}
           />

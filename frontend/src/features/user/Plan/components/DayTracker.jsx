@@ -5,6 +5,7 @@ import { formatExerciseDetail, REST_ACTIVITY_TYPES } from '../utils/planFormat.j
 import ExerciseGuideModal from '../components/ExerciseGuideModal.jsx';
 import { muscleFor, summarizeMuscles, suggestAlternatives } from '../utils/exerciseMatch.js';
 import { fitDayToMinutes } from '../utils/sessionFit.js';
+import PlanDayRoutine from './PlanDayRoutine.jsx';
 
 // ── Module 5 — day-cycling schedule ──────────────────────────────────────────
 // Maps training days across the user's preferred weekdays: training day #1 →
@@ -147,7 +148,7 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
 
   const handleStartWorkout = () => {
     if (!activeDayData) return;
-    navigate('/dashboard/workouts', {
+    navigate('/workouts', {
       state: {
         fromPlan: {
           planId:       plan.id,
@@ -527,6 +528,20 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
                 </div>
               </div>
 
+              {/* Revision #3 — personalized warm-up before, cool-down once done */}
+              {!isRestDay && plan?.id && (
+                <div className="mb-3 sm:mb-4">
+                  <PlanDayRoutine
+                    key={`${activeDayData.day_number}-${isDayComplete ? 'cool' : 'warm'}`}
+                    planId={plan.id}
+                    dayNumber={activeDayData.day_number}
+                    phase={isDayComplete ? 'cooldown' : 'warmup'}
+                    doneLabel={isDayComplete ? 'Done' : 'Start workout'}
+                    onFinished={isDayComplete ? undefined : handleStartWorkout}
+                  />
+                </div>
+              )}
+
               <div className="flex flex-col min-[480px]:flex-row gap-2 sm:gap-3">
                 {!isDayComplete && (
                   <button
@@ -634,7 +649,7 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
                     <button
                       onClick={() => {
                         setAltExName(null);
-                        navigate('/dashboard/workouts', { state: { exerciseId: alt.slug } });
+                        navigate('/workouts', { state: { exerciseId: alt.slug } });
                       }}
                       className="h-9 px-3 shrink-0 rounded-lg bg-[var(--accent)] text-[var(--text-inverse)] text-[length:var(--fs-9)] font-black uppercase tracking-widest active:scale-95 transition-all"
                     >

@@ -18,6 +18,8 @@ const {
   sanitizeDensity,
 } = require("../utils/nutrition");
 const { CATEGORIES, describeFood } = require("../utils/foodTraits");
+const { findDish, referenceOf } = require("../utils/filipinoDishes");
+const { REVIEW_REASONS } = require("../utils/dishReview");
 const foodImages = require("./foodImage.service");
 
 // Module 4 — persisted meal slot. The manual form used to stuff the meal type
@@ -80,6 +82,47 @@ function setCache(base64Image, result) {
 // Entries are deleted on settle, so failures never stick.
 const inflightAnalyses = new Map();
 
+const per100Ok = (p) =>
+  p && ["calories", "protein", "carbs", "fat"].every((k) => Number.isFinite(Number(p[k])) && Number(p[k]) >= 0);
+const cleanPer100 = (p) => ({
+  calories: Math.min(900, Math.round(Number(p.calories))),
+  protein: Math.min(100, Math.round(Number(p.protein) * 10) / 10),
+  carbs: Math.min(100, Math.round(Number(p.carbs) * 10) / 10),
+  fat: Math.min(100, Math.round(Number(p.fat) * 10) / 10),
+});
+function clampReference(ref) {
+  if (!ref || typeof ref !== "object") return null;
+  const name = String(ref.name || "").replace(/s+/g, " ").trim().slice(0, 60);
+  if (name.length < 2) return null;
+  const out = { name };
+  if (per100Ok(ref.per100)) out.per100 = cleanPer100(ref.per100);
+  if (ref.serving && Number(ref.serving.grams) > 0) {
+    out.serving = { label: String(ref.serving.label || "").slice(0, 30), grams: Math.min(5000, Math.round(Number(ref.serving.grams))) };
+  }
+  if (Number(ref.pieceGrams) > 0) out.pieceGrams = Math.min(1000, Math.round(Number(ref.pieceGrams)));
+  return out;
+}
+// Review fields from dishReview.js, re-validated at the API boundary.
+function clampReview(it) {
+  const out = {};
+  const grams = Number(it.estimated_weight_g);
+  if (Number.isFinite(grams) && grams > 0) out.estimated_weight_g = Math.min(5000, Math.round(grams));
+  const pieces = Number(it.piece_count);
+  if (Number.isInteger(pieces) && pieces >= 1 && pieces <= 60) out.piece_count = pieces;
+  if (["high", "medium", "low"].includes(it.dish_confidence)) out.dish_confidence = it.dish_confidence;
+  const ref = clampReference(it.reference);
+  if (ref && ref.per100) out.reference = ref;
+  if (Array.isArray(it.alternatives)) {
+    const alts = it.alternatives.map(clampReference).filter(Boolean).slice(0, 3);
+    if (alts.length) out.alternatives = alts;
+  }
+  if (Array.isArray(it.review_reasons)) {
+    const reasons = it.review_reasons.filter((r) => REVIEW_REASONS.includes(r));
+    if (reasons.length) out.review_reasons = reasons;
+  }
+  return out;
+}
+
 async function analyzeAndClamp(base64Image) {
   // analyzeFoodImage returns a JSON string (never throws for provider failures —
   // it returns a coded failure object; throws only on timeout/bug).
@@ -128,6 +171,10 @@ async function analyzeAndClamp(base64Image) {
     sugar: it.sugar == null || it.sugar === "" ? null : Math.max(0, Math.round(Number(it.sugar) * 10) / 10) || 0,
     sodium: it.sodium == null || it.sodium === "" ? null : Math.min(20000, Math.max(0, Math.round(Number(it.sodium)) || 0)),
     ...(it.low_confidence ? { low_confidence: true } : {}),
+    // Confirm/correct support: visible weight lets the client rescale when the
+    // user edits the portion; reference + alternatives make a dish correction
+    // instant (no extra AI call); reasons say what to double-check.
+    ...clampReview(it),
     // Allergen hints (safety signal) — keep the model's strings, capped.
     ...(Array.isArray(it.possible_allergens)
       ? {
@@ -327,6 +374,13 @@ async function estimateFoodDensity(foodName) {
   const key = normalizeFoodName(displayName);
   if (!key) {
     throw new AppError("That food name cannot be estimated.", 400, "INVALID_FOOD_NAME");
+  }
+
+  // Built-in Filipino dish reference first: instant, free, and consistent
+  // with the scan result's own sanity checks.
+  const reference = findDish(displayName);
+  if (reference) {
+    return { name: reference.name, per100: referenceOf(reference).per100, source: "reference", cached: true };
   }
 
   const cached = await readDensityCache(key);

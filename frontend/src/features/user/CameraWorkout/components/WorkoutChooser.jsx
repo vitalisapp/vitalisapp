@@ -78,7 +78,7 @@ function WorkoutChooser({ onPick = undefined, onBack = undefined }) {
               onChange={(e) => setFilters({ q: e.target.value })}
               placeholder="Search exercises"
               aria-label="Search exercises"
-              className="w-full h-11 rounded-xl bg-[var(--bg-hover)] border border-transparent pl-10 pr-10 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] outline-none focus:border-[var(--accent)] focus:bg-transparent placeholder:text-[var(--text-disabled)] transition-colors [&::-webkit-search-cancel-button]:hidden"
+              className="w-full h-11 rounded-xl bg-[var(--bg-hover)] border border-transparent pl-10 pr-10 text-[length:var(--fs-16)] sm:text-[length:var(--fs-13)] outline-none focus:border-[var(--accent)] focus:bg-transparent placeholder:text-[var(--input-placeholder)] transition-colors [&::-webkit-search-cancel-button]:hidden"
             />
             {query && (
               <button
@@ -191,7 +191,7 @@ function WorkoutChooser({ onPick = undefined, onBack = undefined }) {
           </div>
         )}
 
-        <p className="text-[length:var(--fs-10)] mt-6 leading-relaxed text-[var(--text-disabled)]">{BRYL_CREDIT}</p>
+        <p className="text-[length:var(--fs-10)] mt-6 leading-relaxed text-[var(--text-muted)]">{BRYL_CREDIT}</p>
       </div>
 
       <Modal

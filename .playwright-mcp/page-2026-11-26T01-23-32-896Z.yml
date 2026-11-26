@@ -1,0 +1,374 @@
+- generic [ref=e4]:
+  - link "Skip to console content" [ref=e5] [cursor=pointer]:
+    - /url: "#admin-main"
+  - complementary "Admin console navigation" [ref=e6]:
+    - generic [ref=e7]:
+      - link "Vitalis admin home" [ref=e8] [cursor=pointer]:
+        - /url: /admin
+        - generic [ref=e10]:
+          - generic [ref=e11]: Vitalis
+          - generic [ref=e12]: Admin console
+      - button "Collapse admin sidebar" [expanded] [ref=e13] [cursor=pointer]:
+        - generic [aria-hidden] [ref=e14]: left_panel_close
+    - navigation "Admin sections" [ref=e16]:
+      - group "Console" [ref=e17]:
+        - generic [ref=e19]: Console
+        - link "Overview" [ref=e20] [cursor=pointer]:
+          - /url: /admin
+          - generic [aria-hidden] [ref=e22]: space_dashboard
+        - link "Users" [ref=e24] [cursor=pointer]:
+          - /url: /admin/users
+          - generic [aria-hidden] [ref=e26]: group
+        - link "Monitoring" [ref=e28] [cursor=pointer]:
+          - /url: /admin/monitoring
+          - generic [aria-hidden] [ref=e30]: monitor_heart
+      - group "Content" [ref=e32]:
+        - generic [ref=e34]: Content
+        - link "Content" [ref=e35] [cursor=pointer]:
+          - /url: /admin/content
+          - generic [aria-hidden] [ref=e37]: library_books
+        - link "AI Usage" [ref=e39] [cursor=pointer]:
+          - /url: /admin/ai-usage
+          - generic [aria-hidden] [ref=e41]: monitoring
+      - group "Security" [ref=e43]:
+        - generic [ref=e45]: Security
+        - link "Access QR" [ref=e46] [cursor=pointer]:
+          - /url: /admin/access
+          - generic [aria-hidden] [ref=e48]: qr_code_2
+        - link "Audit Trail" [ref=e50] [cursor=pointer]:
+          - /url: /admin/audit
+          - generic [aria-hidden] [ref=e52]: history_edu
+    - generic [ref=e54]:
+      - button "Sign out" [ref=e55] [cursor=pointer]:
+        - generic [aria-hidden] [ref=e57]: logout
+      - link "Vitalis Admin — profile & settings" [ref=e59] [cursor=pointer]:
+        - /url: /admin/profile
+        - generic [ref=e60]: V
+        - generic [aria-hidden] [ref=e62]:
+          - generic [ref=e63]: Vitalis Admin
+          - generic [ref=e64]: Administrator · Elevated access
+        - generic [aria-hidden] [ref=e65]: chevron_right
+  - generic [ref=e66]:
+    - banner [ref=e67]:
+      - search [ref=e69]:
+        - generic [aria-hidden] [ref=e70]: search
+        - searchbox "Search members by name or email" [ref=e71]
+        - generic [aria-hidden] [ref=e72]: ↵
+      - generic [ref=e73]:
+        - button "Notifications (1 unread)" [ref=e75] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e76]: notifications
+          - generic [aria-hidden]: "1"
+        - button "Switch to light mode" [pressed] [ref=e78] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e79]:
+            - generic [aria-hidden] [ref=e81]: light_mode
+            - generic [aria-hidden] [ref=e83]: dark_mode
+        - button "Account menu" [ref=e84] [cursor=pointer]:
+          - generic [ref=e85]:
+            - generic [ref=e86]: Vitalis Admin
+            - generic [ref=e87]: Administrator
+          - generic [ref=e88]:
+            - generic [ref=e89]: V
+            - img "Your password is weak — open Profile" [ref=e90]: "!"
+          - generic [aria-hidden] [ref=e91]: expand_more
+    - main [ref=e92]:
+      - generic [ref=e93]:
+        - generic [ref=e95]:
+          - generic [ref=e96]:
+            - generic [ref=e97]: Thursday, November 26 · Administration
+            - heading [level=1] [ref=e98]:
+              - text: Platform
+              - emphasis [ref=e99]: overview.
+            - paragraph [ref=e100]: Welcome back, Vitalis Admin. Live platform health, access and content — the numbers below come straight from the database, and every admin action is audited.
+          - generic [ref=e102]:
+            - generic [ref=e103]: Live data
+            - button "Export" [ref=e106] [cursor=pointer]:
+              - generic [aria-hidden] [ref=e107]: download
+              - text: Export
+              - generic [aria-hidden] [ref=e108]: expand_more
+            - button "Refresh" [ref=e109] [cursor=pointer]:
+              - generic [aria-hidden] [ref=e110]: refresh
+              - text: Refresh
+        - generic [ref=e112]:
+          - generic [ref=e113]:
+            - region "Statistics" [ref=e114]:
+              - generic [ref=e115]:
+                - generic [ref=e116]:
+                  - heading "Statistics" [level=2] [ref=e117]
+                  - paragraph [ref=e118]: Member growth, sessions and AI activity across the platform.
+                - group "Analytics window" [ref=e119]:
+                  - button "7 days" [ref=e120] [cursor=pointer]
+                  - button "14 days" [pressed] [ref=e121] [cursor=pointer]
+                  - button "30 days" [ref=e122] [cursor=pointer]
+              - generic [ref=e123]:
+                - article [ref=e124]:
+                  - generic [ref=e125]:
+                    - generic [ref=e126]: Total members
+                    - generic [aria-hidden] [ref=e128]: group
+                  - generic [ref=e129]: "10"
+                  - paragraph [ref=e130]:
+                    - generic [aria-hidden] [ref=e131]: trending_up
+                    - text: 3 joined this week
+                - article [ref=e132]:
+                  - generic [ref=e133]:
+                    - generic [ref=e134]: Active sessions
+                    - generic [aria-hidden] [ref=e136]: devices
+                  - generic [ref=e137]: "20"
+                  - paragraph [ref=e138]: Known devices in the last 30 days
+                - article [ref=e139]:
+                  - generic [ref=e140]:
+                    - generic [ref=e141]: AI calls today
+                    - generic [aria-hidden] [ref=e143]: neurology
+                  - generic [ref=e144]: "0"
+                  - paragraph [ref=e145]: 70 lifetime calls
+                - article [ref=e146]:
+                  - generic [ref=e147]:
+                    - generic [ref=e148]: Community posts
+                    - generic [aria-hidden] [ref=e150]: forum
+                  - generic [ref=e151]: "1"
+                  - paragraph [ref=e152]: Public feed content
+              - generic [ref=e153]:
+                - generic [ref=e154]:
+                  - generic [ref=e155]:
+                    - heading "AI activity" [level=3] [ref=e156]
+                    - paragraph [ref=e157]: Daily calls versus distinct active members · last 14 days
+                  - generic [ref=e158]:
+                    - generic [ref=e159]: AI calls
+                    - generic [ref=e161]: Active members
+                - img "AI calls versus active members over the last 14 days trend chart" [ref=e164]
+                - generic [ref=e165]:
+                  - generic [ref=e166]: 58 calls in 14 days
+                  - generic [ref=e167]: Peak 42 calls in a day
+                  - generic [ref=e168]: 3 new members in 30 days
+              - generic [ref=e169]:
+                - generic [ref=e170]:
+                  - generic [ref=e171]:
+                    - heading "SMS verification" [level=3] [ref=e172]
+                    - paragraph [ref=e173]: UniSMS credits and verification codes sent · last 14 days
+                  - generic [ref=e174]:
+                    - generic [ref=e175]: SMS sent
+                    - generic [ref=e177]: Phones verified
+                - status [ref=e179]:
+                  - generic [aria-hidden] [ref=e181]: sms
+                  - generic [ref=e182]:
+                    - generic [ref=e183]: UniSMS credits left
+                    - generic [ref=e184]: "2"
+                    - generic [ref=e187]: Warning below 20 · critical at 5 · checked Just now
+                  - generic [ref=e188]:
+                    - generic [ref=e189]:
+                      - generic [aria-hidden] [ref=e190]: error
+                      - text: Critical
+                    - generic [ref=e191]: Sender ID Unisoft
+                    - button "Refresh" [ref=e192] [cursor=pointer]:
+                      - generic [aria-hidden] [ref=e193]: refresh
+                      - text: Refresh
+                - img "Verification SMS sent versus phones verified over the last 14 days trend chart" [ref=e195]
+                - generic [ref=e196]:
+                  - generic [ref=e197]: 0 SMS sent in 14 days
+                  - generic [ref=e198]: 0 phones verified
+                  - generic [ref=e199]: 0 sent today
+                  - generic [ref=e200]: 0 members verified by phone
+            - generic [ref=e201]:
+              - generic [ref=e202]:
+                - generic [ref=e203]:
+                  - heading "Member engagement" [level=2] [ref=e204]:
+                    - generic [aria-hidden] [ref=e205]: monitor_heart
+                    - text: Member engagement
+                  - paragraph [ref=e206]: Last 7 days, from members' own workout, meal and weight logs.
+                - link "Open monitoring" [ref=e208] [cursor=pointer]:
+                  - /url: /admin/monitoring
+                  - text: Open monitoring
+                  - generic [aria-hidden] [ref=e209]: arrow_forward
+              - generic [ref=e210]:
+                - paragraph [ref=e211]: 22% of members logged activity in the last 7 days. 9 of 9 need attention (4 inactive). The most common gap is "no meals logged this week" (8 members).
+                - img "0 green, 5 yellow, 4 red" [ref=e212]
+                - generic [ref=e215]:
+                  - link "Active 0" [ref=e216] [cursor=pointer]:
+                    - /url: /admin/monitoring?status=green
+                    - text: Active
+                    - generic [ref=e218]: "0"
+                  - link "Needs attention 5" [ref=e219] [cursor=pointer]:
+                    - /url: /admin/monitoring?status=yellow
+                    - text: Needs attention
+                    - generic [ref=e221]: "5"
+                  - link "Inactive 4" [ref=e222] [cursor=pointer]:
+                    - /url: /admin/monitoring?status=red
+                    - text: Inactive
+                    - generic [ref=e224]: "4"
+                - generic [ref=e225]:
+                  - generic [ref=e226]:
+                    - generic [ref=e227]:
+                      - text: "2"
+                      - generic [ref=e228]: / 9
+                    - generic [ref=e229]: Members active
+                  - generic [ref=e230]:
+                    - generic [ref=e231]: "7"
+                    - generic [ref=e232]: Workouts logged
+                  - generic [ref=e233]:
+                    - generic [ref=e234]: "7"
+                    - generic [ref=e235]: Meals logged
+            - generic [ref=e236]:
+              - generic [ref=e237]:
+                - generic [ref=e239]:
+                  - heading "Platform breakdown" [level=2] [ref=e240]:
+                    - generic [aria-hidden] [ref=e241]: category
+                    - text: Platform breakdown
+                  - paragraph [ref=e242]: Explore the live counters behind each workspace.
+                - generic [ref=e243]:
+                  - group "Metric category" [ref=e244]:
+                    - button "Members" [pressed] [ref=e245] [cursor=pointer]:
+                      - generic [aria-hidden] [ref=e246]: group
+                      - text: Members
+                    - button "Training" [ref=e247] [cursor=pointer]:
+                      - generic [aria-hidden] [ref=e248]: exercise
+                      - text: Training
+                    - button "Nutrition" [ref=e249] [cursor=pointer]:
+                      - generic [aria-hidden] [ref=e250]: restaurant
+                      - text: Nutrition
+                    - button "Content" [ref=e251] [cursor=pointer]:
+                      - generic [aria-hidden] [ref=e252]: auto_stories
+                      - text: Content
+                  - generic [ref=e253]:
+                    - generic [ref=e254]:
+                      - generic [aria-hidden] [ref=e256]: how_to_reg
+                      - generic [ref=e257]:
+                        - generic [ref=e258]: "10"
+                        - generic [ref=e259]: Active accounts
+                    - generic [ref=e260]:
+                      - generic [aria-hidden] [ref=e262]: person_off
+                      - generic [ref=e263]:
+                        - generic [ref=e264]: "0"
+                        - generic [ref=e265]: Deactivated
+                    - generic [ref=e266]:
+                      - generic [aria-hidden] [ref=e268]: shield_person
+                      - generic [ref=e269]:
+                        - generic [ref=e270]: "1"
+                        - generic [ref=e271]: Admin accounts
+                    - generic [ref=e272]:
+                      - generic [aria-hidden] [ref=e274]: person_add
+                      - generic [ref=e275]:
+                        - generic [ref=e276]: "3"
+                        - generic [ref=e277]: New in 30 days
+              - generic [ref=e278]:
+                - generic [ref=e279]:
+                  - generic [ref=e280]:
+                    - heading "Needs attention" [level=2] [ref=e281]:
+                      - generic [aria-hidden] [ref=e282]: notification_important
+                      - text: Needs attention
+                    - paragraph [ref=e283]: Accounts that may need a nudge or a review.
+                  - generic [ref=e284]: 0 to review
+                - generic [ref=e286]:
+                  - generic [ref=e287]:
+                    - generic [ref=e288]:
+                      - generic [aria-hidden] [ref=e290]: mark_email_unread
+                      - generic [ref=e291]:
+                        - generic [ref=e292]: Unverified emails
+                        - generic [ref=e293]: Never confirmed their address
+                      - generic [ref=e294]: "0"
+                    - generic [ref=e295]:
+                      - generic [aria-hidden] [ref=e297]: pending_actions
+                      - generic [ref=e298]:
+                        - generic [ref=e299]: Onboarding incomplete
+                        - generic [ref=e300]: Profile setup not finished
+                      - generic [ref=e301]: "0"
+                    - generic [ref=e302]:
+                      - generic [aria-hidden] [ref=e304]: person_off
+                      - generic [ref=e305]:
+                        - generic [ref=e306]: Deactivated accounts
+                        - generic [ref=e307]: Access currently suspended
+                      - generic [ref=e308]: "0"
+                    - generic [ref=e309]:
+                      - generic [aria-hidden] [ref=e311]: person_add
+                      - generic [ref=e312]:
+                        - generic [ref=e313]: New in 30 days
+                        - generic [ref=e314]: Recently joined members
+                      - generic [ref=e315]: "3"
+                  - link "Review members" [ref=e317] [cursor=pointer]:
+                    - /url: /admin/users
+                    - generic [aria-hidden] [ref=e318]: group
+                    - text: Review members
+          - complementary "Calendar and admin activity" [ref=e319]:
+            - generic [ref=e320]:
+              - generic [ref=e322]:
+                - heading "Calendar" [level=2] [ref=e323]:
+                  - generic [aria-hidden] [ref=e324]: calendar_month
+                  - text: Calendar
+                - paragraph [ref=e325]: Pick a day to inspect the actions recorded on it.
+              - generic [ref=e327]:
+                - generic [ref=e328]:
+                  - generic [ref=e329]: November 2026
+                  - generic [ref=e330]:
+                    - button "Previous month" [ref=e331] [cursor=pointer]:
+                      - generic [aria-hidden] [ref=e332]: chevron_left
+                    - button "Today" [ref=e333] [cursor=pointer]
+                    - button "Next month" [ref=e334] [cursor=pointer]:
+                      - generic [aria-hidden] [ref=e335]: chevron_right
+                - group "November 2026 calendar" [ref=e336]:
+                  - generic [aria-hidden] [ref=e337]: M
+                  - generic [aria-hidden] [ref=e338]: T
+                  - generic [aria-hidden] [ref=e339]: W
+                  - generic [aria-hidden] [ref=e340]: T
+                  - generic [aria-hidden] [ref=e341]: F
+                  - generic [aria-hidden] [ref=e342]: S
+                  - generic [aria-hidden] [ref=e343]: S
+                  - button "Monday, October 26, 2026" [ref=e344] [cursor=pointer]: "26"
+                  - button "Tuesday, October 27, 2026" [ref=e345] [cursor=pointer]: "27"
+                  - button "Wednesday, October 28, 2026" [ref=e346] [cursor=pointer]: "28"
+                  - button "Thursday, October 29, 2026" [ref=e347] [cursor=pointer]: "29"
+                  - button "Friday, October 30, 2026" [ref=e348] [cursor=pointer]: "30"
+                  - button "Saturday, October 31, 2026" [ref=e349] [cursor=pointer]: "31"
+                  - button "Sunday, November 1, 2026" [ref=e350] [cursor=pointer]: "1"
+                  - button "Monday, November 2, 2026" [ref=e351] [cursor=pointer]: "2"
+                  - button "Tuesday, November 3, 2026" [ref=e352] [cursor=pointer]: "3"
+                  - button "Wednesday, November 4, 2026" [ref=e353] [cursor=pointer]: "4"
+                  - button "Thursday, November 5, 2026" [ref=e354] [cursor=pointer]: "5"
+                  - button "Friday, November 6, 2026" [ref=e355] [cursor=pointer]: "6"
+                  - button "Saturday, November 7, 2026" [ref=e356] [cursor=pointer]: "7"
+                  - button "Sunday, November 8, 2026" [ref=e357] [cursor=pointer]: "8"
+                  - button "Monday, November 9, 2026" [ref=e358] [cursor=pointer]: "9"
+                  - button "Tuesday, November 10, 2026" [ref=e359] [cursor=pointer]: "10"
+                  - button "Wednesday, November 11, 2026" [ref=e360] [cursor=pointer]: "11"
+                  - button "Thursday, November 12, 2026" [ref=e361] [cursor=pointer]: "12"
+                  - button "Friday, November 13, 2026" [ref=e362] [cursor=pointer]: "13"
+                  - button "Saturday, November 14, 2026" [ref=e363] [cursor=pointer]: "14"
+                  - button "Sunday, November 15, 2026" [ref=e364] [cursor=pointer]: "15"
+                  - button "Monday, November 16, 2026" [ref=e365] [cursor=pointer]: "16"
+                  - button "Tuesday, November 17, 2026" [ref=e366] [cursor=pointer]: "17"
+                  - button "Wednesday, November 18, 2026" [ref=e367] [cursor=pointer]: "18"
+                  - button "Thursday, November 19, 2026" [ref=e368] [cursor=pointer]: "19"
+                  - button "Friday, November 20, 2026" [ref=e369] [cursor=pointer]: "20"
+                  - button "Saturday, November 21, 2026, 1 admin action" [ref=e370] [cursor=pointer]: "21"
+                  - button "Sunday, November 22, 2026" [ref=e372] [cursor=pointer]: "22"
+                  - button "Monday, November 23, 2026" [ref=e373] [cursor=pointer]: "23"
+                  - button "Tuesday, November 24, 2026" [ref=e374] [cursor=pointer]: "24"
+                  - button "Wednesday, November 25, 2026" [ref=e375] [cursor=pointer]: "25"
+                  - button "Thursday, November 26, 2026" [ref=e376] [cursor=pointer]: "26"
+                  - button "Friday, November 27, 2026" [ref=e377] [cursor=pointer]: "27"
+                  - button "Saturday, November 28, 2026" [ref=e378] [cursor=pointer]: "28"
+                  - button "Sunday, November 29, 2026" [ref=e379] [cursor=pointer]: "29"
+                  - button "Monday, November 30, 2026" [ref=e380] [cursor=pointer]: "30"
+                  - button "Tuesday, December 1, 2026" [ref=e381] [cursor=pointer]: "1"
+                  - button "Wednesday, December 2, 2026" [ref=e382] [cursor=pointer]: "2"
+                  - button "Thursday, December 3, 2026" [ref=e383] [cursor=pointer]: "3"
+                  - button "Friday, December 4, 2026" [ref=e384] [cursor=pointer]: "4"
+                  - button "Saturday, December 5, 2026" [ref=e385] [cursor=pointer]: "5"
+                  - button "Sunday, December 6, 2026" [ref=e386] [cursor=pointer]: "6"
+                - generic [ref=e387]:
+                  - generic [ref=e388]: Thu, Nov 26 · today
+                  - generic [ref=e389]: 1 active day
+            - generic [ref=e390]:
+              - generic [ref=e391]:
+                - generic [ref=e392]:
+                  - heading "Recent activity" [level=2] [ref=e393]:
+                    - generic [aria-hidden] [ref=e394]: history
+                    - text: Recent activity
+                  - paragraph [ref=e395]: The latest actions taken inside the console.
+                - link "View trail" [ref=e397] [cursor=pointer]:
+                  - /url: /admin/audit
+                  - text: View trail
+                  - generic [aria-hidden] [ref=e398]: arrow_forward
+              - list [ref=e400]:
+                - listitem [ref=e401]:
+                  - generic [aria-hidden] [ref=e403]: qr_code_2
+                  - generic [ref=e404]:
+                    - paragraph [ref=e405]: Vitalis Admin · Access QR created
+                    - paragraph [ref=e406]: Platform · 4d ago

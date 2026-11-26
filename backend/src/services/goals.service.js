@@ -53,7 +53,7 @@ function toRecord(row) {
     heightCm: row.height_cm != null ? Number(row.height_cm) : null,
     weightKg: row.weight_kg != null ? Number(row.weight_kg) : null,
     bmi: row.bmi != null ? Number(row.bmi) : null,
-    dob: row.dob,
+    dob: row.dob ? isoDate(row.dob) : null,
     sex: row.sex,
     exerciseFreq: row.exercise_freq,
     sleepHours: row.sleep_hours != null ? Number(row.sleep_hours) : null,
@@ -72,7 +72,7 @@ function toRecord(row) {
 // Carry forward body profile unless the caller overrides it (never mutate req.body)
 function carriedBody(prev, overrides) {
   return {
-    dob: prev.dob,
+    dob: prev.dob ? isoDate(prev.dob) : null,
     sex: prev.sex,
     heightCm: prev.height_cm,
     weightKg: prev.weight_kg,
@@ -272,6 +272,8 @@ async function updateActiveGoalIdentity(prev, dobVal, sexVal) {
     activityLevel: prev.activity_level,
     goalType: prev.goal_type,
     pace: prev.pace,
+    // Keep multi-goal targets (recomposition, protein) on identity edits.
+    secondaryGoals: splitGoals(prev.secondary_goals),
   });
 
   await db.execute(
@@ -345,6 +347,8 @@ async function recalibrateGoal(userId, { force = false } = {}) {
     activityLevel: prev.activity_level,
     goalType: prev.goal_type,
     pace: prev.pace,
+    // Recalibration must not drop the extra goals' nutrition effects.
+    secondaryGoals: splitGoals(prev.secondary_goals),
   });
 
   const setCols = ['daily_kcal = ?', 'protein_g = ?', 'carbs_g = ?', 'fat_g = ?'];

@@ -1,5 +1,6 @@
 // Password reset (email OTP) — thin controller.
 const service = require("../services/forgotpassword.service");
+const { checkPassword } = require("../utils/passwordPolicy");
 
 async function postsendOtp(req, res, next) {
   try {
@@ -56,8 +57,9 @@ async function postresetPassword(req, res, next) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
-    if (typeof newPassword !== "string" || newPassword.length < 8 || newPassword.length > 128) {
-      return res.status(400).json({ error: "Password must be 8–128 characters." });
+    const policy = checkPassword(newPassword);
+    if (!policy.ok) {
+      return res.status(400).json({ error: policy.message, code: "WEAK_PASSWORD", failed: policy.failed });
     }
 
     try {

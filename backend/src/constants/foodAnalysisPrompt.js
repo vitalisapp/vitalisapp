@@ -8,8 +8,10 @@ FOOD CHECK FIRST: only analyze food or drink meant to be eaten. If the photo doe
   "items": [
     {
       food_name  – string: specific name of this item (include portion/piece count when visible),
-      serving    – string: estimated serving size (e.g. "1 cup", "0.5 cup cooked", "2 pcs"),
-      estimated_weight_g – integer: total visible grams of THIS item (e.g. 180),
+      piece_count – integer: how many separate pieces of this item you counted (COUNTING PROTOCOL below); null for non-countable food (rice, soup, sauce, salad, drinks),
+      per_piece_g – integer: estimated grams of ONE piece; null when piece_count is null,
+      serving    – string: estimated serving size (e.g. "1 cup", "0.5 cup cooked", "3 pcs") — must use the same count as piece_count,
+      estimated_weight_g – integer: total visible grams of THIS item (e.g. 180) — for countable food = piece_count × per_piece_g,
       calories   – integer: kcal for the VISIBLE PORTION ONLY,
        protein    – number: grams of protein (up to 1 decimal),
        carbs      – number: grams of carbohydrates (up to 1 decimal),
@@ -21,6 +23,9 @@ FOOD CHECK FIRST: only analyze food or drink meant to be eaten. If the photo doe
       sugar               – number: grams of total sugars (1 decimal), part of carbs, never more than carbs,
       sodium              – integer: milligrams of sodium (soy sauce, bagoong, patis, instant noodles and processed meat are high),
       possible_allergens  – array of strings: allergens likely present in THIS item, using ONLY these canonical names: peanut, tree nut, milk, egg, gluten, soy, fish, shellfish, sesame. Use [] when none apply or you cannot tell from the image — never invent other names.
+      dish_confidence     – "high" | "medium" | "low": how sure you are of the dish IDENTITY (not the portion). Use "low" when it could easily be another dish,
+      alternatives        – array of up to 3 strings: other dishes this item could realistically be (most likely first), e.g. ["Pork adobo","Bistek tagalog"]; [] when dish_confidence is "high",
+      low_confidence      – boolean: true when portion, piece count or identity is uncertain; omit or false otherwise.
     }
   ],
   "suggestion" – string: one practical health tip about this meal (≤ 15 words)
@@ -31,9 +36,31 @@ A. One array entry per DISTINCT visible food (e.g. chicken + rice + broccoli = 3
 B. Maximum 8 items — merge tiny garnishes/sauces into the nearest main item.
 C. Every item independently follows the PORTION, MACRO, and FAT BREAKDOWN rules below.
 
+COUNTING PROTOCOL (do this BEFORE estimating any weight or calories)
+Undercounting is the most common error — e.g. reporting 2 empanadas when 3 are on the plate.
+For every countable food (empanadas, lumpia, siomai, dumplings, nuggets, wings, drumsticks,
+eggs, pandesal/bread rolls, cookies, pizza slices, sushi, skewers, fish balls, fruit pieces…):
+  a. Scan the WHOLE image in a fixed order: left → right, top → bottom, then the edges, the
+     background, other plates, containers, hands and anything stacked on top.
+  b. Count EVERY individual piece, including pieces that are partly hidden, overlapping,
+     stacked, cut open, half-eaten, or cut off by the photo edge. A piece only partly visible
+     still counts as 1 if it is clearly a separate piece.
+  c. Use visible boundaries — separate crimped edges, tips, shadows, gaps — to split pieces
+     that touch. Two touching pieces are 2, not 1.
+  d. Count a second time in the opposite order. If the two counts differ, look again and use
+     the number that matches the separate pieces you can actually see.
+  e. Never default to 1 or 2. Write the final number in piece_count, in food_name
+     (e.g. "Empanada (3 pcs)") and in serving (e.g. "3 pcs"), all identical.
+  f. THEN estimate the VISIBLE edible weight, excluding bones, wrappers and missing bites.
+     per_piece_g is the average visible edible grams per counted piece, NOT a whole-piece
+     default. Set estimated_weight_g = piece_count × per_piece_g and size every nutrient
+     for that visible weight. Never reconstruct hidden or off-screen portions.
+  g. If boundaries, food identity or scale are unclear, set low_confidence:true and use
+     a generic food name rather than inventing an exact recipe, brand or hidden filling.
+
 PORTION ESTIMATION RULES
 1. Estimate ONLY what is VISIBLE in the image. Do not assume extras off-screen.
-2. Count pieces when applicable and include the count in food_name.
+2. Count pieces with the COUNTING PROTOCOL and use the same count everywhere.
 3. Compare food size to standard references: plate (~25cm), bowl (~16cm), utensils, or packaging.
 4. A standard Filipino plate of rice = 1 cup (~180g cooked rice).
    This is only a size reference, never a default portion. Scale every reference
@@ -58,6 +85,27 @@ MACRO RULES (non-negotiable)
 8. Calories must be non-negative integers; nutrient grams may have 1 decimal.
    Zero is valid for nutrients absent from a food; never add minimum quantities
    just to make a nutrient nonzero. References are approximate, not minimums.
+
+FILIPINO DISH IDENTIFICATION (decide the dish from these visual cues BEFORE using anchors)
+Many Filipino dishes look alike in photos. Name the dish from what you SEE, not the most famous name:
+- Dark brown soy-vinegar glaze, garlic, bay leaf, little or no vegetables → ADOBO
+  (chicken: bone-in pieces, skin; pork: cubed belly with fat layers). Onion rings + thin beef slices → BISTEK.
+- Red-orange tomato sauce stews → look closer:
+  diced pork + liver + small potato/carrot cubes, often raisins/hotdog → MENUDO;
+  large beef/goat chunks + bell pepper + liver-spread-thickened sauce, olives/cheese → CALDERETA;
+  large beef chunks with pork-fat strips inside, smoother sauce → MECHADO;
+  ground meat with tiny diced vegetables → GINILING.
+- Thick orange/brown PEANUT sauce with oxtail/tripe, eggplant, sitaw, pechay; bagoong on the side → KARE-KARE
+  (log bagoong as its own small item when visible).
+- Clear soups → look at broth and vegetables:
+  SOUR, cloudy-clear with kangkong, labanos, sitaw, okra, tomato → SINIGANG (pork / shrimp / fish by the protein);
+  ginger broth, sayote or green papaya, malunggay/chili leaves, chicken → TINOLA;
+  plain broth, cabbage/pechay, corn on cob, potato → NILAGA; same with big bone + marrow → BULALO.
+- Creamy white/beige coconut sauce → GINATAAN; with chili and pork → BICOL EXPRESS; shredded dark taro leaves → LAING.
+- Very dark (almost black) thick pork stew → DINUGUAN.
+- Crispy fried pork with blistered skin: cubes → LECHON KAWALI; whole leg/knuckle → CRISPY PATA; chopped on sizzling plate → SISIG.
+If two dishes fit, pick the closer one, set dish_confidence "medium" or "low" and list the others in alternatives.
+Never invent a regional name you are not sure of — a generic name ("Pork stew in tomato sauce") with alternatives is better.
 
 ─── CALIBRATION ANCHORS ────────────────────────────────────────────────────
 
@@ -152,6 +200,13 @@ BREAD, SNACKS & STREET FOOD:
   Isaw (chicken intestine) 2 sticks (~60g):     120 kcal | P: 8g  | C: 6g  | F: 6g
   Betamax 2pcs (~60g):                          100 kcal | P: 8g  | C: 4g  | F: 6g
   Hotdog on stick 1pc (~60g):                   180 kcal | P: 6g  | C: 10g | F: 12g
+  Empanada fried 1pc (~90g, meat/veg filling):  270 kcal | P: 8g  | C: 28g | F: 14g
+  Empanada baked 1pc (~90g):                    230 kcal | P: 8g  | C: 26g | F: 10g
+  Lumpia shanghai 1pc (~20g):                    60 kcal | P: 2.5g| C: 4g  | F: 4g
+  Lumpiang gulay (fried, 1pc ~80g):             150 kcal | P: 3g  | C: 18g | F: 7g
+  Siomai 1pc (~20g):                             45 kcal | P: 3g  | C: 3g  | F: 2.5g
+  Steamed dumpling 1pc (~25g):                   45 kcal | P: 2.5g| C: 5g  | F: 1.5g
+  Chicken nugget 1pc (~18g):                     50 kcal | P: 2.5g| C: 3g  | F: 3g
 
 WESTERN & INTERNATIONAL:
   Grilled chicken breast 200g (no coating):     330 kcal | P: 62g | C: 0g  | F: 7g
@@ -233,6 +288,9 @@ DAIRY & EGGS:
 ─── END OF CALIBRATION ANCHORS ────────────────────────────────────────────────
 
 CRITICAL MISTAKES TO AVOID
+- Undercounting pieces: re-check partly hidden, overlapping, stacked and edge pieces
+- food_name, serving and piece_count showing different numbers
+- Calories sized for fewer pieces than piece_count (per-piece anchor × piece_count is the sanity check)
 - Do not add arbitrary minimum carbs or fat to small portions
 - Scale shared and small portions by their actual estimated weight
 - Always verify: (protein × 4) + (carbs × 4) + (fat × 9) ≈ your calorie number ± 5%
@@ -244,7 +302,7 @@ FAT BREAKDOWN RULES
 11. If unsure, split remaining fat after saturated/trans as 40% mono, 35% poly, remainder.
 
 OUTPUT FORMAT (raw JSON only — no markdown, no prose, no code fences):
-{"items":[{"food_name":"...","serving":"...","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"sugar":0,"sodium":0,"possible_allergens":[]}],"suggestion":"..."}`;
+{"items":[{"food_name":"...","piece_count":null,"per_piece_g":null,"serving":"...","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"sugar":0,"sodium":0,"possible_allergens":[],"dish_confidence":"high","alternatives":[]}],"suggestion":"..."}`;
 
 // Compact variant for providers with tight input budgets (Groq free tier:
 // 7,000 tokens/minute). Keeps the rules that drive accuracy — visible-portion
@@ -257,10 +315,17 @@ TASK
 List EVERY distinct food as its own item. Maximum 8. Group identical pieces (e.g. "3 pcs nuggets").
 FOOD CHECK FIRST: only analyze food or drink meant to be eaten. If the photo does NOT clearly show real food or drink — e.g. a person, face or selfie, body part, pet/animal, screen, document, room, scenery, vehicle, everyday object, empty plate/packaging, toy or fake food, or a blank/blurry image — return ONLY {"items":[],"not_food":true,"subject":"<2-5 words: what the photo shows>","suggestion":"This doesn't look like food."} — never invent a dish and never guess food from a person, logo or object. A person holding or eating real food still counts as food: analyze the food only.
 Output ONLY raw JSON, no markdown or prose:
-{"items":[{"food_name":"...","serving":"1 cup","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"sugar":0,"sodium":0,"possible_allergens":[]}],"suggestion":"one short tip"}
+{"items":[{"food_name":"...","piece_count":null,"per_piece_g":null,"serving":"1 cup","estimated_weight_g":0,"calories":0,"protein":0,"carbs":0,"fat":0,"saturated_fat":0,"trans_fat":0,"polyunsaturated_fat":0,"monounsaturated_fat":0,"sugar":0,"sodium":0,"possible_allergens":[],"dish_confidence":"high","alternatives":[]}],"suggestion":"one short tip"}
+dish_confidence = how sure you are of the dish identity (high/medium/low); alternatives = up to 3 other dishes it could be ([] when high).
+
+COUNTING (before any weight or calories) — undercounting is the #1 error (e.g. 2 empanadas reported when 3 are visible):
+- For countable food (empanada, lumpia, siomai, dumplings, nuggets, wings, eggs, rolls, cookies, slices, skewers) scan left→right, top→bottom, then edges, background, other plates and stacked pieces.
+- Count every separate piece, including partly hidden, overlapping, cut-off or half-eaten ones. Touching pieces are separate. Count again in reverse order; never default to 1 or 2.
+- piece_count = that number (null for rice, soup, sauce, drinks). per_piece_g = average VISIBLE edible grams per piece, excluding bones, wrappers and missing bites, not a whole-piece default. estimated_weight_g = piece_count × per_piece_g. food_name ("Empanada (3 pcs)") and serving ("3 pcs") use the same number; nutrients cover only that visible weight.
+- If boundaries, identity or scale are unclear, set low_confidence:true and use a generic name. Never invent hidden portions, fillings or brands.
 
 RULES
-1. Estimate only what is visible. Count pieces and put the count in food_name. Never assume off-screen food.
+1. Estimate only what is visible. Never assume off-screen food.
 2. Estimate grams first, then derive macros from that weight. Do not count a composite dish and its ingredients twice.
 3. kcal/g must be plausible: watery veg 0.1–1, rice/noodles 1–1.5, bread 2–3, meat 1.5–3, fried food 2–4, oil ~9.
 4. Check energy: (protein × 4) + (carbs × 4) + (fat × 9) ≈ calories ± 5%. Zero is valid for absent nutrients — never add a minimum.
@@ -277,9 +342,20 @@ PHILIPPINE / COMMON ANCHORS (scale to the visible portion, never assume a whole 
 - Grilled chicken breast 200g: 330 kcal | P62 C0 F7
 - Fried rice 1 cup ~180g: 290 kcal | P6 C42 F10
 - Pandesal 1 pc ~50g: 150 kcal | P4 C28 F2
+- Empanada fried 1 pc ~90g: 270 kcal | P8 C28 F14
+- Lumpia shanghai 1 pc ~20g: 60 kcal | P2.5 C4 F4
+- Siomai 1 pc ~20g: 45 kcal | P3 C3 F2.5
 - Boiled egg 1 large: 78 kcal | P6 C1 F5
 - Medium banana ~120g: 105 kcal | P1 C27 F0
-Use the closest anchor when a dish is not listed.`;
+- Kare-kare ~250g: 420 kcal | P30 C14 F26
+- Pork menudo ~200g: 300 kcal | P20 C18 F14
+- Bulalo 1 bowl ~400ml: 450 kcal | P35 C10 F30
+Use the closest anchor when a dish is not listed.
+
+FILIPINO LOOK-ALIKES (name from what you see; if unsure set dish_confidence "low" and list alternatives):
+- Dark soy-vinegar glaze → adobo. Red tomato stew → menudo (diced pork+liver+potato), caldereta (big chunks+bell pepper+liver spread), mechado (big beef chunks with fat strips).
+- Peanut sauce + oxtail/eggplant/sitaw → kare-kare. Sour clear soup + kangkong/labanos → sinigang. Ginger broth + sayote/papaya → tinola. Plain broth + cabbage/corn → nilaga; with marrow bone → bulalo.
+- Coconut cream → ginataan / bicol express (chili) / laing (taro leaves). Near-black stew → dinuguan.`;
 
 
 // Per-100 g density for ONE named food. Used by the manual meal form's

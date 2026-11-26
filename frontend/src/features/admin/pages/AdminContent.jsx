@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useAdminFilters } from '../hooks/useAdminFilters.js';
+import { ADMIN_FILTERS } from '../utils/urlFilters.js';
 import { apiDelete } from '../../../lib/apiClient.js';
 import { useAdminResource } from '../hooks/useAdminResource.js';
 import Icon from '../../../components/Icon.jsx';
@@ -39,14 +41,19 @@ const humanize = (value) => String(value || '—').toLowerCase().replace(/_/g, '
 
 export default function AdminContent() {
   const { show, node: toast } = useAdminToast();
-  const [tab, setTab] = useState('plans');
+  const { values: { tab, tag, plansPage, postsPage }, update } = useAdminFilters(ADMIN_FILTERS.content);
+  const setTab = (value) => update({ tab: value });
 
-  const [plansOffset, setPlansOffset] = useState(0);
+  const plansOffset = (Number(plansPage) - 1) * PAGE_SIZE;
+  const setPlansOffset = (value) => update({ plansPage: value / PAGE_SIZE + 1 });
   const plans = useAdminResource(`/api/admin/plans?limit=${PAGE_SIZE}&offset=${plansOffset}`);
 
-  const [tagInput, setTagInput] = useState('');
-  const [tag, setTag] = useState('');
-  const [postsOffset, setPostsOffset] = useState(0);
+  const [tagInput, setTagInput] = useState(tag);
+  useEffect(() => {
+    setTagInput(tag);
+  }, [tag]);
+  const postsOffset = (Number(postsPage) - 1) * PAGE_SIZE;
+  const setPostsOffset = (value) => update({ postsPage: value / PAGE_SIZE + 1 });
   const posts = useAdminResource(
     `/api/admin/community/posts?limit=${PAGE_SIZE}&offset=${postsOffset}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`,
   );
@@ -191,7 +198,7 @@ export default function AdminContent() {
           flush
         >
           <form className="adm-toolbar" style={{ padding: '4px 20px 14px' }}
-            onSubmit={(e) => { e.preventDefault(); setTag(tagInput.trim()); setPostsOffset(0); }}>
+            onSubmit={(e) => { e.preventDefault(); update({ tag: tagInput.trim(), postsPage: 1 }); }}>
             <label className="adm-search">
               <Icon name="sell" />
               <input className="adm-input" value={tagInput} placeholder="Filter by exact tag…"
@@ -200,7 +207,7 @@ export default function AdminContent() {
             <button type="submit" className="adm-btn"><Icon name="filter_alt" /> Apply</button>
             {tag && (
               <button type="button" className="adm-btn is-ghost is-sm"
-                onClick={() => { setTag(''); setTagInput(''); setPostsOffset(0); }}>
+                onClick={() => { setTagInput(''); update({ tag: '', postsPage: 1 }); }}>
                 Clear
               </button>
             )}

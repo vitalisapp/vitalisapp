@@ -41,7 +41,8 @@ const updatePersonalSchema = z.object({
 function sendPlanError(err, res, next) {
     if (err instanceof AppError) {
         const body = { error: err.message };
-        if (err.code === 'NO_ACTIVE_GOAL' || err.code === 'NEEDS_MIGRATION_032') body.code = err.code;
+        if (err.code === 'NO_ACTIVE_GOAL' || err.code === 'NEEDS_MIGRATION_032' || err.code === 'LEVEL_LOCKED') body.code = err.code;
+        if (err.code === 'LEVEL_LOCKED' && err.details) body.details = err.details;
         return res.status(err.statusCode).json(body);
     }
     return next(err);
@@ -101,6 +102,24 @@ async function getcontentPlanId(req, res, next) {
     } catch (err) {
         if (err instanceof AppError) return sendPlanError(err, res, next);
         console.error("Plan Content Error:", err);
+        next(err);
+    }
+}
+
+// GET /api/plans/:planId/days/:dayNumber/routine — warm-up + cool-down.
+const routineParams = z.object({
+    planId: z.coerce.number().int().positive(),
+    dayNumber: z.coerce.number().int().min(1).max(366),
+});
+async function getDayRoutine(req, res, next) {
+    const parsed = routineParams.safeParse(req.params || {});
+    if (!parsed.success) return res.status(400).json({ error: 'Valid planId and dayNumber are required' });
+    try {
+        const routine = await plansService.getDayRoutine(req.user.id, parsed.data.planId, parsed.data.dayNumber);
+        res.set('Cache-Control', 'private, no-store');
+        res.json(routine);
+    } catch (err) {
+        if (err instanceof AppError) return sendPlanError(err, res, next);
         next(err);
     }
 }
@@ -211,6 +230,7 @@ module.exports = {
     postprogressComplete,
     getprogressUserIdPlanId,
     getcontentPlanId,
+    getDayRoutine,
     getUserId,
     getGoalStatusUserId,
     postCreate,

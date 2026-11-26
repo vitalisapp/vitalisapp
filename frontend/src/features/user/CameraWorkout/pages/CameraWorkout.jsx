@@ -21,6 +21,10 @@ import { formStatus } from '../components/formStatus.js';
 import CorrectionBanner from '../components/CorrectionBanner.jsx';
 import SessionBottomBar from '../components/SessionBottomBar.jsx';
 import WorkoutSummary from '../components/WorkoutSummary.jsx';
+import PlanDayRoutine from '../../Plan/components/PlanDayRoutine.jsx';
+import UnlockCelebration from '../../Progression/components/UnlockCelebration.jsx';
+import ChallengeResultCard from '../../Progression/components/ChallengeResultCard.jsx';
+import { useRefreshProgression } from '../../Progression/hooks/useProgression.js';
 import WorkoutFeedbackSheet from '../components/WorkoutFeedbackSheet.jsx';
 import AddWorkoutModal from '../../Log/components/AddWorkoutModal.jsx';
 import ExerciseChoiceModal from '../components/ExerciseChoiceModal.jsx';
@@ -48,6 +52,10 @@ const CameraWorkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const fromPlan = location.state?.fromPlan ?? null;
+  // Revision #4 — optional challenge started from Plans › Levels.
+  const challenge = fromPlan ? null : (location.state?.challenge ?? null);
+  const [challengeResult, setChallengeResult] = useState(null);
+  const refreshProgression = useRefreshProgression();
 
   const requiredMins = fromPlan?.durationMins ?? 0;
   const minReps      = MIN_REPS_DEFAULT;
@@ -81,13 +89,13 @@ const CameraWorkout = () => {
   const selfTracked = workoutMode !== 'hold' && counterType === 'generic';
 
   // Rep + hold targets (user picks before Start). Manual input allowed.
-  const [repTarget, setRepTarget] = useState(5);
+  const [repTarget, setRepTarget] = useState(() => (challenge?.mode === 'rep' && challenge.reps) || 5);
   const [repCustom, setRepCustom] = useState('');
-  const [setTarget, setSetTarget] = useState(3);
+  const [setTarget, setSetTarget] = useState(() => (challenge?.mode === 'rep' && challenge.sets) || 3);
   const [setCustom, setSetCustom] = useState('');
   const [completedSets, setCompletedSets] = useState(0);
   const completedSetsRef = useRef(0);
-  const [holdTarget, setHoldTarget] = useState(45);
+  const [holdTarget, setHoldTarget] = useState(() => (challenge?.mode === 'hold' && challenge.target) || 45);
   const [holdCustom, setHoldCustom] = useState('');
 
   const [isRecording,     setIsRecording]     = useState(false);
@@ -239,26 +247,7 @@ const CameraWorkout = () => {
   const doStop = useCallback(() => {
     cancelAnalysis();
     const final = workoutMode === 'hold' ? repCountRef.current : completedSetsRef.current * repTarget + repCountRef.current;
-    endSession('completed', final).catch(err => {
-      if (import.meta.env.DEV) console.warn('[endSession] background error:', err);
-    });
-
     const held = Math.floor(holdRef.current);
-    const label = resolved?.label ?? workoutType;
-    const msg = workoutMode === 'hold'
-      ? `Session complete! You held ${held} seconds. Great work!`
-      : `Session complete! You did ${final} ${final === 1 ? 'rep' : 'reps'}. Great work!`;
-    setAiFeedback(msg);
-    if (voiceEnabled) speak(msg, 1.0, 1.05);
-
-    setLogs(prev => [...prev, {
-      exercise: label,
-      reps:     workoutMode === 'hold' ? `${held}s` : final,
-      time:     new Date().toLocaleTimeString(),
-    }]);
-
-    const resolvedUserId = user?.id ?? user?.userId ?? null;
-
     // ── Complete summary (reference screen 3). Score is a documented
     // client-side heuristic: average of sampled postural symmetry for
     // alignment/balance + rep-cadence tempo. No backend change.
@@ -283,6 +272,41 @@ const CameraWorkout = () => {
     const scoreParts = [avgSym, avgSym];
     if (tempoNum !== null) scoreParts.push(tempoNum);
     const score = Math.max(0, Math.min(100, Math.round(scoreParts.reduce((a, b) => a + b, 0) / scoreParts.length)));
+
+    // Revision #4: technique signal — only real camera pose data counts.
+    const formScore = cameraOn && samples.length >= 10 && avgSym > 0 ? score : null;
+    const challengeSets = challenge?.mode === 'hold' && workoutMode === 'hold'
+      ? [{ exercise_name: resolved?.label ?? workoutType, set_number: 1, duration_seconds: held }]
+      : undefined;
+    setChallengeResult(null);
+    endSession('completed', final, challengeSets, formScore === null ? undefined : { form_score: formScore })
+      .then((log) => {
+        refreshProgression();
+        if (!challenge || !log?.id || log.status !== 'completed') return;
+        setChallengeResult({ loading: true });
+        apiPost(`/api/progression/challenges/${encodeURIComponent(challenge.key)}/complete`, { workoutLogId: log.id })
+          .then((r) => { setChallengeResult(r); refreshProgression(); })
+          .catch((err) => setChallengeResult({ error: err?.message || 'Could not check the challenge.' }));
+      })
+      .catch(err => {
+        if (import.meta.env.DEV) console.warn('[endSession] background error:', err);
+      });
+
+    const label = resolved?.label ?? workoutType;
+    const msg = workoutMode === 'hold'
+      ? `Session complete! You held ${held} seconds. Great work!`
+      : `Session complete! You did ${final} ${final === 1 ? 'rep' : 'reps'}. Great work!`;
+    setAiFeedback(msg);
+    if (voiceEnabled) speak(msg, 1.0, 1.05);
+
+    setLogs(prev => [...prev, {
+      exercise: label,
+      reps:     workoutMode === 'hold' ? `${held}s` : final,
+      time:     new Date().toLocaleTimeString(),
+    }]);
+
+    const resolvedUserId = user?.id ?? user?.userId ?? null;
+
     const lastCue = aiFeedback && !/^(Select Exercise|Starting|Switched|Session complete)/.test(aiFeedback)
       ? aiFeedback
       : 'Nice work — consistency beats intensity. Keep it up.';
@@ -304,7 +328,7 @@ const CameraWorkout = () => {
 
     if (fromPlan) {
       // Deferred until Done — the summary shows first.
-      pendingNavRef.current = () => navigate('/dashboard/plans', {
+      pendingNavRef.current = () => navigate('/plans', {
         state: { openTracker: fromPlan.planId },
       });
     }
@@ -324,7 +348,7 @@ const CameraWorkout = () => {
     setElapsedSecs(0);
     setIsRecording(false);
     setPaused(false);
-  }, [cancelAnalysis, endSession, repCountRef, holdRef, workoutType, workoutMode, resolved, voiceEnabled, user, fromPlan, isSessionComplete, navigate, setAiFeedback, aiFeedback, repTarget, setTarget, holdTarget]);
+  }, [cancelAnalysis, endSession, repCountRef, holdRef, workoutType, workoutMode, resolved, voiceEnabled, user, fromPlan, isSessionComplete, navigate, setAiFeedback, aiFeedback, repTarget, setTarget, holdTarget, cameraOn, challenge, refreshProgression]);
 
   // Pause / resume: freezes timer + rep counting; video and skeleton
   // preview keep running. Voice cues are gated on paused upstream.
@@ -370,8 +394,9 @@ const CameraWorkout = () => {
 
   const handleFeedbackClose = useCallback(() => {
     setFeedbackFor(null);
+    refreshProgression();
     flushPendingNav();
-  }, [flushPendingNav]);
+  }, [flushPendingNav, refreshProgression]);
 
   useEffect(() => { doStopRef.current = doStop; }, [doStop]);
 
@@ -468,7 +493,7 @@ const CameraWorkout = () => {
       try { skipSummaryRef.current = true; doStopRef.current?.(); } catch { /* noop */ }
     }
     if (fromPlan) {
-      navigate('/dashboard/plans', { state: { openTracker: fromPlan.planId } });
+      navigate('/plans', { state: { openTracker: fromPlan.planId } });
     } else {
       navigate('/dashboard');
     }
@@ -691,6 +716,17 @@ const CameraWorkout = () => {
       <div>
         {/* ── Unified app topbar (menu + Vitalis + bell + theme + avatar) ── */}
         <div>
+        {challenge && (
+          <div className="bg-[var(--accent-bg)] border-b border-[var(--accent-border)] px-4 py-2.5 flex items-center gap-2 min-w-0">
+            <Icon name="emoji_events" className="text-[length:var(--fs-16)] text-[var(--accent)] shrink-0" />
+            <span className="text-[length:var(--fs-10)] font-black uppercase tracking-widest text-[var(--accent)] truncate">
+              Challenge: {challenge.name}
+            </span>
+            <span className="text-[length:var(--fs-10)] text-[var(--text-secondary)] uppercase tracking-widest truncate">
+              · {challenge.mode === 'hold' ? `${challenge.target}s total hold` : `${challenge.target} reps in one session`}
+            </span>
+          </div>
+        )}
         {fromPlan && (
           <div className="bg-[var(--accent-bg)] border-b border-[var(--accent-border)] px-4 py-2.5 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
@@ -947,8 +983,16 @@ const CameraWorkout = () => {
         </div>
         {/* Room for the fixed BottomNav so the bar never rests underneath it at page end. */}
         <div className="md:hidden" style={{ height: 'calc(84px + env(safe-area-inset-bottom, 0px))' }} aria-hidden="true" />
-        <WorkoutSummary summary={summary} kcalBurned={sessionResult?.calories_burned ?? null} onDone={handleSummaryDone} />
+        <WorkoutSummary summary={summary} kcalBurned={sessionResult?.calories_burned ?? null} onDone={handleSummaryDone}>
+          {challenge && challengeResult ? (
+            <ChallengeResultCard challenge={challenge} result={challengeResult} />
+          ) : null}
+          {fromPlan?.planId && fromPlan?.dayNumber ? (
+            <PlanDayRoutine planId={fromPlan.planId} dayNumber={fromPlan.dayNumber} phase="cooldown" defaultOpen />
+          ) : null}
+        </WorkoutSummary>
         <WorkoutFeedbackSheet logId={feedbackFor} onClose={handleFeedbackClose} />
+        <UnlockCelebration suppressed={Boolean(isRecording || summary || feedbackFor)} />
         </>
         )}
       </div>

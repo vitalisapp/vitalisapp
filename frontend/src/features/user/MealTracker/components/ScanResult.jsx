@@ -2,6 +2,8 @@ import { useState } from 'react';
 import Icon from '../../../../components/Icon.jsx';
 import Button from '../../../../components/ui/Button.jsx';
 import { MEAL_SLOTS, suggestMealSlot } from '../utils/mealSlots.js';
+import { itemsNeedingReview, needsReview, reviewReasons, REASON_TEXT } from '../../../../lib/scanReview.js';
+import ScanItemEditor from './ScanItemEditor.jsx';
 
 // Reference-style result sheet: dish title, kcal ring, macro bars,
 // tappable ingredient chips (toggle include), custom add, Add meal.
@@ -78,30 +80,14 @@ function MacroBar({ label = undefined, grams = undefined, max = undefined }) {
   );
 }
 
-// One numeric input of the tap-to-correct editor.
-function CorrectInput({ label = undefined, value = undefined, onChange = undefined, disabled = undefined }) {
-  return (
-    <label className="mt-result-correct-field">
-      <span>{label}</span>
-      <input
-        type="number"
-        min="0"
-        inputMode="numeric"
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(event.target.value)}
-        className="mt-result-correct-input"
-      />
-    </label>
-  );
-}
-
 export default function ScanResult({
   result = undefined,
   isLogging = undefined,
   onToggle = undefined,
   onScale = undefined,
   onEditItem = undefined,
+  onConfirmItem = undefined,
+  onEstimateDish = undefined,
   onAddCustom = undefined,
   onSave = undefined,
   onRescan = undefined,
@@ -110,8 +96,9 @@ export default function ScanResult({
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState({ food_name: '', calories: '', serving: '' });
   const [editingKey, setEditingKey] = useState(null);
-  const [draftEdit, setDraftEdit] = useState({ calories: '', protein: '', carbs: '', fat: '' });
   const [mealSlot, setMealSlot] = useState(() => suggestMealSlot());
+  // One-tap confirm: first Save with unchecked uncertain items asks once.
+  const [confirmingSave, setConfirmingSave] = useState(false);
 
   const items = result?.items || [];
   const flagged = items.filter(
@@ -150,24 +137,19 @@ export default function ScanResult({
   };
 
   const openEditor = (item) => {
+    setConfirmingSave(false);
     setEditingKey(item.key);
-    setDraftEdit({
-      calories: String(item.calories ?? ''),
-      protein: String(item.protein ?? ''),
-      carbs: String(item.carbs ?? ''),
-      fat: String(item.fat ?? ''),
-    });
   };
+  const editingItem = editingKey ? items.find((entry) => entry.key === editingKey) : null;
+  const toReview = itemsNeedingReview(items);
 
-  const applyEdit = (key) => {
-    const number = (value) => (value === '' || value == null ? undefined : Number(value));
-    onEditItem?.(key, {
-      calories: number(draftEdit.calories),
-      protein: number(draftEdit.protein),
-      carbs: number(draftEdit.carbs),
-      fat: number(draftEdit.fat),
-    });
-    setEditingKey(null);
+  const requestSave = () => {
+    if (toReview.length > 0 && !confirmingSave) {
+      setConfirmingSave(true);
+      return;
+    }
+    setConfirmingSave(false);
+    onSave?.({ mealType: mealSlot });
   };
   const editedCount = items.filter((item) => item.corrected).length;
 
@@ -224,10 +206,12 @@ export default function ScanResult({
 
       <p className="mt-result-section-label">Nutritional value</p>
 
-      {selected.some((item) => item.low_confidence) && (
-        <p role="status" className="mt-result-notice mt-result-notice--warning">
-          Low confidence estimate — verify portion before saving.
-        </p>
+      {toReview.length > 0 && (
+        <div role="status" className="mt-result-notice mt-result-notice--warning">
+          {toReview.length === 1
+            ? `Please check ${cleanFoodName(toReview[0].food_name)}: ${REASON_TEXT[reviewReasons(toReview[0]).find((c) => c !== 'macro_mismatch')]?.toLowerCase()}.`
+            : `${toReview.length} items need a quick check — tap the ones marked “Check”.`}
+        </div>
       )}
       {result?.retryable && (
         <p role="alert" className="mt-result-notice mt-result-notice--info">
@@ -307,6 +291,18 @@ export default function ScanResult({
                   {cleanFoodName(item.food_name).slice(0, 18) || item.food_name.slice(0, 18)}
                 </span>
               </button>
+              {needsReview(item) && (
+                <button
+                  type="button"
+                  onClick={() => openEditor(item)}
+                  className="mt-result-check-badge"
+                  aria-label={`Check ${item.food_name}: may be inaccurate`}
+                  title={REASON_TEXT[reviewReasons(item)[0]]}
+                >
+                  <Icon name="error" className="mt-result-check-icon" fill={1} />
+                  Check
+                </button>
+              )}
 
               <button
                 type="button"
@@ -323,73 +319,22 @@ export default function ScanResult({
         </div>
       )}
 
-      {editingKey && (() => {
-        const item = items.find((entry) => entry.key === editingKey);
-        if (!item) return null;
-        return (
-          <div
-            className="mt-result-editor"
-            role="form"
-            aria-label={`Correct estimate for ${item.food_name}`}
-          >
-            <div className="mt-result-editor-head">
-              <p className="mt-result-editor-title">
-                Correct: {cleanFoodName(item.food_name)}
-              </p>
-              <button
-                type="button"
-                onClick={() => setEditingKey(null)}
-                aria-label="Close correction editor"
-                className="mt-result-editor-close"
-              >
-                <Icon name="close" className="mt-icon-symbol" />
-              </button>
-            </div>
-            <p className="mt-result-editor-note">
-              Your correction replaces the AI estimate. Leave kcal empty to re-derive it
-              from macros.
-            </p>
-            <div className="mt-result-correct-grid">
-              <CorrectInput
-                label="kcal"
-                value={draftEdit.calories}
-                onChange={(value) => setDraftEdit((current) => ({ ...current, calories: value }))}
-              />
-              <CorrectInput
-                label="P (g)"
-                value={draftEdit.protein}
-                onChange={(value) => setDraftEdit((current) => ({ ...current, protein: value }))}
-              />
-              <CorrectInput
-                label="C (g)"
-                value={draftEdit.carbs}
-                onChange={(value) => setDraftEdit((current) => ({ ...current, carbs: value }))}
-              />
-              <CorrectInput
-                label="F (g)"
-                value={draftEdit.fat}
-                onChange={(value) => setDraftEdit((current) => ({ ...current, fat: value }))}
-              />
-            </div>
-            <div className="mt-result-editor-actions">
-              <button
-                type="button"
-                onClick={() => setEditingKey(null)}
-                className="mt-result-editor-cancel"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => applyEdit(item.key)}
-                className="mt-result-editor-save"
-              >
-                Save correction
-              </button>
-            </div>
-          </div>
-        );
-      })()}
+      {editingItem && (
+        <ScanItemEditor
+          key={editingItem.key}
+          item={editingItem}
+          onCancel={() => setEditingKey(null)}
+          onConfirm={() => {
+            onConfirmItem?.(editingItem.key);
+            setEditingKey(null);
+          }}
+          onSave={(patch) => {
+            onEditItem?.(editingItem.key, patch);
+            setEditingKey(null);
+          }}
+          onEstimateDish={onEstimateDish}
+        />
+      )}
 
       {!adding ? (
         <button
@@ -466,8 +411,31 @@ export default function ScanResult({
         </div>
       </div>
 
+      {confirmingSave && toReview.length > 0 && (
+        <div role="alertdialog" aria-label="Uncertain items" className="mt-result-confirm">
+          <p className="mt-result-confirm-title">
+            {toReview.length === 1 ? '1 item may be inaccurate' : `${toReview.length} items may be inaccurate`}
+          </p>
+          <ul className="mt-result-confirm-list">
+            {toReview.map((item) => (
+              <li key={item.key}>
+                <strong>{cleanFoodName(item.food_name)}</strong> — {REASON_TEXT[reviewReasons(item).find((c) => c !== 'macro_mismatch')]}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-result-editor-actions">
+            <button type="button" className="mt-result-editor-cancel" onClick={() => openEditor(toReview[0])}>
+              Review
+            </button>
+            <button type="button" className="mt-result-editor-save" onClick={requestSave} disabled={isLogging}>
+              Save anyway
+            </button>
+          </div>
+        </div>
+      )}
+
       <Button
-        onClick={() => onSave?.({ mealType: mealSlot })}
+        onClick={requestSave}
         loading={isLogging}
         disabled={isLogging || selected.length === 0}
         fullWidth

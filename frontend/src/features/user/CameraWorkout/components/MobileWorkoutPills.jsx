@@ -98,7 +98,7 @@ export default function MobileWorkoutPills({ workoutType = undefined, onSelect =
                 onChange={(e) => { setQuery(e.target.value); setShown(PAGE); }}
                 placeholder="Search exercises"
                 aria-label="Search exercises"
-                className="w-full h-11 rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] pl-10 pr-9 text-[length:var(--fs-14)] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-disabled)] focus:border-[var(--accent)]"
+                className="w-full h-11 rounded-xl bg-[var(--bg-hover)] border border-[var(--border-light)] pl-10 pr-9 text-[length:var(--fs-14)] text-[var(--text-primary)] outline-none placeholder:text-[var(--input-placeholder)] focus:border-[var(--accent)]"
               />
               {query && (
                 <button

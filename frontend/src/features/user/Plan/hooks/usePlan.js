@@ -79,12 +79,18 @@ const usePlans = () => {
   }, [fetchMarketplace]);
 
   // ── Enroll in a plan ───────────────────────────────────────────
+  // Returns true on success. Failures (e.g. LEVEL_LOCKED for an Advanced /
+  // Extreme plan) are shown to the user instead of being swallowed.
   const handleEnroll = async (planId) => {
     try {
       await apiPost('/api/plans/enroll', { planId });
       await fetchMarketplace();
+      return true;
     } catch (err) {
       if (import.meta.env.DEV) console.error('Enrollment failed:', err);
+      if (err?.code === 'ALREADY_ENROLLED') { await fetchMarketplace(); return true; }
+      setActionError(err?.message || 'Could not start this plan.');
+      return false;
     }
   };
 

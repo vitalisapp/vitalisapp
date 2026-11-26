@@ -4,6 +4,9 @@ const db = require('../config/db');
 const { AppError } = require('../utils/errors');
 const { recommendPlan } = require('../utils/workoutRecommender');
 const { ageOn } = require('../utils/age');
+const { recommendRoutine } = require('../utils/warmupRecommender');
+const { classifyBmi } = require('../utils/health');
+const { requiredLevelForPlan } = require('../utils/progression');
 
 // Bodyweight starter sets per plan focus (equipment: none).
 // Recovery days intentionally get zero exercises (tracker offers Mark Complete).
@@ -130,8 +133,12 @@ async function insertPersonalPlan(conn, userId, { title, tag, intensity, targetF
 // Enroll in a marketplace template. Identity comes from JWT (userId), never body.
 async function enroll(userId, planId) {
     // 404 (not 500 FK) when plan doesn't exist
-    const [[plan]] = await db.execute('SELECT id FROM plans WHERE id = ? LIMIT 1', [planId]);
+    const [[plan]] = await db.execute('SELECT * FROM plans WHERE id = ? LIMIT 1', [planId]);
     if (!plan) throw new AppError('Plan not found', 404, 'PLAN_NOT_FOUND');
+    // Revision #4: Advanced / Extreme curated plans need the matching level.
+    // Already-enrolled users hit ALREADY_ENROLLED below and keep access.
+    const [[already]] = await db.execute('SELECT id FROM user_plans WHERE user_id = ? AND plan_id = ? LIMIT 1', [userId, planId]);
+    if (!already) await require('./progression.service').assertCanStartPlan(userId, plan);
     try {
         await db.execute(
             `INSERT INTO user_plans (user_id, plan_id, enrolled_at) VALUES (?, ?, NOW())`,
@@ -211,6 +218,42 @@ async function getPlanContent(planId) {
     }));
 }
 
+// Personalized warm-up + cool-down for one plan day (Revision #3). Reads the
+// day itself (works for generated AND curated plans) and the user's level,
+// goals and safety settings; the routine logic is pure (warmupRecommender).
+async function getDayRoutine(userId, planId, dayNumber) {
+    const [[day]] = await db.execute(
+        `SELECT id, day_number, title, activity_type, duration_mins
+           FROM plan_contents WHERE plan_id = ? AND day_number = ? LIMIT 1`,
+        [planId, dayNumber]
+    );
+    if (!day) throw new AppError('Plan day not found', 404, 'PLAN_DAY_NOT_FOUND');
+    const [exercises] = await db.execute(
+        'SELECT exercise_name AS name FROM plan_exercises WHERE plan_content_id = ? ORDER BY exercise_order ASC',
+        [day.id]
+    );
+    const goal = await loadActiveGoal(userId);
+    const prefs = await loadPrefs(userId);
+    return recommendRoutine(routineInput(goal, prefs, { ...day, exercises }));
+}
+
+/** Pure: goal row + prefs + day → routine input. Missing level → BEGINNER (safest). */
+function routineInput(goal, prefs, day) {
+    let age = null;
+    try { age = goal?.dob ? ageOn(goal.dob) : null; } catch { age = null; }
+    const bmiClass = classifyBmi(goal?.bmi);
+    const sedentary = goal?.activity_level === 'SEDENTARY';
+    return {
+        experience: goal?.experience_level || undefined,
+        goals: goal ? [goal.goal_type, ...parseSecondary(goal.secondary_goals)] : [],
+        day,
+        excludedCategories: prefs?.excludedCategories || [],
+        // Same low-impact rule as the workout recommender.
+        lowImpact: Boolean(bmiClass && (bmiClass.key === 'OBESE' || (bmiClass.key === 'OVERWEIGHT' && sedentary))),
+        age,
+    };
+}
+
 async function getPlansForUser(userId) {
     const [rows] = await db.execute(
         `SELECT p.*, IF(up.user_id IS NULL, 0, 1) as is_enrolled
@@ -230,7 +273,14 @@ async function getPlansForUser(userId) {
         );
         for (const r of counts) doneByPlan[r.plan_id] = Number(r.done || 0);
     } catch { doneByPlan = {}; }
+    // Revision #4: lock state for Advanced / Extreme curated plans. Fail-open
+    // for display only (enroll still enforces); pre-migration nothing locks.
+    let userLevel = null;
+    if (rows.some((p) => requiredLevelForPlan(p) > 1)) {
+        try { userLevel = await require('./progression.service').currentLevel(userId); } catch { userLevel = null; }
+    }
     return rows.map((p) => {
+        const requiredLevel = requiredLevelForPlan(p);
         const total = Number(p.duration_days || 0);
         const done = Number(doneByPlan[p.id] || 0);
         const ownerId = p.owner_user_id ?? null;
@@ -242,6 +292,8 @@ async function getPlansForUser(userId) {
             is_owner: ownerId != null && String(ownerId) === String(userId) ? 1 : 0,
             completed_days: done,
             progress_pct: total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0,
+            required_level: requiredLevel,
+            locked: userLevel !== null && requiredLevel > userLevel && Number(p.is_enrolled) !== 1,
         };
     });
 }
@@ -665,6 +717,8 @@ module.exports = {
     completeProgress,
     getProgress,
     getPlanContent,
+    getDayRoutine,
+    routineInput,
     getPlansForUser,
     createPersonalPlan,
     updatePersonalPlan,

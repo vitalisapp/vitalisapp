@@ -22,12 +22,12 @@
   --mt-line: color-mix(in srgb, var(--text-primary) 8%, transparent);
   --mt-line-strong: color-mix(in srgb, var(--text-primary) 14%, transparent);
   --mt-blue: #b1c4d0;
-  --mt-blue-strong: #587687;
+  --mt-blue-strong: #3f5a6a;
   --mt-brown: #594b30;
   --mt-lavender: #9385a2;
-  --mt-lavender-strong: #705e80;
+  --mt-lavender-strong: #584868;
   --mt-beige: #d0cca8;
-  --mt-beige-strong: #84784b;
+  --mt-beige-strong: #5f5630;
   --mt-sage: #8fb684;
   --mt-sage-strong: #5c8352;
   --mt-radius: 24px;
@@ -898,7 +898,7 @@
 }
 .meal-tracker .mt-macro-target {
   margin: 2px 0 9px;
-  color: color-mix(in srgb, var(--text-primary) 56%, transparent);
+  color: color-mix(in srgb, var(--text-primary) 72%, transparent);
   font-size: 9.5px;
   font-weight: 600;
 }
@@ -2824,3 +2824,155 @@
 .mt-limit--over .mt-limit-msg { color: var(--error, #b91c1c); }
 .mt-limits-foot { margin: 0; font-size: 11px; color: var(--text-muted); }
 @media (prefers-reduced-motion: reduce) { .mt-limit-fill { transition: none; } }
+
+/* ─── Revision #2: confirm / correct scanned dishes ───────────────────────
+   Theme tokens only (warning/info/text/mt-*) so dark and light both work. */
+.meal-tracker .mt-result-check-badge {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 1px 3px;
+  border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+  border-radius: 999px;
+  background: var(--warning-bg);
+  color: var(--warning);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 7.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.meal-tracker .mt-result-check-icon {
+  font-size: 10px;
+}
+.meal-tracker .mt-result-reasons {
+  display: grid;
+  gap: 3px;
+  margin: 6px 0 8px;
+  padding: 0;
+  list-style: none;
+}
+.meal-tracker .mt-result-reasons li {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  color: var(--warning);
+  font-size: 9px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.meal-tracker .mt-result-reasons li.is-info {
+  color: var(--text-muted);
+  font-weight: 550;
+}
+.meal-tracker .mt-result-reason-icon {
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+.meal-tracker .mt-result-correct-field--wide {
+  margin-bottom: 6px;
+}
+.meal-tracker .mt-result-correct-input--text {
+  padding: 0 7px;
+  font-weight: 650;
+}
+.meal-tracker .mt-result-correct-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.meal-tracker .mt-result-alts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 7px;
+}
+.meal-tracker .mt-result-alts-label {
+  color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.meal-tracker .mt-result-alt {
+  min-height: 24px;
+  padding: 2px 9px;
+  border: 1px solid var(--mt-line);
+  border-radius: 999px;
+  background: var(--mt-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  font-weight: 700;
+}
+.meal-tracker .mt-result-alt:hover,
+.meal-tracker .mt-result-alt:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.meal-tracker .mt-result-recalc {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 28px;
+  margin: 0 0 7px;
+  border: 1px dashed var(--accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  font-weight: 750;
+}
+.meal-tracker .mt-result-recalc:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.meal-tracker .mt-result-recalc-icon {
+  font-size: 13px;
+}
+.meal-tracker .mt-result-editor-error {
+  margin: -2px 0 7px;
+  color: var(--error);
+  font-size: 9px;
+  font-weight: 650;
+}
+.meal-tracker .mt-result-editor-save:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.meal-tracker .mt-result-confirm {
+  margin: 0 0 8px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
+  border-radius: 13px;
+  background: var(--warning-bg);
+}
+.meal-tracker .mt-result-confirm-title {
+  margin: 0 0 4px;
+  color: var(--warning);
+  font-size: 10.5px;
+  font-weight: 800;
+}
+.meal-tracker .mt-result-confirm-list {
+  margin: 0;
+  padding-left: 14px;
+  color: var(--text-primary);
+  font-size: 9px;
+  line-height: 1.45;
+}
+/* iOS zooms into inputs under 16px on focus — keep the editor usable on phones. */
+@media (pointer: coarse) {
+  .meal-tracker .mt-result-correct-input {
+    height: 34px;
+    font-size: 16px;
+  }
+}

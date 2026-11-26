@@ -2,9 +2,10 @@ import Icon from '../../../../components/Icon.jsx';
 import { PlanCover } from '../components/PlanWidgets.jsx';
 
 // PLAN DETAIL OVERLAY COMPONENT
-const PlanDetailOverlay = ({ plan = undefined, onClose = undefined, onStart = undefined }) => {
+const PlanDetailOverlay = ({ plan = undefined, onClose = undefined, onStart = undefined, onLocked = undefined }) => {
   if (!plan) return null;
   const enrolled = plan.is_enrolled === 1;
+  const locked = Boolean(plan.locked) && !enrolled && plan.is_owner !== 1;
   const pct = Math.max(0, Math.min(100, Number(plan.progress_pct) || 0));
   // VITALIS has no payments: every plan is free (legacy seeded prices are ignored).
   const price = 'Free';
@@ -82,14 +83,23 @@ const PlanDetailOverlay = ({ plan = undefined, onClose = undefined, onStart = un
               <span className="p-sheet-price-note">
                 {enrolled
                   ? 'Already in your plans'
-                  : 'Free to start'}
+                  : locked
+                    ? `Unlocks at Level ${plan.required_level}`
+                    : 'Free to start'}
               </span>
             </div>
 
-            <button type="button" onClick={onStart} className="p-sheet-cta">
-              <Icon name="play_arrow" className="text-[length:var(--fs-18)]" fill={1} />
-              {enrolled ? 'Open plan tracker' : 'Start this plan'}
-            </button>
+            {locked ? (
+              <button type="button" onClick={onLocked} className="p-sheet-cta">
+                <Icon name="lock" className="text-[length:var(--fs-18)]" />
+                See how to unlock
+              </button>
+            ) : (
+              <button type="button" onClick={onStart} className="p-sheet-cta">
+                <Icon name="play_arrow" className="text-[length:var(--fs-18)]" fill={1} />
+                {enrolled ? 'Open plan tracker' : 'Start this plan'}
+              </button>
+            )}
           </div>
         </div>
       </div>

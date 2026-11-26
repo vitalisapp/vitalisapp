@@ -2,6 +2,8 @@
 // HTTP concerns (cookies, status codes) stay in auth.controller.js.
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
+const { hashPassword, isWeakPassword, needsRehash } = require("../utils/passwordPolicy");
+const { executeCompat } = require("../utils/schemaCompat");
 const crypto = require("crypto");
 const UAParser = require("ua-parser-js");
 const { OAuth2Client } = require("google-auth-library");
@@ -252,17 +254,18 @@ async function logUserSession(req, userId) {
 
 // ─── ME ───
 async function getMe(userId) {
-  const [rows] = await db.execute(
-    `SELECT
+  const meSql = (weakCol) => `SELECT
        u.id, u.name, u.email, u.fitness_goal, u.is_verified,
        u.onboarding_completed, u.token_version,
-       u.accepted_terms_at, u.accepted_terms_version, u.status, u.role,
+       u.accepted_terms_at, u.accepted_terms_version, u.status, u.role, ${weakCol},
        COALESCE(p.avatar_url, u.avatar_url) AS avatar
      FROM users u
      LEFT JOIN user_profiles p ON p.user_id = u.id
-     WHERE u.id = ?`,
-    [userId],
-  );
+     WHERE u.id = ?`;
+  // Pre-060 databases have no password_weak column → no warning, still works.
+  const [rows] = await executeCompat(db, "password_weak",
+    [meSql("u.password_weak"), [userId]],
+    [meSql("NULL AS password_weak")]);
   return rows[0] || null;
 }
 
@@ -331,17 +334,16 @@ async function register({ name, email, password, phone, verificationMethod = 'em
     throw new AppError(PHONE_INVALID_MSG, 400, "PHONE_INVALID");
   }
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPw = await bcrypt.hash(password, salt);
+  const hashedPw = await hashPassword(password);
 
   const autoVerified = skipEmailVerification() && !(wantsSms && smsVerificationRequiredInDev());
 
   let insertResult;
   try {
-    [insertResult] = await db.execute(
-      "INSERT INTO users (name, email, phone, password, fitness_goal, is_online, is_verified, onboarding_completed, role, accepted_terms_at, accepted_terms_version) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, NOW(), ?)",
-      [name, email, normalizedPhone || null, hashedPw, "general fitness", autoVerified ? 1 : 0, autoVerified ? 1 : 0, isSeedAdmin(email) ? "admin" : "member", CONSENT_VERSION],
-    );
+    const regParams = [name, email, normalizedPhone || null, hashedPw, "general fitness", autoVerified ? 1 : 0, autoVerified ? 1 : 0, isSeedAdmin(email) ? "admin" : "member", CONSENT_VERSION];
+    [insertResult] = await executeCompat(db, "password_weak",
+      ["INSERT INTO users (name, email, phone, password, password_weak, fitness_goal, is_online, is_verified, onboarding_completed, role, accepted_terms_at, accepted_terms_version) VALUES (?, ?, ?, ?, 0, ?, ?, ?, 0, ?, NOW(), ?)", regParams],
+      ["INSERT INTO users (name, email, phone, password, fitness_goal, is_online, is_verified, onboarding_completed, role, accepted_terms_at, accepted_terms_version) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, NOW(), ?)"]);
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY") {
       if (/uq_users_phone|phone/i.test(String(err.sqlMessage || err.message))) {
@@ -408,9 +410,45 @@ async function register({ name, email, password, phone, verificationMethod = 'em
   };
 }
 
+// ─── PASSWORD HEALTH ───
+// Runs only after a SUCCESSFUL password check. Never blocks the login: an old
+// password that fails today's policy still signs in; we only record
+// password_weak so the Profile shows "Password needs attention". Also
+// upgrades legacy cost-10 hashes to the current bcrypt cost transparently.
+// Failures here are logged and swallowed — they must never break a login.
+async function syncPasswordHealth(user, password) {
+  try {
+    const weak = isWeakPassword(password) ? 1 : 0;
+    const rehash = needsRehash(user.password);
+    const known = user.password_weak === null || user.password_weak === undefined
+      ? null
+      : Number(user.password_weak);
+    if (!rehash && known === weak) return;
+
+    if (rehash) {
+      const newHash = await hashPassword(password);
+      // Pre-060: still upgrade the hash, just without the flag.
+      await executeCompat(db, "password_weak",
+        ["UPDATE users SET password = ?, password_weak = ? WHERE id = ?", [newHash, weak, user.id]],
+        ["UPDATE users SET password = ? WHERE id = ?", [newHash, user.id]]);
+    } else if (user.password_weak !== undefined) {
+      // undefined = the column doesn't exist yet (legacy select) → nothing to store.
+      await db.execute("UPDATE users SET password_weak = ? WHERE id = ?", [weak, user.id]);
+    }
+    user.password_weak = weak;
+  } catch (err) {
+    console.error("[password-health] update failed:", err.code || err.message);
+  }
+}
+
 // ─── LOGIN ───
 const LOGIN_USER_SELECT =
+  "SELECT id, name, email, phone, password, password_weak, fitness_goal, avatar_url, is_verified, onboarding_completed, is_online, token_version, status, role FROM users WHERE email = ?";
+// Before migration 060 (no password_weak column) — login must keep working.
+const LOGIN_USER_SELECT_LEGACY =
   "SELECT id, name, email, phone, password, fitness_goal, avatar_url, is_verified, onboarding_completed, is_online, token_version, status, role FROM users WHERE email = ?";
+const selectLoginUser = (email) =>
+  executeCompat(db, "password_weak", [LOGIN_USER_SELECT, [email]], [LOGIN_USER_SELECT_LEGACY]);
 
 async function login({ email, password }) {
   const lockStatus = checkRateLimit(email);
@@ -420,7 +458,7 @@ async function login({ email, password }) {
     });
   }
 
-  const [users] = await db.execute(LOGIN_USER_SELECT, [email]);
+  const [users] = await selectLoginUser(email);
   if (users.length === 0) {
     // Explicit "not found" is a product decision: /register already reveals
     // taken emails (EMAIL_EXISTS), so this leaks nothing new. Probing stays
@@ -445,6 +483,7 @@ async function login({ email, password }) {
   }
 
   clearAttempts(email);
+  await syncPasswordHealth(user, password);
 
   // Soft-deactivated accounts: the password is correct, but the login is
   // refused so stale sessions can't sneak back in. The login screen offers
@@ -509,7 +548,7 @@ async function googleLogin(code) {
     throw new AppError("Google email is not verified", 401, "GOOGLE_AUTH_FAILED");
   }
 
-  const [users] = await db.execute(LOGIN_USER_SELECT, [email]);
+  const [users] = await selectLoginUser(email);
 
   let user;
   let isNewUser = false;
@@ -570,14 +609,13 @@ async function changePassword(userId, currentPassword, newPassword) {
     throw new AppError("Current password is incorrect", 401, "INVALID_PASSWORD");
   }
 
-  const salt = await bcrypt.genSalt(10);
-  const newHash = await bcrypt.hash(newPassword, salt);
+  const newHash = await hashPassword(newPassword);
   // Bump token_version: every previously issued cookie is rejected by
   // verifyUser from this point on (true revocation, not just flags).
-  await db.execute("UPDATE users SET password = ?, token_version = token_version + 1 WHERE id = ?", [
-    newHash,
-    userId,
-  ]);
+  // The new password passed the policy, so the weak warning clears.
+  await executeCompat(db, "password_weak",
+    ["UPDATE users SET password = ?, password_weak = 0, token_version = token_version + 1 WHERE id = ?", [newHash, userId]],
+    ["UPDATE users SET password = ?, token_version = token_version + 1 WHERE id = ?"]);
   await db.execute("UPDATE user_sessions SET is_current = 0 WHERE user_id = ?", [userId]);
 
   // Fresh identity for the re-issued session cookie + the security email.

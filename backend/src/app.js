@@ -31,7 +31,7 @@ function createApp(io) {
           scriptSrc: ["'self'", "https://accounts.google.com"],
           styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
           fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-          imgSrc: ["'self'", "data:", "blob:", "https://server.arcgisonline.com"],
+          imgSrc: ["'self'", "data:", "blob:", "https://tiles.openfreemap.org"],
           connectSrc: ["'self'", "https://accounts.google.com", "https://cdn.jsdelivr.net"],
           frameSrc: ["https://accounts.google.com"],
           objectSrc: ["'none'"],

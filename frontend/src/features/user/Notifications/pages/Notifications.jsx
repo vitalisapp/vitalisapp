@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUrlFilters } from '../../../../hooks/useUrlFilters.js';
 import AccountPageShell from '../../../../components/app/AccountPageShell.jsx';
 import PageHeader from '../../../../components/app/PageHeader.jsx';
 import Icon from '../../../../components/Icon.jsx';
@@ -21,13 +22,20 @@ const STATUS_FILTERS = [
   { key: 'unread', label: 'Unread' },
   { key: 'read', label: 'Read' },
 ];
+const URL_FILTERS = {
+  status: { options: ['unread', 'read'] },
+  category: { options: NOTIFICATION_CATEGORIES },
+};
 
 const Notifications = ({ embedded = false }) => {
   const navigate = useNavigate();
   const { user, loading, logout } = useAuth();
   const [items, setItems] = useState([]);
-  const [filter, setFilter] = useState('all');
-  const [cat, setCat] = useState('ALL');
+  const { values, setFilters, clearFilters } = useUrlFilters(URL_FILTERS, { replace: false });
+  const filter = values.status || 'all';
+  const cat = values.category || 'ALL';
+  const setFilter = (status) => setFilters({ status: status === 'all' ? '' : status });
+  const setCat = (category) => setFilters({ category: category === 'ALL' ? '' : category });
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState(null);
 
@@ -90,7 +98,7 @@ const Notifications = ({ embedded = false }) => {
   const groups = useMemo(() => groupByDay(shown), [shown]);
 
   const handleLogout = async () => { await logout(); navigate('/login'); };
-  const resetFilters = () => { setFilter('all'); setCat('ALL'); };
+  const resetFilters = clearFilters;
 
   if (loading) {
     return (

@@ -151,7 +151,7 @@ export default function GoalDetailSheet({ userId = undefined, goal = undefined, 
               <span className="material-symbols-outlined text-[length:var(--fs-18)]">edit</span> Change Goal
             </button>
             <button
-              onClick={() => { onClose?.(); navigate('/dashboard/plans'); }}
+              onClick={() => { onClose?.(); navigate('/plans'); }}
               className="flex-1 min-w-[140px] h-12 rounded-[12px] bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[length:var(--fs-13)] flex items-center justify-center gap-1.5"
             >
               <span className="material-symbols-outlined text-[length:var(--fs-18)]">book</span> View Plans

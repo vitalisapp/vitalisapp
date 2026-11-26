@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiPost } from '../../../../lib/apiClient.js';
+import { checkPassword } from '../../../../lib/passwordPolicy.js';
 
 // Forgot-password logic hook — REUSES the same email-OTP reset endpoints and
 // rules as the auth ForgotPassword page (Auth/ForgotPassword):
@@ -90,7 +91,8 @@ export const useForgotPassword = ({ initialEmail = '' } = {}) => {
   // what happens next (profile: sign out everywhere → login).
   const resetPassword = async () => {
     if (newPassword !== confirmPw) { setError('Passwords do not match.'); return false; }
-    if (newPassword.length < 8)   { setError('Password must be at least 8 characters.'); return false; }
+    const policy = checkPassword(newPassword);
+    if (!policy.ok) { setError(policy.message); return false; }
     setLoading(true); setError('');
     try {
       await post('/api/forgot-password/reset-password', {

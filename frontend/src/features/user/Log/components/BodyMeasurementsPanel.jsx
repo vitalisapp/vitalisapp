@@ -147,7 +147,7 @@ export default function BodyMeasurementsPanel({ userId = undefined }) {
           {FIELDS.map((f) => (
             <label key={f.key} className="block">
               <span className="block text-[length:var(--fs-10)] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">
-                {f.label} <span className="text-[var(--text-disabled)]">({f.unit})</span>
+                {f.label} <span className="text-[var(--text-muted)]">({f.unit})</span>
               </span>
               <input
                 type="number"

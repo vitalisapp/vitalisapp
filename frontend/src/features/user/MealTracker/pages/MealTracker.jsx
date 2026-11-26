@@ -357,6 +357,7 @@ export default function MealTracker() {
     toggleItem,
     scaleSelected,
     editItem,
+    confirmItem,
     addCustomItem,
     clearResult,
     handleDeleteMeal,
@@ -1012,6 +1013,8 @@ export default function MealTracker() {
                   onToggle={toggleItem}
                   onScale={scaleSelected}
                   onEditItem={editItem}
+                  onConfirmItem={confirmItem}
+                  onEstimateDish={estimateFoodDensity}
                   onAddCustom={addCustomItem}
                   onSave={handleResultSave}
                   onRescan={() => fileRef.current?.click()}

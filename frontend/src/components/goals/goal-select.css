@@ -1,0 +1,64 @@
+/* Revision #5 — multi-goal picker. Theme tokens only (works in both themes). */
+.gms { display: flex; flex-direction: column; gap: 12px; }
+.gms-help { margin: 0; font-size: 12px; line-height: 1.45; color: var(--text-secondary); }
+
+.gms-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 380px) { .gms-grid { grid-template-columns: 1fr; } }
+.gms-card {
+  position: relative; display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 10px 12px;
+  border: 1px solid var(--border-light); border-radius: 12px; background: var(--bg-primary);
+  color: var(--text-primary); text-align: left; font-size: 12.5px; font-weight: 600;
+  transition: border-color 150ms, background-color 150ms;
+}
+.gms-card:hover { border-color: var(--border-medium); }
+.gms-card.is-on { border-color: var(--accent); background: var(--accent-bg); }
+.gms-card__icon { font-size: 18px; color: var(--text-secondary); flex-shrink: 0; }
+.gms-card.is-on .gms-card__icon { color: var(--accent); }
+.gms-card__label { flex: 1; min-width: 0; line-height: 1.25; }
+.gms-card__check { font-size: 16px; color: var(--accent); flex-shrink: 0; }
+
+.gms-badge {
+  display: inline-flex; align-items: center; margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+  background: var(--accent); color: var(--text-inverse); font-size: 10px; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase; vertical-align: middle; flex-shrink: 0;
+}
+.gms-badge--extra { background: transparent; color: var(--accent); border: 1px solid var(--accent-border); }
+
+.gms-conflict {
+  padding: 12px 14px; border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+  background: var(--warning-bg);
+}
+.gms-conflict__head { display: flex; align-items: flex-start; gap: 8px; }
+.gms-conflict__icon { font-size: 18px; color: var(--warning); flex-shrink: 0; margin-top: 1px; }
+.gms-conflict__title { flex: 1; margin: 0; font-size: 13px; font-weight: 800; color: var(--text-primary); }
+.gms-conflict__close { display: grid; place-items: center; width: 32px; height: 32px; margin: -6px -6px 0 0; border-radius: 8px; color: var(--text-secondary); }
+.gms-conflict__close .material-symbols-outlined { font-size: 18px; }
+.gms-conflict__text, .gms-conflict__tip { margin: 6px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-primary); }
+.gms-conflict__tip { color: var(--text-secondary); }
+.gms-conflict__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.gms-conflict__action {
+  min-height: 40px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border-medium);
+  background: var(--bg-primary); color: var(--text-primary); font-size: 12px; font-weight: 700;
+}
+.gms-conflict__action:hover { border-color: var(--accent); color: var(--accent); }
+
+.gms-main { margin: 0; padding: 0; border: 0; min-width: 0; }
+.gms-main__legend { padding: 0; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: var(--text-primary); }
+.gms-main__row { display: flex; flex-wrap: wrap; gap: 8px; }
+.gms-main__opt {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 40px; padding: 8px 12px; border-radius: 999px;
+  border: 1px solid var(--border-light); background: var(--bg-primary); color: var(--text-secondary);
+  font-size: 12px; font-weight: 700;
+}
+.gms-main__opt.is-on { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+.gms-main__star { font-size: 15px; }
+.gms-main__hint { margin: 6px 0 0; font-size: 11.5px; color: var(--text-secondary); }
+
+.gms-mix { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border-light); background: var(--bg-tertiary); }
+.gms-mix__title { margin: 0 0 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); }
+.gms-mix ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.gms-mix li { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.45; color: var(--text-primary); }
+.gms-mix__icon { font-size: 16px; color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+
+.gms--onboarding .onb-choice__title { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }

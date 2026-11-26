@@ -116,8 +116,10 @@ export const PlanActions = ({ plan = undefined, onEdit = undefined, onDelete = u
   );
 };
 
-export const PlanCard = ({ plan = undefined, onOpen = undefined, onEnroll = undefined, onContinue = undefined, onEdit = undefined, onDelete = undefined, style = {} }) => {
+export const PlanCard = ({ plan = undefined, onOpen = undefined, onEnroll = undefined, onContinue = undefined, onEdit = undefined, onDelete = undefined, onLocked = undefined, style = {} }) => {
   const enrolled = plan.is_enrolled === 1 || plan.is_owner === 1;
+  // Revision #4: Advanced / Extreme plans need a level (server enforces too).
+  const locked = Boolean(plan.locked) && !enrolled;
   const pct = Math.max(0, Math.min(100, Number(plan.progress_pct) || 0));
   // VITALIS has no payments: every plan is free (legacy seeded prices are ignored).
   const price = 'Free';
@@ -153,6 +155,11 @@ export const PlanCard = ({ plan = undefined, onOpen = undefined, onEnroll = unde
           ) : null}
         </div>
         <div className="p-cover-badges p-cover-badges--end">
+          {locked ? (
+            <span className="p-badge p-badge--locked">
+              <Icon name="lock" /> Level {plan.required_level}
+            </span>
+          ) : null}
           <span className="p-badge">{price}</span>
         </div>
       </div>
@@ -207,6 +214,18 @@ export const PlanCard = ({ plan = undefined, onOpen = undefined, onEnroll = unde
               className="p-btn"
             >
               Continue training
+            </button>
+          ) : locked ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                (onLocked || onOpen)(plan);
+              }}
+              className="p-btn p-btn--locked"
+              aria-label={`${plan.title} is locked. See how to unlock Level ${plan.required_level}`}
+            >
+              <Icon name="lock" /> Unlock at Level {plan.required_level}
             </button>
           ) : (
             <button

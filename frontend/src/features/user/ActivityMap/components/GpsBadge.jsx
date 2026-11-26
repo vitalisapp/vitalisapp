@@ -31,13 +31,13 @@ const GpsBadge = ({ locationStatus = undefined, accuracy = undefined, coords = u
           {label}
         </span>
         {hasAccuracy && (
-          <span className="whitespace-nowrap text-[10px] font-semibold text-white/45 sm:text-[11px]">
+          <span className="whitespace-nowrap text-[10px] font-semibold text-white/65 sm:text-[11px]">
             ±{Math.round(accuracy)}m
           </span>
         )}
       </div>
       {granted && coords && (
-        <span className="hidden truncate text-[9px] font-medium tabular-nums text-white/30 sm:block">
+        <span className="hidden truncate text-[9px] font-medium tabular-nums text-white/60 sm:block">
           {coords[0].toFixed(5)}, {coords[1].toFixed(5)}
         </span>
       )}

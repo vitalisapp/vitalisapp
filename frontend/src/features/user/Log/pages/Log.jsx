@@ -17,7 +17,7 @@ import ExportTab from "../components/ExportTab.jsx";
 import { SummaryStats, SummaryInsights } from "../components/ProgressSummary.jsx";
 import "../log.css";
 
-// Progress page (/dashboard/logs).
+// Progress page (/logs).
 // Order: header → KPI tiles → trend chart → insights → tabs.
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

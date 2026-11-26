@@ -46,11 +46,11 @@ const QuickLog = ({ userId = undefined, onWeightLogged = undefined }) => {
   };
 
   const items = [
-    { icon: 'restaurant', label: 'Add Meal', action: () => navigate('/dashboard/meal-tracker?manual=1') },
-    { icon: 'photo_camera', label: 'Scan Meal with AI', action: () => navigate('/dashboard/meal-tracker?scan=1') },
+    { icon: 'restaurant', label: 'Add Meal', action: () => navigate('/meal-tracker?manual=1') },
+    { icon: 'photo_camera', label: 'Scan Meal with AI', action: () => navigate('/meal-tracker?scan=1') },
     { icon: 'monitor_weight', label: 'Log Weight', action: () => setMode('weight') },
-    { icon: 'fitness_center', label: 'Log Workout', action: () => navigate('/dashboard/workouts') },
-    { icon: 'directions_run', label: 'Start Activity', action: () => navigate('/dashboard/activity-map') },
+    { icon: 'fitness_center', label: 'Log Workout', action: () => navigate('/workouts') },
+    { icon: 'directions_run', label: 'Start Activity', action: () => navigate('/activity-map') },
   ];
 
   return (

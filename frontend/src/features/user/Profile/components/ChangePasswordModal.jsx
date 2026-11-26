@@ -5,6 +5,7 @@ import Button from '../../../../components/ui/Button.jsx';
 import Icon from '../../../../components/Icon.jsx';
 import PasswordField from './PasswordField.jsx';
 import PasswordStrength from './PasswordStrength.jsx';
+import { checkPassword, MIN_LENGTH } from '../../../../lib/passwordPolicy.js';
 import '../password-ui.css';
 
 /**
@@ -56,8 +57,9 @@ export default function ChangePasswordModal({ onClose = undefined, onSuccess = u
     if (!currentPassword) {
       errors.current = 'Enter your current password.';
     }
-    if (newPassword.length < 8) {
-      errors.new = 'New password must be at least 8 characters.';
+    const policy = checkPassword(newPassword);
+    if (!policy.ok) {
+      errors.new = policy.message;
     } else if (newPassword === currentPassword) {
       errors.new = 'New password must be different from your current password.';
     }
@@ -210,7 +212,7 @@ export default function ChangePasswordModal({ onClose = undefined, onSuccess = u
             }}
             autoComplete="new-password"
             placeholder="Create password"
-            helper="Use at least 8 characters."
+            helper={`Use ${MIN_LENGTH}+ characters with upper & lowercase letters, a number and a symbol.`}
             error={fieldErrors.new}
             disabled={loading}
             inputRef={newRef}
@@ -234,7 +236,7 @@ export default function ChangePasswordModal({ onClose = undefined, onSuccess = u
             placeholder="Re-enter password"
             helper="Re-enter your new password."
             success={
-              confirmPassword && newPassword.length >= 8 && newPassword === confirmPassword
+              confirmPassword && checkPassword(newPassword).ok && newPassword === confirmPassword
                 ? 'Passwords match.'
                 : ''
             }

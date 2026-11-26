@@ -1254,3 +1254,19 @@
   .vplans .wh-skel { animation: none; }
   .vplans .wh-row { transition: none; }
 }
+
+/* ── Revision #4: level-locked plans ─────────────────────────────────────── */
+.vplans .p-badge--locked {
+  gap: 3px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+}
+.vplans .p-badge--locked .material-symbols-outlined { font-size: 13px; }
+.vplans .p-btn--locked {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+}
+.vplans .p-btn--locked .material-symbols-outlined { font-size: 15px; }
+.vplans .p-btn--locked:hover { filter: none; background: var(--bg-hover); }

@@ -8,21 +8,21 @@ import { readFilters, writeFilters } from '../lib/urlFilters.js';
  *   { q: {}, equipment: { options: ['Barbell', ...] } }
  *
  * Returns { values, setFilters, clearFilters, activeCount }.
- * Updates use history `replace` so typing or toggling chips doesn't flood the
- * back stack; Back still leaves the page in one step.
+ * Updates default to history `replace` for live typing. Pass { replace: false }
+ * for committed selections that should be restored by Back/Forward.
  */
-export function useUrlFilters(config) {
+export function useUrlFilters(config, { replace = true } = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
   const values = useMemo(() => readFilters(searchParams, config), [searchParams, config]);
 
   const setFilters = useCallback((patch) => {
-    setSearchParams((prev) => writeFilters(prev, config, patch), { replace: true });
-  }, [setSearchParams, config]);
+    setSearchParams((prev) => writeFilters(prev, config, patch), { replace });
+  }, [setSearchParams, config, replace]);
 
   const clearFilters = useCallback(() => {
     const patch = Object.fromEntries(Object.keys(config).map((k) => [k, '']));
-    setSearchParams((prev) => writeFilters(prev, config, patch), { replace: true });
-  }, [setSearchParams, config]);
+    setSearchParams((prev) => writeFilters(prev, config, patch), { replace });
+  }, [setSearchParams, config, replace]);
 
   const activeCount = useMemo(
     () => Object.values(values).filter((v) => String(v).trim()).length,

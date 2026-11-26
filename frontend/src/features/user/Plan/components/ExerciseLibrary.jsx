@@ -31,7 +31,7 @@ const ExerciseLibrary = () => {
     <div>
       <p className="text-[length:var(--fs-10)] font-black uppercase tracking-[0.25em] mb-2" style={{ color: 'var(--text-muted)' }}>Search</p>
       <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Name, equipment, or muscle"
-        className="w-full h-12 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-[length:var(--fs-13)] outline-none focus:border-[var(--accent)] placeholder:text-[var(--text-disabled)]" />
+        className="w-full h-12 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] px-4 text-[length:var(--fs-13)] outline-none focus:border-[var(--accent)] placeholder:text-[var(--input-placeholder)]" />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
         {[
           { label: 'Equipment', value: equipment, set: setEquipment, options: filters.equipment, all: 'All equipment' },
@@ -127,7 +127,7 @@ const ExerciseLibrary = () => {
                 style={{ borderColor: 'var(--border-medium)', color: 'var(--text-muted)' }}>
                 Close
               </button>
-              <button onClick={() => navigate('/dashboard/workouts', { state: { exerciseId: open.slug } })}
+              <button onClick={() => navigate('/workouts', { state: { exerciseId: open.slug } })}
                 className="flex-1 py-3 rounded-xl font-black text-sm uppercase"
                 style={{ background: 'var(--accent)', color: 'var(--text-inverse)' }}>
                 Start {isHoldExercise(open) ? 'Hold' : 'Workout'}

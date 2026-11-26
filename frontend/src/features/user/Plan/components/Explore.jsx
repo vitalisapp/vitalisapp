@@ -48,7 +48,7 @@ const ContinueTrainingCard = ({ plan = undefined, onContinue = undefined }) => {
   );
 };
 
-const Explore = ({ plans = undefined, onOpen = undefined, onEnroll = undefined, onContinue = undefined }) => {
+const Explore = ({ plans = undefined, onOpen = undefined, onEnroll = undefined, onContinue = undefined, onLocked = undefined }) => {
   const { values, setFilters, clearFilters } = useUrlFilters(EXPLORE_FILTERS);
   const query = values.q;
   const intensity = values.intensity || 'All';
@@ -189,6 +189,7 @@ const Explore = ({ plans = undefined, onOpen = undefined, onEnroll = undefined, 
                 onOpen={onOpen}
                 onEnroll={onEnroll}
                 onContinue={onContinue}
+                onLocked={onLocked}
                 style={{ animation: `slideUp 0.3s ease ${Math.min(i, 8) * 0.04}s both` }}
               />
             ))}

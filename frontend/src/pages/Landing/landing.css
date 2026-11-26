@@ -9,14 +9,17 @@
   --nn-bg: #f6f6f4;
   --nn-ink: #0f1412;
   --nn-ink-soft: #222724;
-  --nn-muted: #8b8b89;
-  --nn-muted-dark: #9b9c98;
+  --nn-muted: #636561;
+  --nn-muted-dark: #6b6d69;
   --nn-line: #e3e3df;
   --nn-lime: #cdfb47;
   --nn-lime-hover: #d9ff69;
   --nn-panel: #eaeae7;
   --nn-soft: #efefef;
   --nn-white: #ffffff;
+  /* The V mark sits on the light canvas in this theme, so it needs a deeper
+     green than the accent lime to stay legible. */
+  --nn-brand-mark: #557000;
 
   /* Fixed tokens that don't flip with the theme. "surface-strong" is the
      near-black panel colour used by dark cards (stats bar, feature cards,
@@ -123,6 +126,7 @@
   height: 1.75rem;
   overflow: visible;
   margin-right: -1px;
+  color: var(--nn-brand-mark);
 }
 
 .nn-brand-word {
@@ -2991,7 +2995,7 @@
   font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.5;
-  color: #8f8f8d;
+  color: var(--nn-muted);
   text-align: left;
   transition: color 0.18s ease;
 }
@@ -3059,7 +3063,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   line-height: 1.5;
-  color: #96968f;
+  color: var(--nn-muted);
 }
 
 .nn-footer-bottom-left,
@@ -3073,7 +3077,7 @@
 .nn-footer-bottom button {
   padding: 0;
   font-size: inherit;
-  color: #96968f;
+  color: var(--nn-muted);
   transition: color 0.18s ease;
 }
 
@@ -4894,6 +4898,8 @@ html.dark-theme .nn-root {
   --nn-surface-strong: #141a12;
   --nn-surface-strong-hover: #1b2318;
   --nn-white: #f1f5ea;
+  /* On the dark canvas the bright lime reads clearly. */
+  --nn-brand-mark: #c7f464;
 
   /* Dashboard's ambient wash — barely-there green light for depth. */
   background:

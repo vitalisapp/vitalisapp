@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { checkDob, todayIso } from '../../../../lib/age.js';
 import { SLEEP_CHOICES } from '../../../../lib/bmi.js';
 import {
-  EXPERIENCE_LEVELS, EXCLUSION_CATEGORIES, MAX_EXTRA_GOALS,
-  extraGoalBlockReason, cleanExtraGoals, isRecomposition, checkTargetDate, targetDateBounds,
+  EXPERIENCE_LEVELS, EXCLUSION_CATEGORIES, checkTargetDate, targetDateBounds,
 } from '../../../../lib/goalSetup.js';
 import BmiInsight from '../../../../components/health/BmiInsight.jsx';
 import SleepNote from '../../../../components/health/SleepNote.jsx';
@@ -13,10 +12,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import { useAuth } from '../../../../hooks/useAuth.jsx';
 import Icon from '../../../../components/Icon.jsx';
+import GoalMultiSelect from '../../../../components/goals/GoalMultiSelect.jsx';
+import { describeGoalMix } from '../../../../lib/goalSelection.js';
 import { apiFetch, apiPost } from '../../../../lib/apiClient.js';
 import { safeSet, safeSetJSON, safeGetJSON } from '../../../../lib/storage.js';
 import {
-  GOAL_TYPES, ACTIVITY_LEVELS, PACES, FOCUSES,
+  ACTIVITY_LEVELS, PACES, FOCUSES,
   EXERCISE_FREQ,
   goalLabel, humanizeOption,
 } from '../constants/goals.js';
@@ -244,7 +245,6 @@ const Onboarding = () => {
 
   const dateBounds = useMemo(() => targetDateBounds(), []);
   const dateCheck = checkTargetDate({ targetDate, weightKg, targetWeightKg: targetWeight || null });
-  const toggleExtra = (k) => setExtraGoals((list) => (list.includes(k) ? list.filter((x) => x !== k) : [...list, k]));
 
   const canContinue = () => {
     switch (step) {
@@ -355,7 +355,7 @@ const Onboarding = () => {
       // Best-effort: build one recommended plan per goal (primary active).
       // Fire-and-forget so it never delays the dashboard transition.
       apiPost('/api/plans/auto-from-goal', { all: true, regenerate: true }).catch(() => {});
-      navigate('/dashboard/plans?tab=my-plans');
+      navigate('/plans?tab=my-plans');
     } catch (e) {
       setError(e?.message || 'Could not finish. Check connection and try again — you can skip for now.');
     } finally {
@@ -542,49 +542,19 @@ const Onboarding = () => {
                     </div>
                   )}
 
-                  {/* STEP 2 — Primary goal */}
+                  {/* STEP 2 — Goals: multi-select with a main goal (Revision #5) */}
                   {step === 1 && (
-                    <>
-                      <div className="onb-choice-grid" role="group" aria-label="Primary goal">
-                        {GOAL_TYPES.map((g) => (
-                          <ChoiceCard
-                            key={g.key}
-                            active={goalType === g.key}
-                            icon={g.icon}
-                            title={g.label}
-                            description={g.desc}
-                            onClick={() => {
-                              setGoalType(g.key); setPace(''); setFocus(''); setTargetWeight('');
-                              setExtraGoals((list) => cleanExtraGoals(g.key, list));
-                            }}
-                          />
-                        ))}
-                      </div>
-                      {goalType && (
-                        <fieldset className="onb-fieldset onb-extra-goals">
-                          <legend className="onb-label">
-                            Extra goals <span className="onb-label__hint">optional, up to {MAX_EXTRA_GOALS}</span>
-                          </legend>
-                          <div className="onb-chip-row">
-                            {GOAL_TYPES.filter((g) => g.key !== goalType).map((g) => {
-                              const reason = extraGoalBlockReason(goalType, g.key, extraGoals);
-                              const active = extraGoals.includes(g.key);
-                              return (
-                                <Chip key={g.key} active={active} disabled={!active && Boolean(reason)} title={!active ? reason || undefined : undefined}
-                                  onClick={() => toggleExtra(g.key)}>
-                                  {g.label}
-                                </Chip>
-                              );
-                            })}
-                          </div>
-                          <p className="onb-hint-text">
-                            {isRecomposition(goalType, extraGoals)
-                              ? 'Losing fat while building muscle: your calories stay close to maintenance and protein goes up, so you keep and build muscle.'
-                              : 'Your main goal sets your calories. Each extra goal gets its own workout plan you can switch to anytime.'}
-                          </p>
-                        </fieldset>
-                      )}
-                    </>
+                    <GoalMultiSelect
+                      variant="onboarding"
+                      primary={goalType}
+                      extras={extraGoals}
+                      onChange={({ primary, extras }) => {
+                        // Goal details (pace / focus / target) belong to the main goal.
+                        if (primary !== goalType) { setPace(''); setFocus(''); setTargetWeight(''); }
+                        setGoalType(primary);
+                        setExtraGoals(extras);
+                      }}
+                    />
                   )}
 
                   {/* STEP 3 — Goal details (depends on goal) */}
@@ -958,6 +928,16 @@ const Onboarding = () => {
                           <Icon name="balance" />
                           <span>Recomposition: a small calorie deficit with high protein, so you lose fat while building muscle.</span>
                         </p>
+                      )}
+                      {plan.goal.secondaryGoals?.length > 0 && (
+                        <div className="gms-mix" aria-label="How your goals shape your plan">
+                          <p className="gms-mix__title">How your goals shape your plan</p>
+                          <ul>
+                            {describeGoalMix(plan.goal.goalType, plan.goal.secondaryGoals).map((l) => (
+                              <li key={l.text}><Icon name={l.icon} className="gms-mix__icon" />{l.text}</li>
+                            ))}
+                          </ul>
+                        </div>
                       )}
                       {plan.targetFeasibility && !plan.targetFeasibility.realistic && (
                         <p className="onb-note onb-note--warn">

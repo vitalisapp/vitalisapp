@@ -1,0 +1,8 @@
+[
+  { "file": "chicken-adobo-1.jpg", "expected": "Chicken adobo" },
+  { "file": "pork-adobo-1.jpg", "expected": "Pork adobo", "grams": 160 },
+  { "file": "sinigang-baboy-1.jpg", "expected": "Sinigang na baboy" },
+  { "file": "kare-kare-1.jpg", "expected": "Kare-kare", "grams": 250 },
+  { "file": "menudo-1.jpg", "expected": "Pork menudo" },
+  { "file": "tinola-1.jpg", "expected": "Tinola" }
+]

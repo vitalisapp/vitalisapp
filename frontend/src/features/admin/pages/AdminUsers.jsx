@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useAdminFilters } from '../hooks/useAdminFilters.js';
+import { ADMIN_FILTERS } from '../utils/urlFilters.js';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import { useAdminResource } from '../hooks/useAdminResource.js';
 import UserDrawer from '../components/UserDrawer.jsx';
@@ -44,23 +45,17 @@ const PAGE_SIZE = 12;
 export default function AdminUsers() {
   const { user: admin } = useAuth();
   const { show, node: toast } = useAdminToast();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const urlQuery = searchParams.get('q') || '';
-  const [search, setSearch] = useState(urlQuery);
-  const [query, setQuery] = useState(urlQuery);
-  const [role, setRole] = useState('');
-  const [status, setStatus] = useState('');
-  const [offset, setOffset] = useState(0);
+  const { values: { q: query, role, status, page }, update } = useAdminFilters(ADMIN_FILTERS.users);
+  const [search, setSearch] = useState(query);
+  const offset = (Number(page) - 1) * PAGE_SIZE;
+  const setOffset = (value) => update({ page: value / PAGE_SIZE + 1 });
   const [selected, setSelected] = useState(null);
 
   // The shared admin topbar writes `?q=`, so the in-page field follows the
   // URL when search comes from there, a browser back/forward or Clear.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSearch(urlQuery);
-    setQuery(urlQuery);
-    setOffset(0);
-  }, [urlQuery]);
+    setSearch(query);
+  }, [query]);
 
   const params = new URLSearchParams();
   if (query) params.set('q', query);
@@ -76,16 +71,12 @@ export default function AdminUsers() {
   const applySearch = (event) => {
     event.preventDefault();
     const term = search.trim();
-    setQuery(term);
-    setOffset(0);
-    setSearchParams(term ? { q: term } : {}, { replace: true });
+    update({ q: term, page: 1 });
   };
 
   const clearSearch = () => {
     setSearch('');
-    setQuery('');
-    setOffset(0);
-    setSearchParams({}, { replace: true });
+    update({ q: '', page: 1 });
   };
 
   return (
@@ -131,13 +122,13 @@ export default function AdminUsers() {
           )}
           <span className="adm-toolbar__spacer" />
           <select className="adm-select" value={role} aria-label="Filter by role"
-            onChange={(e) => { setRole(e.target.value); setOffset(0); }}>
+            onChange={(e) => update({ role: e.target.value, page: 1 })}>
             <option value="">All roles</option>
             <option value="member">Members</option>
             <option value="admin">Admins</option>
           </select>
           <select className="adm-select" value={status} aria-label="Filter by status"
-            onChange={(e) => { setStatus(e.target.value); setOffset(0); }}>
+            onChange={(e) => update({ status: e.target.value, page: 1 })}>
             <option value="">All statuses</option>
             <option value="active">Active</option>
             <option value="deactivated">Deactivated</option>

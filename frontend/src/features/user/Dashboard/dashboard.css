@@ -542,7 +542,7 @@
   transform: translateY(-50%);
   font-size: 9px;
   font-weight: 600;
-  color: var(--text-disabled);
+  color: var(--text-muted);
 }
 .vd-chart-bars {
   position: relative;
@@ -617,7 +617,7 @@
   line-height: 1.2;
 }
 .vd-bar-day { font-weight: 700; color: var(--text-secondary); }
-.vd-bar-date { color: var(--text-disabled); font-variant-numeric: tabular-nums; }
+.vd-bar-date { color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .vd-bar-col--today .vd-bar-day { color: var(--accent); }
 .vd-chart-empty {
   flex: 1;

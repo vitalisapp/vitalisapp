@@ -120,7 +120,7 @@ export default defineConfig(({ mode }) => {
           ],
           shortcuts: [
             { name: 'Dashboard', url: '/dashboard' },
-            { name: 'Log workout', url: '/dashboard/logs' },
+            { name: 'Log workout', url: '/logs' },
           ],
           icons: [
             { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
@@ -171,15 +171,43 @@ export default defineConfig(({ mode }) => {
               },
             },
             {
-              urlPattern:
-                /https:\/\/(tile\.openstreetmap\.org|server\.arcgisonline\.com|.*basemaps\.cartocdn\.com)\/.*/,
+              // MapLibre web worker (hashed .mjs asset, not in globPatterns):
+              // cached on first map visit so a revisit renders cached tiles offline.
+              urlPattern: ({ url, sameOrigin }) =>
+                sameOrigin && /\/maplibre-gl-worker-[^/]*\.mjs$/.test(url.pathname),
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'map-worker',
+                expiration: { maxEntries: 4, maxAgeSeconds: 60 * 60 * 24 * 30 },
+                cacheableResponse: { statuses: [200] },
+              },
+            },
+            {
+              // OpenFreeMap style JSON + TileJSON (/styles/*, /planet, …): small
+              // and re-pointed upstream on each tile release — revalidate.
+              urlPattern: ({ url }) =>
+                url.hostname === 'tiles.openfreemap.org' &&
+                (url.pathname.startsWith('/styles/') || /^\/[^/]+$/.test(url.pathname)),
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'map-styles',
+                expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 7 },
+                cacheableResponse: { statuses: [200] },
+              },
+            },
+            {
+              // Vector tiles, glyphs, sprites: versioned URLs → bounded
+              // CacheFirst. Viewed tiles only — no prefetch / bulk download.
+              urlPattern: ({ url }) => url.hostname === 'tiles.openfreemap.org',
               handler: 'CacheFirst',
               options: {
                 cacheName: 'map-tiles',
                 expiration: {
-                  maxEntries: 500,
+                  maxEntries: 300,
                   maxAgeSeconds: 60 * 60 * 24 * 7,
+                  purgeOnQuotaError: true,
                 },
+                cacheableResponse: { statuses: [200] },
               },
             },
             {
@@ -214,7 +242,10 @@ export default defineConfig(({ mode }) => {
           manualChunks: (id) => {
             if (!id.includes('node_modules')) return undefined;
             if (id.includes('@mediapipe')) return 'vendor-mediapipe';
-            // No forced groups for leaflet / chart.js: Rolldown pulls a group's
+            // MapLibre's dist bundle has no imports, so this group can't pull
+            // react in (the leaflet pitfall below); it caches across app deploys.
+            if (id.includes('node_modules/maplibre-gl/')) return 'vendor-maplibre';
+            // No forced group for chart.js: Rolldown pulls a group's
             // dependencies into it, so react + react-dom landed inside
             // vendor-chart/vendor-map and every page (even /login) downloaded
             // both libraries. Left unassigned, they split naturally into the

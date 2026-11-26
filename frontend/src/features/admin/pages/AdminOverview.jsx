@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useAdminFilters } from '../hooks/useAdminFilters.js';
+import { ADMIN_FILTERS } from '../utils/urlFilters.js';
 import { Link } from 'react-router-dom';
 import Icon from '../../../components/Icon.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
@@ -225,9 +227,13 @@ const OverviewSkeleton = () => (
 export default function AdminOverview() {
   const { user } = useAuth();
   const { show, node: toast } = useAdminToast();
-  const [windowDays, setWindowDays] = useState(14);
-  const [category, setCategory] = useState('members');
-  const [selectedDate, setSelectedDate] = useState(null);
+  const { values, update } = useAdminFilters(ADMIN_FILTERS.overview);
+  const windowDays = Number(values.days);
+  const category = values.category;
+  const selectedDate = values.date ? new Date(`${values.date}T00:00:00`) : null;
+  const setWindowDays = (days) => update({ days });
+  const setCategory = (value) => update({ category: value });
+  const setSelectedDate = (date) => update({ date: date ? localDayKey(date) : '' });
 
   const overview = useAdminResource(OVERVIEW_PATH);
   const usage = useAdminResource(`/api/admin/ai-usage?days=${windowDays}`);
@@ -539,6 +545,7 @@ export default function AdminOverview() {
           >
             <AdminCalendar
               selectedDate={selectedDate}
+              key={values.date || 'all'}
               onSelectDate={setSelectedDate}
               eventsByDay={eventsByDay}
             />

@@ -1,4 +1,5 @@
 import { getPasswordStrength } from '../utils/passwordStrength.js';
+import PasswordChecklist from '../../../../components/password/PasswordChecklist.jsx';
 
 export default function PasswordStrength({ password = undefined }) {
   const strength = getPasswordStrength(password);
@@ -15,6 +16,7 @@ export default function PasswordStrength({ password = undefined }) {
           <span key={index} className={index < strength.bars ? 'is-on' : ''} />
         ))}
       </div>
+      <PasswordChecklist password={password} />
     </div>
   );
 }

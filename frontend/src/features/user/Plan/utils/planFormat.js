@@ -46,5 +46,7 @@ export const TABS = [
   { id: 'my-plans', label: 'My Plans',  icon: 'bookmarks' },
   { id: 'explore',  label: 'Explore',   icon: 'explore'   },
   { id: 'library',  label: 'Library',   icon: 'fitness_center' },
+  // Revision #4 — levels, unlock requirements, challenges.
+  { id: 'levels',   label: 'Levels',    icon: 'military_tech' },
   { id: 'history',  label: 'History',   icon: 'history'   },
 ];

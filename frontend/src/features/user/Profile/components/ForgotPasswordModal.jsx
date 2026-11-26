@@ -6,6 +6,7 @@ import Icon from '../../../../components/Icon.jsx';
 import PasswordField from './PasswordField.jsx';
 import PasswordStrength from './PasswordStrength.jsx';
 import OtpInput from './OtpInput.jsx';
+import { checkPassword, MIN_LENGTH } from '../../../../lib/passwordPolicy.js';
 import '../password-ui.css';
 
 const STEP_META = [
@@ -290,7 +291,7 @@ export default function ForgotPasswordModal({ defaultEmail = undefined, onClose 
               }}
               autoComplete="new-password"
               placeholder="Create password"
-              helper="Use at least 8 characters."
+              helper={`Use ${MIN_LENGTH}+ characters with upper & lowercase letters, a number and a symbol.`}
               disabled={flow.loading}
               inputRef={newPasswordRef}
             >
@@ -313,7 +314,7 @@ export default function ForgotPasswordModal({ defaultEmail = undefined, onClose 
               placeholder="Re-enter password"
               helper="Re-enter your new password."
               success={
-                flow.confirmPw && flow.newPassword.length >= 8 && flow.newPassword === flow.confirmPw
+                flow.confirmPw && checkPassword(flow.newPassword).ok && flow.newPassword === flow.confirmPw
                   ? 'Passwords match.'
                   : ''
               }

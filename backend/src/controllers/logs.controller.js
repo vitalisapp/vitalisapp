@@ -4,7 +4,7 @@ const service = require('../services/logs.service');
 async function postUserId(req,res,next){
   try{
         const { userId } = req.params;
-        const { calories, steps, minutes } = req.body;
+        const { calories, steps, minutes, local_date } = req.body || {};
         const c = Math.max(0, parseInt(calories) || 0);
         const s = Math.max(0, parseInt(steps) || 0);
         const m = Math.max(0, parseInt(minutes) || 0);
@@ -19,7 +19,7 @@ async function postUserId(req,res,next){
         if (process.env.NODE_ENV !== 'production') console.log(`[LOGS] Received — userId:${userId} calories:${c} steps:${s} minutes:${m}`);
     
         try {
-            const result = await service.logDailyStats(userId, { calories: c, steps: s, minutes: m });
+            const result = await service.logDailyStats(userId, { calories: c, steps: s, minutes: m, localDate: local_date });
             if (process.env.NODE_ENV !== 'production') console.log(`[LOGS] OK — affectedRows:${result.affectedRows}`);
             res.status(200).json({ message: "Activity logged successfully" });
         } catch (err) {

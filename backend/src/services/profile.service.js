@@ -89,7 +89,25 @@ async function getProfile(userId) {
         fatG: g.fat_g != null ? Number(g.fat_g) : null,
         status: g.status,
         createdAt: g.created_at,
+        secondaryGoals: [],
+        targetDate: null,
+        experienceLevel: null,
       };
+      // Revision #5: extra goals (+ target date / level) so the Profile shows
+      // every goal and Change Goal never wipes them. Separate query: these
+      // columns arrive in later migrations and must not break the profile.
+      try {
+        const [[extra]] = await db.execute(
+          `SELECT secondary_goals, target_date, experience_level FROM fitness_goals
+            WHERE user_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1`,
+          [userId]
+        );
+        if (extra) {
+          onboarding.secondaryGoals = String(extra.secondary_goals || '').split(',').map((x) => x.trim()).filter(Boolean);
+          onboarding.targetDate = extra.target_date ? new Date(extra.target_date).toLocaleDateString('en-CA') : null;
+          onboarding.experienceLevel = extra.experience_level || null;
+        }
+      } catch (_) { /* pre-032/050 schema */ }
     }
   } catch (_) { /* onboarding optional */ }
 

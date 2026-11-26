@@ -20,6 +20,9 @@ import PlanDetailOverlay from '../components/PlanDetailOverlay.jsx';
 import DayTracker from '../components/DayTracker.jsx';
 import MyPlans from '../components/MyPlans.jsx';
 import Explore from '../components/Explore.jsx';
+import LevelsPanel from '../../Progression/components/LevelsPanel.jsx';
+import UnlockCelebration from '../../Progression/components/UnlockCelebration.jsx';
+import { useRefreshProgression } from '../../Progression/hooks/useProgression.js';
 import '../plans.css';
 
 // MAIN PLANS PAGE COMPONENT
@@ -48,6 +51,7 @@ const Plans = () => {
     detailPlan, trackerPlan, trackerContent, trackerProgress,
     setDetailPlan, setActionError, setActionOk, handleEnroll, createPersonal, updatePersonal, autoFromGoal, activatePlan, removePersonal, startTracker: loadTracker, handleCompleteDay, closeTracker,
   } = usePlans();
+  const refreshProgression = useRefreshProgression();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
   // Module 5 — preferences + adaptive tips (silent on failure).
@@ -177,9 +181,12 @@ const Plans = () => {
   }, [requestedPlanId, trainingPlans, loading, setDetailPlan, setSearchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleEnrollAndSwitch = async (planId) => {
-    await handleEnroll(planId);
-    setActiveTab('my-plans');
+    const ok = await handleEnroll(planId);
+    if (ok) setActiveTab('my-plans');
+    else refreshProgression();
   };
+  // Revision #4: a locked plan opens the Levels tab with its requirements.
+  const showLevels = () => { setDetailPlan(null); setActiveTab('levels'); };
 
   const handleGenerateAndSwitch = async (body) => {
     const data = await autoFromGoal(body);
@@ -326,16 +333,20 @@ const Plans = () => {
                   />
                 </>
               )}
-              {activeTab === 'explore'  && <Explore  plans={trainingPlans} onOpen={setDetailPlan} onEnroll={handleEnrollAndSwitch} onContinue={startTracker} />}
+              {activeTab === 'explore'  && <Explore  plans={trainingPlans} onOpen={setDetailPlan} onEnroll={handleEnrollAndSwitch} onContinue={startTracker} onLocked={showLevels} />}
+              {activeTab === 'levels'   && <LevelsPanel />}
               {activeTab === 'library'  && <ExerciseLibrary />}
               {activeTab === 'history'  && <WorkoutHistory onBrowse={() => setActiveTab('library')} />}
             </>
           )}
 
+      <UnlockCelebration suppressed={Boolean(trackerPlan)} />
+
       {detailPlan && (
         <PlanDetailOverlay
           plan={detailPlan}
           onClose={() => setDetailPlan(null)}
+          onLocked={showLevels}
           onStart={() => {
             if (detailPlan.is_enrolled === 1) {
               startTracker(detailPlan);

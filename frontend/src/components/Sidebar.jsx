@@ -79,7 +79,7 @@ export const SidebarSection = ({ label = undefined, children = undefined }) => (
 
 /** Account card: real user data, links to the profile page. */
 export const SidebarAccount = ({
-  to = '/dashboard/profile',
+  to = '/profile',
   name = undefined,
   subtitle = undefined,
   avatarUrl = undefined,
@@ -263,11 +263,11 @@ const Sidebar = ({ onClick = undefined, collapsed = false, onToggle = undefined 
           />
 
           <SidebarAccount
-            to={profileItem?.path || '/dashboard/profile'}
+            to={profileItem?.path || '/profile'}
             name={displayName}
             subtitle={subtitle}
             avatarUrl={user?.avatar}
-            active={isRowActive(profileItem?.path || '/dashboard/profile')}
+            active={isRowActive(profileItem?.path || '/profile')}
             alert={needsOnboarding}
             collapsed={collapsed}
             showTooltip={showTooltip}

@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useAdminFilters } from '../hooks/useAdminFilters.js';
+import { ADMIN_FILTERS } from '../utils/urlFilters.js';
 import { useAdminResource } from '../hooks/useAdminResource.js';
 import Icon from '../../../components/Icon.jsx';
 import {
@@ -12,8 +14,10 @@ const PAGE_SIZE = 10;
 const WINDOWS = [7, 14, 30, 90];
 
 export default function AdminAiUsage() {
-  const [days, setDays] = useState(14);
-  const [offset, setOffset] = useState(0);
+  const { values, update } = useAdminFilters(ADMIN_FILTERS.aiUsage);
+  const days = Number(values.days);
+  const offset = (Number(values.page) - 1) * PAGE_SIZE;
+  const setOffset = (value) => update({ page: value / PAGE_SIZE + 1 });
   const { data, loading, error, reload } = useAdminResource(
     `/api/admin/ai-usage?days=${days}&limit=${PAGE_SIZE}&offset=${offset}`,
   );
@@ -42,7 +46,7 @@ export default function AdminAiUsage() {
                 key={value}
                 type="button"
                 className={`adm-seg__btn${days === value ? ' is-active' : ''}`}
-                onClick={() => { setDays(value); setOffset(0); }}
+                onClick={() => update({ days: value, page: 1 })}
                 aria-pressed={days === value}
               >
                 {value} days

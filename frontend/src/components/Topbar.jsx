@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from './Icon.jsx';
+import WarningBadge from './WarningBadge.jsx';
 import { apiGet, apiFetch } from '../lib/apiClient.js';
 import { resolveAvatar, capitalizeName } from '../lib/avatar.js';
 import { useAuth } from '../hooks/useAuth.jsx';
@@ -191,11 +192,14 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
   // Only fire authed polls when the session cookie is proven — pages pass
   // a (possibly stale) userId prop, which alone 401-spams on dead sessions.
   const authedUserId = sessionValid === true ? userId : null;
-  // Yellow "setup incomplete" dot: unfinished onboarding, missing body
-  // metrics, or no fitness goal (same warning Sidebar flags on Profile).
-  const { hasWarning } = useProfileWarnings(authedUserId, user);
+  // Yellow "needs attention" warning shared by the avatar and the account
+  // menu. `issues` names the exact Profile section (security, metrics, goal…)
+  // so the menu item can say *what* is wrong instead of a generic dot.
+  const { hasWarning, issues } = useProfileWarnings(authedUserId, user);
+  const primaryIssue = issues?.[0]?.message || '';
+  const warningLabel = primaryIssue ? `${primaryIssue} — open Profile` : 'Profile needs attention';
 
-  const accountBase = user?.role === 'admin' ? '/admin' : '/dashboard';
+  const accountBase = user?.role === 'admin' ? '/admin' : '';
   const SETTINGS_ITEMS = getSettingsItems(navigate, accountBase);
   if (user?.role === 'admin') {
     SETTINGS_ITEMS.unshift({
@@ -461,10 +465,11 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
                 {showAvatarImg ? <img src={avatar.src} alt="User" className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} /> : avatar.initials}
               </div>
               {hasWarning && (
-                <span
-                  aria-hidden="true"
-                  title="Profile setup incomplete"
-                  className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[var(--warning)] ring-2 ring-[var(--bg-secondary)]"
+                <WarningBadge
+                  label={warningLabel}
+                  size={13}
+                  ring="var(--bg-secondary)"
+                  style={{ position: 'absolute', top: -2, right: -2 }}
                 />
               )}
             </div>
@@ -485,10 +490,11 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
                       {showAvatarImg ? <img src={avatar.src} alt="User" className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} /> : avatar.initials}
                     </div>
                     {hasWarning && (
-                      <span
-                        aria-hidden="true"
-                        title="Profile setup incomplete"
-                        className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[var(--warning)] ring-2 ring-[var(--surface)]"
+                      <WarningBadge
+                        label={warningLabel}
+                        size={13}
+                        ring="var(--surface)"
+                        style={{ position: 'absolute', top: -2, right: -2 }}
                       />
                     )}
                   </div>
@@ -498,16 +504,30 @@ const Topbar = ({ sidebarExpanded = false, userId = undefined, leftSlot = null, 
                   </div>
                 </div>
                 <div className="p-1.5 flex flex-col gap-0.5">
-                  {SETTINGS_ITEMS.map(({ icon, label, accent, action }) => (
-                    <button
-                      key={label}
-                      onClick={() => { action(); setSettingsOpen(false); }}
-                      className={'w-full flex items-center gap-2.5 px-3 py-2 pointer-coarse:min-h-11 rounded-lg text-[length:var(--fs-11)] sm:text-[length:var(--fs-12)] transition-colors duration-150 text-left cursor-pointer border-none bg-transparent ' + (accent ? 'text-(--accent) hover:bg-(--accent-bg)' : 'text-(--text-muted) hover:text-(--text-primary) hover:bg-(--bg-hover)')}
-                    >
-                      <Icon name={icon} className="text-[length:var(--fs-14)] sm:text-[length:var(--fs-15)]" />
-                      {label}
-                    </button>
-                  ))}
+                  {SETTINGS_ITEMS.map(({ icon, label, accent, action }) => {
+                    // Only Profile carries the section-specific warning badge;
+                    // its tooltip/label names the first real issue.
+                    const flagged = hasWarning && label === 'Profile';
+                    return (
+                      <button
+                        key={label}
+                        onClick={() => { action(); setSettingsOpen(false); }}
+                        aria-label={flagged ? `${label} — ${primaryIssue || 'needs attention'}` : undefined}
+                        className={'w-full flex items-center gap-2.5 px-3 py-2 pointer-coarse:min-h-11 rounded-lg text-[length:var(--fs-11)] sm:text-[length:var(--fs-12)] transition-colors duration-150 text-left cursor-pointer border-none bg-transparent ' + (accent ? 'text-(--accent) hover:bg-(--accent-bg)' : 'text-(--text-muted) hover:text-(--text-primary) hover:bg-(--bg-hover)')}
+                      >
+                        <Icon name={icon} className="text-[length:var(--fs-14)] sm:text-[length:var(--fs-15)]" />
+                        {label}
+                        {flagged && (
+                          <WarningBadge
+                            label={warningLabel}
+                            size={15}
+                            ring="var(--bg-secondary)"
+                            className="ml-auto"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                   <div className="border-t border-(--border-light) mt-1 pt-1">
                     <button
                       onClick={() => { setShowFeedback(true); setSettingsOpen(false); }}

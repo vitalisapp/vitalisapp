@@ -145,7 +145,7 @@ const CheckEmail = () => {
           </button>
 
           {!changing ? (
-            <div className="mt-2 text-[12px] text-[#c4c9b0]/50 space-y-2">
+            <div className="mt-2 text-[12px] text-[#c4c9b0]/70 space-y-2">
               <p>Didn't receive it?{' '}
                 <button onClick={resend} disabled={busy || cooldown > 0} className="text-[var(--accent-dark)] font-semibold hover:text-[var(--accent)] disabled:opacity-50 bg-transparent border-none cursor-pointer p-0">
                   {busy ? 'Sending...' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend Verification Email'}
@@ -160,9 +160,9 @@ const CheckEmail = () => {
           ) : (
             <form onSubmit={changeEmail} className="mt-2 space-y-3 text-left">
               <input type="password" required placeholder="Current password" value={password} onChange={(e) => setPassword(e.target.value)}
-                 className="w-full bg-white/5 border border-white/10 rounded-xl text-[16px] p-3 outline-none focus:border-[var(--accent)]/50 placeholder:text-white/10" />
+                 className="w-full bg-white/5 border border-white/10 rounded-xl text-[16px] p-3 outline-none focus:border-[var(--accent)]/50 placeholder:text-white/50" />
               <input type="email" required placeholder="New email address" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
-                 className="w-full bg-white/5 border border-white/10 rounded-xl text-[16px] p-3 outline-none focus:border-[var(--accent)]/50 placeholder:text-white/10" />
+                 className="w-full bg-white/5 border border-white/10 rounded-xl text-[16px] p-3 outline-none focus:border-[var(--accent)]/50 placeholder:text-white/50" />
               <div className="flex gap-2">
                 <button type="button" onClick={() => setChanging(false)} className="flex-1 bg-white/5 border border-white/10 rounded-xl text-[11px] font-semibold uppercase p-3">Cancel</button>
                 <button type="submit" disabled={busy} className="flex-1 bg-[var(--accent)] text-[var(--text-inverse)] font-bold text-[11px] uppercase p-3 rounded-xl disabled:opacity-50">

@@ -9,7 +9,13 @@ function clearSessionCookie(req, res) {
   } catch (_) {}
 }
 
-const verifyUser = async (req, res, next) => {
+// Authenticate a cookie session and populate req.user.
+//
+// This is shared by verifyUser AND the role gates. Role gates can be mounted
+// in src/routes/index.js (before a router's own verifyUser), so they must be
+// able to authenticate the request themselves instead of relying on req.user
+// already being set.
+async function authenticate(req, res, next) {
   // Cookie-only (no Bearer fallback) so XSS can't steal a token from storage.
   const token = req.cookies?.[COOKIE_NAME];
 
@@ -61,19 +67,39 @@ const verifyUser = async (req, res, next) => {
       accepted_terms_at: u.accepted_terms_at,
       accepted_terms_version: u.accepted_terms_version,
     };
-    next();
+    return next();
   } catch (e) {
-    next(e);
+    return next(e);
   }
+}
+
+// Normal route-level middleware. A mount-level gate may already have
+// authenticated this request, so skip the duplicate DB lookup in that case.
+const verifyUser = (req, res, next) => {
+  if (req.user) return next();
+  return authenticate(req, res, next);
 };
 
+// Run `onReady` only after a session user exists on req.user. Role gates use
+// this so they work both before and after router-level verifyUser.
+function withAuthenticatedUser(req, res, next, onReady) {
+  if (req.user) return onReady();
+  return authenticate(req, res, (err) => {
+    if (err) return next(err);
+    return onReady();
+  });
+}
+
 // Module 1 — admin gate for governance endpoints (Module 7 builds the panel
-// on this). Reads the role already loaded by verifyUser — zero extra queries.
+// on this). Reads the role loaded by verifyUser — zero extra queries when a
+// route has already authenticated.
 function requireAdmin(req, res, next) {
-  if (req.user?.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required', code: 'FORBIDDEN_ADMIN' });
-  }
-  next();
+  return withAuthenticatedUser(req, res, next, () => {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required', code: 'FORBIDDEN_ADMIN' });
+    }
+    next();
+  });
 }
 
 // Role middleware — member-only gate. Mirror of requireAdmin: an admin hitting
@@ -82,24 +108,27 @@ function requireAdmin(req, res, next) {
 // frontend counterpart (MemberRoute / AdminRoute) is what handles the
 // redirect-to-own-dashboard UX; this is the API-level enforcement.
 function requireMember(req, res, next) {
-  if (req.user?.role === 'admin') {
-    return res.status(403).json({
-      error: 'This is a member-only endpoint. Admins use /api/admin.',
-      code: 'FORBIDDEN_MEMBER',
-    });
-  }
-  next();
+  return withAuthenticatedUser(req, res, next, () => {
+    if (req.user?.role === 'admin') {
+      return res.status(403).json({
+        error: 'This is a member-only endpoint. Admins use /api/admin.',
+        code: 'FORBIDDEN_MEMBER',
+      });
+    }
+    next();
+  });
 }
 
 // Generic variant for future role needs (e.g. moderator). Valid roles only —
 // fails closed for anything the verifyUser role column doesn't carry.
 function requireRole(role) {
-  return (req, res, next) => {
-    if (req.user?.role !== role) {
-      return res.status(403).json({ error: `Role '${role}' required`, code: 'FORBIDDEN_ROLE' });
-    }
-    next();
-  };
+  return (req, res, next) =>
+    withAuthenticatedUser(req, res, next, () => {
+      if (req.user?.role !== role) {
+        return res.status(403).json({ error: `Role '${role}' required`, code: 'FORBIDDEN_ROLE' });
+      }
+      next();
+    });
 }
 
 module.exports = verifyUser;

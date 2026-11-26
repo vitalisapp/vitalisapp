@@ -31,7 +31,7 @@ async function patchIdEnd(req, res, next) {
   try {
     const logId = parseLogId(req, res);
     if (logId === null) return undefined;
-    const { status = 'completed', rep_count = 0, sets } = req.body || {};
+    const { status = 'completed', rep_count = 0, sets, form_score } = req.body || {};
     if (!workoutService.VALID_END_STATUS.includes(status)) {
       return res
         .status(400)
@@ -41,8 +41,13 @@ async function patchIdEnd(req, res, next) {
     if (!Number.isInteger(reps) || reps < 0 || reps > 100000) {
       return res.status(400).json({ error: 'rep_count must be an integer 0–100000' });
     }
+    // Revision #4: camera technique score (optional; null = no pose data).
+    const form = form_score === undefined || form_score === null ? null : Number(form_score);
+    if (form !== null && (!Number.isInteger(form) || form < 0 || form > 100)) {
+      return res.status(400).json({ error: 'form_score must be an integer 0–100' });
+    }
     try {
-      const result = await workoutService.endWorkout(req.user.id, logId, status, reps, sets);
+      const result = await workoutService.endWorkout(req.user.id, logId, status, reps, sets, form);
       if (result.outcome === 'not_found') return res.status(404).json({ error: 'Log not found' });
       if (result.outcome === 'conflict') return res.status(409).json({ error: `Already ${result.status}` });
       res.json(result.log);

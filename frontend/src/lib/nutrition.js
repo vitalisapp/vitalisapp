@@ -61,6 +61,8 @@ export function scalePortion(item, factor) {
   // Section 6: sugar (g) / sodium (mg) stay null when unknown.
   if (base.sugar != null) next.sugar = Math.max(0, round1((Number(base.sugar) || 0) * f));
   if (base.sodium != null) next.sodium = Math.max(0, Math.round((Number(base.sodium) || 0) * f));
+  // Scan items carry their visible weight; keep it in step with the portion.
+  if (Number(base.grams) > 0) next.grams = Math.max(1, Math.round(Number(base.grams) * f));
   return next;
 }
 

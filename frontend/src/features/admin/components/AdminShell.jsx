@@ -6,6 +6,7 @@ import { useAuth } from '../../../hooks/useAuth.jsx';
 import { useSidebarCollapsed } from '../../../hooks/useSidebarCollapsed.js';
 import AdminSidebar from './AdminSidebar.jsx';
 import AdminBottomNav from './AdminBottomNav.jsx';
+import { ADMIN_FILTERS, writeAdminFilters } from '../utils/urlFilters.js';
 import '../admin.css';
 
 const ADMIN_NAV = [
@@ -27,11 +28,14 @@ const ADMIN_NAV = [
 function AdminTopbarSearch({ initialQuery = '' }) {
   const [value, setValue] = useState(initialQuery);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const submit = (event) => {
     event.preventDefault();
     const query = value.trim();
-    navigate(query ? `/admin/users?q=${encodeURIComponent(query)}` : '/admin/users');
+    const current = location.pathname === '/admin/users' ? new URLSearchParams(location.search) : new URLSearchParams();
+    const next = writeAdminFilters(current, ADMIN_FILTERS.users, { q: query, page: 1 });
+    navigate({ pathname: '/admin/users', search: next.toString() ? `?${next}` : '' });
   };
 
   return (

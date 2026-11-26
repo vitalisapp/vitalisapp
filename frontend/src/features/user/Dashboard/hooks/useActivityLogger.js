@@ -16,7 +16,7 @@ export const useActivityLogger = (
 
       if (!(calories > 0 || steps > 0 || minutes > 0)) return;
 
-      await apiPost(`/api/logs/${USER_ID}`, { calories, steps, minutes });
+      await apiPost(`/api/logs/${USER_ID}`, { calories, steps, minutes, local_date: localTodayIso() });
 
       const updatedData = await apiGet(`/api/dashboard/${USER_ID}?today=${localTodayIso()}`);
       setData(mergeData(updatedData));

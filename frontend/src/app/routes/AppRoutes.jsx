@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
-import { Route, Routes, Navigate } from 'react-router-dom';
+import { Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import { legacyMemberDestination } from '../../lib/routePaths.js';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import { MemberRoute, ProtectedRoute, PublicRoute } from '../../hooks/useMiddleware.jsx';
 import { ErrorBoundary } from '../../components/ErrorBoundary.jsx';
@@ -41,6 +42,14 @@ const AccessRedirect = lazy(() => import('../../pages/Go/AccessRedirect.jsx'));
 
 const RouteFallback = FullPageLoader;
 
+function LegacyMemberRedirect() {
+  const location = useLocation();
+  const destination = legacyMemberDestination(location);
+  return destination
+    ? <Navigate to={destination} state={location.state} replace />
+    : <NotFound />;
+}
+
 export default function AppRoutes() {
   const { user, loading } = useAuth();
   if (loading) return <RouteFallback />;
@@ -56,18 +65,17 @@ export default function AppRoutes() {
         {/* Member app — MemberRoute bounces admins back to their console. */}
         <Route path="/dashboard" element={<MemberRoute><Dashboard /></MemberRoute>} />
 
-        <Route path="/dashboard/messenger" element={<Navigate to="/dashboard/community/messages" replace />} />
-        <Route path="/dashboard/plans" element={<MemberRoute><Plans /></MemberRoute>} />
-        <Route path="/dashboard/activity-map" element={<MemberRoute><ActivityMap /></MemberRoute>} />
-                <Route path="/dashboard/workouts" element={<MemberRoute><CameraWorkout /></MemberRoute>} />
-        <Route path="/dashboard/profile" element={<MemberRoute><Profile /></MemberRoute>} />
-        <Route path="/dashboard/logs" element={<MemberRoute><Log /></MemberRoute>} />
-        <Route path="/dashboard/meal-tracker" element={<MemberRoute><NutritionTracker /></MemberRoute>} />
-        <Route path="/dashboard/community" element={<MemberRoute><Community /></MemberRoute>} />
-        <Route path="/dashboard/community/messages" element={<MemberRoute><Community /></MemberRoute>} />
-        <Route path="/dashboard/notifications" element={<MemberRoute><Notifications /></MemberRoute>} />
-        <Route path="/dashboard/preferences" element={<MemberRoute><Preferences /></MemberRoute>} />
-        <Route path="/dashboard/help-support" element={<MemberRoute><HelpSupport /></MemberRoute>} />
+        <Route path="/plans" element={<MemberRoute><Plans /></MemberRoute>} />
+        <Route path="/activity-map" element={<MemberRoute><ActivityMap /></MemberRoute>} />
+        <Route path="/workouts" element={<MemberRoute><CameraWorkout /></MemberRoute>} />
+        <Route path="/profile" element={<MemberRoute><Profile /></MemberRoute>} />
+        <Route path="/logs" element={<MemberRoute><Log /></MemberRoute>} />
+        <Route path="/meal-tracker" element={<MemberRoute><NutritionTracker /></MemberRoute>} />
+        <Route path="/community" element={<MemberRoute><Community /></MemberRoute>} />
+        <Route path="/community/messages" element={<MemberRoute><Community /></MemberRoute>} />
+        <Route path="/notifications" element={<MemberRoute><Notifications /></MemberRoute>} />
+        <Route path="/preferences" element={<MemberRoute><Preferences /></MemberRoute>} />
+        <Route path="/help-support" element={<MemberRoute><HelpSupport /></MemberRoute>} />
         <Route path="/onboarding" element={<ProtectedRoute requireOnboarding={false}><Onboarding /></ProtectedRoute>} />
 
         {/* Module 7 — admin console. API enforcement is requireAdmin; this is the UI gate. */}
@@ -104,10 +112,9 @@ export default function AppRoutes() {
         <Route path="/go/:code" element={<AccessRedirect />} />
 <Route path="/verify-phone" element={<VerifyPhone />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        {/* Legacy removed-module path — redirect to dashboard */}
-        <Route path="/dashboard/virtual-clinic" element={<Navigate to="/dashboard" replace />} />
-        {/* BMI lives inside Profile — redirect dead ROUTES.BMI link instead of falling to * */}
-        <Route path="/dashboard/bmi" element={<Navigate to="/dashboard/profile" replace />} />
+        {/* Preserve bookmarks, email links, query actions and workout navigation state. */}
+        <Route path="/dashboard/*" element={<LegacyMemberRedirect />} />
+        <Route path="/messenger" element={<LegacyMemberRedirect />} />
         <Route path="/reset-password" element={<ForgotPassword />} />
         <Route path="/forgot-password" element={<Navigate to="/reset-password" replace />} />
         <Route path="/404" element={<NotFound />} />

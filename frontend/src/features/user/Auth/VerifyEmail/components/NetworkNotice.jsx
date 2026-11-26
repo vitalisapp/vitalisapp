@@ -49,7 +49,7 @@ export default function NetworkNotice({ senderId = 'Unisoft', className = '' }) 
         ))}
       </ul>
 
-      <p className="mt-2 text-[10px] italic leading-relaxed text-[#c4c9b0]/45">
+      <p className="mt-2 text-[10px] italic leading-relaxed text-[#c4c9b0]/70">
         Use a Globe, TM, or DITO number. Codes are sent as &ldquo;{senderId}&rdquo; and availability depends on
         your network and provider — delivery can be delayed or blocked.
       </p>

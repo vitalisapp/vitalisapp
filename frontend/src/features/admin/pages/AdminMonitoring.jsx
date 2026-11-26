@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useAdminFilters } from '../hooks/useAdminFilters.js';
+import { ADMIN_FILTERS } from '../utils/urlFilters.js';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import { useAdminResource } from '../hooks/useAdminResource.js';
 import { useAdminToast } from '../hooks/useAdminToast.jsx';
@@ -93,21 +94,14 @@ function FlagList({ flags = undefined }) {
 export default function AdminMonitoring() {
   const { user: admin } = useAuth();
   const { show, node: toast } = useAdminToast();
-  const [params, setParams] = useSearchParams();
-  const status = ['green', 'yellow', 'red'].includes(params.get('status')) ? params.get('status') : '';
-  const flag = FLAG_GROUPS.some((g) => g.key === params.get('flag')) ? params.get('flag') : '';
-  const q = params.get('q') || '';
-  const page = Math.max(1, Number.parseInt(params.get('page'), 10) || 1);
+  const { values: { status, flag, q, page: pageValue }, update: updateFilters } = useAdminFilters(ADMIN_FILTERS.monitoring);
+  const page = Number(pageValue);
   const [search, setSearch] = useState({ key: q, value: q });
   const searchValue = search.key === q ? search.value : q; // follow URL (back/forward)
   const [selected, setSelected] = useState(null);
 
   const update = (changes) => {
-    const next = new URLSearchParams(params);
-    Object.entries(changes).forEach(([k, v]) => (v ? next.set(k, String(v)) : next.delete(k)));
-    if (!('page' in changes)) next.delete('page'); // any filter change → page 1
-    if (next.get('page') === '1') next.delete('page');
-    setParams(next);
+    updateFilters({ page: 1, ...changes });
   };
 
   const api = new URLSearchParams();
@@ -215,7 +209,7 @@ export default function AdminMonitoring() {
             {status && <span className={`adm-mon-tag is-${status}`}>{STATUS_META[status].label}</span>}
             {flag && <span className="adm-mon-tag">{FLAG_GROUPS.find((g) => g.key === flag)?.label}</span>}
             {q && <span className="adm-mon-tag">“{q}”</span>}
-            <button type="button" className="adm-btn is-ghost is-sm" onClick={() => { setSearch({ key: '', value: '' }); setParams({}); }}>
+            <button type="button" className="adm-btn is-ghost is-sm" onClick={() => { setSearch({ key: '', value: '' }); update({ q: '', status: '', flag: '' }); }}>
               Clear filters
             </button>
           </div>

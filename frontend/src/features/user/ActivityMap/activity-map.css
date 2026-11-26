@@ -260,12 +260,143 @@
   box-shadow: var(--shadow-md);
 }
 
-.am-map-card .leaflet-container {
+.am-map-card .vitalis-map {
   position: absolute;
   inset: 0;
   z-index: 0;
   width: 100%;
   height: 100%;
+}
+
+/* ── MapLibre map (VitalisMap) ───────────────────────────────────────────
+   Own stacking context (z-index 0) so map panes, markers and controls never
+   paint over the app nav, scrims or modals — same contract as Leaflet had. */
+.vitalis-map {
+  position: relative;
+  z-index: 0;
+  max-width: 100%;
+  min-height: 280px;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .vitalis-map {
+    min-height: 420px;
+  }
+}
+
+/* Two classes so this beats maplibre-gl.css `.maplibregl-map { position:
+   relative }` regardless of stylesheet order (it would collapse to 0px). */
+.vitalis-map > .vitalis-map__canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.vitalis-map__notice {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: min(86%, 340px);
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(9, 14, 9, 0.82);
+  color: #f4f8ef;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  backdrop-filter: blur(12px);
+}
+
+.vitalis-map__notice .material-symbols-outlined {
+  flex-shrink: 0;
+  font-size: 18px;
+  opacity: 0.8;
+}
+
+/* Attribution (© OpenFreeMap / OpenMapTiles / OpenStreetMap) is legally
+   required — keep it, blended into the theme as a subtle chip. */
+.vitalis-map .maplibregl-ctrl-attrib {
+  background: color-mix(in srgb, var(--bg-card) 72%, transparent);
+  color: var(--text-muted);
+  font-size: 9px;
+  line-height: 1.4;
+  backdrop-filter: blur(4px);
+}
+
+.vitalis-map .maplibregl-ctrl-attrib a {
+  color: var(--text-muted);
+}
+
+.dark-theme .vitalis-map .maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+
+/* Markers (were Leaflet divIcons — same size, colours and pulse) */
+.am-marker {
+  box-sizing: border-box;
+  border: 3px solid #fff;
+  border-radius: 50%;
+}
+
+/* No `position` here: maplibre-gl.css gives markers position:absolute, and
+   overriding it (prod CSS loads after MapLibre's) puts markers in normal flow,
+   shifting every marker after the first. Absolute already anchors the pulse. */
+.am-marker--user {
+  width: 20px;
+  height: 20px;
+  background: #007aff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+
+.am-marker__pulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: rgba(0, 122, 255, 0.2);
+  animation: am-marker-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.am-marker--start,
+.am-marker--finish {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.am-marker--start {
+  background: #22c55e;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.5);
+}
+
+.am-marker--finish {
+  background: #ef4444;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+}
+
+@keyframes am-marker-ping {
+  0% { transform: scale(1); opacity: 1; }
+  75% { transform: scale(2); opacity: 0; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .am-marker__pulse {
+    animation: none;
+  }
 }
 
 .am-map-scrim {
@@ -577,7 +708,7 @@
 }
 
 .am-splits__count {
-  color: var(--text-disabled);
+  color: var(--text-muted);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -651,7 +782,7 @@
   justify-content: center;
   gap: 5px;
   margin: 9px 0 0;
-  color: var(--text-disabled);
+  color: var(--text-muted);
   font-size: 9.5px;
   font-weight: 600;
   line-height: 1.3;
@@ -1578,6 +1709,14 @@
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.am-activity__kcal-source {
+  margin-left: 3px;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .am-activity__stats {

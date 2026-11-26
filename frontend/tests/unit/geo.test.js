@@ -119,3 +119,14 @@ describe("formatPace", () => {
     assert.equal(formatPace(700, 2), "5'50\"");
   });
 });
+
+describe("isValidCoordinate", () => {
+  it("accepts in-range finite pairs and rejects everything else", async () => {
+    const { isValidCoordinate } = await import("../../src/features/user/ActivityMap/utils/geo.js");
+    assert.equal(isValidCoordinate(14.6, 120.98), true);
+    assert.equal(isValidCoordinate(90, -180), true);
+    for (const [a, b] of [[NaN, 0], [0, Infinity], [91, 0], [0, 181], [undefined, 1], [null, null]]) {
+      assert.equal(isValidCoordinate(a, b), false);
+    }
+  });
+});

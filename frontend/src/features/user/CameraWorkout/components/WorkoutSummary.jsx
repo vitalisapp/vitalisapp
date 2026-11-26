@@ -1,3 +1,4 @@
+import { Children } from "react";
 import Icon from "../../../../components/Icon.jsx";
 import { createPortal } from "react-dom";
 
@@ -11,7 +12,7 @@ function scoreChip(score) {
   return { label: 'Needs work', cls: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' };
 }
 
-export default function WorkoutSummary({ summary = undefined, kcalBurned = null, onDone = undefined }) {
+export default function WorkoutSummary({ summary = undefined, kcalBurned = null, onDone = undefined, children = undefined }) {
   if (!summary) return null;
   const chip = scoreChip(summary.score);
   const r = 52;
@@ -87,6 +88,9 @@ export default function WorkoutSummary({ summary = undefined, kcalBurned = null,
             <p className="text-[length:var(--fs-13)] leading-relaxed text-[var(--text-secondary)]">{summary.coach}</p>
           </div>
         )}
+
+        {/* Extra sections from the page, e.g. the plan-day cool-down (Revision #3) */}
+        {Children.toArray(children).length > 0 && <div className="mt-4 flex flex-col gap-3">{children}</div>}
 
         <button
           onClick={onDone}

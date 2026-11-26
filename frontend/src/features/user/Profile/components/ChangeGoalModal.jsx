@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { apiFetch, apiPost } from '../../../../lib/apiClient.js';
 import Icon from '../../../../components/Icon.jsx';
 import Modal from '../../../../components/ui/Modal.jsx';
-import { GOAL_TYPES, PACES, goalLabel } from '../../Onboarding/constants/goals.js';
-import { MAX_EXTRA_GOALS, extraGoalBlockReason, cleanExtraGoals, checkTargetDate, targetDateBounds } from '../../../../lib/goalSetup.js';
+import { PACES, goalLabel } from '../../Onboarding/constants/goals.js';
+import { checkTargetDate, targetDateBounds, cleanExtraGoals } from '../../../../lib/goalSetup.js';
+import GoalMultiSelect from '../../../../components/goals/GoalMultiSelect.jsx';
 
 // Change Goal modal (master plan §12) — switch the active goal without replaying
 // onboarding. Body profile is carried forward server-side (PATCH /:userId/change).
@@ -25,7 +26,8 @@ const ChangeGoalModal = ({ userId = undefined, currentGoal = undefined, identity
   const [weight, setWeight] = useState(currentGoal?.weightKg != null ? String(currentGoal.weightKg) : '');
   const [dob, setDob] = useState(identity?.dob || currentGoal?.dob ? String(identity?.dob || currentGoal?.dob).slice(0, 10) : '');
   const [sex, setSex] = useState(identity?.sex || currentGoal?.sex || '');
-  const [extraGoals, setExtraGoals] = useState(() => currentGoal?.secondaryGoals || []);
+  // Extras that clash with a (pre-picked) main goal are dropped up front.
+  const [extraGoals, setExtraGoals] = useState(() => cleanExtraGoals(currentGoal?.goalType, currentGoal?.secondaryGoals || []));
   const [targetDate, setTargetDate] = useState(() => currentGoal?.targetDate || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -46,12 +48,14 @@ const ChangeGoalModal = ({ userId = undefined, currentGoal = undefined, identity
     weightKg: firstSetup ? weight : currentGoal?.weightKg,
     targetWeightKg: targetWeight || null,
   });
-  const pickGoal = (k) => { setGoalType(k); setExtraGoals((list) => cleanExtraGoals(k, list)); };
-  const toggleExtra = (k) => setExtraGoals((list) => (list.includes(k) ? list.filter((x) => x !== k) : [...list, k]));
 
   const submit = async (e) => {
     e.preventDefault();
     if (saving) return;
+    if (!goalType) {
+      setError('Choose at least one goal.');
+      return;
+    }
     if (needsTarget && !(Number(targetWeight) > 0)) {
       setError('Enter a target weight for this goal.');
       return;
@@ -122,21 +126,12 @@ const ChangeGoalModal = ({ userId = undefined, currentGoal = undefined, identity
         {error && <p className="bg-[var(--error-bg)] border border-[var(--error)]/20 rounded-lg text-[var(--error)] text-[length:var(--fs-11)] font-semibold p-2.5 mb-3 text-center">{error}</p>}
 
         <form onSubmit={submit} className="space-y-3">
-          {GOAL_TYPES.map((g) => (
-            <button type="button" key={g.key} onClick={() => pickGoal(g.key)}
-              className={`w-full text-left p-3.5 rounded-[14px] border transition-colors flex items-center gap-3 ${goalType === g.key ? 'border-[var(--accent)] bg-[var(--accent-bg)]' : 'border-[var(--border-light)] bg-[var(--bg-hover)] hover:border-[var(--border-medium)]'}`}>
-              <span className="w-9 h-9 rounded-xl bg-[var(--bg-active)] border border-[var(--border-light)] flex items-center justify-center shrink-0 overflow-hidden">
-                <Icon name={g.icon} className="text-[length:var(--fs-20)] text-[var(--accent)]" />
-              </span>
-              <span className="flex-1 min-w-0">
-                <span className="block text-[length:var(--fs-13)] font-bold break-normal">{g.label}</span>
-                <span className="block text-[length:var(--fs-11)] text-[var(--text-muted)] break-normal text-pretty">{g.desc}</span>
-              </span>
-              <span className={`w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center ${goalType === g.key ? 'border-[var(--accent)]' : 'border-[var(--border-medium)]'}`}>
-                {goalType === g.key && <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />}
-              </span>
-            </button>
-          ))}
+          {/* Revision #5 — multi-select goals with a main goal + conflict help */}
+          <GoalMultiSelect
+            primary={goalType}
+            extras={extraGoals}
+            onChange={({ primary, extras }) => { setGoalType(primary); setExtraGoals(extras); setError(''); }}
+          />
 
           {firstSetup && (
             <div className="grid grid-cols-2 gap-3 pt-1">
@@ -193,25 +188,6 @@ const ChangeGoalModal = ({ userId = undefined, currentGoal = undefined, identity
             </>
           )}
 
-          <div>
-            <p className="text-[length:var(--fs-10)] font-bold uppercase tracking-widest text-[var(--text-muted)]">Extra goals (optional, up to {MAX_EXTRA_GOALS})</p>
-            <div className="flex gap-2 mt-1 flex-wrap">
-              {GOAL_TYPES.filter((g) => g.key !== goalType).map((g) => {
-                const active = extraGoals.includes(g.key);
-                const reason = active ? null : extraGoalBlockReason(goalType, g.key, extraGoals);
-                return (
-                  <button type="button" key={g.key} onClick={() => toggleExtra(g.key)} disabled={Boolean(reason)} title={reason || undefined}
-                    aria-pressed={active}
-                    className={`h-9 px-3 rounded-full text-[12px] font-semibold border transition-colors disabled:opacity-40 ${active
-                      ? 'bg-[var(--accent-bg)] text-[var(--accent)] border-[var(--accent-border)]'
-                      : 'border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-medium)]'}`}>
-                    {g.label}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-1 text-[12px] text-[var(--text-muted)]">Each extra goal gets its own workout plan in My Plans.</p>
-          </div>
 
           <div>
             <label htmlFor="cg-target-date" className="text-[length:var(--fs-10)] font-bold uppercase tracking-widest text-[var(--text-muted)]">Target date (optional)</label>

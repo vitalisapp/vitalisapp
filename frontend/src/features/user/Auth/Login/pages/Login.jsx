@@ -122,18 +122,18 @@ const Login = () => {
             <span className="text-[var(--accent)]">RECOVER</span><br />
             SMARTER.
           </h1>
-          <p className="v-hero-sub text-[13px] text-[#e5e2e1]/45 max-w-[320px] leading-relaxed font-light mt-1">
+          <p className="v-hero-sub text-[13px] text-[#e5e2e1]/65 max-w-[320px] leading-relaxed font-light mt-1">
             Manual training, nutrition, and activity logging with AI insights from your own data.
           </p>
 
           <div className="v-hero-stats flex gap-8 mt-6 pt-6 border-t border-white/10">
             <div className="flex flex-col">
               <span className="font-['Bebas_Neue'] text-3xl text-[var(--accent)] leading-none">6</span>
-              <span className="text-[10px] tracking-widest uppercase text-white/30">Modules</span>
+              <span className="text-[10px] tracking-widest uppercase text-white/55">Modules</span>
             </div>
             <div className="flex flex-col">
               <span className="font-['Bebas_Neue'] text-3xl text-[var(--accent)] leading-none">100%</span>
-              <span className="text-[10px] tracking-widest uppercase text-white/30">Manual-first</span>
+              <span className="text-[10px] tracking-widest uppercase text-white/55">Manual-first</span>
             </div>
           </div>
         </div>
@@ -155,7 +155,7 @@ const Login = () => {
                 </span>
                 Back to Landing
               </button>
-              <span className="inline-flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-white/25">
+              <span className="inline-flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-white/55">
                 <span className="h-1 w-1 rounded-full bg-[var(--accent)] shadow-[0_0_0_3px_rgba(199,244,100,0.08)]" />
                 Secure access
               </span>
@@ -168,7 +168,7 @@ const Login = () => {
             </div>
 
             <h2 className="v-card-title font-['Bebas_Neue'] text-[32px] tracking-wider leading-none mb-1.5">WELCOME BACK</h2>
-            <p className="v-card-sub text-xs text-[#c4c9b0]/55 tracking-wide mb-8">Sign in to continue your training.</p>
+            <p className="v-card-sub text-xs text-[#c4c9b0]/70 tracking-wide mb-8">Sign in to continue your training.</p>
 
             <form onSubmit={(e) => handleSubmit(e, { email, password })} className="space-y-5">
               {deactivated && (
@@ -206,7 +206,7 @@ const Login = () => {
                 </label>
                 <input
                   type="email"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl text-sm p-3.5 outline-none transition-all focus:border-[var(--accent)]/50 focus:bg-[var(--accent)]/5 focus:ring-4 focus:ring-[var(--accent)]/10 placeholder:text-white/10 disabled:opacity-50"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl text-sm p-3.5 outline-none transition-all focus:border-[var(--accent)]/50 focus:bg-[var(--accent)]/5 focus:ring-4 focus:ring-[var(--accent)]/10 placeholder:text-white/50 disabled:opacity-50"
                   placeholder="athlete@vitalis.io"
                   required
                   disabled={loading}
@@ -225,7 +225,7 @@ const Login = () => {
                 <div className="relative">
                   <input
                     type={showPw ? 'text' : 'password'}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl text-sm p-3.5 pr-12 outline-none transition-all focus:border-[var(--accent)]/50 focus:bg-[var(--accent)]/5 focus:ring-4 focus:ring-[var(--accent)]/10 placeholder:text-white/10 disabled:opacity-50"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl text-sm p-3.5 pr-12 outline-none transition-all focus:border-[var(--accent)]/50 focus:bg-[var(--accent)]/5 focus:ring-4 focus:ring-[var(--accent)]/10 placeholder:text-white/50 disabled:opacity-50"
                     placeholder="••••••••••••"
                     required
                     disabled={loading}
@@ -239,7 +239,7 @@ const Login = () => {
                     onClick={() => setShowPw(v => !v)}
                     disabled={loading}
                     aria-label={showPw ? 'Hide password' : 'Show password'}
-                    className="v-touch-target absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-[var(--accent)] transition-colors bg-transparent border-none cursor-pointer text-[18px] leading-none"
+                    className="v-touch-target absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-[var(--accent)] transition-colors bg-transparent border-none cursor-pointer text-[18px] leading-none"
                   >
                     <span className="material-symbols-outlined text-[20px]">{showPw ? 'visibility_off' : 'visibility'}</span>
                   </button>
@@ -266,7 +266,7 @@ const Login = () => {
 
               <div className="v-card-divider flex items-center gap-3 py-1">
                 <div className="flex-1 h-[1px] bg-white/5" />
-                <span className="text-[10px] tracking-[0.3em] uppercase text-white/20">or</span>
+                <span className="text-[10px] tracking-[0.3em] uppercase text-white/55">or</span>
                 <div className="flex-1 h-[1px] bg-white/5" />
               </div>
 
@@ -287,7 +287,7 @@ const Login = () => {
               </button>
             </form>
 
-            <div className="v-card-footer mt-7 text-center text-xs text-[#c4c9b0]/45">
+            <div className="v-card-footer mt-7 text-center text-xs text-[#c4c9b0]/70">
               Don't have an account?
               <Link to="/register" className="v-touch-target text-[var(--accent-dark)] font-semibold ml-1 hover:text-[var(--accent)] transition-colors">Register</Link>
             </div>

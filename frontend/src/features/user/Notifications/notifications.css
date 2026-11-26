@@ -145,7 +145,7 @@ button.vn-card:focus-visible .vn-card__hint { opacity: 1; }
   font-weight: 600;
   color: var(--text-muted);
 }
-.vn-group__count { font-weight: 500; color: var(--text-disabled); }
+.vn-group__count { font-weight: 500; color: var(--text-muted); }
 
 /* ── Segmented control + chips (full-page filters) ────────────────── */
 .vn-segment {

@@ -6,26 +6,15 @@ import { TermsOfUseModal, PrivacyPolicyModal } from '../components/LegalModals.j
 import NetworkNotice from '../../VerifyEmail/components/NetworkNotice.jsx';
 import { SMS_SENDER_ID } from '../../../../../app/config/env.js';
 import { livePhoneError } from '../../../../../lib/phone.js';
-
-const pwStrength = (pw) => {
-  if (!pw) return null;
-  let score = 0;
-  if (pw.length >= 8)          score++;
-  if (pw.length >= 12)         score++;
-  if (/[A-Z]/.test(pw))        score++;
-  if (/[0-9]/.test(pw))        score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
-  if (score <= 1) return { label: 'Weak',   color: '#ef4444', pct: '33%'  };
-  if (score <= 3) return { label: 'Medium', color: '#f59e0b', pct: '66%'  };
-  return              { label: 'Strong', color: 'var(--accent)',  pct: '100%' };
-};
+import { getPasswordStrength, MIN_LENGTH } from '../../../../../lib/passwordPolicy.js';
+import PasswordChecklist from '../../../../../components/password/PasswordChecklist.jsx';
 
 const VisibilityToggle = ({ visible = undefined, onToggle = undefined, label = undefined }) => (
   <button
     type="button"
     onClick={onToggle}
     aria-label={label}
-    className="v-touch-target text-white/40 hover:text-[var(--accent)] transition-colors bg-transparent border-none cursor-pointer leading-none p-1"
+    className="v-touch-target text-white/60 hover:text-[var(--accent)] transition-colors bg-transparent border-none cursor-pointer leading-none p-1"
   >
     <span className="material-symbols-outlined text-[20px]">{visible ? 'visibility_off' : 'visibility'}</span>
   </button>
@@ -45,7 +34,7 @@ const Field = ({ id = undefined, label = undefined, icon = undefined, error = un
       </label>
       <div className="relative">
         {icon && (
-          <span className={`material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] pointer-events-none transition-colors ${error ? 'text-red-400' : isFocused ? 'text-[var(--accent)]' : 'text-white/40'}`}>
+          <span className={`material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] pointer-events-none transition-colors ${error ? 'text-red-400' : isFocused ? 'text-[var(--accent)]' : 'text-white/60'}`}>
             {icon}
           </span>
         )}
@@ -54,7 +43,7 @@ const Field = ({ id = undefined, label = undefined, icon = undefined, error = un
           onFocus={() => setFocusedId(id)}
           onBlur={() => setFocusedId('')}
           aria-invalid={error ? true : undefined}
-          className={`w-full bg-white/5 border rounded-xl text-sm text-[#e5e2e1] p-3.5 outline-none transition-all placeholder:text-white/10 disabled:opacity-50 ${icon ? 'pl-11' : 'pl-4'} ${rightElement ? 'pr-12' : 'pr-4'} ${error ? 'border-red-500/60' : 'border-white/10 focus:border-[var(--accent)]/50 focus:bg-[var(--accent)]/5 focus:ring-4 focus:ring-[var(--accent)]/10'}`}
+          className={`w-full bg-white/5 border rounded-xl text-sm text-[#e5e2e1] p-3.5 outline-none transition-all placeholder:text-white/50 disabled:opacity-50 ${icon ? 'pl-11' : 'pl-4'} ${rightElement ? 'pr-12' : 'pr-4'} ${error ? 'border-red-500/60' : 'border-white/10 focus:border-[var(--accent)]/50 focus:bg-[var(--accent)]/5 focus:ring-4 focus:ring-[var(--accent)]/10'}`}
           {...props}
         />
         {rightElement && (
@@ -95,7 +84,7 @@ const Register = () => {
   };
 
   const mismatch = formData.confirm.length > 0 && formData.password !== formData.confirm;
-  const strength = pwStrength(formData.password);
+  const strength = getPasswordStrength(formData.password);
 
   const update = (field) => (e) => {
     if (error) clearError();
@@ -126,7 +115,7 @@ const Register = () => {
           <h1 className="font-['Bebas_Neue',sans-serif] text-[clamp(52px,5.5vw,82px)] leading-[0.95] tracking-[0.02em]">
             BUILD<br />YOUR<br /><span className="text-[var(--accent)]">ATHLETE</span><br />PROFILE.
           </h1>
-          <p className="text-[13px] text-[#e5e2e1]/45 max-w-[320px] leading-[1.7] font-light mt-1">
+          <p className="text-[13px] text-[#e5e2e1]/65 max-w-[320px] leading-[1.7] font-light mt-1">
             Create your account, then optionally set your goal and body profile. Log training, nutrition, and activity manually.
           </p>
         </div>
@@ -155,7 +144,7 @@ const Register = () => {
             </div>
 
             <h2 className="font-['Bebas_Neue',sans-serif] text-[32px] tracking-wider leading-none mb-1.5">CREATE ACCOUNT</h2>
-            <p className="text-xs text-[#c4c9b0]/55 tracking-wide mb-8">Step 1 of onboarding — you can set your goal and body profile next (optional).</p>
+            <p className="text-xs text-[#c4c9b0]/70 tracking-wide mb-8">Step 1 of onboarding — you can set your goal and body profile next (optional).</p>
 
             {invite?.valid && invite.kind !== 'link' && (
               <div className="flex items-start gap-2.5 rounded-xl border border-[var(--accent)]/25 bg-[var(--accent)]/[0.07] px-3.5 py-2.5 mb-5 text-[12px] leading-relaxed text-[#e5e2e1]/85" role="status">
@@ -278,9 +267,9 @@ const Register = () => {
                   label="Password"
                   icon="lock"
                   type={showPw ? 'text' : 'password'}
-                  placeholder="Min. 8 characters"
+                  placeholder={`Min. ${MIN_LENGTH} characters`}
                   required
-                  minLength={8}
+                  minLength={MIN_LENGTH}
                   disabled={loading}
                   value={formData.password}
                   onChange={update('password')}
@@ -297,6 +286,7 @@ const Register = () => {
                     <p className="text-[10px] mt-1 font-semibold" style={{ color: strength.color }}>{strength.label}</p>
                   </div>
                 )}
+                <PasswordChecklist password={formData.password} id="register-password-rules" />
               </div>
 
               {/* Confirm Password */}
@@ -320,7 +310,7 @@ const Register = () => {
               </div>
 
               {/* Terms */}
-              <div className="flex items-start gap-2.5 mb-[18px] text-[12px] text-[#c4c9b0]/55 leading-relaxed">
+              <div className="flex items-start gap-2.5 mb-[18px] text-[12px] text-[#c4c9b0]/70 leading-relaxed">
                 <input
                   id="register-agree"
                   type="checkbox"
@@ -365,7 +355,7 @@ const Register = () => {
 
             <div className="flex items-center gap-3 py-1 mt-4">
               <div className="flex-1 h-[1px] bg-white/5" />
-              <span className="text-[10px] tracking-[0.3em] uppercase text-white/20">or</span>
+              <span className="text-[10px] tracking-[0.3em] uppercase text-white/55">or</span>
               <div className="flex-1 h-[1px] bg-white/5" />
             </div>
 
@@ -385,7 +375,7 @@ const Register = () => {
               {loading ? 'Working...' : 'Sign up with Google'}
             </button>
 
-            <div className="mt-7 text-center text-xs text-[#c4c9b0]/45">
+            <div className="mt-7 text-center text-xs text-[#c4c9b0]/70">
               Already have an account?
               <Link className="v-touch-target text-[var(--accent-dark)] font-semibold ml-1 hover:text-[var(--accent)] transition-colors" to="/login">Sign in</Link>
             </div>

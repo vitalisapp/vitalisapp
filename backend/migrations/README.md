@@ -10,7 +10,7 @@
 Each table file is self-contained (`SET FOREIGN_KEY_CHECKS=0/1` + single
 `CREATE TABLE IF NOT EXISTS`). Seeds use `INSERT IGNORE`.
 Runner `src/db/migrate.js` applies pending `*.sql` in lexicographic order,
-tracked in `_migrations`. Next migration: `059_<slug>.sql`
+tracked in `_migrations`. Next migration: `063_<slug>.sql`
 (`npm run db:create -- <slug>`).
 
 ## History
@@ -80,6 +80,10 @@ tracked in `_migrations`. Next migration: `059_<slug>.sql`
   every plan price is zeroed (the applied 030 seed ships 19.99 / 9.99 / 4.99;
   per the rules it is not edited — 054 runs after it on fresh databases too).
   `price` column kept (default 0.00) for a stable API shape.
+- 2026-11-26: `062_activity_calories.sql` — Revision #7: activity/workout
+  `local_date` (the browser's calendar day) plus `activity_logs.calories_source`
+  (`estimated` vs `measured`). Dashboard burn buckets by local day with a
+  timestamp fallback; measured values are never overwritten by estimates.
 
 ## Rules
 
