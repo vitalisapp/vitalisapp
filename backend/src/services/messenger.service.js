@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { AppError } = require('../utils/errors');
+const { normalize, rankByName } = require('../utils/fuzzyName');
 
 const FRIEND_STATUSES = ['accepted', 'close_friend'];
 
@@ -73,9 +74,23 @@ async function createMessage(senderId, receiverId, content) {
 
 // User search with the viewer's relationship folded in so the UI can show
 // Add / Requested / Respond / Friends without extra round-trips.
+// Fuzzy: SQL pulls a broad candidate pool (any word contains a query token, or
+// a name word starts with a token's first letter — catches typos like
+// "usr2"/"jhon"), then rankByName scores and keeps the best 10.
+const SEARCH_CANDIDATES = 300;
+const SEARCH_RESULTS = 10;
+
 async function searchUsers(rawQuery, viewerId) {
-  // Escape LIKE wildcards so %/_ are literal
-  const escaped = rawQuery.replace(/[\\%_]/g, (c) => `\\${c}`);
+  const tokens = [...new Set(normalize(rawQuery).split(' ').filter(Boolean))].slice(0, 5);
+  if (tokens.length === 0) return [];
+  // Tokens are [a-z0-9] only after normalize(), so no LIKE escaping is needed.
+  // The unicode_ci collation makes these accent- and case-insensitive.
+  const clauses = [];
+  const likeParams = [];
+  for (const tok of tokens) {
+    clauses.push('u.name LIKE ?', 'u.name LIKE ?', 'u.name LIKE ?');
+    likeParams.push(`%${tok}%`, `${tok[0]}%`, `% ${tok[0]}%`);
+  }
   const [rows] = await db.execute(
     `SELECT u.id, u.name, COALESCE(p.avatar_url, u.avatar_url) AS avatar_url, u.is_online,
             (SELECT f.status FROM friendships f
@@ -84,11 +99,12 @@ async function searchUsers(rawQuery, viewerId) {
                WHERE f.user_id = u.id AND f.friend_id = ? LIMIT 1) AS incoming_status
      FROM users u
      LEFT JOIN user_profiles p ON p.user_id = u.id
-     WHERE u.name LIKE ? ESCAPE '\\\\' AND u.id != ?
-     LIMIT 10`,
-    [viewerId, viewerId, `%${escaped}%`, viewerId]
+     WHERE (${clauses.join(' OR ')}) AND u.id != ?
+     ORDER BY u.is_online DESC, u.id ASC
+     LIMIT ${SEARCH_CANDIDATES}`,
+    [viewerId, viewerId, ...likeParams, viewerId]
   );
-  return rows;
+  return rankByName(rawQuery, rows).slice(0, SEARCH_RESULTS);
 }
 
 // ─── FRIENDSHIPS ───────────────────────────────────────────────────────────

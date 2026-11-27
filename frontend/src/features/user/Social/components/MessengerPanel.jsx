@@ -6,6 +6,7 @@ import { useMessages } from '../hooks/useMessages.js';
 import { useNotificationStream } from '../../../../context/NotificationStream.jsx';
 import { acquireSocket, releaseSocket, joinUserRoom } from '../../../../lib/socket.js';
 import { resolveAvatar } from '../../../../lib/avatar.js';
+import { rankByName } from '../../../../lib/fuzzyName.js';
 import ErrorState from '../../../../components/feedback/ErrorState.jsx';
 import BrandLoader from '../../../../components/ui/BrandLoader.jsx';
 import '../messenger.css';
@@ -244,10 +245,11 @@ const MessengerPanel = ({ headerSlot = null }) => {
 
   const query = searchTerm.trim().toLowerCase();
   const onlineCount = useMemo(() => contacts.filter((c) => c.is_online).length, [contacts]);
-  const visibleContacts = useMemo(() => contacts.filter((c) => (
-    (presenceFilter === 'all' || c.is_online)
-    && (!query || String(c.name || '').toLowerCase().includes(query))
-  )), [contacts, presenceFilter, query]);
+  // Fuzzy + ranked: typos and partial letters still find the friend ("jhon", "kai rvra").
+  const visibleContacts = useMemo(() => {
+    const present = contacts.filter((c) => presenceFilter === 'all' || c.is_online);
+    return query ? rankByName(query, present, (c) => c.name || '') : present;
+  }, [contacts, presenceFilter, query]);
   // Friends already show under Conversations; People lists everyone else.
   const people = useMemo(() => {
     const ids = new Set(contacts.map((c) => c.id));
