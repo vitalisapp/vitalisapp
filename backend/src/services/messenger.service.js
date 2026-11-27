@@ -4,6 +4,9 @@ const { normalize, rankByName } = require('../utils/fuzzyName');
 
 const FRIEND_STATUSES = ['accepted', 'close_friend'];
 
+// SQL string literals here MUST use single quotes: managed MySQL (Aiven) runs
+// with sql_mode=ANSI, where "pending" is a column name, not a string.
+
 // Contacts = accepted/close-friend rows where the user is on either side.
 async function getContacts(userId) {
   const query = `
@@ -113,7 +116,8 @@ async function addFriend(userId, friendId) {
   const [[friend]] = await db.execute('SELECT id FROM users WHERE id = ? LIMIT 1', [friendId]);
   if (!friend) return false;
   await db.execute(
-    'INSERT INTO friendships (user_id, friend_id, status) VALUES (?, ?, "close_friend") ON DUPLICATE KEY UPDATE status="close_friend"',
+    `INSERT INTO friendships (user_id, friend_id, status) VALUES (?, ?, 'close_friend')
+     ON DUPLICATE KEY UPDATE status = 'close_friend'`,
     [userId, friendId]
   );
   return true;
@@ -142,7 +146,7 @@ async function sendFriendRequest(userId, friendId) {
   );
   // They already asked us — mutual intent means accept immediately.
   if (incoming) {
-    await db.execute('UPDATE friendships SET status = "accepted" WHERE id = ?', [incoming.id]);
+    await db.execute("UPDATE friendships SET status = 'accepted' WHERE id = ?", [incoming.id]);
     return { ok: true, status: 'accepted', friendName: friend.name, requesterName: me?.name };
   }
 
@@ -150,10 +154,10 @@ async function sendFriendRequest(userId, friendId) {
     (r) => Number(r.user_id) === Number(userId) && Number(r.friend_id) === Number(friendId)
   );
   if (outgoing) {
-    await db.execute('UPDATE friendships SET status = "pending" WHERE id = ?', [outgoing.id]);
+    await db.execute("UPDATE friendships SET status = 'pending' WHERE id = ?", [outgoing.id]);
   } else {
     await db.execute(
-      'INSERT INTO friendships (user_id, friend_id, status) VALUES (?, ?, "pending")',
+      "INSERT INTO friendships (user_id, friend_id, status) VALUES (?, ?, 'pending')",
       [userId, friendId]
     );
   }
@@ -177,17 +181,17 @@ async function getIncomingRequests(userId) {
 
 async function acceptFriendRequest(userId, requesterId) {
   const [rows] = await db.execute(
-    'SELECT id FROM friendships WHERE user_id = ? AND friend_id = ? AND status = "pending" LIMIT 1',
+    "SELECT id FROM friendships WHERE user_id = ? AND friend_id = ? AND status = 'pending' LIMIT 1",
     [requesterId, userId]
   );
   if (rows.length === 0) return false;
-  await db.execute('UPDATE friendships SET status = "accepted" WHERE id = ?', [rows[0].id]);
+  await db.execute("UPDATE friendships SET status = 'accepted' WHERE id = ?", [rows[0].id]);
   return true;
 }
 
 async function declineFriendRequest(userId, requesterId) {
   const [result] = await db.execute(
-    'DELETE FROM friendships WHERE user_id = ? AND friend_id = ? AND status = "pending"',
+    "DELETE FROM friendships WHERE user_id = ? AND friend_id = ? AND status = 'pending'",
     [requesterId, userId]
   );
   return result.affectedRows > 0;

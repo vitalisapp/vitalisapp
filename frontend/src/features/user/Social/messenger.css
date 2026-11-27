@@ -120,6 +120,8 @@
   transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
 }
 .vmsg-search input::placeholder { color: var(--m-muted); }
+/* The custom .vmsg-search-clear button replaces the browser's own ✕. */
+.vmsg-search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; display: none; }
 .vmsg-search input:focus {
   border-color: var(--m-accent);
   box-shadow: 0 0 0 4px var(--m-accent-soft);
