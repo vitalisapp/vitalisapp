@@ -36,7 +36,7 @@ DROP TEMPORARY TABLE IF EXISTS seed_level_plans;
 CREATE TEMPORARY TABLE seed_level_plans (seed_pk INT AUTO_INCREMENT PRIMARY KEY, 
   title VARCHAR(200), tag VARCHAR(100), intensity VARCHAR(50), weeks INT,
   minutes INT, session_key VARCHAR(30), description TEXT
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO seed_level_plans (title, tag, intensity, weeks, minutes, session_key, description) VALUES
 ('Advanced Strength Builder', 'Strength', 'Advanced', 4, 45, 'adv_strength',
  'Unlocked at Level 2. Higher-volume bodyweight strength with tempo work and longer holds. Warm up fully and keep perfect form on every rep.'),
@@ -55,7 +55,7 @@ WHERE NOT EXISTS (
 );
 
 DROP TEMPORARY TABLE IF EXISTS seed_level_days;
-CREATE TEMPORARY TABLE seed_level_days (n INT PRIMARY KEY);
+CREATE TEMPORARY TABLE seed_level_days (n INT PRIMARY KEY) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO seed_level_days VALUES
 (1),(2),(3),(4),(5),(6),(7),(8),(9),(10),(11),(12),(13),(14),
 (15),(16),(17),(18),(19),(20),(21),(22),(23),(24),(25),(26),(27),(28);
@@ -82,7 +82,7 @@ DROP TEMPORARY TABLE IF EXISTS seed_level_exercises;
 CREATE TEMPORARY TABLE seed_level_exercises (seed_pk INT AUTO_INCREMENT PRIMARY KEY, 
   session_key VARCHAR(30), exercise_order INT, exercise_name VARCHAR(150),
   sets INT, reps VARCHAR(50), seconds INT, rest INT, notes VARCHAR(255)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO seed_level_exercises (session_key, exercise_order, exercise_name, sets, reps, seconds, rest, notes) VALUES
 ('adv_strength',1,'Bodyweight Squats',4,'20',NULL,60,'3-second lowering phase.'),
 ('adv_strength',2,'Push-Ups',4,'15',NULL,60,'Chest to fist height; full lockout.'),

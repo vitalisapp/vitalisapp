@@ -16,7 +16,7 @@ CREATE TEMPORARY TABLE seed_plan_catalog (seed_pk INT AUTO_INCREMENT PRIMARY KEY
   title VARCHAR(200), tag VARCHAR(100), intensity VARCHAR(50),
   weeks INT, focus VARCHAR(100), session_key VARCHAR(30), minutes INT,
   description TEXT
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO seed_plan_catalog (title, tag, intensity, weeks, focus, session_key, minutes, description) VALUES
 ('Bodyweight Basics', 'Strength', 'Beginner', 4, 'Full Body', 'balanced', 25, 'Build a bodyweight routine with squats, scaled push-ups, bridges and core work. Three training days, two mobility days and two rest days per week.'),
 ('Upper Body Foundations', 'Strength', 'Beginner', 4, 'Upper Body', 'upper', 25, 'Practice pushing and trunk control without weights. Use knee push-ups as needed and keep every repetition controlled.'),
@@ -51,7 +51,7 @@ FROM seed_new_plans;
 -- Compatible with migration 030 (owner/template/image columns arrive later).
 -- Their defaults make these public templates with no image.
 DROP TEMPORARY TABLE IF EXISTS seed_day_numbers;
-CREATE TEMPORARY TABLE seed_day_numbers (n INT PRIMARY KEY);
+CREATE TEMPORARY TABLE seed_day_numbers (n INT PRIMARY KEY) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO seed_day_numbers VALUES
 (1),(2),(3),(4),(5),(6),(7),(8),(9),(10),(11),(12),(13),(14),
 (15),(16),(17),(18),(19),(20),(21),(22),(23),(24),(25),(26),(27),(28);
@@ -77,7 +77,7 @@ DROP TEMPORARY TABLE IF EXISTS seed_session_exercises;
 CREATE TEMPORARY TABLE seed_session_exercises (seed_pk INT AUTO_INCREMENT PRIMARY KEY, 
   session_key VARCHAR(30), exercise_order INT, exercise_name VARCHAR(150),
   reps VARCHAR(50), seconds INT, notes VARCHAR(255)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO seed_session_exercises (session_key, exercise_order, exercise_name, reps, seconds, notes) VALUES
 ('balanced',1,'Bodyweight Squats','10',NULL,'Use a comfortable depth.'),
 ('balanced',2,'Push-Ups','8',NULL,'Knees down to scale.'),
@@ -143,7 +143,7 @@ DROP TEMPORARY TABLE seed_plan_catalog;
 -- Public assets are served from /plans/, not /public/plans/.
 -- Apply on every seed run, including plans that already exist.
 DROP TEMPORARY TABLE IF EXISTS seed_plan_images;
-CREATE TEMPORARY TABLE seed_plan_images (seed_pk INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(200), image_url VARCHAR(500));
+CREATE TEMPORARY TABLE seed_plan_images (seed_pk INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(200), image_url VARCHAR(500)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO seed_plan_images (title, image_url) VALUES
 ('Foundations of Strength', '/plans/lucid-origin_Filename_foundations-of-strength.png_Beginner-focused_controlled_bodyweight_squa-0.jpg'),
 ('Iron Forge Protocol', '/plans/lucid-origin_02_Iron_Forge_Protocol_Filename_iron-forge-protocol.png_Powerful_strength_traini-0.jpg'),

@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('./loadEnv');
 const required = ['DB_HOST', 'DB_USER', 'DB_NAME', 'JWT_SECRET'];
 const missing = required.filter((k) => !process.env[k]);
 if (!('DB_PASS' in process.env)) {

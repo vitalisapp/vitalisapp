@@ -63,6 +63,24 @@ function addMissingColumns(table, createSql) {
   return lines.length ? ['', `-- Add any columns an older \`${table}\` is missing`, ...lines] : [];
 }
 
+// Same idea for foreign keys: an older existing table keeps no FK, so add each
+// one only when information_schema shows it is missing. (FOREIGN_KEY_CHECKS=0
+// is set at the top of the file, so existing rows are not re-validated.)
+function addMissingForeignKeys(table, createSql) {
+  const lines = [];
+  for (const raw of createSql.split('\n')) {
+    const m = raw.match(/^\s+CONSTRAINT `([^`]+)` (FOREIGN KEY .+?),?$/);
+    if (!m) continue;
+    const [, name, def] = m;
+    const alter = `ALTER TABLE \`${table}\` ADD CONSTRAINT \`${name}\` ${def}`.replace(/'/g, "''");
+    lines.push(
+      `SET @s = (SELECT IF(COUNT(*) = 0, '${alter}', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = '${table}' AND constraint_name = '${name}' AND constraint_type = 'FOREIGN KEY');`,
+      'PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;',
+    );
+  }
+  return lines.length ? ['', `-- Add any foreign keys an older \`${table}\` is missing`, ...lines] : [];
+}
+
 async function dump(srcDb, outFile) {
   const c = await mysql.createConnection({ ...conn, database: srcDb, dateStrings: true, supportBigNumbers: true, bigNumberStrings: true });
   const [tables] = await c.query(
@@ -115,6 +133,7 @@ USE \`fitnessapp\`;`);
     const createSql = portable(ddl['Create Table']);
     out.push(`${createSql};`);
     out.push(...addMissingColumns(t, createSql));
+    out.push(...addMissingForeignKeys(t, createSql));
     const [rows] = await c.query(`SELECT * FROM \`${t}\``);
     if (!rows.length) continue;
     rowsTotal += rows.length;

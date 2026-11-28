@@ -1,4 +1,4 @@
-try { require('dotenv').config(); } catch {}
+require('./loadEnv');
 const mysql = require('mysql2');
 
 if (!process.env.DB_NAME) {
@@ -13,6 +13,7 @@ if (!process.env.DB_NAME) {
 const host = process.env.DB_HOST || '127.0.0.1';
 const isProduction = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
 const isAivenHost = /\.aivencloud\.com$|\.aiven\.io$/i.test(host.trim());
+const isLocalHost = /^(localhost|127\.0\.0\.1|::1)$/i.test(host.trim());
 const sslFlag = String(process.env.DB_SSL || '').toLowerCase();
 
 const useSsl =
@@ -20,7 +21,7 @@ const useSsl =
     ? true
     : sslFlag === '0' || sslFlag === 'false'
       ? false
-      : isProduction || isAivenHost;
+      : (isProduction && !isLocalHost) || isAivenHost;
 
 let sslOpt;
 if (useSsl) {
@@ -33,7 +34,7 @@ if (useSsl) {
   } catch { /* fall through to default secure */
   }
 
-  if (!ca && (isProduction || isAivenHost) && sslFlag !== '0' && sslFlag !== 'false') {
+  if (!ca && (isProduction || isAivenHost) && !isLocalHost && sslFlag !== '0' && sslFlag !== 'false') {
     // Fail fast: Aiven rejects unverified TLS, so a missing CA would only
     // surface later as a cryptic handshake error on the first query.
     throw new Error(

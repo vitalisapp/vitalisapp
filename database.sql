@@ -1,13 +1,13 @@
 -- database.sql - Vitalis full schema + seed data
 -- Generated for a clean XAMPP (MariaDB 10.4) / MySQL 8 phpMyAdmin import.
 --
--- Source of truth: backend/migrations/001..063 (62 files).
+-- Source of truth: backend/migrations/001..065 (64 files).
 -- Built by applying every migration to an EMPTY database and exporting it,
 -- so this file holds the schema plus seed data and no real user records.
 -- Dataset: Clean: plans, food catalog and default admin account.
 -- Non-destructive: nothing is dropped. Existing tables and rows are kept.
 -- Rebuild: npm run db:sql (from backend/).
--- Regenerated: 2026-11-26.
+-- Regenerated: 2026-11-28.
 --
 -- What this does:
 --   1. Creates database `fitnessapp` and selects it.
@@ -53,68 +53,70 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @vitalis_fresh = (SELECT COUNT(*) = 0 FROM `_migrations`);
 INSERT IGNORE INTO `_migrations` (`name`, `applied_at`)
 SELECT m.name, m.applied_at FROM (
-  SELECT '001_users.sql' AS name, '2026-11-26 16:08:51' AS applied_at
-  UNION ALL SELECT '002_plans.sql' AS name, '2026-11-26 16:08:51' AS applied_at
-  UNION ALL SELECT '003_plan_contents.sql' AS name, '2026-11-26 16:08:51' AS applied_at
-  UNION ALL SELECT '004_plan_exercises.sql' AS name, '2026-11-26 16:08:52' AS applied_at
-  UNION ALL SELECT '005_activity_logs.sql' AS name, '2026-11-26 16:08:52' AS applied_at
-  UNION ALL SELECT '006_activity_kudos.sql' AS name, '2026-11-26 16:08:52' AS applied_at
-  UNION ALL SELECT '007_ai_daily_usage.sql' AS name, '2026-11-26 16:08:52' AS applied_at
-  UNION ALL SELECT '008_ai_insight_cache.sql' AS name, '2026-11-26 16:08:52' AS applied_at
-  UNION ALL SELECT '009_bmi_records.sql' AS name, '2026-11-26 16:08:53' AS applied_at
-  UNION ALL SELECT '010_community_posts.sql' AS name, '2026-11-26 16:08:53' AS applied_at
-  UNION ALL SELECT '011_community_likes.sql' AS name, '2026-11-26 16:08:53' AS applied_at
-  UNION ALL SELECT '012_community_comments.sql' AS name, '2026-11-26 16:08:53' AS applied_at
-  UNION ALL SELECT '013_daily_checkins.sql' AS name, '2026-11-26 16:08:54' AS applied_at
-  UNION ALL SELECT '014_daily_stats.sql' AS name, '2026-11-26 16:08:54' AS applied_at
-  UNION ALL SELECT '015_email_verifications.sql' AS name, '2026-11-26 16:08:54' AS applied_at
-  UNION ALL SELECT '016_fitness_goals.sql' AS name, '2026-11-26 16:08:54' AS applied_at
-  UNION ALL SELECT '017_food_logs.sql' AS name, '2026-11-26 16:08:54' AS applied_at
-  UNION ALL SELECT '018_friendships.sql' AS name, '2026-11-26 16:08:54' AS applied_at
-  UNION ALL SELECT '019_messages.sql' AS name, '2026-11-26 16:08:55' AS applied_at
-  UNION ALL SELECT '020_notifications.sql' AS name, '2026-11-26 16:08:55' AS applied_at
-  UNION ALL SELECT '021_password_reset_otps.sql' AS name, '2026-11-26 16:08:55' AS applied_at
-  UNION ALL SELECT '022_sleep_logs.sql' AS name, '2026-11-26 16:08:55' AS applied_at
-  UNION ALL SELECT '023_user_nutrient_goals.sql' AS name, '2026-11-26 16:08:55' AS applied_at
-  UNION ALL SELECT '024_user_plan_progress.sql' AS name, '2026-11-26 16:08:56' AS applied_at
-  UNION ALL SELECT '025_user_plans.sql' AS name, '2026-11-26 16:08:56' AS applied_at
-  UNION ALL SELECT '026_user_profiles.sql' AS name, '2026-11-26 16:08:56' AS applied_at
-  UNION ALL SELECT '027_user_sessions.sql' AS name, '2026-11-26 16:08:56' AS applied_at
-  UNION ALL SELECT '028_user_settings.sql' AS name, '2026-11-26 16:08:56' AS applied_at
-  UNION ALL SELECT '029_workout_logs.sql' AS name, '2026-11-26 16:08:57' AS applied_at
-  UNION ALL SELECT '030_seeds.sql' AS name, '2026-11-26 16:08:57' AS applied_at
-  UNION ALL SELECT '031_landing_visits.sql' AS name, '2026-11-26 16:08:57' AS applied_at
-  UNION ALL SELECT '032_personal_plans.sql' AS name, '2026-11-26 16:08:58' AS applied_at
-  UNION ALL SELECT '033_user_allergies.sql' AS name, '2026-11-26 16:08:58' AS applied_at
-  UNION ALL SELECT '034_workout_sets.sql' AS name, '2026-11-26 16:08:58' AS applied_at
-  UNION ALL SELECT '035_training_preferences.sql' AS name, '2026-11-26 16:08:59' AS applied_at
-  UNION ALL SELECT '036_account_governance.sql' AS name, '2026-11-26 16:08:59' AS applied_at
-  UNION ALL SELECT '037_meal_type_food_catalog.sql' AS name, '2026-11-26 16:08:59' AS applied_at
-  UNION ALL SELECT '038_progress_module.sql' AS name, '2026-11-26 16:09:00' AS applied_at
-  UNION ALL SELECT '039_admin_audit.sql' AS name, '2026-11-26 16:09:00' AS applied_at
-  UNION ALL SELECT '040_admin_seed.sql' AS name, '2026-11-26 16:09:00' AS applied_at
-  UNION ALL SELECT '041_goal_recalibration.sql' AS name, '2026-11-26 16:09:00' AS applied_at
-  UNION ALL SELECT '042_progress_cadence.sql' AS name, '2026-11-26 16:09:00' AS applied_at
-  UNION ALL SELECT '043_food_grams.sql' AS name, '2026-11-26 16:09:00' AS applied_at
-  UNION ALL SELECT '044_food_density_cache.sql' AS name, '2026-11-26 16:09:00' AS applied_at
-  UNION ALL SELECT '045_email_delivery.sql' AS name, '2026-11-26 16:09:00' AS applied_at
-  UNION ALL SELECT '046_phone_verifications.sql' AS name, '2026-11-26 16:09:01' AS applied_at
-  UNION ALL SELECT '047_remove_sleep_recovery.sql' AS name, '2026-11-26 16:09:02' AS applied_at
-  UNION ALL SELECT '048_access_groups.sql' AS name, '2026-11-26 16:09:04' AS applied_at
-  UNION ALL SELECT '049_sleep_hours.sql' AS name, '2026-11-26 16:09:04' AS applied_at
-  UNION ALL SELECT '050_goal_personalization.sql' AS name, '2026-11-26 16:09:04' AS applied_at
-  UNION ALL SELECT '051_coach_weeks.sql' AS name, '2026-11-26 16:09:04' AS applied_at
-  UNION ALL SELECT '052_smart_reminders.sql' AS name, '2026-11-26 16:09:05' AS applied_at
-  UNION ALL SELECT '053_food_details.sql' AS name, '2026-11-26 16:09:06' AS applied_at
-  UNION ALL SELECT '054_free_plans.sql' AS name, '2026-11-26 16:09:06' AS applied_at
-  UNION ALL SELECT '055_dedupe_user_sessions.sql' AS name, '2026-11-26 16:09:06' AS applied_at
-  UNION ALL SELECT '056_plan_images.sql' AS name, '2026-11-26 16:09:06' AS applied_at
-  UNION ALL SELECT '058_browser_device_identity.sql' AS name, '2026-11-26 16:09:06' AS applied_at
-  UNION ALL SELECT '059_workout_calories.sql' AS name, '2026-11-26 16:09:06' AS applied_at
-  UNION ALL SELECT '060_password_weak_flag.sql' AS name, '2026-11-26 16:09:07' AS applied_at
-  UNION ALL SELECT '061_progression.sql' AS name, '2026-11-26 16:09:08' AS applied_at
-  UNION ALL SELECT '062_activity_calories.sql' AS name, '2026-11-26 16:09:08' AS applied_at
-  UNION ALL SELECT '063_normalize_activity_level.sql' AS name, '2026-11-26 16:09:08' AS applied_at
+  SELECT '001_users.sql' AS name, '2026-11-28 15:38:26' AS applied_at
+  UNION ALL SELECT '002_plans.sql' AS name, '2026-11-28 15:38:26' AS applied_at
+  UNION ALL SELECT '003_plan_contents.sql' AS name, '2026-11-28 15:38:26' AS applied_at
+  UNION ALL SELECT '004_plan_exercises.sql' AS name, '2026-11-28 15:38:26' AS applied_at
+  UNION ALL SELECT '005_activity_logs.sql' AS name, '2026-11-28 15:38:26' AS applied_at
+  UNION ALL SELECT '006_activity_kudos.sql' AS name, '2026-11-28 15:38:26' AS applied_at
+  UNION ALL SELECT '007_ai_daily_usage.sql' AS name, '2026-11-28 15:38:27' AS applied_at
+  UNION ALL SELECT '008_ai_insight_cache.sql' AS name, '2026-11-28 15:38:27' AS applied_at
+  UNION ALL SELECT '009_bmi_records.sql' AS name, '2026-11-28 15:38:27' AS applied_at
+  UNION ALL SELECT '010_community_posts.sql' AS name, '2026-11-28 15:38:27' AS applied_at
+  UNION ALL SELECT '011_community_likes.sql' AS name, '2026-11-28 15:38:27' AS applied_at
+  UNION ALL SELECT '012_community_comments.sql' AS name, '2026-11-28 15:38:27' AS applied_at
+  UNION ALL SELECT '013_daily_checkins.sql' AS name, '2026-11-28 15:38:27' AS applied_at
+  UNION ALL SELECT '014_daily_stats.sql' AS name, '2026-11-28 15:38:27' AS applied_at
+  UNION ALL SELECT '015_email_verifications.sql' AS name, '2026-11-28 15:38:27' AS applied_at
+  UNION ALL SELECT '016_fitness_goals.sql' AS name, '2026-11-28 15:38:27' AS applied_at
+  UNION ALL SELECT '017_food_logs.sql' AS name, '2026-11-28 15:38:27' AS applied_at
+  UNION ALL SELECT '018_friendships.sql' AS name, '2026-11-28 15:38:28' AS applied_at
+  UNION ALL SELECT '019_messages.sql' AS name, '2026-11-28 15:38:28' AS applied_at
+  UNION ALL SELECT '020_notifications.sql' AS name, '2026-11-28 15:38:28' AS applied_at
+  UNION ALL SELECT '021_password_reset_otps.sql' AS name, '2026-11-28 15:38:28' AS applied_at
+  UNION ALL SELECT '022_sleep_logs.sql' AS name, '2026-11-28 15:38:28' AS applied_at
+  UNION ALL SELECT '023_user_nutrient_goals.sql' AS name, '2026-11-28 15:38:28' AS applied_at
+  UNION ALL SELECT '024_user_plan_progress.sql' AS name, '2026-11-28 15:38:28' AS applied_at
+  UNION ALL SELECT '025_user_plans.sql' AS name, '2026-11-28 15:38:28' AS applied_at
+  UNION ALL SELECT '026_user_profiles.sql' AS name, '2026-11-28 15:38:28' AS applied_at
+  UNION ALL SELECT '027_user_sessions.sql' AS name, '2026-11-28 15:38:28' AS applied_at
+  UNION ALL SELECT '028_user_settings.sql' AS name, '2026-11-28 15:38:28' AS applied_at
+  UNION ALL SELECT '029_workout_logs.sql' AS name, '2026-11-28 15:38:29' AS applied_at
+  UNION ALL SELECT '030_seeds.sql' AS name, '2026-11-28 15:38:29' AS applied_at
+  UNION ALL SELECT '031_landing_visits.sql' AS name, '2026-11-28 15:38:29' AS applied_at
+  UNION ALL SELECT '032_personal_plans.sql' AS name, '2026-11-28 15:38:29' AS applied_at
+  UNION ALL SELECT '033_user_allergies.sql' AS name, '2026-11-28 15:38:29' AS applied_at
+  UNION ALL SELECT '034_workout_sets.sql' AS name, '2026-11-28 15:38:29' AS applied_at
+  UNION ALL SELECT '035_training_preferences.sql' AS name, '2026-11-28 15:38:29' AS applied_at
+  UNION ALL SELECT '036_account_governance.sql' AS name, '2026-11-28 15:38:30' AS applied_at
+  UNION ALL SELECT '037_meal_type_food_catalog.sql' AS name, '2026-11-28 15:38:30' AS applied_at
+  UNION ALL SELECT '038_progress_module.sql' AS name, '2026-11-28 15:38:30' AS applied_at
+  UNION ALL SELECT '039_admin_audit.sql' AS name, '2026-11-28 15:38:30' AS applied_at
+  UNION ALL SELECT '040_admin_seed.sql' AS name, '2026-11-28 15:38:30' AS applied_at
+  UNION ALL SELECT '041_goal_recalibration.sql' AS name, '2026-11-28 15:38:30' AS applied_at
+  UNION ALL SELECT '042_progress_cadence.sql' AS name, '2026-11-28 15:38:30' AS applied_at
+  UNION ALL SELECT '043_food_grams.sql' AS name, '2026-11-28 15:38:30' AS applied_at
+  UNION ALL SELECT '044_food_density_cache.sql' AS name, '2026-11-28 15:38:30' AS applied_at
+  UNION ALL SELECT '045_email_delivery.sql' AS name, '2026-11-28 15:38:30' AS applied_at
+  UNION ALL SELECT '046_phone_verifications.sql' AS name, '2026-11-28 15:38:31' AS applied_at
+  UNION ALL SELECT '047_remove_sleep_recovery.sql' AS name, '2026-11-28 15:38:31' AS applied_at
+  UNION ALL SELECT '048_access_groups.sql' AS name, '2026-11-28 15:38:32' AS applied_at
+  UNION ALL SELECT '049_sleep_hours.sql' AS name, '2026-11-28 15:38:32' AS applied_at
+  UNION ALL SELECT '050_goal_personalization.sql' AS name, '2026-11-28 15:38:33' AS applied_at
+  UNION ALL SELECT '051_coach_weeks.sql' AS name, '2026-11-28 15:38:33' AS applied_at
+  UNION ALL SELECT '052_smart_reminders.sql' AS name, '2026-11-28 15:38:33' AS applied_at
+  UNION ALL SELECT '053_food_details.sql' AS name, '2026-11-28 15:38:34' AS applied_at
+  UNION ALL SELECT '054_free_plans.sql' AS name, '2026-11-28 15:38:34' AS applied_at
+  UNION ALL SELECT '055_dedupe_user_sessions.sql' AS name, '2026-11-28 15:38:34' AS applied_at
+  UNION ALL SELECT '056_plan_images.sql' AS name, '2026-11-28 15:38:34' AS applied_at
+  UNION ALL SELECT '058_browser_device_identity.sql' AS name, '2026-11-28 15:38:34' AS applied_at
+  UNION ALL SELECT '059_workout_calories.sql' AS name, '2026-11-28 15:38:34' AS applied_at
+  UNION ALL SELECT '060_password_weak_flag.sql' AS name, '2026-11-28 15:38:34' AS applied_at
+  UNION ALL SELECT '061_progression.sql' AS name, '2026-11-28 15:38:35' AS applied_at
+  UNION ALL SELECT '062_activity_calories.sql' AS name, '2026-11-28 15:38:35' AS applied_at
+  UNION ALL SELECT '063_normalize_activity_level.sql' AS name, '2026-11-28 15:38:35' AS applied_at
+  UNION ALL SELECT '064_plans_owner_fk.sql' AS name, '2026-11-28 15:38:35' AS applied_at
+  UNION ALL SELECT '065_seed_original_plan_content.sql' AS name, '2026-11-28 15:38:35' AS applied_at
 ) m WHERE @vitalis_fresh = 1;
 
 -- --------------------------------------------------------
@@ -161,6 +163,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `access_groups` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'access_groups' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `access_groups` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `access_groups` ADD CONSTRAINT `access_groups_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'access_groups' AND constraint_name = 'access_groups_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `activity_kudos`
 -- --------------------------------------------------------
@@ -183,6 +189,12 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_kudos` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_kudos' AND column_name = 'user_id');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_kudos` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_kudos' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `activity_kudos` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_kudos` ADD CONSTRAINT `fk_kudos_activity` FOREIGN KEY (`activity_id`) REFERENCES `activity_logs` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'activity_kudos' AND constraint_name = 'fk_kudos_activity' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_kudos` ADD CONSTRAINT `fk_kudos_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'activity_kudos' AND constraint_name = 'fk_kudos_user' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -230,6 +242,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_logs` ADD COLUMN `calories_source` enum(''estimated'',''measured'') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''estimated''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'activity_logs' AND column_name = 'calories_source');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `activity_logs` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `activity_logs` ADD CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'activity_logs' AND constraint_name = 'activity_logs_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `admin_actions`
 -- --------------------------------------------------------
@@ -260,6 +276,12 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `admin_actions` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'admin_actions' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `admin_actions` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `admin_actions` ADD CONSTRAINT `admin_actions_ibfk_1` FOREIGN KEY (`admin_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'admin_actions' AND constraint_name = 'admin_actions_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `admin_actions` ADD CONSTRAINT `admin_actions_ibfk_2` FOREIGN KEY (`target_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'admin_actions' AND constraint_name = 'admin_actions_ibfk_2' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `ai_daily_usage`
 -- --------------------------------------------------------
@@ -277,6 +299,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_daily_usage` ADD COLUMN `usage_day` date NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_daily_usage' AND column_name = 'usage_day');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_daily_usage` ADD COLUMN `count` int NOT NULL DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_daily_usage' AND column_name = 'count');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `ai_daily_usage` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_daily_usage` ADD CONSTRAINT `fk_ai_usage_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'ai_daily_usage' AND constraint_name = 'fk_ai_usage_user' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -306,6 +332,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_insight_cache` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_insight_cache' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_insight_cache` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_insight_cache' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `ai_insight_cache` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `ai_insight_cache` ADD CONSTRAINT `ai_insight_cache_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'ai_insight_cache' AND constraint_name = 'ai_insight_cache_ibfk_1' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -338,6 +368,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `bmi_records` ADD COLUMN `bmi_category` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'bmi_records' AND column_name = 'bmi_category');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `bmi_records` ADD COLUMN `recorded_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'bmi_records' AND column_name = 'recorded_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `bmi_records` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `bmi_records` ADD CONSTRAINT `bmi_records_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'bmi_records' AND constraint_name = 'bmi_records_ibfk_1' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -387,6 +421,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `body_measurements` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `body_measurements` ADD CONSTRAINT `body_measurements_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'body_measurements' AND constraint_name = 'body_measurements_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `coach_weeks`
 -- --------------------------------------------------------
@@ -425,6 +463,12 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `coach_weeks` ADD COLUMN `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coach_weeks' AND column_name = 'updated_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `coach_weeks` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `coach_weeks` ADD CONSTRAINT `coach_weeks_plan_fk` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'coach_weeks' AND constraint_name = 'coach_weeks_plan_fk' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `coach_weeks` ADD CONSTRAINT `coach_weeks_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'coach_weeks' AND constraint_name = 'coach_weeks_user_fk' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `community_comments`
 -- --------------------------------------------------------
@@ -455,6 +499,12 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_comments` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_comments' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `community_comments` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_comments` ADD CONSTRAINT `fk_community_comments_post` FOREIGN KEY (`post_id`) REFERENCES `community_posts` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'community_comments' AND constraint_name = 'fk_community_comments_post' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_comments` ADD CONSTRAINT `fk_community_comments_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'community_comments' AND constraint_name = 'fk_community_comments_user' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `community_likes`
 -- --------------------------------------------------------
@@ -477,6 +527,12 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_likes` ADD COLUMN `user_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_likes' AND column_name = 'user_id');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_likes` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_likes' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `community_likes` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_likes` ADD CONSTRAINT `fk_community_likes_post` FOREIGN KEY (`post_id`) REFERENCES `community_posts` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'community_likes' AND constraint_name = 'fk_community_likes_post' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_likes` ADD CONSTRAINT `fk_community_likes_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'community_likes' AND constraint_name = 'fk_community_likes_user' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -510,6 +566,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_posts` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_posts' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_posts` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'community_posts' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `community_posts` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `community_posts` ADD CONSTRAINT `fk_community_posts_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'community_posts' AND constraint_name = 'fk_community_posts_user' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -546,6 +606,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `daily_stats` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'daily_stats' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `daily_stats` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'daily_stats' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `daily_stats` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `daily_stats` ADD CONSTRAINT `daily_stats_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'daily_stats' AND constraint_name = 'daily_stats_ibfk_1' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -592,6 +656,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `email_verifications` ADD COLUMN `used` tinyint(1) DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'email_verifications' AND column_name = 'used');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `email_verifications` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'email_verifications' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `email_verifications` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `email_verifications` ADD CONSTRAINT `email_verifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'email_verifications' AND constraint_name = 'email_verifications_ibfk_1' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -684,6 +752,12 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `calibrated_weight_kg` double DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'calibrated_weight_kg');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD COLUMN `calibrated_at` datetime DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND column_name = 'calibrated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `fitness_goals` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD CONSTRAINT `fitness_goals_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND constraint_name = 'fitness_goals_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `fitness_goals` ADD CONSTRAINT `fitness_goals_ibfk_plan` FOREIGN KEY (`source_plan_id`) REFERENCES `plans` (`id`) ON DELETE SET NULL', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'fitness_goals' AND constraint_name = 'fitness_goals_ibfk_plan' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -1005,6 +1079,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD COLUMN `logged_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND column_name = 'logged_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `food_logs` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `food_logs` ADD CONSTRAINT `food_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'food_logs' AND constraint_name = 'food_logs_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `food_nutrition_cache`
 -- --------------------------------------------------------
@@ -1077,6 +1155,12 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `friendships` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'friendships' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `friendships` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `friendships` ADD CONSTRAINT `friendships_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'friendships' AND constraint_name = 'friendships_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `friendships` ADD CONSTRAINT `friendships_ibfk_2` FOREIGN KEY (`friend_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'friendships' AND constraint_name = 'friendships_ibfk_2' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `landing_visits`
 -- --------------------------------------------------------
@@ -1136,6 +1220,12 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `messages` ADD COLUMN `sent_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'messages' AND column_name = 'sent_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `messages` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `messages` ADD CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'messages' AND constraint_name = 'messages_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `messages` ADD CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'messages' AND constraint_name = 'messages_ibfk_2' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `notifications`
 -- --------------------------------------------------------
@@ -1172,6 +1262,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `notifications` ADD COLUMN `source` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'notifications' AND column_name = 'source');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `notifications` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `notifications` ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'notifications' AND constraint_name = 'notifications_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `password_reset_otps`
 -- --------------------------------------------------------
@@ -1200,6 +1294,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `password_reset_otps` ADD COLUMN `used` tinyint(1) DEFAULT ''0''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'password_reset_otps' AND column_name = 'used');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `password_reset_otps` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'password_reset_otps' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `password_reset_otps` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `password_reset_otps` ADD CONSTRAINT `password_reset_otps_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'password_reset_otps' AND constraint_name = 'password_reset_otps_ibfk_1' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -1242,6 +1340,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `phone_verifications` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'phone_verifications' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `phone_verifications` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `phone_verifications` ADD CONSTRAINT `phone_verifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'phone_verifications' AND constraint_name = 'phone_verifications_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `plan_contents`
 -- --------------------------------------------------------
@@ -1277,391 +1379,546 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_contents` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_contents' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
-INSERT IGNORE INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
-(1, 46, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(2, 46, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(3, 46, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(4, 46, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(5, 46, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(6, 46, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(7, 46, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(8, 46, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(9, 46, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(10, 46, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(11, 46, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(12, 46, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(13, 46, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(14, 46, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(15, 46, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(16, 46, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(17, 46, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(18, 46, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(19, 46, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(20, 46, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(21, 46, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(22, 46, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(23, 46, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(24, 46, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(25, 46, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(26, 46, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(27, 46, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(28, 46, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(29, 47, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(30, 47, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(31, 47, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(32, 47, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(33, 47, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(34, 47, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(35, 47, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(36, 47, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(37, 47, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(38, 47, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(39, 47, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(40, 47, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(41, 47, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(42, 47, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(43, 47, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(44, 47, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(45, 47, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(46, 47, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(47, 47, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(48, 47, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(49, 47, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(50, 47, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(51, 47, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(52, 47, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(53, 47, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(54, 47, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(55, 47, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(56, 47, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(57, 48, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(58, 48, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(59, 48, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(60, 48, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(61, 48, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(62, 48, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(63, 48, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(64, 48, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(65, 48, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(66, 48, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(67, 48, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(68, 48, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(69, 48, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(70, 48, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(71, 48, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(72, 48, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(73, 48, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(74, 48, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(75, 48, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(76, 48, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(77, 48, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(78, 48, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(79, 48, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(80, 48, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(81, 48, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(82, 48, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(83, 48, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(84, 48, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(85, 49, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(86, 49, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(87, 49, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(88, 49, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(89, 49, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(90, 49, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(91, 49, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(92, 49, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(93, 49, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(94, 49, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(95, 49, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(96, 49, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(97, 49, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(98, 49, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(99, 50, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(100, 50, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57');
+-- Add any foreign keys an older `plan_contents` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_contents` ADD CONSTRAINT `plan_contents_ibfk_1` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'plan_contents' AND constraint_name = 'plan_contents_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 INSERT IGNORE INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
-(101, 50, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(102, 50, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(103, 50, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(104, 50, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(105, 50, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(106, 50, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(107, 50, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(108, 50, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(109, 50, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(110, 50, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(111, 50, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(112, 50, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(113, 50, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(114, 50, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(115, 50, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(116, 50, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(117, 50, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(118, 50, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(119, 50, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(120, 50, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(121, 50, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(122, 50, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(123, 50, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(124, 50, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(125, 50, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(126, 50, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(127, 51, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(128, 51, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(129, 51, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(130, 51, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(131, 51, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(132, 51, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(133, 51, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(134, 51, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(135, 51, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(136, 51, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(137, 51, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(138, 51, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(139, 51, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(140, 51, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(141, 52, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(142, 52, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(143, 52, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(144, 52, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(145, 52, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(146, 52, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(147, 52, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(148, 52, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(149, 52, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(150, 52, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(151, 52, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(152, 52, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(153, 52, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(154, 52, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(155, 52, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(156, 52, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(157, 52, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(158, 52, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(159, 52, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(160, 52, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(161, 52, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(162, 52, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(163, 52, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(164, 52, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(165, 52, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(166, 52, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(167, 52, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(168, 52, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(169, 53, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(170, 53, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(171, 53, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(172, 53, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(173, 53, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(174, 53, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(175, 53, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(176, 53, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(177, 53, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(178, 53, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(179, 53, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(180, 53, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(181, 53, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(182, 53, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(183, 53, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(184, 53, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(185, 53, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(186, 53, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(187, 53, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(188, 53, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(189, 53, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(190, 53, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(191, 53, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(192, 53, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(193, 53, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(194, 53, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-26 16:08:57'),
-(195, 53, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(196, 53, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(197, 54, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(198, 54, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(199, 54, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(200, 54, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57');
+(1, 46, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(2, 46, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(3, 46, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(4, 46, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(5, 46, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(6, 46, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(7, 46, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(8, 46, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(9, 46, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(10, 46, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(11, 46, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(12, 46, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(13, 46, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(14, 46, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(15, 46, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(16, 46, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(17, 46, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(18, 46, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(19, 46, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(20, 46, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(21, 46, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(22, 46, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(23, 46, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(24, 46, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(25, 46, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(26, 46, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(27, 46, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(28, 46, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(29, 47, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(30, 47, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(31, 47, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(32, 47, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(33, 47, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(34, 47, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(35, 47, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(36, 47, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(37, 47, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(38, 47, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(39, 47, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(40, 47, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(41, 47, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(42, 47, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(43, 47, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(44, 47, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(45, 47, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(46, 47, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(47, 47, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(48, 47, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(49, 47, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(50, 47, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(51, 47, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(52, 47, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(53, 47, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(54, 47, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(55, 47, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(56, 47, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(57, 48, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(58, 48, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(59, 48, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(60, 48, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(61, 48, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(62, 48, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(63, 48, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(64, 48, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(65, 48, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(66, 48, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(67, 48, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(68, 48, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(69, 48, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(70, 48, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(71, 48, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(72, 48, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(73, 48, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(74, 48, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(75, 48, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(76, 48, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(77, 48, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(78, 48, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(79, 48, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(80, 48, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(81, 48, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(82, 48, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(83, 48, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(84, 48, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(85, 49, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(86, 49, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(87, 49, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(88, 49, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(89, 49, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(90, 49, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(91, 49, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(92, 49, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(93, 49, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(94, 49, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(95, 49, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(96, 49, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(97, 49, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(98, 49, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(99, 50, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(100, 50, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29');
 
 INSERT IGNORE INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
-(201, 54, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(202, 54, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(203, 54, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(204, 54, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(205, 54, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(206, 54, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(207, 54, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(208, 54, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(209, 54, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(210, 54, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(211, 54, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(212, 54, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(213, 54, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(214, 54, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(215, 54, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(216, 54, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(217, 54, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(218, 54, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(219, 54, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(220, 54, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(221, 54, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(222, 54, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(223, 54, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(224, 54, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(225, 55, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(226, 55, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(227, 55, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(228, 55, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(229, 55, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(230, 55, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(231, 55, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(232, 55, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(233, 55, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(234, 55, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(235, 55, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(236, 55, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-26 16:08:57'),
-(237, 55, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(238, 55, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(239, 56, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(240, 56, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(241, 56, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(242, 56, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(243, 56, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(244, 56, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(245, 56, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(246, 57, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(247, 57, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(248, 57, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(249, 57, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(250, 57, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(251, 57, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(252, 57, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(253, 58, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 16:08:57'),
-(254, 58, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(255, 58, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 16:08:57'),
-(256, 58, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(257, 58, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 16:08:57'),
-(258, 58, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(259, 58, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(260, 58, 8, 'Day 8 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 16:08:57'),
-(261, 58, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(262, 58, 10, 'Day 10 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 16:08:57'),
-(263, 58, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(264, 58, 12, 'Day 12 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-26 16:08:57'),
-(265, 58, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(266, 58, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(267, 59, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(268, 59, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(269, 59, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(270, 59, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(271, 59, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(272, 59, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(273, 59, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(274, 59, 8, 'Day 8 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(275, 59, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(276, 59, 10, 'Day 10 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(277, 59, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(278, 59, 12, 'Day 12 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(279, 59, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(280, 59, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(281, 60, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(282, 60, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(283, 60, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(284, 60, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(285, 60, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(286, 60, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(287, 60, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(288, 60, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(289, 60, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(290, 60, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(291, 60, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(292, 60, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(293, 60, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(294, 60, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(295, 60, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(296, 60, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(297, 60, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(298, 60, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(299, 60, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(300, 60, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57');
+(101, 50, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(102, 50, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(103, 50, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(104, 50, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(105, 50, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(106, 50, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(107, 50, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(108, 50, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(109, 50, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(110, 50, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(111, 50, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(112, 50, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(113, 50, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(114, 50, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(115, 50, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(116, 50, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(117, 50, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(118, 50, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(119, 50, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(120, 50, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(121, 50, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(122, 50, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(123, 50, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(124, 50, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(125, 50, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(126, 50, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(127, 51, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(128, 51, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(129, 51, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(130, 51, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(131, 51, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(132, 51, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(133, 51, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(134, 51, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(135, 51, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(136, 51, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(137, 51, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(138, 51, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(139, 51, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(140, 51, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(141, 52, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(142, 52, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(143, 52, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(144, 52, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(145, 52, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(146, 52, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(147, 52, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(148, 52, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(149, 52, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(150, 52, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(151, 52, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(152, 52, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(153, 52, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(154, 52, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(155, 52, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(156, 52, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(157, 52, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(158, 52, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(159, 52, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(160, 52, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(161, 52, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(162, 52, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(163, 52, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(164, 52, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(165, 52, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(166, 52, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(167, 52, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(168, 52, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(169, 53, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(170, 53, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(171, 53, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(172, 53, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(173, 53, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(174, 53, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(175, 53, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(176, 53, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(177, 53, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(178, 53, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(179, 53, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(180, 53, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(181, 53, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(182, 53, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(183, 53, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(184, 53, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(185, 53, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(186, 53, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(187, 53, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(188, 53, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(189, 53, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(190, 53, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(191, 53, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(192, 53, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(193, 53, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(194, 53, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 25, '2026-11-28 15:38:29'),
+(195, 53, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(196, 53, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(197, 54, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(198, 54, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(199, 54, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(200, 54, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29');
 
 INSERT IGNORE INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
-(301, 60, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(302, 60, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(303, 60, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(304, 60, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(305, 60, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(306, 60, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-26 16:08:57'),
-(307, 60, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-26 16:08:57'),
-(308, 60, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-26 16:08:57'),
-(512, 61, 1, 'Day 1 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 16:09:08'),
-(513, 61, 2, 'Day 2 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(514, 61, 3, 'Day 3 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 16:09:08'),
-(515, 61, 4, 'Day 4 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(516, 61, 5, 'Day 5 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 16:09:08'),
-(517, 61, 6, 'Day 6 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(518, 61, 7, 'Day 7 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(519, 61, 8, 'Day 8 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 16:09:08'),
-(520, 61, 9, 'Day 9 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(521, 61, 10, 'Day 10 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 16:09:08'),
-(522, 61, 11, 'Day 11 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(523, 61, 12, 'Day 12 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 16:09:08'),
-(524, 61, 13, 'Day 13 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(525, 61, 14, 'Day 14 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(526, 61, 15, 'Day 15 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 16:09:08'),
-(527, 61, 16, 'Day 16 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(528, 61, 17, 'Day 17 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 16:09:08'),
-(529, 61, 18, 'Day 18 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(530, 61, 19, 'Day 19 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 16:09:08'),
-(531, 61, 20, 'Day 20 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(532, 61, 21, 'Day 21 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(533, 61, 22, 'Day 22 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 16:09:08'),
-(534, 61, 23, 'Day 23 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(535, 61, 24, 'Day 24 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 16:09:08'),
-(536, 61, 25, 'Day 25 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(537, 61, 26, 'Day 26 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-26 16:09:08'),
-(538, 61, 27, 'Day 27 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(539, 61, 28, 'Day 28 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(540, 62, 1, 'Day 1 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 16:09:08'),
-(541, 62, 2, 'Day 2 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(542, 62, 3, 'Day 3 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 16:09:08'),
-(543, 62, 4, 'Day 4 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(544, 62, 5, 'Day 5 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 16:09:08'),
-(545, 62, 6, 'Day 6 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(546, 62, 7, 'Day 7 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(547, 62, 8, 'Day 8 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 16:09:08'),
-(548, 62, 9, 'Day 9 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(549, 62, 10, 'Day 10 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 16:09:08'),
-(550, 62, 11, 'Day 11 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(551, 62, 12, 'Day 12 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 16:09:08'),
-(552, 62, 13, 'Day 13 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(553, 62, 14, 'Day 14 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(554, 62, 15, 'Day 15 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 16:09:08'),
-(555, 62, 16, 'Day 16 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(556, 62, 17, 'Day 17 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 16:09:08'),
-(557, 62, 18, 'Day 18 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(558, 62, 19, 'Day 19 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 16:09:08'),
-(559, 62, 20, 'Day 20 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(560, 62, 21, 'Day 21 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(561, 62, 22, 'Day 22 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 16:09:08'),
-(562, 62, 23, 'Day 23 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(563, 62, 24, 'Day 24 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 16:09:08'),
-(564, 62, 25, 'Day 25 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(565, 62, 26, 'Day 26 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-26 16:09:08'),
-(566, 62, 27, 'Day 27 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(567, 62, 28, 'Day 28 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(568, 63, 1, 'Day 1 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 16:09:08'),
-(569, 63, 2, 'Day 2 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(570, 63, 3, 'Day 3 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 16:09:08'),
-(571, 63, 4, 'Day 4 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(572, 63, 5, 'Day 5 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 16:09:08'),
-(573, 63, 6, 'Day 6 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(574, 63, 7, 'Day 7 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(575, 63, 8, 'Day 8 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 16:09:08'),
-(576, 63, 9, 'Day 9 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(577, 63, 10, 'Day 10 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 16:09:08'),
-(578, 63, 11, 'Day 11 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08'),
-(579, 63, 12, 'Day 12 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-26 16:09:08'),
-(580, 63, 13, 'Day 13 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-26 16:09:08'),
-(581, 63, 14, 'Day 14 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-26 16:09:08');
+(201, 54, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(202, 54, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(203, 54, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(204, 54, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(205, 54, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(206, 54, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(207, 54, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(208, 54, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(209, 54, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(210, 54, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(211, 54, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(212, 54, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(213, 54, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(214, 54, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(215, 54, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(216, 54, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(217, 54, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(218, 54, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(219, 54, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(220, 54, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(221, 54, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(222, 54, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(223, 54, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(224, 54, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(225, 55, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(226, 55, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(227, 55, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(228, 55, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(229, 55, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(230, 55, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(231, 55, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(232, 55, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(233, 55, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(234, 55, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(235, 55, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(236, 55, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 20, '2026-11-28 15:38:29'),
+(237, 55, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(238, 55, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(239, 56, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(240, 56, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(241, 56, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(242, 56, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(243, 56, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(244, 56, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(245, 56, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(246, 57, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(247, 57, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(248, 57, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(249, 57, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(250, 57, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(251, 57, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(252, 57, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(253, 58, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-28 15:38:29'),
+(254, 58, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(255, 58, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-28 15:38:29'),
+(256, 58, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(257, 58, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-28 15:38:29'),
+(258, 58, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(259, 58, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(260, 58, 8, 'Day 8 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-28 15:38:29'),
+(261, 58, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(262, 58, 10, 'Day 10 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-28 15:38:29'),
+(263, 58, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(264, 58, 12, 'Day 12 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 20, '2026-11-28 15:38:29'),
+(265, 58, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(266, 58, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(267, 59, 1, 'Day 1 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(268, 59, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(269, 59, 3, 'Day 3 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(270, 59, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(271, 59, 5, 'Day 5 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(272, 59, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(273, 59, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(274, 59, 8, 'Day 8 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(275, 59, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(276, 59, 10, 'Day 10 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(277, 59, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(278, 59, 12, 'Day 12 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(279, 59, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(280, 59, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(281, 60, 1, 'Day 1 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(282, 60, 2, 'Day 2 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(283, 60, 3, 'Day 3 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(284, 60, 4, 'Day 4 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(285, 60, 5, 'Day 5 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(286, 60, 6, 'Day 6 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(287, 60, 7, 'Day 7 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(288, 60, 8, 'Day 8 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(289, 60, 9, 'Day 9 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(290, 60, 10, 'Day 10 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(291, 60, 11, 'Day 11 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(292, 60, 12, 'Day 12 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(293, 60, 13, 'Day 13 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(294, 60, 14, 'Day 14 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(295, 60, 15, 'Day 15 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(296, 60, 16, 'Day 16 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(297, 60, 17, 'Day 17 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(298, 60, 18, 'Day 18 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(299, 60, 19, 'Day 19 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(300, 60, 20, 'Day 20 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29');
+
+INSERT IGNORE INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
+(301, 60, 21, 'Day 21 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(302, 60, 22, 'Day 22 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(303, 60, 23, 'Day 23 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(304, 60, 24, 'Day 24 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(305, 60, 25, 'Day 25 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(306, 60, 26, 'Day 26 - Training', 'Workout', 'Warm up for 3-5 minutes. Complete the listed sets with the prescribed rest, then cool down. Scale repetitions to maintain good form.', 30, '2026-11-28 15:38:29'),
+(307, 60, 27, 'Day 27 - Mobility', 'Recovery', 'Move gently and stay within a comfortable range. Do not force stretches.', 15, '2026-11-28 15:38:29'),
+(308, 60, 28, 'Day 28 - Rest', 'Rest', 'Rest today. An easy walk is optional.', 0, '2026-11-28 15:38:29'),
+(512, 61, 1, 'Day 1 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-28 15:38:35'),
+(513, 61, 2, 'Day 2 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(514, 61, 3, 'Day 3 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-28 15:38:35'),
+(515, 61, 4, 'Day 4 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(516, 61, 5, 'Day 5 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-28 15:38:35'),
+(517, 61, 6, 'Day 6 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(518, 61, 7, 'Day 7 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(519, 61, 8, 'Day 8 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-28 15:38:35'),
+(520, 61, 9, 'Day 9 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(521, 61, 10, 'Day 10 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-28 15:38:35'),
+(522, 61, 11, 'Day 11 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(523, 61, 12, 'Day 12 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-28 15:38:35'),
+(524, 61, 13, 'Day 13 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(525, 61, 14, 'Day 14 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(526, 61, 15, 'Day 15 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-28 15:38:35'),
+(527, 61, 16, 'Day 16 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(528, 61, 17, 'Day 17 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-28 15:38:35'),
+(529, 61, 18, 'Day 18 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(530, 61, 19, 'Day 19 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-28 15:38:35'),
+(531, 61, 20, 'Day 20 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(532, 61, 21, 'Day 21 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(533, 61, 22, 'Day 22 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-28 15:38:35'),
+(534, 61, 23, 'Day 23 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(535, 61, 24, 'Day 24 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-28 15:38:35'),
+(536, 61, 25, 'Day 25 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(537, 61, 26, 'Day 26 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 45, '2026-11-28 15:38:35'),
+(538, 61, 27, 'Day 27 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(539, 61, 28, 'Day 28 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(540, 62, 1, 'Day 1 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-28 15:38:35'),
+(541, 62, 2, 'Day 2 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(542, 62, 3, 'Day 3 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-28 15:38:35'),
+(543, 62, 4, 'Day 4 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(544, 62, 5, 'Day 5 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-28 15:38:35'),
+(545, 62, 6, 'Day 6 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(546, 62, 7, 'Day 7 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(547, 62, 8, 'Day 8 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-28 15:38:35'),
+(548, 62, 9, 'Day 9 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(549, 62, 10, 'Day 10 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-28 15:38:35'),
+(550, 62, 11, 'Day 11 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(551, 62, 12, 'Day 12 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-28 15:38:35'),
+(552, 62, 13, 'Day 13 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(553, 62, 14, 'Day 14 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(554, 62, 15, 'Day 15 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-28 15:38:35'),
+(555, 62, 16, 'Day 16 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(556, 62, 17, 'Day 17 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-28 15:38:35'),
+(557, 62, 18, 'Day 18 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(558, 62, 19, 'Day 19 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-28 15:38:35'),
+(559, 62, 20, 'Day 20 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(560, 62, 21, 'Day 21 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(561, 62, 22, 'Day 22 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-28 15:38:35'),
+(562, 62, 23, 'Day 23 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(563, 62, 24, 'Day 24 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-28 15:38:35'),
+(564, 62, 25, 'Day 25 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(565, 62, 26, 'Day 26 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 55, '2026-11-28 15:38:35'),
+(566, 62, 27, 'Day 27 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(567, 62, 28, 'Day 28 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(568, 63, 1, 'Day 1 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-28 15:38:35'),
+(569, 63, 2, 'Day 2 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(570, 63, 3, 'Day 3 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-28 15:38:35'),
+(571, 63, 4, 'Day 4 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(572, 63, 5, 'Day 5 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-28 15:38:35'),
+(573, 63, 6, 'Day 6 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(574, 63, 7, 'Day 7 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(575, 63, 8, 'Day 8 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-28 15:38:35'),
+(576, 63, 9, 'Day 9 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(577, 63, 10, 'Day 10 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-28 15:38:35'),
+(578, 63, 11, 'Day 11 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(579, 63, 12, 'Day 12 - Training', 'Workout', 'Complete the full warm-up first. Work hard but stop each set before your form breaks down, then cool down.', 40, '2026-11-28 15:38:35'),
+(580, 63, 13, 'Day 13 - Mobility', 'Recovery', 'Easy mobility to recover. Stay within a comfortable range.', 15, '2026-11-28 15:38:35'),
+(581, 63, 14, 'Day 14 - Rest', 'Rest', 'Full rest. Sleep well and eat enough protein to recover.', 0, '2026-11-28 15:38:35'),
+(639, 40, 1, 'Week 1: Full-Body Strength A', 'Strength', 'Squat, bench press, and bent-over row at light, controlled loads to groove the core movement patterns.', 45, '2026-11-28 15:38:35'),
+(640, 40, 2, 'Week 1: Mobility & Core', 'Mobility', 'Hip, shoulder, and ankle mobility drills paired with a basic anti-rotation core circuit.', 25, '2026-11-28 15:38:35'),
+(641, 40, 3, 'Week 1: Full-Body Strength B', 'Strength', 'Deadlift, overhead press, and pull-up (or assisted row) variations focusing on bracing and bar path.', 45, '2026-11-28 15:38:35'),
+(642, 40, 4, 'Week 1: Active Recovery Walk', 'Recovery', 'A brisk outdoor or treadmill walk to promote blood flow and aid recovery between lifting days.', 30, '2026-11-28 15:38:35'),
+(643, 40, 5, 'Week 1: Full-Body Strength C', 'Strength', 'Front squat, incline press, and single-arm row to round out weekly volume with fresh angles.', 45, '2026-11-28 15:38:35'),
+(644, 40, 6, 'Week 1: Conditioning Circuit', 'Cardio', 'Light kettlebell or bodyweight circuit to build work capacity without interfering with strength gains.', 30, '2026-11-28 15:38:35'),
+(645, 40, 7, 'Week 1: Rest Day', 'Recovery', 'Full rest. Prioritize sleep, hydration, and protein intake to support muscle repair.', 10, '2026-11-28 15:38:35'),
+(646, 40, 8, 'Week 2: Full-Body Strength A', 'Strength', 'Squat, bench press, and bent-over row at light, controlled loads to groove the core movement patterns.', 45, '2026-11-28 15:38:35'),
+(647, 40, 9, 'Week 2: Mobility & Core', 'Mobility', 'Hip, shoulder, and ankle mobility drills paired with a basic anti-rotation core circuit.', 25, '2026-11-28 15:38:35'),
+(648, 40, 10, 'Week 2: Full-Body Strength B', 'Strength', 'Deadlift, overhead press, and pull-up (or assisted row) variations focusing on bracing and bar path.', 45, '2026-11-28 15:38:35'),
+(649, 40, 11, 'Week 2: Active Recovery Walk', 'Recovery', 'A brisk outdoor or treadmill walk to promote blood flow and aid recovery between lifting days.', 30, '2026-11-28 15:38:35'),
+(650, 40, 12, 'Week 2: Full-Body Strength C', 'Strength', 'Front squat, incline press, and single-arm row to round out weekly volume with fresh angles.', 45, '2026-11-28 15:38:35'),
+(651, 40, 13, 'Week 2: Conditioning Circuit', 'Cardio', 'Light kettlebell or bodyweight circuit to build work capacity without interfering with strength gains.', 30, '2026-11-28 15:38:35'),
+(652, 40, 14, 'Week 2: Rest Day', 'Recovery', 'Full rest. Prioritize sleep, hydration, and protein intake to support muscle repair.', 10, '2026-11-28 15:38:35'),
+(653, 40, 15, 'Week 3: Full-Body Strength A', 'Strength', 'Squat, bench press, and bent-over row at light, controlled loads to groove the core movement patterns.', 45, '2026-11-28 15:38:35'),
+(654, 40, 16, 'Week 3: Mobility & Core', 'Mobility', 'Hip, shoulder, and ankle mobility drills paired with a basic anti-rotation core circuit.', 25, '2026-11-28 15:38:35'),
+(655, 40, 17, 'Week 3: Full-Body Strength B', 'Strength', 'Deadlift, overhead press, and pull-up (or assisted row) variations focusing on bracing and bar path.', 45, '2026-11-28 15:38:35'),
+(656, 40, 18, 'Week 3: Active Recovery Walk', 'Recovery', 'A brisk outdoor or treadmill walk to promote blood flow and aid recovery between lifting days.', 30, '2026-11-28 15:38:35'),
+(657, 40, 19, 'Week 3: Full-Body Strength C', 'Strength', 'Front squat, incline press, and single-arm row to round out weekly volume with fresh angles.', 45, '2026-11-28 15:38:35'),
+(658, 40, 20, 'Week 3: Conditioning Circuit', 'Cardio', 'Light kettlebell or bodyweight circuit to build work capacity without interfering with strength gains.', 30, '2026-11-28 15:38:35'),
+(659, 40, 21, 'Week 3: Rest Day', 'Recovery', 'Full rest. Prioritize sleep, hydration, and protein intake to support muscle repair.', 10, '2026-11-28 15:38:35'),
+(660, 40, 22, 'Week 4: Full-Body Strength A', 'Strength', 'Squat, bench press, and bent-over row at light, controlled loads to groove the core movement patterns.', 45, '2026-11-28 15:38:35');
+
+INSERT IGNORE INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
+(661, 40, 23, 'Week 4: Mobility & Core', 'Mobility', 'Hip, shoulder, and ankle mobility drills paired with a basic anti-rotation core circuit.', 25, '2026-11-28 15:38:35'),
+(662, 40, 24, 'Week 4: Full-Body Strength B', 'Strength', 'Deadlift, overhead press, and pull-up (or assisted row) variations focusing on bracing and bar path.', 45, '2026-11-28 15:38:35'),
+(663, 40, 25, 'Week 4: Active Recovery Walk', 'Recovery', 'A brisk outdoor or treadmill walk to promote blood flow and aid recovery between lifting days.', 30, '2026-11-28 15:38:35'),
+(664, 40, 26, 'Week 4: Full-Body Strength C', 'Strength', 'Front squat, incline press, and single-arm row to round out weekly volume with fresh angles.', 45, '2026-11-28 15:38:35'),
+(665, 40, 27, 'Week 4: Conditioning Circuit', 'Cardio', 'Light kettlebell or bodyweight circuit to build work capacity without interfering with strength gains.', 30, '2026-11-28 15:38:35'),
+(666, 40, 28, 'Week 4: Rest Day', 'Recovery', 'Full rest. Prioritize sleep, hydration, and protein intake to support muscle repair.', 10, '2026-11-28 15:38:35'),
+(667, 41, 1, 'Week 1: Push Day - Chest/Shoulders/Triceps', 'Strength', 'Heavy bench press, overhead press, and dip variations followed by isolation work to failure.', 60, '2026-11-28 15:38:35'),
+(668, 41, 2, 'Week 1: Pull Day - Back/Biceps', 'Strength', 'Weighted pull-ups, barbell rows, and deadlift variations with a biceps finisher superset.', 60, '2026-11-28 15:38:35'),
+(669, 41, 3, 'Week 1: Leg Day - Quads/Hamstrings/Glutes', 'Strength', 'Back squat or front squat as the primary lift, followed by Romanian deadlifts and accessory leg work.', 65, '2026-11-28 15:38:35'),
+(670, 41, 4, 'Week 1: Active Recovery & Mobility', 'Mobility', 'Foam rolling, hip and thoracic mobility work, and light cardio to flush fatigue before the next push.', 20, '2026-11-28 15:38:35'),
+(671, 41, 5, 'Week 1: Upper Body Hypertrophy', 'Strength', 'Moderate-load, high-volume upper body supersets targeting chest, back, and shoulders.', 55, '2026-11-28 15:38:35'),
+(672, 41, 6, 'Week 1: Lower Body & Core', 'Strength', 'Lunges, leg press, and weighted core circuit to close out the training week with volume.', 55, '2026-11-28 15:38:35'),
+(673, 41, 7, 'Week 1: Rest Day', 'Recovery', 'Complete rest. This is where the growth happens - eat, sleep, and let the muscle rebuild.', 10, '2026-11-28 15:38:35'),
+(674, 41, 8, 'Week 2: Push Day - Chest/Shoulders/Triceps', 'Strength', 'Heavy bench press, overhead press, and dip variations followed by isolation work to failure.', 60, '2026-11-28 15:38:35'),
+(675, 41, 9, 'Week 2: Pull Day - Back/Biceps', 'Strength', 'Weighted pull-ups, barbell rows, and deadlift variations with a biceps finisher superset.', 60, '2026-11-28 15:38:35'),
+(676, 41, 10, 'Week 2: Leg Day - Quads/Hamstrings/Glutes', 'Strength', 'Back squat or front squat as the primary lift, followed by Romanian deadlifts and accessory leg work.', 65, '2026-11-28 15:38:35'),
+(677, 41, 11, 'Week 2: Active Recovery & Mobility', 'Mobility', 'Foam rolling, hip and thoracic mobility work, and light cardio to flush fatigue before the next push.', 20, '2026-11-28 15:38:35'),
+(678, 41, 12, 'Week 2: Upper Body Hypertrophy', 'Strength', 'Moderate-load, high-volume upper body supersets targeting chest, back, and shoulders.', 55, '2026-11-28 15:38:35'),
+(679, 41, 13, 'Week 2: Lower Body & Core', 'Strength', 'Lunges, leg press, and weighted core circuit to close out the training week with volume.', 55, '2026-11-28 15:38:35'),
+(680, 41, 14, 'Week 2: Rest Day', 'Recovery', 'Complete rest. This is where the growth happens - eat, sleep, and let the muscle rebuild.', 10, '2026-11-28 15:38:35'),
+(681, 41, 15, 'Week 3: Push Day - Chest/Shoulders/Triceps', 'Strength', 'Heavy bench press, overhead press, and dip variations followed by isolation work to failure.', 60, '2026-11-28 15:38:35'),
+(682, 41, 16, 'Week 3: Pull Day - Back/Biceps', 'Strength', 'Weighted pull-ups, barbell rows, and deadlift variations with a biceps finisher superset.', 60, '2026-11-28 15:38:35'),
+(683, 41, 17, 'Week 3: Leg Day - Quads/Hamstrings/Glutes', 'Strength', 'Back squat or front squat as the primary lift, followed by Romanian deadlifts and accessory leg work.', 65, '2026-11-28 15:38:35'),
+(684, 41, 18, 'Week 3: Active Recovery & Mobility', 'Mobility', 'Foam rolling, hip and thoracic mobility work, and light cardio to flush fatigue before the next push.', 20, '2026-11-28 15:38:35'),
+(685, 41, 19, 'Week 3: Upper Body Hypertrophy', 'Strength', 'Moderate-load, high-volume upper body supersets targeting chest, back, and shoulders.', 55, '2026-11-28 15:38:35'),
+(686, 41, 20, 'Week 3: Lower Body & Core', 'Strength', 'Lunges, leg press, and weighted core circuit to close out the training week with volume.', 55, '2026-11-28 15:38:35'),
+(687, 41, 21, 'Week 3: Rest Day', 'Recovery', 'Complete rest. This is where the growth happens - eat, sleep, and let the muscle rebuild.', 10, '2026-11-28 15:38:35'),
+(688, 41, 22, 'Week 4: Push Day - Chest/Shoulders/Triceps', 'Strength', 'Heavy bench press, overhead press, and dip variations followed by isolation work to failure.', 60, '2026-11-28 15:38:35'),
+(689, 41, 23, 'Week 4: Pull Day - Back/Biceps', 'Strength', 'Weighted pull-ups, barbell rows, and deadlift variations with a biceps finisher superset.', 60, '2026-11-28 15:38:35'),
+(690, 41, 24, 'Week 4: Leg Day - Quads/Hamstrings/Glutes', 'Strength', 'Back squat or front squat as the primary lift, followed by Romanian deadlifts and accessory leg work.', 65, '2026-11-28 15:38:35'),
+(691, 41, 25, 'Week 4: Active Recovery & Mobility', 'Mobility', 'Foam rolling, hip and thoracic mobility work, and light cardio to flush fatigue before the next push.', 20, '2026-11-28 15:38:35'),
+(692, 41, 26, 'Week 4: Upper Body Hypertrophy', 'Strength', 'Moderate-load, high-volume upper body supersets targeting chest, back, and shoulders.', 55, '2026-11-28 15:38:35'),
+(693, 41, 27, 'Week 4: Lower Body & Core', 'Strength', 'Lunges, leg press, and weighted core circuit to close out the training week with volume.', 55, '2026-11-28 15:38:35'),
+(694, 41, 28, 'Week 4: Rest Day', 'Recovery', 'Complete rest. This is where the growth happens - eat, sleep, and let the muscle rebuild.', 10, '2026-11-28 15:38:35'),
+(695, 41, 29, 'Week 5: Push Day - Chest/Shoulders/Triceps', 'Strength', 'Heavy bench press, overhead press, and dip variations followed by isolation work to failure.', 60, '2026-11-28 15:38:35'),
+(696, 41, 30, 'Week 5: Pull Day - Back/Biceps', 'Strength', 'Weighted pull-ups, barbell rows, and deadlift variations with a biceps finisher superset.', 60, '2026-11-28 15:38:35'),
+(697, 41, 31, 'Week 5: Leg Day - Quads/Hamstrings/Glutes', 'Strength', 'Back squat or front squat as the primary lift, followed by Romanian deadlifts and accessory leg work.', 65, '2026-11-28 15:38:35'),
+(698, 41, 32, 'Week 5: Active Recovery & Mobility', 'Mobility', 'Foam rolling, hip and thoracic mobility work, and light cardio to flush fatigue before the next push.', 20, '2026-11-28 15:38:35'),
+(699, 41, 33, 'Week 5: Upper Body Hypertrophy', 'Strength', 'Moderate-load, high-volume upper body supersets targeting chest, back, and shoulders.', 55, '2026-11-28 15:38:35'),
+(700, 41, 34, 'Week 5: Lower Body & Core', 'Strength', 'Lunges, leg press, and weighted core circuit to close out the training week with volume.', 55, '2026-11-28 15:38:35'),
+(701, 41, 35, 'Week 5: Rest Day', 'Recovery', 'Complete rest. This is where the growth happens - eat, sleep, and let the muscle rebuild.', 10, '2026-11-28 15:38:35'),
+(702, 41, 36, 'Week 6: Push Day - Chest/Shoulders/Triceps', 'Strength', 'Heavy bench press, overhead press, and dip variations followed by isolation work to failure.', 60, '2026-11-28 15:38:35'),
+(703, 41, 37, 'Week 6: Pull Day - Back/Biceps', 'Strength', 'Weighted pull-ups, barbell rows, and deadlift variations with a biceps finisher superset.', 60, '2026-11-28 15:38:35'),
+(704, 41, 38, 'Week 6: Leg Day - Quads/Hamstrings/Glutes', 'Strength', 'Back squat or front squat as the primary lift, followed by Romanian deadlifts and accessory leg work.', 65, '2026-11-28 15:38:35'),
+(705, 41, 39, 'Week 6: Active Recovery & Mobility', 'Mobility', 'Foam rolling, hip and thoracic mobility work, and light cardio to flush fatigue before the next push.', 20, '2026-11-28 15:38:35'),
+(706, 41, 40, 'Week 6: Upper Body Hypertrophy', 'Strength', 'Moderate-load, high-volume upper body supersets targeting chest, back, and shoulders.', 55, '2026-11-28 15:38:35'),
+(707, 41, 41, 'Week 6: Lower Body & Core', 'Strength', 'Lunges, leg press, and weighted core circuit to close out the training week with volume.', 55, '2026-11-28 15:38:35'),
+(708, 41, 42, 'Week 6: Rest Day', 'Recovery', 'Complete rest. This is where the growth happens - eat, sleep, and let the muscle rebuild.', 10, '2026-11-28 15:38:35'),
+(709, 41, 43, 'Week 7: Push Day - Chest/Shoulders/Triceps', 'Strength', 'Heavy bench press, overhead press, and dip variations followed by isolation work to failure.', 60, '2026-11-28 15:38:35'),
+(710, 41, 44, 'Week 7: Pull Day - Back/Biceps', 'Strength', 'Weighted pull-ups, barbell rows, and deadlift variations with a biceps finisher superset.', 60, '2026-11-28 15:38:35'),
+(711, 41, 45, 'Week 7: Leg Day - Quads/Hamstrings/Glutes', 'Strength', 'Back squat or front squat as the primary lift, followed by Romanian deadlifts and accessory leg work.', 65, '2026-11-28 15:38:35'),
+(712, 41, 46, 'Week 7: Active Recovery & Mobility', 'Mobility', 'Foam rolling, hip and thoracic mobility work, and light cardio to flush fatigue before the next push.', 20, '2026-11-28 15:38:35'),
+(713, 41, 47, 'Week 7: Upper Body Hypertrophy', 'Strength', 'Moderate-load, high-volume upper body supersets targeting chest, back, and shoulders.', 55, '2026-11-28 15:38:35'),
+(714, 41, 48, 'Week 7: Lower Body & Core', 'Strength', 'Lunges, leg press, and weighted core circuit to close out the training week with volume.', 55, '2026-11-28 15:38:35'),
+(715, 41, 49, 'Week 7: Rest Day', 'Recovery', 'Complete rest. This is where the growth happens - eat, sleep, and let the muscle rebuild.', 10, '2026-11-28 15:38:35'),
+(716, 41, 50, 'Week 8: Push Day - Chest/Shoulders/Triceps', 'Strength', 'Heavy bench press, overhead press, and dip variations followed by isolation work to failure.', 60, '2026-11-28 15:38:35'),
+(717, 41, 51, 'Week 8: Pull Day - Back/Biceps', 'Strength', 'Weighted pull-ups, barbell rows, and deadlift variations with a biceps finisher superset.', 60, '2026-11-28 15:38:35'),
+(718, 41, 52, 'Week 8: Leg Day - Quads/Hamstrings/Glutes', 'Strength', 'Back squat or front squat as the primary lift, followed by Romanian deadlifts and accessory leg work.', 65, '2026-11-28 15:38:35'),
+(719, 41, 53, 'Week 8: Active Recovery & Mobility', 'Mobility', 'Foam rolling, hip and thoracic mobility work, and light cardio to flush fatigue before the next push.', 20, '2026-11-28 15:38:35'),
+(720, 41, 54, 'Week 8: Upper Body Hypertrophy', 'Strength', 'Moderate-load, high-volume upper body supersets targeting chest, back, and shoulders.', 55, '2026-11-28 15:38:35'),
+(721, 41, 55, 'Week 8: Lower Body & Core', 'Strength', 'Lunges, leg press, and weighted core circuit to close out the training week with volume.', 55, '2026-11-28 15:38:35'),
+(722, 41, 56, 'Week 8: Rest Day', 'Recovery', 'Complete rest. This is where the growth happens - eat, sleep, and let the muscle rebuild.', 10, '2026-11-28 15:38:35'),
+(723, 42, 1, 'Week 1: Full-Body HIIT Circuit', 'HIIT', '40 seconds work / 20 seconds rest full-body circuit combining squats, push-ups, and mountain climbers.', 30, '2026-11-28 15:38:35'),
+(724, 42, 2, 'Week 1: Steady-State Cardio', 'Cardio', 'Sustained moderate-pace cardio (jog, bike, or row) to build an aerobic base for fat oxidation.', 35, '2026-11-28 15:38:35'),
+(725, 42, 3, 'Week 1: Lower-Body Burner Circuit', 'HIIT', 'Jump squats, lunges, and glute bridges in a fast-paced circuit to spike heart rate and burn calories.', 30, '2026-11-28 15:38:35'),
+(726, 42, 4, 'Week 1: Active Recovery Walk', 'Recovery', 'An easy-paced walk to support recovery while still keeping daily activity levels elevated.', 20, '2026-11-28 15:38:35'),
+(727, 42, 5, 'Week 1: Upper-Body & Core Circuit', 'HIIT', 'Push-ups, plank variations, and battle-rope or band work in a high-intensity superset format.', 30, '2026-11-28 15:38:35'),
+(728, 42, 6, 'Week 1: Interval Sprints', 'Cardio', 'Short, hard sprint intervals with full recovery between rounds to maximize calorie burn.', 25, '2026-11-28 15:38:35'),
+(729, 42, 7, 'Week 1: Rest & Recharge', 'Recovery', 'A full rest day to let the nervous system recover from the week\'s high-intensity work.', 10, '2026-11-28 15:38:35'),
+(730, 42, 8, 'Week 2: Full-Body HIIT Circuit', 'HIIT', '40 seconds work / 20 seconds rest full-body circuit combining squats, push-ups, and mountain climbers.', 30, '2026-11-28 15:38:35'),
+(731, 42, 9, 'Week 2: Steady-State Cardio', 'Cardio', 'Sustained moderate-pace cardio (jog, bike, or row) to build an aerobic base for fat oxidation.', 35, '2026-11-28 15:38:35'),
+(732, 42, 10, 'Week 2: Lower-Body Burner Circuit', 'HIIT', 'Jump squats, lunges, and glute bridges in a fast-paced circuit to spike heart rate and burn calories.', 30, '2026-11-28 15:38:35'),
+(733, 42, 11, 'Week 2: Active Recovery Walk', 'Recovery', 'An easy-paced walk to support recovery while still keeping daily activity levels elevated.', 20, '2026-11-28 15:38:35'),
+(734, 42, 12, 'Week 2: Upper-Body & Core Circuit', 'HIIT', 'Push-ups, plank variations, and battle-rope or band work in a high-intensity superset format.', 30, '2026-11-28 15:38:35'),
+(735, 42, 13, 'Week 2: Interval Sprints', 'Cardio', 'Short, hard sprint intervals with full recovery between rounds to maximize calorie burn.', 25, '2026-11-28 15:38:35'),
+(736, 42, 14, 'Week 2: Rest & Recharge', 'Recovery', 'A full rest day to let the nervous system recover from the week\'s high-intensity work.', 10, '2026-11-28 15:38:35'),
+(737, 43, 1, 'Week 1: Easy Aerobic Base', 'Cardio', 'Low-intensity run, row, or bike session designed to build aerobic base without accumulating fatigue.', 30, '2026-11-28 15:38:35'),
+(738, 43, 2, 'Week 1: Tempo Intervals', 'Cardio', 'Comfortably-hard tempo intervals to push lactate threshold and improve sustained pace.', 25, '2026-11-28 15:38:35'),
+(739, 43, 3, 'Week 1: Cross-Train Session', 'Cardio', 'A change of modality (bike or row) to build fitness while reducing repetitive impact stress.', 35, '2026-11-28 15:38:35'),
+(740, 43, 4, 'Week 1: Mobility & Stretch', 'Mobility', 'Lower-body and hip mobility work to keep joints healthy under increasing training volume.', 20, '2026-11-28 15:38:35'),
+(741, 43, 5, 'Week 1: Long Steady Endurance', 'Cardio', 'An extended steady-pace session to build endurance capacity and mental toughness.', 40, '2026-11-28 15:38:35'),
+(742, 43, 6, 'Week 1: Hill or Resistance Intervals', 'Cardio', 'Uphill or resisted intervals to build power and strength alongside aerobic capacity.', 30, '2026-11-28 15:38:35'),
+(743, 43, 7, 'Week 1: Rest Day', 'Recovery', 'Full rest to allow the cardiovascular system to adapt to the week\'s training load.', 10, '2026-11-28 15:38:35'),
+(744, 43, 8, 'Week 2: Easy Aerobic Base', 'Cardio', 'Low-intensity run, row, or bike session designed to build aerobic base without accumulating fatigue.', 30, '2026-11-28 15:38:35'),
+(745, 43, 9, 'Week 2: Tempo Intervals', 'Cardio', 'Comfortably-hard tempo intervals to push lactate threshold and improve sustained pace.', 25, '2026-11-28 15:38:35'),
+(746, 43, 10, 'Week 2: Cross-Train Session', 'Cardio', 'A change of modality (bike or row) to build fitness while reducing repetitive impact stress.', 35, '2026-11-28 15:38:35'),
+(747, 43, 11, 'Week 2: Mobility & Stretch', 'Mobility', 'Lower-body and hip mobility work to keep joints healthy under increasing training volume.', 20, '2026-11-28 15:38:35'),
+(748, 43, 12, 'Week 2: Long Steady Endurance', 'Cardio', 'An extended steady-pace session to build endurance capacity and mental toughness.', 40, '2026-11-28 15:38:35'),
+(749, 43, 13, 'Week 2: Hill or Resistance Intervals', 'Cardio', 'Uphill or resisted intervals to build power and strength alongside aerobic capacity.', 30, '2026-11-28 15:38:35'),
+(750, 43, 14, 'Week 2: Rest Day', 'Recovery', 'Full rest to allow the cardiovascular system to adapt to the week\'s training load.', 10, '2026-11-28 15:38:35'),
+(751, 43, 15, 'Week 3: Easy Aerobic Base', 'Cardio', 'Low-intensity run, row, or bike session designed to build aerobic base without accumulating fatigue.', 30, '2026-11-28 15:38:35'),
+(752, 43, 16, 'Week 3: Tempo Intervals', 'Cardio', 'Comfortably-hard tempo intervals to push lactate threshold and improve sustained pace.', 25, '2026-11-28 15:38:35'),
+(753, 43, 17, 'Week 3: Cross-Train Session', 'Cardio', 'A change of modality (bike or row) to build fitness while reducing repetitive impact stress.', 35, '2026-11-28 15:38:35'),
+(754, 43, 18, 'Week 3: Mobility & Stretch', 'Mobility', 'Lower-body and hip mobility work to keep joints healthy under increasing training volume.', 20, '2026-11-28 15:38:35'),
+(755, 43, 19, 'Week 3: Long Steady Endurance', 'Cardio', 'An extended steady-pace session to build endurance capacity and mental toughness.', 40, '2026-11-28 15:38:35'),
+(756, 43, 20, 'Week 3: Hill or Resistance Intervals', 'Cardio', 'Uphill or resisted intervals to build power and strength alongside aerobic capacity.', 30, '2026-11-28 15:38:35'),
+(757, 43, 21, 'Week 3: Rest Day', 'Recovery', 'Full rest to allow the cardiovascular system to adapt to the week\'s training load.', 10, '2026-11-28 15:38:35'),
+(758, 43, 22, 'Week 4: Easy Aerobic Base', 'Cardio', 'Low-intensity run, row, or bike session designed to build aerobic base without accumulating fatigue.', 30, '2026-11-28 15:38:35'),
+(759, 43, 23, 'Week 4: Tempo Intervals', 'Cardio', 'Comfortably-hard tempo intervals to push lactate threshold and improve sustained pace.', 25, '2026-11-28 15:38:35'),
+(760, 43, 24, 'Week 4: Cross-Train Session', 'Cardio', 'A change of modality (bike or row) to build fitness while reducing repetitive impact stress.', 35, '2026-11-28 15:38:35');
+
+INSERT IGNORE INTO `plan_contents` (`id`, `plan_id`, `day_number`, `title`, `activity_type`, `description`, `duration_mins`, `created_at`) VALUES
+(761, 43, 25, 'Week 4: Mobility & Stretch', 'Mobility', 'Lower-body and hip mobility work to keep joints healthy under increasing training volume.', 20, '2026-11-28 15:38:35'),
+(762, 43, 26, 'Week 4: Long Steady Endurance', 'Cardio', 'An extended steady-pace session to build endurance capacity and mental toughness.', 40, '2026-11-28 15:38:35'),
+(763, 43, 27, 'Week 4: Hill or Resistance Intervals', 'Cardio', 'Uphill or resisted intervals to build power and strength alongside aerobic capacity.', 30, '2026-11-28 15:38:35'),
+(764, 43, 28, 'Week 4: Rest Day', 'Recovery', 'Full rest to allow the cardiovascular system to adapt to the week\'s training load.', 10, '2026-11-28 15:38:35'),
+(765, 44, 1, 'Morning Mobility Wake-Up', 'Mobility', 'A gentle full-body flow to open up the joints and get blood flowing before the day starts.', 15, '2026-11-28 15:38:35'),
+(766, 44, 2, 'Hip Opener Flow', 'Mobility', 'Targeted hip flexor, glute, and adductor stretches to counter the effects of prolonged sitting.', 20, '2026-11-28 15:38:35'),
+(767, 44, 3, 'Active Recovery Walk', 'Recovery', 'A relaxed-pace walk paired with deep breathing to promote circulation without adding fatigue.', 30, '2026-11-28 15:38:35'),
+(768, 44, 4, 'Shoulder & Spine Reset', 'Mobility', 'Thoracic rotations and shoulder circles to restore upper-body range of motion.', 18, '2026-11-28 15:38:35'),
+(769, 44, 5, 'Foam Rolling & Breathwork', 'Recovery', 'Self-myofascial release on major muscle groups followed by five minutes of diaphragmatic breathing.', 15, '2026-11-28 15:38:35'),
+(770, 44, 6, 'Full-Body Stretch Flow', 'Mobility', 'A slow, continuous stretch sequence covering every major muscle group.', 25, '2026-11-28 15:38:35'),
+(771, 44, 7, 'Rest & Reflect', 'Recovery', 'A true rest day - light walking only, plus a few minutes reflecting on how your body feels after the week.', 10, '2026-11-28 15:38:35'),
+(772, 45, 1, 'Week 1: Lower Body Flexibility', 'Flexibility', 'Hamstring, quad, and calf stretches held for extended duration to improve lower-body range of motion.', 20, '2026-11-28 15:38:35'),
+(773, 45, 2, 'Week 1: Upper Body & Shoulder Flow', 'Flexibility', 'Chest, shoulder, and thoracic spine stretches to counter rounded-shoulder posture.', 20, '2026-11-28 15:38:35'),
+(774, 45, 3, 'Week 1: Hip & Spine Mobility', 'Flexibility', 'Deep hip openers and spinal rotations to improve everyday movement quality.', 20, '2026-11-28 15:38:35'),
+(775, 45, 4, 'Week 1: Full-Body Stretch Flow', 'Flexibility', 'A continuous, slow-paced stretch sequence covering every major muscle group.', 25, '2026-11-28 15:38:35'),
+(776, 45, 5, 'Week 1: Hamstring & Posterior Chain', 'Flexibility', 'Targeted posterior chain stretches to address tight hamstrings and lower back.', 20, '2026-11-28 15:38:35'),
+(777, 45, 6, 'Week 1: Deep Stretch & Breathwork', 'Flexibility', 'Long-held passive stretches paired with diaphragmatic breathing for a parasympathetic reset.', 25, '2026-11-28 15:38:35'),
+(778, 45, 7, 'Week 1: Rest & Reflect', 'Recovery', 'A light rest day - gentle movement only, plus reflection on flexibility gains so far.', 10, '2026-11-28 15:38:35'),
+(779, 45, 8, 'Week 2: Lower Body Flexibility', 'Flexibility', 'Hamstring, quad, and calf stretches held for extended duration to improve lower-body range of motion.', 20, '2026-11-28 15:38:35'),
+(780, 45, 9, 'Week 2: Upper Body & Shoulder Flow', 'Flexibility', 'Chest, shoulder, and thoracic spine stretches to counter rounded-shoulder posture.', 20, '2026-11-28 15:38:35'),
+(781, 45, 10, 'Week 2: Hip & Spine Mobility', 'Flexibility', 'Deep hip openers and spinal rotations to improve everyday movement quality.', 20, '2026-11-28 15:38:35'),
+(782, 45, 11, 'Week 2: Full-Body Stretch Flow', 'Flexibility', 'A continuous, slow-paced stretch sequence covering every major muscle group.', 25, '2026-11-28 15:38:35'),
+(783, 45, 12, 'Week 2: Hamstring & Posterior Chain', 'Flexibility', 'Targeted posterior chain stretches to address tight hamstrings and lower back.', 20, '2026-11-28 15:38:35'),
+(784, 45, 13, 'Week 2: Deep Stretch & Breathwork', 'Flexibility', 'Long-held passive stretches paired with diaphragmatic breathing for a parasympathetic reset.', 25, '2026-11-28 15:38:35'),
+(785, 45, 14, 'Week 2: Rest & Reflect', 'Recovery', 'A light rest day - gentle movement only, plus reflection on flexibility gains so far.', 10, '2026-11-28 15:38:35');
 
 -- --------------------------------------------------------
 -- Table `plan_exercises`
@@ -1697,6 +1954,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_exercises` ADD COLUMN `rest_seconds` int DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_exercises' AND column_name = 'rest_seconds');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_exercises` ADD COLUMN `notes` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plan_exercises' AND column_name = 'notes');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `plan_exercises` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plan_exercises` ADD CONSTRAINT `plan_exercises_ibfk_1` FOREIGN KEY (`plan_content_id`) REFERENCES `plan_contents` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'plan_exercises' AND constraint_name = 'plan_exercises_ibfk_1' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
@@ -2843,7 +3104,415 @@ INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, 
 (1262, 524, 4, 'Deep Breathing', 1, NULL, 60, NULL, 'Breathe slowly and comfortably.'),
 (1263, 520, 4, 'Deep Breathing', 1, NULL, 60, NULL, 'Breathe slowly and comfortably.'),
 (1264, 517, 4, 'Deep Breathing', 1, NULL, 60, NULL, 'Breathe slowly and comfortably.'),
-(1265, 513, 4, 'Deep Breathing', 1, NULL, 60, NULL, 'Breathe slowly and comfortably.');
+(1265, 513, 4, 'Deep Breathing', 1, NULL, 60, NULL, 'Breathe slowly and comfortably.'),
+(1279, 639, 1, 'Barbell Back Squat', 3, '10', NULL, 90, 'Controlled tempo, focus on depth'),
+(1280, 639, 2, 'Flat Barbell Bench Press', 3, '10', NULL, 90, NULL),
+(1281, 639, 3, 'Bent-Over Barbell Row', 3, '10', NULL, 90, NULL),
+(1282, 639, 4, 'Plank Hold', 3, NULL, 30, 45, NULL),
+(1283, 640, 1, 'World\'s Greatest Stretch', 2, '8', NULL, 30, 'Each side'),
+(1284, 640, 2, 'Band/PVC Shoulder Pass-Throughs', 2, '12', NULL, 30, NULL),
+(1285, 640, 3, 'Ankle Rocks', 2, '10', NULL, 20, 'Each side'),
+(1286, 640, 4, 'Pallof Press', 3, '12', NULL, 30, 'Each side, anti-rotation core'),
+(1287, 641, 1, 'Conventional Deadlift', 3, '8', NULL, 120, 'Reset each rep'),
+(1288, 641, 2, 'Standing Overhead Press', 3, '8', NULL, 90, NULL),
+(1289, 641, 3, 'Assisted Pull-Up or Inverted Row', 3, '8', NULL, 90, NULL),
+(1290, 641, 4, 'Dead Bug', 3, '12', NULL, 30, NULL),
+(1291, 642, 1, 'Brisk Walk', 1, NULL, 1800, NULL, 'Easy, conversational pace'),
+(1292, 643, 1, 'Front Squat', 3, '8', NULL, 90, NULL),
+(1293, 643, 2, 'Incline Dumbbell Press', 3, '10', NULL, 90, NULL),
+(1294, 643, 3, 'Single-Arm Dumbbell Row', 3, '10', NULL, 75, 'Each side'),
+(1295, 643, 4, 'Hanging Knee Raise', 3, '12', NULL, 45, NULL),
+(1296, 644, 1, 'Kettlebell Swings', 4, '15', NULL, 30, NULL),
+(1297, 644, 2, 'Goblet Squats', 4, '15', NULL, 30, NULL),
+(1298, 644, 3, 'Push-Up to Renegade Row', 4, '10', NULL, 30, NULL),
+(1299, 644, 4, 'Mountain Climbers', 4, NULL, 30, 30, NULL),
+(1300, 645, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Prioritize sleep, hydration, and protein intake'),
+(1301, 646, 1, 'Barbell Back Squat', 3, '10', NULL, 90, 'Controlled tempo, focus on depth'),
+(1302, 646, 2, 'Flat Barbell Bench Press', 3, '10', NULL, 90, NULL),
+(1303, 646, 3, 'Bent-Over Barbell Row', 3, '10', NULL, 90, NULL),
+(1304, 646, 4, 'Plank Hold', 3, NULL, 30, 45, NULL),
+(1305, 647, 1, 'World\'s Greatest Stretch', 2, '8', NULL, 30, 'Each side'),
+(1306, 647, 2, 'Band/PVC Shoulder Pass-Throughs', 2, '12', NULL, 30, NULL),
+(1307, 647, 3, 'Ankle Rocks', 2, '10', NULL, 20, 'Each side'),
+(1308, 647, 4, 'Pallof Press', 3, '12', NULL, 30, 'Each side, anti-rotation core'),
+(1309, 648, 1, 'Conventional Deadlift', 3, '8', NULL, 120, 'Reset each rep'),
+(1310, 648, 2, 'Standing Overhead Press', 3, '8', NULL, 90, NULL),
+(1311, 648, 3, 'Assisted Pull-Up or Inverted Row', 3, '8', NULL, 90, NULL),
+(1312, 648, 4, 'Dead Bug', 3, '12', NULL, 30, NULL),
+(1313, 649, 1, 'Brisk Walk', 1, NULL, 1800, NULL, 'Easy, conversational pace'),
+(1314, 650, 1, 'Front Squat', 3, '8', NULL, 90, NULL),
+(1315, 650, 2, 'Incline Dumbbell Press', 3, '10', NULL, 90, NULL),
+(1316, 650, 3, 'Single-Arm Dumbbell Row', 3, '10', NULL, 75, 'Each side'),
+(1317, 650, 4, 'Hanging Knee Raise', 3, '12', NULL, 45, NULL),
+(1318, 651, 1, 'Kettlebell Swings', 4, '15', NULL, 30, NULL),
+(1319, 651, 2, 'Goblet Squats', 4, '15', NULL, 30, NULL),
+(1320, 651, 3, 'Push-Up to Renegade Row', 4, '10', NULL, 30, NULL),
+(1321, 651, 4, 'Mountain Climbers', 4, NULL, 30, 30, NULL),
+(1322, 652, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Prioritize sleep, hydration, and protein intake'),
+(1323, 653, 1, 'Barbell Back Squat', 3, '10', NULL, 90, 'Controlled tempo, focus on depth'),
+(1324, 653, 2, 'Flat Barbell Bench Press', 3, '10', NULL, 90, NULL),
+(1325, 653, 3, 'Bent-Over Barbell Row', 3, '10', NULL, 90, NULL),
+(1326, 653, 4, 'Plank Hold', 3, NULL, 30, 45, NULL),
+(1327, 654, 1, 'World\'s Greatest Stretch', 2, '8', NULL, 30, 'Each side'),
+(1328, 654, 2, 'Band/PVC Shoulder Pass-Throughs', 2, '12', NULL, 30, NULL),
+(1329, 654, 3, 'Ankle Rocks', 2, '10', NULL, 20, 'Each side'),
+(1330, 654, 4, 'Pallof Press', 3, '12', NULL, 30, 'Each side, anti-rotation core'),
+(1331, 655, 1, 'Conventional Deadlift', 3, '8', NULL, 120, 'Reset each rep'),
+(1332, 655, 2, 'Standing Overhead Press', 3, '8', NULL, 90, NULL),
+(1333, 655, 3, 'Assisted Pull-Up or Inverted Row', 3, '8', NULL, 90, NULL),
+(1334, 655, 4, 'Dead Bug', 3, '12', NULL, 30, NULL),
+(1335, 656, 1, 'Brisk Walk', 1, NULL, 1800, NULL, 'Easy, conversational pace'),
+(1336, 657, 1, 'Front Squat', 3, '8', NULL, 90, NULL),
+(1337, 657, 2, 'Incline Dumbbell Press', 3, '10', NULL, 90, NULL),
+(1338, 657, 3, 'Single-Arm Dumbbell Row', 3, '10', NULL, 75, 'Each side'),
+(1339, 657, 4, 'Hanging Knee Raise', 3, '12', NULL, 45, NULL),
+(1340, 658, 1, 'Kettlebell Swings', 4, '15', NULL, 30, NULL),
+(1341, 658, 2, 'Goblet Squats', 4, '15', NULL, 30, NULL),
+(1342, 658, 3, 'Push-Up to Renegade Row', 4, '10', NULL, 30, NULL),
+(1343, 658, 4, 'Mountain Climbers', 4, NULL, 30, 30, NULL),
+(1344, 659, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Prioritize sleep, hydration, and protein intake'),
+(1345, 660, 1, 'Barbell Back Squat', 3, '10', NULL, 90, 'Controlled tempo, focus on depth'),
+(1346, 660, 2, 'Flat Barbell Bench Press', 3, '10', NULL, 90, NULL),
+(1347, 660, 3, 'Bent-Over Barbell Row', 3, '10', NULL, 90, NULL),
+(1348, 660, 4, 'Plank Hold', 3, NULL, 30, 45, NULL),
+(1349, 661, 1, 'World\'s Greatest Stretch', 2, '8', NULL, 30, 'Each side'),
+(1350, 661, 2, 'Band/PVC Shoulder Pass-Throughs', 2, '12', NULL, 30, NULL),
+(1351, 661, 3, 'Ankle Rocks', 2, '10', NULL, 20, 'Each side'),
+(1352, 661, 4, 'Pallof Press', 3, '12', NULL, 30, 'Each side, anti-rotation core'),
+(1353, 662, 1, 'Conventional Deadlift', 3, '8', NULL, 120, 'Reset each rep'),
+(1354, 662, 2, 'Standing Overhead Press', 3, '8', NULL, 90, NULL),
+(1355, 662, 3, 'Assisted Pull-Up or Inverted Row', 3, '8', NULL, 90, NULL),
+(1356, 662, 4, 'Dead Bug', 3, '12', NULL, 30, NULL);
+
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+(1357, 663, 1, 'Brisk Walk', 1, NULL, 1800, NULL, 'Easy, conversational pace'),
+(1358, 664, 1, 'Front Squat', 3, '8', NULL, 90, NULL),
+(1359, 664, 2, 'Incline Dumbbell Press', 3, '10', NULL, 90, NULL),
+(1360, 664, 3, 'Single-Arm Dumbbell Row', 3, '10', NULL, 75, 'Each side'),
+(1361, 664, 4, 'Hanging Knee Raise', 3, '12', NULL, 45, NULL),
+(1362, 665, 1, 'Kettlebell Swings', 4, '15', NULL, 30, NULL),
+(1363, 665, 2, 'Goblet Squats', 4, '15', NULL, 30, NULL),
+(1364, 665, 3, 'Push-Up to Renegade Row', 4, '10', NULL, 30, NULL),
+(1365, 665, 4, 'Mountain Climbers', 4, NULL, 30, 30, NULL),
+(1366, 666, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Prioritize sleep, hydration, and protein intake'),
+(1367, 667, 1, 'Barbell Bench Press', 4, '6', NULL, 120, NULL),
+(1368, 667, 2, 'Standing Barbell Overhead Press', 4, '8', NULL, 90, NULL),
+(1369, 667, 3, 'Weighted Dips', 3, '10', NULL, 90, NULL),
+(1370, 667, 4, 'Cable Lateral Raise', 3, '15', NULL, 45, NULL),
+(1371, 667, 5, 'Triceps Rope Pushdown', 3, '12', NULL, 45, NULL),
+(1372, 668, 1, 'Weighted Pull-Ups', 4, '6', NULL, 120, NULL),
+(1373, 668, 2, 'Barbell Bent-Over Row', 4, '8', NULL, 90, NULL),
+(1374, 668, 3, 'Romanian Deadlift', 3, '8', NULL, 90, NULL),
+(1375, 668, 4, 'Seated Cable Row', 3, '12', NULL, 60, NULL),
+(1376, 668, 5, 'Barbell Bicep Curl', 3, '12', NULL, 45, NULL),
+(1377, 669, 1, 'Back Squat', 4, '6', NULL, 150, NULL),
+(1378, 669, 2, 'Romanian Deadlift', 3, '10', NULL, 90, NULL),
+(1379, 669, 3, 'Walking Lunges', 3, '12', NULL, 60, 'Each leg'),
+(1380, 669, 4, 'Leg Press', 3, '12', NULL, 75, NULL),
+(1381, 669, 5, 'Standing Calf Raise', 4, '15', NULL, 45, NULL),
+(1382, 670, 1, 'Foam Rolling - Full Body', 1, NULL, 600, NULL, NULL),
+(1383, 670, 2, 'Hip 90/90 Stretch', 2, NULL, 45, 15, 'Each side'),
+(1384, 670, 3, 'Thoracic Spine Rotations', 2, '10', NULL, 20, 'Each side'),
+(1385, 670, 4, 'Light Cycling or Walking', 1, NULL, 900, NULL, 'Easy effort'),
+(1386, 671, 1, 'Incline DB Press + Chest-Supported Row (superset)', 4, '12', NULL, 60, NULL),
+(1387, 671, 2, 'DB Shoulder Press + Face Pull (superset)', 3, '12', NULL, 60, NULL),
+(1388, 671, 3, 'Cable Fly + Lat Pulldown (superset)', 3, '15', NULL, 45, NULL),
+(1389, 672, 1, 'Bulgarian Split Squat', 3, '10', NULL, 60, 'Each leg'),
+(1390, 672, 2, 'Lying Leg Curl', 3, '12', NULL, 60, NULL),
+(1391, 672, 3, 'Hanging Leg Raise', 3, '15', NULL, 45, NULL),
+(1392, 672, 4, 'Weighted Plank', 3, NULL, 45, 45, NULL),
+(1393, 673, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Growth happens here - eat, sleep, recover'),
+(1394, 674, 1, 'Barbell Bench Press', 4, '6', NULL, 120, NULL),
+(1395, 674, 2, 'Standing Barbell Overhead Press', 4, '8', NULL, 90, NULL),
+(1396, 674, 3, 'Weighted Dips', 3, '10', NULL, 90, NULL),
+(1397, 674, 4, 'Cable Lateral Raise', 3, '15', NULL, 45, NULL),
+(1398, 674, 5, 'Triceps Rope Pushdown', 3, '12', NULL, 45, NULL),
+(1399, 675, 1, 'Weighted Pull-Ups', 4, '6', NULL, 120, NULL),
+(1400, 675, 2, 'Barbell Bent-Over Row', 4, '8', NULL, 90, NULL),
+(1401, 675, 3, 'Romanian Deadlift', 3, '8', NULL, 90, NULL),
+(1402, 675, 4, 'Seated Cable Row', 3, '12', NULL, 60, NULL),
+(1403, 675, 5, 'Barbell Bicep Curl', 3, '12', NULL, 45, NULL),
+(1404, 676, 1, 'Back Squat', 4, '6', NULL, 150, NULL),
+(1405, 676, 2, 'Romanian Deadlift', 3, '10', NULL, 90, NULL),
+(1406, 676, 3, 'Walking Lunges', 3, '12', NULL, 60, 'Each leg'),
+(1407, 676, 4, 'Leg Press', 3, '12', NULL, 75, NULL),
+(1408, 676, 5, 'Standing Calf Raise', 4, '15', NULL, 45, NULL),
+(1409, 677, 1, 'Foam Rolling - Full Body', 1, NULL, 600, NULL, NULL),
+(1410, 677, 2, 'Hip 90/90 Stretch', 2, NULL, 45, 15, 'Each side'),
+(1411, 677, 3, 'Thoracic Spine Rotations', 2, '10', NULL, 20, 'Each side'),
+(1412, 677, 4, 'Light Cycling or Walking', 1, NULL, 900, NULL, 'Easy effort'),
+(1413, 678, 1, 'Incline DB Press + Chest-Supported Row (superset)', 4, '12', NULL, 60, NULL),
+(1414, 678, 2, 'DB Shoulder Press + Face Pull (superset)', 3, '12', NULL, 60, NULL),
+(1415, 678, 3, 'Cable Fly + Lat Pulldown (superset)', 3, '15', NULL, 45, NULL),
+(1416, 679, 1, 'Bulgarian Split Squat', 3, '10', NULL, 60, 'Each leg'),
+(1417, 679, 2, 'Lying Leg Curl', 3, '12', NULL, 60, NULL),
+(1418, 679, 3, 'Hanging Leg Raise', 3, '15', NULL, 45, NULL),
+(1419, 679, 4, 'Weighted Plank', 3, NULL, 45, 45, NULL),
+(1420, 680, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Growth happens here - eat, sleep, recover'),
+(1421, 681, 1, 'Barbell Bench Press', 4, '6', NULL, 120, NULL),
+(1422, 681, 2, 'Standing Barbell Overhead Press', 4, '8', NULL, 90, NULL),
+(1423, 681, 3, 'Weighted Dips', 3, '10', NULL, 90, NULL),
+(1424, 681, 4, 'Cable Lateral Raise', 3, '15', NULL, 45, NULL),
+(1425, 681, 5, 'Triceps Rope Pushdown', 3, '12', NULL, 45, NULL),
+(1426, 682, 1, 'Weighted Pull-Ups', 4, '6', NULL, 120, NULL),
+(1427, 682, 2, 'Barbell Bent-Over Row', 4, '8', NULL, 90, NULL),
+(1428, 682, 3, 'Romanian Deadlift', 3, '8', NULL, 90, NULL),
+(1429, 682, 4, 'Seated Cable Row', 3, '12', NULL, 60, NULL),
+(1430, 682, 5, 'Barbell Bicep Curl', 3, '12', NULL, 45, NULL),
+(1431, 683, 1, 'Back Squat', 4, '6', NULL, 150, NULL),
+(1432, 683, 2, 'Romanian Deadlift', 3, '10', NULL, 90, NULL),
+(1433, 683, 3, 'Walking Lunges', 3, '12', NULL, 60, 'Each leg'),
+(1434, 683, 4, 'Leg Press', 3, '12', NULL, 75, NULL),
+(1435, 683, 5, 'Standing Calf Raise', 4, '15', NULL, 45, NULL),
+(1436, 684, 1, 'Foam Rolling - Full Body', 1, NULL, 600, NULL, NULL),
+(1437, 684, 2, 'Hip 90/90 Stretch', 2, NULL, 45, 15, 'Each side'),
+(1438, 684, 3, 'Thoracic Spine Rotations', 2, '10', NULL, 20, 'Each side'),
+(1439, 684, 4, 'Light Cycling or Walking', 1, NULL, 900, NULL, 'Easy effort'),
+(1440, 685, 1, 'Incline DB Press + Chest-Supported Row (superset)', 4, '12', NULL, 60, NULL),
+(1441, 685, 2, 'DB Shoulder Press + Face Pull (superset)', 3, '12', NULL, 60, NULL),
+(1442, 685, 3, 'Cable Fly + Lat Pulldown (superset)', 3, '15', NULL, 45, NULL),
+(1443, 686, 1, 'Bulgarian Split Squat', 3, '10', NULL, 60, 'Each leg'),
+(1444, 686, 2, 'Lying Leg Curl', 3, '12', NULL, 60, NULL),
+(1445, 686, 3, 'Hanging Leg Raise', 3, '15', NULL, 45, NULL),
+(1446, 686, 4, 'Weighted Plank', 3, NULL, 45, 45, NULL),
+(1447, 687, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Growth happens here - eat, sleep, recover'),
+(1448, 688, 1, 'Barbell Bench Press', 4, '6', NULL, 120, NULL),
+(1449, 688, 2, 'Standing Barbell Overhead Press', 4, '8', NULL, 90, NULL),
+(1450, 688, 3, 'Weighted Dips', 3, '10', NULL, 90, NULL),
+(1451, 688, 4, 'Cable Lateral Raise', 3, '15', NULL, 45, NULL),
+(1452, 688, 5, 'Triceps Rope Pushdown', 3, '12', NULL, 45, NULL),
+(1453, 689, 1, 'Weighted Pull-Ups', 4, '6', NULL, 120, NULL),
+(1454, 689, 2, 'Barbell Bent-Over Row', 4, '8', NULL, 90, NULL),
+(1455, 689, 3, 'Romanian Deadlift', 3, '8', NULL, 90, NULL),
+(1456, 689, 4, 'Seated Cable Row', 3, '12', NULL, 60, NULL);
+
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+(1457, 689, 5, 'Barbell Bicep Curl', 3, '12', NULL, 45, NULL),
+(1458, 690, 1, 'Back Squat', 4, '6', NULL, 150, NULL),
+(1459, 690, 2, 'Romanian Deadlift', 3, '10', NULL, 90, NULL),
+(1460, 690, 3, 'Walking Lunges', 3, '12', NULL, 60, 'Each leg'),
+(1461, 690, 4, 'Leg Press', 3, '12', NULL, 75, NULL),
+(1462, 690, 5, 'Standing Calf Raise', 4, '15', NULL, 45, NULL),
+(1463, 691, 1, 'Foam Rolling - Full Body', 1, NULL, 600, NULL, NULL),
+(1464, 691, 2, 'Hip 90/90 Stretch', 2, NULL, 45, 15, 'Each side'),
+(1465, 691, 3, 'Thoracic Spine Rotations', 2, '10', NULL, 20, 'Each side'),
+(1466, 691, 4, 'Light Cycling or Walking', 1, NULL, 900, NULL, 'Easy effort'),
+(1467, 692, 1, 'Incline DB Press + Chest-Supported Row (superset)', 4, '12', NULL, 60, NULL),
+(1468, 692, 2, 'DB Shoulder Press + Face Pull (superset)', 3, '12', NULL, 60, NULL),
+(1469, 692, 3, 'Cable Fly + Lat Pulldown (superset)', 3, '15', NULL, 45, NULL),
+(1470, 693, 1, 'Bulgarian Split Squat', 3, '10', NULL, 60, 'Each leg'),
+(1471, 693, 2, 'Lying Leg Curl', 3, '12', NULL, 60, NULL),
+(1472, 693, 3, 'Hanging Leg Raise', 3, '15', NULL, 45, NULL),
+(1473, 693, 4, 'Weighted Plank', 3, NULL, 45, 45, NULL),
+(1474, 694, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Growth happens here - eat, sleep, recover'),
+(1475, 695, 1, 'Barbell Bench Press', 4, '6', NULL, 120, NULL),
+(1476, 695, 2, 'Standing Barbell Overhead Press', 4, '8', NULL, 90, NULL),
+(1477, 695, 3, 'Weighted Dips', 3, '10', NULL, 90, NULL),
+(1478, 695, 4, 'Cable Lateral Raise', 3, '15', NULL, 45, NULL),
+(1479, 695, 5, 'Triceps Rope Pushdown', 3, '12', NULL, 45, NULL),
+(1480, 696, 1, 'Weighted Pull-Ups', 4, '6', NULL, 120, NULL),
+(1481, 696, 2, 'Barbell Bent-Over Row', 4, '8', NULL, 90, NULL),
+(1482, 696, 3, 'Romanian Deadlift', 3, '8', NULL, 90, NULL),
+(1483, 696, 4, 'Seated Cable Row', 3, '12', NULL, 60, NULL),
+(1484, 696, 5, 'Barbell Bicep Curl', 3, '12', NULL, 45, NULL),
+(1485, 697, 1, 'Back Squat', 4, '6', NULL, 150, NULL),
+(1486, 697, 2, 'Romanian Deadlift', 3, '10', NULL, 90, NULL),
+(1487, 697, 3, 'Walking Lunges', 3, '12', NULL, 60, 'Each leg'),
+(1488, 697, 4, 'Leg Press', 3, '12', NULL, 75, NULL),
+(1489, 697, 5, 'Standing Calf Raise', 4, '15', NULL, 45, NULL),
+(1490, 698, 1, 'Foam Rolling - Full Body', 1, NULL, 600, NULL, NULL),
+(1491, 698, 2, 'Hip 90/90 Stretch', 2, NULL, 45, 15, 'Each side'),
+(1492, 698, 3, 'Thoracic Spine Rotations', 2, '10', NULL, 20, 'Each side'),
+(1493, 698, 4, 'Light Cycling or Walking', 1, NULL, 900, NULL, 'Easy effort'),
+(1494, 699, 1, 'Incline DB Press + Chest-Supported Row (superset)', 4, '12', NULL, 60, NULL),
+(1495, 699, 2, 'DB Shoulder Press + Face Pull (superset)', 3, '12', NULL, 60, NULL),
+(1496, 699, 3, 'Cable Fly + Lat Pulldown (superset)', 3, '15', NULL, 45, NULL),
+(1497, 700, 1, 'Bulgarian Split Squat', 3, '10', NULL, 60, 'Each leg'),
+(1498, 700, 2, 'Lying Leg Curl', 3, '12', NULL, 60, NULL),
+(1499, 700, 3, 'Hanging Leg Raise', 3, '15', NULL, 45, NULL),
+(1500, 700, 4, 'Weighted Plank', 3, NULL, 45, 45, NULL),
+(1501, 701, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Growth happens here - eat, sleep, recover'),
+(1502, 702, 1, 'Barbell Bench Press', 4, '6', NULL, 120, NULL),
+(1503, 702, 2, 'Standing Barbell Overhead Press', 4, '8', NULL, 90, NULL),
+(1504, 702, 3, 'Weighted Dips', 3, '10', NULL, 90, NULL),
+(1505, 702, 4, 'Cable Lateral Raise', 3, '15', NULL, 45, NULL),
+(1506, 702, 5, 'Triceps Rope Pushdown', 3, '12', NULL, 45, NULL),
+(1507, 703, 1, 'Weighted Pull-Ups', 4, '6', NULL, 120, NULL),
+(1508, 703, 2, 'Barbell Bent-Over Row', 4, '8', NULL, 90, NULL),
+(1509, 703, 3, 'Romanian Deadlift', 3, '8', NULL, 90, NULL),
+(1510, 703, 4, 'Seated Cable Row', 3, '12', NULL, 60, NULL),
+(1511, 703, 5, 'Barbell Bicep Curl', 3, '12', NULL, 45, NULL),
+(1512, 704, 1, 'Back Squat', 4, '6', NULL, 150, NULL),
+(1513, 704, 2, 'Romanian Deadlift', 3, '10', NULL, 90, NULL),
+(1514, 704, 3, 'Walking Lunges', 3, '12', NULL, 60, 'Each leg'),
+(1515, 704, 4, 'Leg Press', 3, '12', NULL, 75, NULL),
+(1516, 704, 5, 'Standing Calf Raise', 4, '15', NULL, 45, NULL),
+(1517, 705, 1, 'Foam Rolling - Full Body', 1, NULL, 600, NULL, NULL),
+(1518, 705, 2, 'Hip 90/90 Stretch', 2, NULL, 45, 15, 'Each side'),
+(1519, 705, 3, 'Thoracic Spine Rotations', 2, '10', NULL, 20, 'Each side'),
+(1520, 705, 4, 'Light Cycling or Walking', 1, NULL, 900, NULL, 'Easy effort'),
+(1521, 706, 1, 'Incline DB Press + Chest-Supported Row (superset)', 4, '12', NULL, 60, NULL),
+(1522, 706, 2, 'DB Shoulder Press + Face Pull (superset)', 3, '12', NULL, 60, NULL),
+(1523, 706, 3, 'Cable Fly + Lat Pulldown (superset)', 3, '15', NULL, 45, NULL),
+(1524, 707, 1, 'Bulgarian Split Squat', 3, '10', NULL, 60, 'Each leg'),
+(1525, 707, 2, 'Lying Leg Curl', 3, '12', NULL, 60, NULL),
+(1526, 707, 3, 'Hanging Leg Raise', 3, '15', NULL, 45, NULL),
+(1527, 707, 4, 'Weighted Plank', 3, NULL, 45, 45, NULL),
+(1528, 708, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Growth happens here - eat, sleep, recover'),
+(1529, 709, 1, 'Barbell Bench Press', 4, '6', NULL, 120, NULL),
+(1530, 709, 2, 'Standing Barbell Overhead Press', 4, '8', NULL, 90, NULL),
+(1531, 709, 3, 'Weighted Dips', 3, '10', NULL, 90, NULL),
+(1532, 709, 4, 'Cable Lateral Raise', 3, '15', NULL, 45, NULL),
+(1533, 709, 5, 'Triceps Rope Pushdown', 3, '12', NULL, 45, NULL),
+(1534, 710, 1, 'Weighted Pull-Ups', 4, '6', NULL, 120, NULL),
+(1535, 710, 2, 'Barbell Bent-Over Row', 4, '8', NULL, 90, NULL),
+(1536, 710, 3, 'Romanian Deadlift', 3, '8', NULL, 90, NULL),
+(1537, 710, 4, 'Seated Cable Row', 3, '12', NULL, 60, NULL),
+(1538, 710, 5, 'Barbell Bicep Curl', 3, '12', NULL, 45, NULL),
+(1539, 711, 1, 'Back Squat', 4, '6', NULL, 150, NULL),
+(1540, 711, 2, 'Romanian Deadlift', 3, '10', NULL, 90, NULL),
+(1541, 711, 3, 'Walking Lunges', 3, '12', NULL, 60, 'Each leg'),
+(1542, 711, 4, 'Leg Press', 3, '12', NULL, 75, NULL),
+(1543, 711, 5, 'Standing Calf Raise', 4, '15', NULL, 45, NULL),
+(1544, 712, 1, 'Foam Rolling - Full Body', 1, NULL, 600, NULL, NULL),
+(1545, 712, 2, 'Hip 90/90 Stretch', 2, NULL, 45, 15, 'Each side'),
+(1546, 712, 3, 'Thoracic Spine Rotations', 2, '10', NULL, 20, 'Each side'),
+(1547, 712, 4, 'Light Cycling or Walking', 1, NULL, 900, NULL, 'Easy effort'),
+(1548, 713, 1, 'Incline DB Press + Chest-Supported Row (superset)', 4, '12', NULL, 60, NULL),
+(1549, 713, 2, 'DB Shoulder Press + Face Pull (superset)', 3, '12', NULL, 60, NULL),
+(1550, 713, 3, 'Cable Fly + Lat Pulldown (superset)', 3, '15', NULL, 45, NULL),
+(1551, 714, 1, 'Bulgarian Split Squat', 3, '10', NULL, 60, 'Each leg'),
+(1552, 714, 2, 'Lying Leg Curl', 3, '12', NULL, 60, NULL),
+(1553, 714, 3, 'Hanging Leg Raise', 3, '15', NULL, 45, NULL),
+(1554, 714, 4, 'Weighted Plank', 3, NULL, 45, 45, NULL),
+(1555, 715, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Growth happens here - eat, sleep, recover'),
+(1556, 716, 1, 'Barbell Bench Press', 4, '6', NULL, 120, NULL);
+
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+(1557, 716, 2, 'Standing Barbell Overhead Press', 4, '8', NULL, 90, NULL),
+(1558, 716, 3, 'Weighted Dips', 3, '10', NULL, 90, NULL),
+(1559, 716, 4, 'Cable Lateral Raise', 3, '15', NULL, 45, NULL),
+(1560, 716, 5, 'Triceps Rope Pushdown', 3, '12', NULL, 45, NULL),
+(1561, 717, 1, 'Weighted Pull-Ups', 4, '6', NULL, 120, NULL),
+(1562, 717, 2, 'Barbell Bent-Over Row', 4, '8', NULL, 90, NULL),
+(1563, 717, 3, 'Romanian Deadlift', 3, '8', NULL, 90, NULL),
+(1564, 717, 4, 'Seated Cable Row', 3, '12', NULL, 60, NULL),
+(1565, 717, 5, 'Barbell Bicep Curl', 3, '12', NULL, 45, NULL),
+(1566, 718, 1, 'Back Squat', 4, '6', NULL, 150, NULL),
+(1567, 718, 2, 'Romanian Deadlift', 3, '10', NULL, 90, NULL),
+(1568, 718, 3, 'Walking Lunges', 3, '12', NULL, 60, 'Each leg'),
+(1569, 718, 4, 'Leg Press', 3, '12', NULL, 75, NULL),
+(1570, 718, 5, 'Standing Calf Raise', 4, '15', NULL, 45, NULL),
+(1571, 719, 1, 'Foam Rolling - Full Body', 1, NULL, 600, NULL, NULL),
+(1572, 719, 2, 'Hip 90/90 Stretch', 2, NULL, 45, 15, 'Each side'),
+(1573, 719, 3, 'Thoracic Spine Rotations', 2, '10', NULL, 20, 'Each side'),
+(1574, 719, 4, 'Light Cycling or Walking', 1, NULL, 900, NULL, 'Easy effort'),
+(1575, 720, 1, 'Incline DB Press + Chest-Supported Row (superset)', 4, '12', NULL, 60, NULL),
+(1576, 720, 2, 'DB Shoulder Press + Face Pull (superset)', 3, '12', NULL, 60, NULL),
+(1577, 720, 3, 'Cable Fly + Lat Pulldown (superset)', 3, '15', NULL, 45, NULL),
+(1578, 721, 1, 'Bulgarian Split Squat', 3, '10', NULL, 60, 'Each leg'),
+(1579, 721, 2, 'Lying Leg Curl', 3, '12', NULL, 60, NULL),
+(1580, 721, 3, 'Hanging Leg Raise', 3, '15', NULL, 45, NULL),
+(1581, 721, 4, 'Weighted Plank', 3, NULL, 45, 45, NULL),
+(1582, 722, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Growth happens here - eat, sleep, recover'),
+(1583, 723, 1, 'Bodyweight Squats', NULL, NULL, 40, 20, '4 rounds total circuit'),
+(1584, 723, 2, 'Push-Ups', NULL, NULL, 40, 20, NULL),
+(1585, 723, 3, 'Mountain Climbers', NULL, NULL, 40, 20, NULL),
+(1586, 723, 4, 'Jumping Jacks', NULL, NULL, 40, 20, NULL),
+(1587, 724, 1, 'Jog / Bike / Row - Moderate Pace', 1, NULL, 1800, NULL, NULL),
+(1588, 725, 1, 'Jump Squats', NULL, NULL, 40, 20, '4 rounds total circuit'),
+(1589, 725, 2, 'Walking Lunges', NULL, NULL, 40, 20, NULL),
+(1590, 725, 3, 'Glute Bridges', NULL, NULL, 40, 20, NULL),
+(1591, 726, 1, 'Easy-Paced Walk', 1, NULL, 1200, NULL, NULL),
+(1592, 727, 1, 'Push-Ups', NULL, NULL, 40, 20, '4 rounds total circuit'),
+(1593, 727, 2, 'Plank Shoulder Taps', NULL, NULL, 40, 20, NULL),
+(1594, 727, 3, 'Resistance Band Rows', NULL, NULL, 40, 20, NULL),
+(1595, 728, 1, 'Sprint Intervals', 8, NULL, 20, 90, '20s hard sprint, 90s walk recovery'),
+(1596, 729, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Let the nervous system recover'),
+(1597, 730, 1, 'Bodyweight Squats', NULL, NULL, 40, 20, '4 rounds total circuit'),
+(1598, 730, 2, 'Push-Ups', NULL, NULL, 40, 20, NULL),
+(1599, 730, 3, 'Mountain Climbers', NULL, NULL, 40, 20, NULL),
+(1600, 730, 4, 'Jumping Jacks', NULL, NULL, 40, 20, NULL),
+(1601, 731, 1, 'Jog / Bike / Row - Moderate Pace', 1, NULL, 1800, NULL, NULL),
+(1602, 732, 1, 'Jump Squats', NULL, NULL, 40, 20, '4 rounds total circuit'),
+(1603, 732, 2, 'Walking Lunges', NULL, NULL, 40, 20, NULL),
+(1604, 732, 3, 'Glute Bridges', NULL, NULL, 40, 20, NULL),
+(1605, 733, 1, 'Easy-Paced Walk', 1, NULL, 1200, NULL, NULL),
+(1606, 734, 1, 'Push-Ups', NULL, NULL, 40, 20, '4 rounds total circuit'),
+(1607, 734, 2, 'Plank Shoulder Taps', NULL, NULL, 40, 20, NULL),
+(1608, 734, 3, 'Resistance Band Rows', NULL, NULL, 40, 20, NULL),
+(1609, 735, 1, 'Sprint Intervals', 8, NULL, 20, 90, '20s hard sprint, 90s walk recovery'),
+(1610, 736, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Let the nervous system recover'),
+(1611, 737, 1, 'Easy Run / Bike / Row', 1, NULL, 1800, NULL, 'Zone 2, conversational pace'),
+(1612, 738, 1, 'Tempo Intervals', 5, NULL, 240, 120, '4 min comfortably-hard, 2 min easy'),
+(1613, 739, 1, 'Bike or Row Cross-Train', 1, NULL, 2100, NULL, 'Moderate pace, low impact'),
+(1614, 740, 1, 'Hip Flexor Stretch', 2, NULL, 45, 15, 'Each side'),
+(1615, 740, 2, 'Hamstring Stretch', 2, NULL, 45, 15, 'Each side'),
+(1616, 740, 3, 'Foam Roll - Calves & IT Band', 1, NULL, 300, NULL, NULL),
+(1617, 741, 1, 'Long Steady Run / Bike', 1, NULL, 2400, NULL, 'Steady aerobic pace'),
+(1618, 742, 1, 'Hill Sprints or Resisted Intervals', 6, NULL, 60, 90, '60s hard, 90s recovery'),
+(1619, 743, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Let the cardiovascular system adapt'),
+(1620, 744, 1, 'Easy Run / Bike / Row', 1, NULL, 1800, NULL, 'Zone 2, conversational pace'),
+(1621, 745, 1, 'Tempo Intervals', 5, NULL, 240, 120, '4 min comfortably-hard, 2 min easy'),
+(1622, 746, 1, 'Bike or Row Cross-Train', 1, NULL, 2100, NULL, 'Moderate pace, low impact'),
+(1623, 747, 1, 'Hip Flexor Stretch', 2, NULL, 45, 15, 'Each side'),
+(1624, 747, 2, 'Hamstring Stretch', 2, NULL, 45, 15, 'Each side'),
+(1625, 747, 3, 'Foam Roll - Calves & IT Band', 1, NULL, 300, NULL, NULL),
+(1626, 748, 1, 'Long Steady Run / Bike', 1, NULL, 2400, NULL, 'Steady aerobic pace'),
+(1627, 749, 1, 'Hill Sprints or Resisted Intervals', 6, NULL, 60, 90, '60s hard, 90s recovery'),
+(1628, 750, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Let the cardiovascular system adapt'),
+(1629, 751, 1, 'Easy Run / Bike / Row', 1, NULL, 1800, NULL, 'Zone 2, conversational pace'),
+(1630, 752, 1, 'Tempo Intervals', 5, NULL, 240, 120, '4 min comfortably-hard, 2 min easy'),
+(1631, 753, 1, 'Bike or Row Cross-Train', 1, NULL, 2100, NULL, 'Moderate pace, low impact'),
+(1632, 754, 1, 'Hip Flexor Stretch', 2, NULL, 45, 15, 'Each side'),
+(1633, 754, 2, 'Hamstring Stretch', 2, NULL, 45, 15, 'Each side'),
+(1634, 754, 3, 'Foam Roll - Calves & IT Band', 1, NULL, 300, NULL, NULL),
+(1635, 755, 1, 'Long Steady Run / Bike', 1, NULL, 2400, NULL, 'Steady aerobic pace'),
+(1636, 756, 1, 'Hill Sprints or Resisted Intervals', 6, NULL, 60, 90, '60s hard, 90s recovery'),
+(1637, 757, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Let the cardiovascular system adapt'),
+(1638, 758, 1, 'Easy Run / Bike / Row', 1, NULL, 1800, NULL, 'Zone 2, conversational pace'),
+(1639, 759, 1, 'Tempo Intervals', 5, NULL, 240, 120, '4 min comfortably-hard, 2 min easy'),
+(1640, 760, 1, 'Bike or Row Cross-Train', 1, NULL, 2100, NULL, 'Moderate pace, low impact'),
+(1641, 761, 1, 'Hip Flexor Stretch', 2, NULL, 45, 15, 'Each side'),
+(1642, 761, 2, 'Hamstring Stretch', 2, NULL, 45, 15, 'Each side'),
+(1643, 761, 3, 'Foam Roll - Calves & IT Band', 1, NULL, 300, NULL, NULL),
+(1644, 762, 1, 'Long Steady Run / Bike', 1, NULL, 2400, NULL, 'Steady aerobic pace'),
+(1645, 763, 1, 'Hill Sprints or Resisted Intervals', 6, NULL, 60, 90, '60s hard, 90s recovery'),
+(1646, 764, 1, 'Full Rest Day', NULL, NULL, NULL, NULL, 'Let the cardiovascular system adapt'),
+(1647, 772, 1, 'Standing Hamstring Stretch', 2, NULL, 45, 15, 'Each side'),
+(1648, 772, 2, 'Quad Stretch', 2, NULL, 45, 15, 'Each side'),
+(1649, 772, 3, 'Calf Stretch', 2, NULL, 45, 15, 'Each side'),
+(1650, 773, 1, 'Doorway Chest Stretch', 2, NULL, 45, 15, 'Each side'),
+(1651, 773, 2, 'Cross-Body Shoulder Stretch', 2, NULL, 30, 15, 'Each side'),
+(1652, 773, 3, 'Thoracic Extension Stretch', 2, NULL, 30, 15, NULL),
+(1653, 774, 1, 'Deep Lunge Hip Opener', 2, NULL, 45, 15, 'Each side'),
+(1654, 774, 2, 'Seated Spinal Twist', 2, NULL, 30, 15, 'Each side'),
+(1655, 774, 3, 'Cat-Cow Flow', 2, '10', NULL, 15, NULL),
+(1656, 775, 1, 'Full-Body Flow Sequence', 1, NULL, 1500, NULL, 'Continuous, slow-paced');
+
+INSERT IGNORE INTO `plan_exercises` (`id`, `plan_content_id`, `exercise_order`, `exercise_name`, `sets`, `reps`, `duration_seconds`, `rest_seconds`, `notes`) VALUES
+(1657, 776, 1, 'Standing Forward Fold', 2, NULL, 45, 15, NULL),
+(1658, 776, 2, 'Single-Leg Hamstring Stretch', 2, NULL, 45, 15, 'Each side'),
+(1659, 776, 3, 'Child\'s Pose (lower back)', 2, NULL, 45, 15, NULL),
+(1660, 777, 1, 'Long-Held Passive Stretch Sequence', 1, NULL, 900, NULL, NULL),
+(1661, 777, 2, 'Diaphragmatic Breathing', 1, NULL, 600, NULL, NULL),
+(1662, 778, 1, 'Rest & Reflect', NULL, NULL, NULL, NULL, 'Gentle movement only'),
+(1663, 779, 1, 'Standing Hamstring Stretch', 2, NULL, 45, 15, 'Each side'),
+(1664, 779, 2, 'Quad Stretch', 2, NULL, 45, 15, 'Each side'),
+(1665, 779, 3, 'Calf Stretch', 2, NULL, 45, 15, 'Each side'),
+(1666, 780, 1, 'Doorway Chest Stretch', 2, NULL, 45, 15, 'Each side'),
+(1667, 780, 2, 'Cross-Body Shoulder Stretch', 2, NULL, 30, 15, 'Each side'),
+(1668, 780, 3, 'Thoracic Extension Stretch', 2, NULL, 30, 15, NULL),
+(1669, 781, 1, 'Deep Lunge Hip Opener', 2, NULL, 45, 15, 'Each side'),
+(1670, 781, 2, 'Seated Spinal Twist', 2, NULL, 30, 15, 'Each side'),
+(1671, 781, 3, 'Cat-Cow Flow', 2, '10', NULL, 15, NULL),
+(1672, 782, 1, 'Full-Body Flow Sequence', 1, NULL, 1500, NULL, 'Continuous, slow-paced'),
+(1673, 783, 1, 'Standing Forward Fold', 2, NULL, 45, 15, NULL),
+(1674, 783, 2, 'Single-Leg Hamstring Stretch', 2, NULL, 45, 15, 'Each side'),
+(1675, 783, 3, 'Child\'s Pose (lower back)', 2, NULL, 45, 15, NULL),
+(1676, 784, 1, 'Long-Held Passive Stretch Sequence', 1, NULL, 900, NULL, NULL),
+(1677, 784, 2, 'Diaphragmatic Breathing', 1, NULL, 600, NULL, NULL),
+(1678, 785, 1, 'Rest & Reflect', NULL, NULL, NULL, NULL, 'Gentle movement only');
 
 -- --------------------------------------------------------
 -- Table `plans`
@@ -2911,31 +3580,35 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD COLUMN `rationale` text COLLATE utf8mb4_unicode_ci', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'plans' AND column_name = 'rationale');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `plans` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `plans` ADD CONSTRAINT `plans_ibfk_owner` FOREIGN KEY (`owner_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'plans' AND constraint_name = 'plans_ibfk_owner' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 INSERT IGNORE INTO `plans` (`id`, `name`, `title`, `tag`, `intensity`, `duration`, `target_focus`, `price`, `image_seed`, `description`, `duration_days`, `difficulty`, `image_url`, `created_at`, `owner_user_id`, `is_template`, `goal_type`, `rationale`) VALUES
-(40, '', 'Foundations of Strength', 'Strength', 'Beginner', '4 Weeks', 'Full-Body Strength & Power', '0.00', 'foundations', 'Beginner progressive program', 28, NULL, '/plans/foundations-of-strength.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(41, '', 'Iron Forge Protocol', 'Strength', 'Advanced', '8 Weeks', 'Hypertrophy & Max Strength', '0.00', 'ironforge', 'Advanced 8-week hypertrophy block', 56, NULL, '/plans/iron-forge-protocol.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(42, '', 'Fat Loss Sprint', 'Fat Loss', 'Moderate', '2 Weeks', 'Fat Loss', '0.00', 'fatloss', 'High-intensity 2-week block', 14, NULL, '/plans/fat-loss-sprint.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(43, '', 'Cardio Surge', 'Cardio', 'Moderate', '4 Weeks', 'Cardio Endurance', '0.00', 'cardiosurge', '4-week aerobic base', 28, NULL, '/plans/cardio-surge.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(44, '', 'Mobility Reset', 'Recovery', 'Beginner', '1 Week', 'Recovery', '0.00', 'mobilityreset', '7-day mobility reset', 7, NULL, '/plans/mobility-reset.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(45, '', 'Total Flexibility Flow', 'Flexibility', 'Beginner', '2 Weeks', 'Flexibility', '0.00', 'flexflow', '2-week flexibility routine', 14, NULL, '/plans/total-flexibility-flow.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(46, 'Bodyweight Basics', 'Bodyweight Basics', 'Strength', 'Beginner', '4 Weeks', 'Full Body', '0.00', 'bodyweight-basics', 'Build a bodyweight routine with squats, scaled push-ups, bridges and core work. Three training days, two mobility days and two rest days per week.', 28, 'Beginner', '/plans/bodyweight-basics.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(47, 'Upper Body Foundations', 'Upper Body Foundations', 'Strength', 'Beginner', '4 Weeks', 'Upper Body', '0.00', 'upper-body-foundations', 'Practice pushing and trunk control without weights. Use knee push-ups as needed and keep every repetition controlled.', 28, 'Beginner', '/plans/upper-body-foundations.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(48, 'Lower Body Builder', 'Lower Body Builder', 'Strength', 'Moderate', '4 Weeks', 'Lower Body', '0.00', 'lower-body-builder', 'Develop leg strength with squats, reverse lunges, glute bridges and calf raises. Alternate training with mobility and rest.', 28, 'Moderate', '/plans/lower-body-builder.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(49, 'Core Control', 'Core Control', 'Strength', 'Beginner', '2 Weeks', 'Core', '0.00', 'core-control', 'Build trunk stability with dead bugs, bird dogs, planks and side planks. Short sessions emphasize steady breathing and control.', 14, 'Beginner', '/plans/core-control.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(50, 'Everyday Strength Circuit', 'Everyday Strength Circuit', 'Strength', 'Moderate', '4 Weeks', 'Full Body', '0.00', 'everyday-strength-circuit', 'Repeat a balanced bodyweight circuit three times weekly, with dedicated mobility and rest days between sessions.', 28, 'Moderate', '/plans/everyday-strength-circuit.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(51, 'Low Impact Cardio Start', 'Low Impact Cardio Start', 'Cardio', 'Beginner', '2 Weeks', 'Cardio Endurance', '0.00', 'low-impact-cardio-start', 'Build an aerobic habit with marching, step jacks, side steps and standing knee lifts. No jumping or equipment required.', 14, 'Beginner', '/plans/low-impact-cardio-start.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(52, 'Cardio Rhythm', 'Cardio Rhythm', 'Cardio', 'Moderate', '4 Weeks', 'Cardio Endurance', '0.00', 'cardio-rhythm', 'Practice timed bodyweight cardio intervals with recovery between sets. Keep a pace you can maintain throughout the session.', 28, 'Moderate', '/plans/cardio-rhythm.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(53, 'Steady Movement Habit', 'Steady Movement Habit', 'Cardio', 'Beginner', '4 Weeks', 'Full Body', '0.00', 'steady-movement-habit', 'Establish a regular movement routine with low-impact intervals, gentle mobility and scheduled rest days.', 28, 'Beginner', '/plans/steady-movement-habit.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(54, 'Full Body Conditioning', 'Full Body Conditioning', 'Fat Loss', 'Moderate', '4 Weeks', 'Full Body', '0.00', 'full-body-conditioning', 'Combine bodyweight strength and timed cardio to support general conditioning. Includes mobility sessions and rest days.', 28, 'Moderate', '/plans/full-body-conditioning.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(55, 'Quick Conditioning Circuit', 'Quick Conditioning Circuit', 'Fat Loss', 'Moderate', '2 Weeks', 'Full Body', '0.00', 'quick-conditioning-circuit', 'Short strength-and-cardio sessions for a busy schedule. Use controlled repetitions and take the prescribed rest between sets.', 14, 'Moderate', '/plans/quick-conditioning-circuit.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(56, 'Desk Break Mobility', 'Desk Break Mobility', 'Recovery', 'Beginner', '1 Week', 'Mobility', '0.00', 'desk-break-mobility', 'Gentle cat-cow, hip circles, child pose and breathing sessions for breaks from sitting. Stay within a comfortable range.', 7, 'Beginner', '/plans/desk-break-mobility.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(57, 'Gentle Recovery Week', 'Gentle Recovery Week', 'Recovery', 'Beginner', '1 Week', 'Recovery', '0.00', 'gentle-recovery-week', 'A week of easy mobility and breathing with two full rest days. Keep the sessions relaxed rather than strenuous.', 7, 'Beginner', '/plans/gentle-recovery-week.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(58, 'Hip Mobility Practice', 'Hip Mobility Practice', 'Flexibility', 'Beginner', '2 Weeks', 'Lower Body', '0.00', 'hip-mobility-practice', 'Practice comfortable hip and lower-body mobility with controlled stretches. Avoid bouncing and never force the range.', 14, 'Beginner', '/plans/hip-mobility-practice.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(59, 'Evening Stretch Routine', 'Evening Stretch Routine', 'Flexibility', 'Beginner', '2 Weeks', 'Flexibility', '0.00', 'evening-stretch-routine', 'Wind down with gentle hamstring, calf, hip-flexor and child-pose holds. Includes two rest days per week.', 14, 'Beginner', '/plans/evening-stretch-routine.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(60, 'Athletic Bodyweight Prep', 'Athletic Bodyweight Prep', 'Strength', 'Moderate', '4 Weeks', 'Full Body', '0.00', 'athletic-bodyweight-prep', 'Build a base of leg strength and trunk control using reverse lunges, squats, shoulder taps and bird dogs.', 28, 'Moderate', '/plans/athletic-bodyweight-prep.jpg', '2026-11-26 16:08:57', NULL, 1, NULL, NULL),
-(61, 'Advanced Strength Builder', 'Advanced Strength Builder', 'Strength', 'Advanced', '4 Weeks', 'Strength', '0.00', 'advanced-strength-builder', 'Unlocked at Level 2. Higher-volume bodyweight strength with tempo work and longer holds. Warm up fully and keep perfect form on every rep.', 28, 'Advanced', NULL, '2026-11-26 16:09:08', NULL, 1, NULL, NULL),
-(62, 'Elite Strength Block', 'Elite Strength Block', 'Strength', 'Extreme', '4 Weeks', 'Strength', '0.00', 'elite-strength-block', 'Unlocked at Level 3. Demanding strength sessions with high volume and slow eccentrics. Stop a set early if your form breaks down.', 28, 'Extreme', NULL, '2026-11-26 16:09:08', NULL, 1, NULL, NULL),
-(63, 'Elite Conditioning', 'Elite Conditioning', 'Performance', 'Extreme', '2 Weeks', 'Performance', '0.00', 'elite-conditioning', 'Unlocked at Level 3. Hard conditioning intervals for experienced trainees. Includes jumping; swap in step-based versions if impact bothers your joints.', 14, 'Extreme', NULL, '2026-11-26 16:09:08', NULL, 1, NULL, NULL);
+(40, '', 'Foundations of Strength', 'Strength', 'Beginner', '4 Weeks', 'Full-Body Strength & Power', '0.00', 'foundations', 'Beginner progressive program', 28, NULL, '/plans/foundations-of-strength.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(41, '', 'Iron Forge Protocol', 'Strength', 'Advanced', '8 Weeks', 'Hypertrophy & Max Strength', '0.00', 'ironforge', 'Advanced 8-week hypertrophy block', 56, NULL, '/plans/iron-forge-protocol.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(42, '', 'Fat Loss Sprint', 'Fat Loss', 'Moderate', '2 Weeks', 'Fat Loss', '0.00', 'fatloss', 'High-intensity 2-week block', 14, NULL, '/plans/fat-loss-sprint.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(43, '', 'Cardio Surge', 'Cardio', 'Moderate', '4 Weeks', 'Cardio Endurance', '0.00', 'cardiosurge', '4-week aerobic base', 28, NULL, '/plans/cardio-surge.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(44, '', 'Mobility Reset', 'Recovery', 'Beginner', '1 Week', 'Recovery', '0.00', 'mobilityreset', '7-day mobility reset', 7, NULL, '/plans/mobility-reset.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(45, '', 'Total Flexibility Flow', 'Flexibility', 'Beginner', '2 Weeks', 'Flexibility', '0.00', 'flexflow', '2-week flexibility routine', 14, NULL, '/plans/total-flexibility-flow.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(46, 'Bodyweight Basics', 'Bodyweight Basics', 'Strength', 'Beginner', '4 Weeks', 'Full Body', '0.00', 'bodyweight-basics', 'Build a bodyweight routine with squats, scaled push-ups, bridges and core work. Three training days, two mobility days and two rest days per week.', 28, 'Beginner', '/plans/bodyweight-basics.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(47, 'Upper Body Foundations', 'Upper Body Foundations', 'Strength', 'Beginner', '4 Weeks', 'Upper Body', '0.00', 'upper-body-foundations', 'Practice pushing and trunk control without weights. Use knee push-ups as needed and keep every repetition controlled.', 28, 'Beginner', '/plans/upper-body-foundations.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(48, 'Lower Body Builder', 'Lower Body Builder', 'Strength', 'Moderate', '4 Weeks', 'Lower Body', '0.00', 'lower-body-builder', 'Develop leg strength with squats, reverse lunges, glute bridges and calf raises. Alternate training with mobility and rest.', 28, 'Moderate', '/plans/lower-body-builder.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(49, 'Core Control', 'Core Control', 'Strength', 'Beginner', '2 Weeks', 'Core', '0.00', 'core-control', 'Build trunk stability with dead bugs, bird dogs, planks and side planks. Short sessions emphasize steady breathing and control.', 14, 'Beginner', '/plans/core-control.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(50, 'Everyday Strength Circuit', 'Everyday Strength Circuit', 'Strength', 'Moderate', '4 Weeks', 'Full Body', '0.00', 'everyday-strength-circuit', 'Repeat a balanced bodyweight circuit three times weekly, with dedicated mobility and rest days between sessions.', 28, 'Moderate', '/plans/everyday-strength-circuit.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(51, 'Low Impact Cardio Start', 'Low Impact Cardio Start', 'Cardio', 'Beginner', '2 Weeks', 'Cardio Endurance', '0.00', 'low-impact-cardio-start', 'Build an aerobic habit with marching, step jacks, side steps and standing knee lifts. No jumping or equipment required.', 14, 'Beginner', '/plans/low-impact-cardio-start.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(52, 'Cardio Rhythm', 'Cardio Rhythm', 'Cardio', 'Moderate', '4 Weeks', 'Cardio Endurance', '0.00', 'cardio-rhythm', 'Practice timed bodyweight cardio intervals with recovery between sets. Keep a pace you can maintain throughout the session.', 28, 'Moderate', '/plans/cardio-rhythm.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(53, 'Steady Movement Habit', 'Steady Movement Habit', 'Cardio', 'Beginner', '4 Weeks', 'Full Body', '0.00', 'steady-movement-habit', 'Establish a regular movement routine with low-impact intervals, gentle mobility and scheduled rest days.', 28, 'Beginner', '/plans/steady-movement-habit.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(54, 'Full Body Conditioning', 'Full Body Conditioning', 'Fat Loss', 'Moderate', '4 Weeks', 'Full Body', '0.00', 'full-body-conditioning', 'Combine bodyweight strength and timed cardio to support general conditioning. Includes mobility sessions and rest days.', 28, 'Moderate', '/plans/full-body-conditioning.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(55, 'Quick Conditioning Circuit', 'Quick Conditioning Circuit', 'Fat Loss', 'Moderate', '2 Weeks', 'Full Body', '0.00', 'quick-conditioning-circuit', 'Short strength-and-cardio sessions for a busy schedule. Use controlled repetitions and take the prescribed rest between sets.', 14, 'Moderate', '/plans/quick-conditioning-circuit.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(56, 'Desk Break Mobility', 'Desk Break Mobility', 'Recovery', 'Beginner', '1 Week', 'Mobility', '0.00', 'desk-break-mobility', 'Gentle cat-cow, hip circles, child pose and breathing sessions for breaks from sitting. Stay within a comfortable range.', 7, 'Beginner', '/plans/desk-break-mobility.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(57, 'Gentle Recovery Week', 'Gentle Recovery Week', 'Recovery', 'Beginner', '1 Week', 'Recovery', '0.00', 'gentle-recovery-week', 'A week of easy mobility and breathing with two full rest days. Keep the sessions relaxed rather than strenuous.', 7, 'Beginner', '/plans/gentle-recovery-week.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(58, 'Hip Mobility Practice', 'Hip Mobility Practice', 'Flexibility', 'Beginner', '2 Weeks', 'Lower Body', '0.00', 'hip-mobility-practice', 'Practice comfortable hip and lower-body mobility with controlled stretches. Avoid bouncing and never force the range.', 14, 'Beginner', '/plans/hip-mobility-practice.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(59, 'Evening Stretch Routine', 'Evening Stretch Routine', 'Flexibility', 'Beginner', '2 Weeks', 'Flexibility', '0.00', 'evening-stretch-routine', 'Wind down with gentle hamstring, calf, hip-flexor and child-pose holds. Includes two rest days per week.', 14, 'Beginner', '/plans/evening-stretch-routine.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(60, 'Athletic Bodyweight Prep', 'Athletic Bodyweight Prep', 'Strength', 'Moderate', '4 Weeks', 'Full Body', '0.00', 'athletic-bodyweight-prep', 'Build a base of leg strength and trunk control using reverse lunges, squats, shoulder taps and bird dogs.', 28, 'Moderate', '/plans/athletic-bodyweight-prep.jpg', '2026-11-28 15:38:29', NULL, 1, NULL, NULL),
+(61, 'Advanced Strength Builder', 'Advanced Strength Builder', 'Strength', 'Advanced', '4 Weeks', 'Strength', '0.00', 'advanced-strength-builder', 'Unlocked at Level 2. Higher-volume bodyweight strength with tempo work and longer holds. Warm up fully and keep perfect form on every rep.', 28, 'Advanced', NULL, '2026-11-28 15:38:34', NULL, 1, NULL, NULL),
+(62, 'Elite Strength Block', 'Elite Strength Block', 'Strength', 'Extreme', '4 Weeks', 'Strength', '0.00', 'elite-strength-block', 'Unlocked at Level 3. Demanding strength sessions with high volume and slow eccentrics. Stop a set early if your form breaks down.', 28, 'Extreme', NULL, '2026-11-28 15:38:34', NULL, 1, NULL, NULL),
+(63, 'Elite Conditioning', 'Elite Conditioning', 'Performance', 'Extreme', '2 Weeks', 'Performance', '0.00', 'elite-conditioning', 'Unlocked at Level 3. Hard conditioning intervals for experienced trainees. Includes jumping; swap in step-based versions if impact bothers your joints.', 14, 'Extreme', NULL, '2026-11-28 15:38:34', NULL, 1, NULL, NULL);
 
 -- --------------------------------------------------------
 -- Table `progress_photos`
@@ -2972,6 +3645,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_photos` ADD COLUMN `captured_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_photos' AND column_name = 'captured_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `progress_photos` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_photos` ADD CONSTRAINT `progress_photos_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'progress_photos' AND constraint_name = 'progress_photos_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `progress_settings`
 -- --------------------------------------------------------
@@ -2992,6 +3669,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_settings` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_settings' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_settings` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'progress_settings' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `progress_settings` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `progress_settings` ADD CONSTRAINT `fk_progress_settings_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'progress_settings' AND constraint_name = 'fk_progress_settings_user' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -3025,6 +3706,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_log` ADD COLUMN `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_log' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `reminder_log` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_log` ADD CONSTRAINT `reminder_log_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'reminder_log' AND constraint_name = 'reminder_log_user_fk' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `reminder_prefs`
 -- --------------------------------------------------------
@@ -3054,6 +3739,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_prefs` ADD COLUMN `email_weekly` tinyint(1) NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_prefs' AND column_name = 'email_weekly');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_prefs` ADD COLUMN `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reminder_prefs' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `reminder_prefs` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `reminder_prefs` ADD CONSTRAINT `reminder_prefs_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'reminder_prefs' AND constraint_name = 'reminder_prefs_user_fk' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -3095,6 +3784,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `training_preferences` ADD COLUMN `excluded_exercises` json DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'training_preferences' AND column_name = 'excluded_exercises');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `training_preferences` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `training_preferences` ADD CONSTRAINT `training_preferences_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'training_preferences' AND constraint_name = 'training_preferences_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `user_allergies`
 -- --------------------------------------------------------
@@ -3115,6 +3808,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_allergies` ADD COLUMN `allergy_name` varchar(60) COLLATE utf8mb4_unicode_ci NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_allergies' AND column_name = 'allergy_name');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_allergies` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_allergies' AND column_name = 'created_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `user_allergies` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_allergies` ADD CONSTRAINT `user_allergies_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'user_allergies' AND constraint_name = 'user_allergies_ibfk_1' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -3147,6 +3844,12 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_challenges` ADD COLUMN `completed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_challenges' AND column_name = 'completed_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `user_challenges` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_challenges` ADD CONSTRAINT `user_challenges_log_fk` FOREIGN KEY (`workout_log_id`) REFERENCES `workout_logs` (`id`) ON DELETE SET NULL', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'user_challenges' AND constraint_name = 'user_challenges_log_fk' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_challenges` ADD CONSTRAINT `user_challenges_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'user_challenges' AND constraint_name = 'user_challenges_user_fk' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `user_nutrient_goals`
 -- --------------------------------------------------------
@@ -3177,6 +3880,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_nutrient_goals` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_nutrient_goals' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_nutrient_goals` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_nutrient_goals' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `user_nutrient_goals` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_nutrient_goals` ADD CONSTRAINT `fk_nutrient_goals_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'user_nutrient_goals' AND constraint_name = 'fk_nutrient_goals_user' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -3213,6 +3920,12 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plan_progress` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_plan_progress' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `user_plan_progress` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plan_progress` ADD CONSTRAINT `user_plan_progress_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'user_plan_progress' AND constraint_name = 'user_plan_progress_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plan_progress` ADD CONSTRAINT `user_plan_progress_ibfk_2` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'user_plan_progress' AND constraint_name = 'user_plan_progress_ibfk_2' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `user_plans`
 -- --------------------------------------------------------
@@ -3235,6 +3948,12 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plans` ADD COLUMN `plan_id` int NOT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_plans' AND column_name = 'plan_id');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plans` ADD COLUMN `enrolled_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_plans' AND column_name = 'enrolled_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `user_plans` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plans` ADD CONSTRAINT `user_plans_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'user_plans' AND constraint_name = 'user_plans_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_plans` ADD CONSTRAINT `user_plans_ibfk_2` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'user_plans' AND constraint_name = 'user_plans_ibfk_2' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -3272,6 +3991,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_profiles` ADD COLUMN `height_cm` decimal(5,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_profiles' AND column_name = 'height_cm');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_profiles` ADD COLUMN `weight_kg` decimal(5,1) DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_profiles' AND column_name = 'weight_kg');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `user_profiles` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_profiles` ADD CONSTRAINT `user_profiles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'user_profiles' AND constraint_name = 'user_profiles_ibfk_1' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -3317,6 +4040,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_sessions` ADD COLUMN `device_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_sessions' AND column_name = 'device_id');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `user_sessions` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_sessions` ADD CONSTRAINT `user_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'user_sessions' AND constraint_name = 'user_sessions_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `user_settings`
 -- --------------------------------------------------------
@@ -3343,6 +4070,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_settings` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_settings' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_settings` ADD COLUMN `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_settings' AND column_name = 'updated_at');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
+-- Add any foreign keys an older `user_settings` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `user_settings` ADD CONSTRAINT `fk_user_settings_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'user_settings' AND constraint_name = 'fk_user_settings_user' AND constraint_type = 'FOREIGN KEY');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
 -- --------------------------------------------------------
@@ -3424,8 +4155,12 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD COLUMN `progression_seen` tinyint unsigned NOT NULL DEFAULT ''1''', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'progression_seen');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `users` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `users` ADD CONSTRAINT `users_access_group_fk` FOREIGN KEY (`access_group_id`) REFERENCES `access_groups` (`id`) ON DELETE SET NULL', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'users' AND constraint_name = 'users_access_group_fk' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 INSERT IGNORE INTO `users` (`id`, `name`, `email`, `phone`, `phone_verified_at`, `password`, `fitness_goal`, `avatar_url`, `is_online`, `created_at`, `updated_at`, `is_verified`, `onboarding_completed`, `accepted_terms_at`, `accepted_terms_version`, `status`, `role`, `token_version`, `access_group_id`, `password_weak`, `progression_level`, `progression_seen`) VALUES
-(1, 'Vitalis Admin', 'admin@gmail.com', NULL, NULL, '$2b$10$nRmo/jnklbzPAdBuIFRqJu3b69VdhC6yyiFWq0gDc9wkg1agFnJU6', NULL, NULL, 0, '2026-11-26 16:09:00', '2026-11-26 16:09:00', 1, 1, '2026-11-26 16:09:00', '1.0', 'active', 'admin', 0, NULL, NULL, 1, 1);
+(1, 'Vitalis Admin', 'admin@gmail.com', NULL, NULL, '$2b$10$nRmo/jnklbzPAdBuIFRqJu3b69VdhC6yyiFWq0gDc9wkg1agFnJU6', NULL, NULL, 0, '2026-11-28 15:38:30', '2026-11-28 15:38:30', 1, 1, '2026-11-28 15:38:30', '1.0', 'active', 'admin', 0, NULL, NULL, 1, 1);
 
 -- --------------------------------------------------------
 -- Table `workout_logs`
@@ -3488,6 +4223,10 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD COLUMN `local_date` date DEFAULT NULL', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND column_name = 'local_date');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `workout_logs` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_logs` ADD CONSTRAINT `workout_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'workout_logs' AND constraint_name = 'workout_logs_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 -- --------------------------------------------------------
 -- Table `workout_sets`
 -- --------------------------------------------------------
@@ -3529,7 +4268,13 @@ PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_s
 SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_sets` ADD COLUMN `created_at` datetime DEFAULT CURRENT_TIMESTAMP', 'DO 0') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workout_sets' AND column_name = 'created_at');
 PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
 
+-- Add any foreign keys an older `workout_sets` is missing
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_sets` ADD CONSTRAINT `workout_sets_ibfk_1` FOREIGN KEY (`workout_log_id`) REFERENCES `workout_logs` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'workout_sets' AND constraint_name = 'workout_sets_ibfk_1' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE `workout_sets` ADD CONSTRAINT `workout_sets_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE', 'DO 0') FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'workout_sets' AND constraint_name = 'workout_sets_ibfk_2' AND constraint_type = 'FOREIGN KEY');
+PREPARE vitalis_stmt FROM @s; EXECUTE vitalis_stmt; DEALLOCATE PREPARE vitalis_stmt;
+
 SET SQL_MODE = @OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- Done. Tables: 44 + _migrations. Seeded: _migrations (62), food_catalog (190), plan_contents (378), plan_exercises (1122), plans (24), users (1).
+-- Done. Tables: 44 + _migrations. Seeded: _migrations (64), food_catalog (190), plan_contents (525), plan_exercises (1522), plans (24), users (1).

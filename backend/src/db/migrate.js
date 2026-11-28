@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Idempotent migration runner: tracks _migrations, runs pending *.sql in order.
-require('dotenv').config();
+require('../config/loadEnv');
 const fs = require('fs');
 const path = require('path');
 const db = require('../config/db');
