@@ -151,25 +151,27 @@ module.exports = (io) => {
         if (!Number.isInteger(id) || id <= 0) return;
 
         const db = require("../config/db");
+        const { SENT_TS_COL, toWireMessage } = require("../utils/messageTime");
         const [rows] = await db.execute(
-          `SELECT id, sender_id, receiver_id, content,
-                  DATE_FORMAT(sent_at, '%H:%i') as time
+          `SELECT id, sender_id, receiver_id, content, ${SENT_TS_COL}
            FROM messages WHERE id = ? LIMIT 1`,
           [id],
         );
-        const row = rows[0];
+        const row = toWireMessage(rows[0]);
         if (!row) return;
         // A socket may only relay messages it actually sent.
         if (String(row.sender_id) !== String(me)) return;
 
-        io.to(String(row.receiver_id)).emit("receive-chat", {
+        const msg = {
           id: row.id,
           sender_id: row.sender_id,
           receiver_id: row.receiver_id,
           content: row.content,
-          time: row.time,
-          isMe: 0,
-        });
+          sent_at: row.sent_at, // ISO UTC — client formats in viewer's timezone
+        };
+        io.to(String(row.receiver_id)).emit("receive-chat", { ...msg, isMe: 0 });
+        // Keep the sender's other tabs/devices in sync (excludes this socket).
+        socket.to(String(me)).emit("receive-chat", { ...msg, isMe: 1 });
       } catch (e) {
         console.warn("[socket] send-chat failed:", e.message);
       }

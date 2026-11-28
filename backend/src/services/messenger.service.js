@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const { AppError } = require('../utils/errors');
 const { normalize, rankByName } = require('../utils/fuzzyName');
+const { SENT_TS_COL, toWireMessage } = require('../utils/messageTime');
 
 const FRIEND_STATUSES = ['accepted', 'close_friend'];
 
@@ -25,8 +26,7 @@ async function getContacts(userId) {
 async function getMessagesBetween(userId, contactId, { limit, before, beforeValid }) {
   const params = [userId, userId, contactId, contactId, userId];
   let sql = `SELECT id, sender_id, receiver_id, content, latitude, longitude, is_read,
-                 DATE_FORMAT(sent_at, '%H:%i') as time,
-                 sent_at as sent_at_raw,
+                 ${SENT_TS_COL},
                  IF(sender_id = ?, 1, 0) as isMe
                  FROM messages 
                  WHERE ((sender_id = ? AND receiver_id = ?)
@@ -40,7 +40,7 @@ async function getMessagesBetween(userId, contactId, { limit, before, beforeVali
   const safeLimit = Math.min(100, Math.max(1, Math.trunc(Number(limit)) || 50));
   sql += ` ORDER BY sent_at DESC LIMIT ${safeLimit}`;
   const [rowsDesc] = await db.execute(sql, params);
-  return rowsDesc.reverse();
+  return rowsDesc.reverse().map(toWireMessage);
 }
 
 // Returns the created message row, or null when the recipient does not exist.
@@ -66,13 +66,13 @@ async function createMessage(senderId, receiverId, content) {
   );
   const [rows] = await db.execute(
     `SELECT id, sender_id, receiver_id, content,
-                 DATE_FORMAT(sent_at, '%H:%i') as time,
+                 ${SENT_TS_COL},
                  IF(sender_id = ?, 1, 0) as isMe
                  FROM messages WHERE id = ?`,
     [senderId, result.insertId]
   );
   if (!rows[0]) throw new AppError('Could not send message', 500, 'MESSAGE_SEND_FAILED');
-  return rows[0];
+  return toWireMessage(rows[0]);
 }
 
 // User search with the viewer's relationship folded in so the UI can show

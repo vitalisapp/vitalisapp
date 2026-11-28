@@ -846,9 +846,9 @@
     "semantic_hash": ""
   },
   "backend/src/services/messenger.service.js": {
-    "mtime": 1795770708.1003497,
-    "seen": 1795770914.4442742,
-    "ast_hash": "e6e08963ecc08e42cd0d9aea6e33e817",
+    "mtime": 1795823465.9570777,
+    "seen": 1795823945.0762622,
+    "ast_hash": "2fc3e1f301e5eb68f25ef44a02bf00d9",
     "semantic_hash": ""
   },
   "backend/src/services/notification.service.js": {
@@ -942,9 +942,9 @@
     "semantic_hash": ""
   },
   "backend/src/sockets/socketHandler.js": {
-    "mtime": 1795311205.4063468,
-    "seen": 1795311886.0962675,
-    "ast_hash": "460fbb949095704135d95b1f48e64db7",
+    "mtime": 1795823466.307639,
+    "seen": 1795823945.0842113,
+    "ast_hash": "9349c6d7b61d2675184015857eadfad1",
     "semantic_hash": ""
   },
   "backend/src/utils/asyncHandler.js": {
@@ -2316,9 +2316,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Social/hooks/useMessages.js": {
-    "mtime": 1792807152.004288,
-    "seen": 1795221113.1629906,
-    "ast_hash": "b0adb83fceebd348ceb4c2f5f963690b",
+    "mtime": 1795823423.1547318,
+    "seen": 1795823945.2241106,
+    "ast_hash": "25644225dc04e1d3cb59deb10c8ad829",
     "semantic_hash": ""
   },
   "frontend/src/hooks/useAccountBasePath.js": {
@@ -3294,9 +3294,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Social/components/MessengerPanel.jsx": {
-    "mtime": 1795770798.742224,
-    "seen": 1795770914.5516891,
-    "ast_hash": "4886cad7481e3aec23a2960d36f82cce",
+    "mtime": 1795823402.0228965,
+    "seen": 1795823945.2236466,
+    "ast_hash": "cd3cfa5ebbaa1eb0b099981883d4514b",
     "semantic_hash": ""
   },
   "frontend/public/landing/qr-code.png": {
@@ -4155,6 +4155,36 @@
     "mtime": 1795679946.4178016,
     "seen": 1795770914.5656772,
     "ast_hash": "9d5b41aa10c90a56561956809156f753",
+    "semantic_hash": ""
+  },
+  "backend/src/utils/messageTime.js": {
+    "mtime": 1795823465.0841794,
+    "seen": 1795823945.09117,
+    "ast_hash": "5acabb44894e414934500d5373bc1ad2",
+    "semantic_hash": ""
+  },
+  "backend/tests/unit/message-time.test.js": {
+    "mtime": 1795823466.5088816,
+    "seen": 1795823945.1146724,
+    "ast_hash": "2e112d2a13fe8631138275333ac23cfb",
+    "semantic_hash": ""
+  },
+  "backend/tests/unit/sql-quotes.test.js": {
+    "mtime": 1795771550.8988965,
+    "seen": 1795823945.1197565,
+    "ast_hash": "48da7f85b6b507750ed8d0a1a33f42a0",
+    "semantic_hash": ""
+  },
+  "frontend/src/lib/messageTime.js": {
+    "mtime": 1795823389.2167895,
+    "seen": 1795823945.231526,
+    "ast_hash": "ad6bd8d6c88175f3700b2a86d6f41505",
+    "semantic_hash": ""
+  },
+  "frontend/tests/unit/message-time.test.js": {
+    "mtime": 1795823659.9004664,
+    "seen": 1795823945.2450013,
+    "ast_hash": "0bacd7a79c017883b319fb3161d8e936",
     "semantic_hash": ""
   },
   "backend/package-lock.json": {

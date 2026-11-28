@@ -7,6 +7,7 @@ import { useNotificationStream } from '../../../../context/NotificationStream.js
 import { acquireSocket, releaseSocket, joinUserRoom } from '../../../../lib/socket.js';
 import { resolveAvatar } from '../../../../lib/avatar.js';
 import { rankByName } from '../../../../lib/fuzzyName.js';
+import { messageDate, formatMessageTime, formatMessageTooltip } from '../../../../lib/messageTime.js';
 import ErrorState from '../../../../components/feedback/ErrorState.jsx';
 import BrandLoader from '../../../../components/ui/BrandLoader.jsx';
 import '../messenger.css';
@@ -19,11 +20,8 @@ const humanizeGoal = (goal) => {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 };
 
-const dayKeyOf = (msg) => {
-  const raw = msg.sent_at_raw || msg.sent_at;
-  const d = raw ? new Date(raw) : new Date(); // optimistic / socket rows are "now"
-  return Number.isNaN(d.getTime()) ? new Date().toDateString() : d.toDateString();
-};
+// Viewer-local calendar day; rows without a timestamp yet are "now".
+const dayKeyOf = (msg) => (messageDate(msg) || new Date()).toDateString();
 
 const dayLabel = (key) => {
   const today = new Date();
@@ -446,7 +444,7 @@ const MessengerPanel = ({ headerSlot = null }) => {
                           {item.messages.map((msg) => (
                             <div
                               key={msg._key}
-                              title={msg.time || undefined}
+                              title={formatMessageTooltip(msg) || undefined}
                               className={`vmsg-bubble${msg.failed ? ' is-failed' : msg._temp ? ' is-pending' : ''}`}
                             >
                               {msg.content}
@@ -459,7 +457,9 @@ const MessengerPanel = ({ headerSlot = null }) => {
                           ) : last._temp ? (
                             <span className="vmsg-time">Sending…</span>
                           ) : (
-                            last.time && <span className="vmsg-time">{last.time}</span>
+                            last.sent_at && (
+                              <time className="vmsg-time" dateTime={last.sent_at}>{formatMessageTime(last)}</time>
+                            )
                           )}
                         </div>
                       );

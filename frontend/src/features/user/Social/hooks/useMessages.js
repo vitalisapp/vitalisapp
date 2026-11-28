@@ -11,16 +11,19 @@ export const useMessages = (userId, activeContact, socketRef) => {
   useEffect(() => {
     if (!activeContact) return;
 
-    const fetchMessages = async () => {
-      setLoadingMsgs(true);
+    // `silent` = background resync: no loader, and keep what we have on error.
+    const fetchMessages = async ({ silent = false } = {}) => {
+      if (!silent) setLoadingMsgs(true);
       try {
         const data = await apiGet(`/api/messages/${userId}/${activeContact.id}`);
-        setMessages(Array.isArray(data) ? data.map(m => ({ ...m, isMe: Number(m.isMe) })) : []);
+        const rows = Array.isArray(data) ? data.map(m => ({ ...m, isMe: Number(m.isMe) })) : [];
+        // Keep unsent/failed optimistic bubbles across a resync.
+        setMessages(prev => (silent ? [...rows, ...prev.filter(m => m._temp || m.failed)] : rows));
       } catch (err) {
         if (import.meta.env.DEV) console.error('Error loading messages:', err);
-        setMessages([]);
+        if (!silent) setMessages([]);
       } finally {
-        setLoadingMsgs(false);
+        if (!silent) setLoadingMsgs(false);
       }
     };
     fetchMessages();
@@ -33,19 +36,24 @@ export const useMessages = (userId, activeContact, socketRef) => {
     socket.off('receive-chat');
 
     const handleNewMessage = (newMsg) => {
-      if (
-        newMsg.sender_id === activeContact.id ||
-        newMsg.receiver_id === activeContact.id
-      ) {
-        setMessages(prev => [
-          ...prev,
-          { ...newMsg, isMe: newMsg.sender_id === userId ? 1 : 0 },
-        ]);
-      }
+      const contactId = String(activeContact.id);
+      if (String(newMsg.sender_id) !== contactId && String(newMsg.receiver_id) !== contactId) return;
+      setMessages(prev => {
+        // The same row can arrive twice (REST reply + other-tab sync): keep one.
+        if (newMsg.id != null && prev.some(m => String(m.id) === String(newMsg.id))) return prev;
+        return [...prev, { ...newMsg, isMe: String(newMsg.sender_id) === String(userId) ? 1 : 0 }];
+      });
     };
 
+    // Messages sent while the socket was down never reach us — resync on reconnect.
+    const handleReconnect = () => { fetchMessages({ silent: true }); };
+
     socket.on('receive-chat', handleNewMessage);
-    return () => socket.off('receive-chat', handleNewMessage);
+    socket.io.on('reconnect', handleReconnect);
+    return () => {
+      socket.off('receive-chat', handleNewMessage);
+      socket.io.off('reconnect', handleReconnect);
+    };
 
   }, [activeContact, userId, socketRef]);
 
@@ -60,7 +68,7 @@ export const useMessages = (userId, activeContact, socketRef) => {
     // Optimistic UI: show message immediately before server confirms
     const optimistic = {
       content,
-      time:  new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      sent_at: new Date().toISOString(),
       isMe:  1,
       _temp: true,
     };
