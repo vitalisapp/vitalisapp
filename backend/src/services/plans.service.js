@@ -165,6 +165,17 @@ async function completeProgress(userId, planId, dayNumber) {
         [userId, planId]
     );
     if (!enrolled) throw new AppError('Enroll in this plan first', 409, 'NOT_ENROLLED');
+    // Sequential unlock: every earlier day must be cleared first.
+    const [[gap]] = await db.execute(
+        `SELECT pc.day_number FROM plan_contents pc
+           LEFT JOIN user_plan_progress up
+             ON up.plan_id = pc.plan_id AND up.day_number = pc.day_number
+            AND up.user_id = ? AND up.is_completed = 1
+          WHERE pc.plan_id = ? AND pc.day_number < ? AND up.day_number IS NULL
+          ORDER BY pc.day_number ASC LIMIT 1`,
+        [userId, planId, dayNumber]
+    );
+    if (gap) throw new AppError(`Finish Day ${gap.day_number} first`, 409, 'DAY_LOCKED');
     await db.execute(
         `INSERT INTO user_plan_progress (user_id, plan_id, day_number, is_completed, completed_at)
          VALUES (?, ?, ?, 1, NOW())

@@ -94,6 +94,19 @@ describe('progress hardening', () => {
     assert.equal(res.statusCode, 409);
     assert.match(res.body.error, /Enroll/);
   });
+  it('409 DAY_LOCKED when an earlier day is not cleared', async () => {
+    queue = [[{ id: 40 }], [{ id: 1 }], [{ day_number: 1 }]];
+    const res = mockRes();
+    await plans.postprogressComplete({ user: { id: 13 }, body: { planId: 40, dayNumber: 2 } }, res, throwNext);
+    assert.equal(res.statusCode, 409);
+    assert.match(res.body.error, /Finish Day 1/);
+  });
+  it('completes a day once all earlier days are cleared', async () => {
+    queue = [[{ id: 40 }], [{ id: 1 }], [], { affectedRows: 1 }];
+    const res = mockRes();
+    await plans.postprogressComplete({ user: { id: 13 }, body: { planId: 40, dayNumber: 2 } }, res, throwNext);
+    assert.notEqual(res.statusCode, 409);
+  });
 });
 
 describe('personal plan create', () => {

@@ -37,8 +37,15 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
   const completedDays = progress.filter(p => p.is_completed).map(p => p.day_number);
   const totalDays     = content.length;
   const currentDay    = content.find(d => !completedDays.includes(d.day_number)) || content[0];
+  // A day unlocks only once every earlier day is cleared (first incomplete day
+  // is the current one; everything after it is locked).
+  const isLocked = (dayNumber) => content.some(
+    (d) => d.day_number < dayNumber && !completedDays.includes(d.day_number)
+  );
   const [activeDay,  setActiveDay]  = useState(
-    (startDay && content.some((d) => d.day_number === startDay)) ? startDay : (currentDay?.day_number || 1)
+    (startDay && content.some((d) => d.day_number === startDay) && !isLocked(startDay))
+      ? startDay
+      : (currentDay?.day_number || 1)
   );
   const [completing, setCompleting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -138,7 +145,7 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
   }
 
   const handleComplete = async () => {
-    if (isDayComplete || completing) return;
+    if (isDayComplete || completing || isLocked(activeDay)) return;
     setCompleting(true);
     await onCompleteDay(activeDay);
     setCompleting(false);
@@ -147,7 +154,7 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
   };
 
   const handleStartWorkout = () => {
-    if (!activeDayData) return;
+    if (!activeDayData || isLocked(activeDay)) return;
     // Auto-select the day's first exercise the camera can run (like a real
     // workout app) instead of dropping the user on the generic chooser.
     const firstMatch = (activeExercises || [])
@@ -246,12 +253,16 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
               {content.map(day => {
                 const done     = completedDays.includes(day.day_number);
                 const isActive = day.day_number === activeDay;
+                const locked   = isLocked(day.day_number);
                 return (
                   <button
                     key={day.day_number}
+                    disabled={locked}
+                    aria-label={locked ? `Day ${day.day_number} locked — finish Day ${day.day_number - 1} first` : undefined}
                     onClick={() => { setActiveDay(day.day_number); setSidebarOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all border-l-2"
+                    className="w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all border-l-2 disabled:cursor-not-allowed"
                     style={{
+                      opacity:         locked ? 0.5 : 1,
                       background:      isActive ? 'var(--bg-active)' : 'transparent',
                       borderLeftColor: isActive ? 'var(--accent)'    : 'transparent',
                       color:           isActive ? 'var(--text-primary)' : 'var(--text-muted)',
@@ -264,7 +275,7 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
                         color:      done ? 'var(--text-inverse)'       : isActive ? 'var(--accent)'    : 'var(--text-muted)',
                       }}
                     >
-                      {done ? <Icon name="check" className="text-[length:var(--fs-14)]" weight={700} /> : day.day_number}
+                      {done ? <Icon name="check" className="text-[length:var(--fs-14)]" weight={700} /> : locked ? <Icon name="lock" className="text-[length:var(--fs-14)]" /> : day.day_number}
                     </div>
                     <div className="overflow-hidden">
                       <p className="text-xs font-bold truncate" style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-muted)' }}>
@@ -299,12 +310,17 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
           {content.map(day => {
             const done     = completedDays.includes(day.day_number);
             const isActive = day.day_number === activeDay;
+            const locked   = isLocked(day.day_number);
             return (
               <button
                 key={day.day_number}
+                disabled={locked}
+                title={locked ? `Locked — finish Day ${day.day_number - 1} first` : undefined}
+                aria-label={locked ? `Day ${day.day_number} locked — finish Day ${day.day_number - 1} first` : undefined}
                 onClick={() => setActiveDay(day.day_number)}
-                className="w-full flex items-center gap-3 px-3 lg:px-4 py-3 lg:py-3.5 text-left transition-all border-l-2"
+                className="w-full flex items-center gap-3 px-3 lg:px-4 py-3 lg:py-3.5 text-left transition-all border-l-2 disabled:cursor-not-allowed"
                 style={{
+                  opacity:         locked ? 0.5 : 1,
                   background:      isActive ? 'var(--bg-active)' : 'transparent',
                   borderLeftColor: isActive ? 'var(--accent)'    : 'transparent',
                   color:           isActive ? 'var(--text-primary)' : 'var(--text-muted)',
@@ -317,7 +333,7 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
                     color:      done ? 'var(--text-inverse)'       : isActive ? 'var(--accent)'    : 'var(--text-muted)',
                   }}
                 >
-                  {done ? <Icon name="check" className="text-[length:var(--fs-12)] lg:text-[length:var(--fs-14)]" weight={700} /> : day.day_number}
+                  {done ? <Icon name="check" className="text-[length:var(--fs-12)] lg:text-[length:var(--fs-14)]" weight={700} /> : locked ? <Icon name="lock" className="text-[length:var(--fs-12)] lg:text-[length:var(--fs-14)]" /> : day.day_number}
                 </div>
                 <div className="hidden lg:block overflow-hidden">
                   <p className="text-xs font-bold truncate" style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-muted)' }}>
@@ -549,21 +565,6 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
               )}
 
               <div className="flex flex-col min-[480px]:flex-row gap-2 sm:gap-3">
-                {!isDayComplete && (
-                  <button
-                    onClick={() => {
-                      const next = content.find(d => d.day_number > activeDay);
-                      if (next) setActiveDay(next.day_number);
-                    }}
-                    className="flex-1 py-3.5 min-h-[48px] rounded-xl border font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2"
-                    style={{ borderColor: 'var(--border-medium)', color: 'var(--text-muted)' }}
-                  >
-                    <Icon name="skip_next" className="text-[length:var(--fs-18)] shrink-0" />
-                    <span className="hidden min-[480px]:inline">Skip for Now</span>
-                    <span className="min-[480px]:hidden">Skip</span>
-                  </button>
-                )}
-
                 {isDayComplete ? (
                   <button
                     disabled
