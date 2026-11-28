@@ -6,6 +6,27 @@ import { matchExercise } from '../utils/exerciseMatch.js';
 import { frameUrl } from '../../CameraWorkout/constants/workoutGuide.js';
 import { speak } from '../../CameraWorkout/hooks/useRepCounter.js';
 
+// Picture for one step: bundled copy first (no CDN dependency), then the CDN,
+// then a plain placeholder (parent keys this by slug so the stage resets) — the modal never shows a broken image.
+function ExerciseFrame({ slug, frame, name }) {
+  const [stage, setStage] = useState(0);
+  const sources = [`/exercise-frames/${slug}/frame-${frame}.png`, frameUrl(slug, frame)].filter(Boolean);
+  const src = sources[stage];
+  return (
+    <div className="rounded-xl overflow-hidden border flex items-center justify-center" style={{ background: '#161b22', borderColor: 'var(--border-light)', aspectRatio: '4 / 3' }}>
+      {src ? (
+        <img key={src} src={src} alt={`${name}, step ${frame} of 3`} className="max-h-full max-w-full object-contain"
+          onError={() => setStage((s) => s + 1)} />
+      ) : (
+        <div className="flex flex-col items-center gap-1 text-center px-4" style={{ color: 'var(--text-muted)' }}>
+          <Icon name="image_not_supported" className="text-[28px]" />
+          <span className="text-[12px]">Picture unavailable — follow the steps below.</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const LEVEL = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' };
 
 // Section 3 — how to do an exercise: pictures, steps, form cues, common
@@ -14,9 +35,18 @@ export default function ExerciseGuideModal({ name = undefined, detail = undefine
   const { guide, loading } = useExerciseGuide(name);
   const match = name ? matchExercise(name) : null;
   const [frame, setFrame] = useState(1);
+  const [auto, setAuto] = useState(true);
   const [busy, setBusy] = useState(false);
   const [reading, setReading] = useState(false);
   const tts = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+  // Fresh exercise: back to picture 1 and auto-play the 3 frames like a demo.
+  useEffect(() => { setFrame(1); setAuto(true); }, [name]);
+  useEffect(() => {
+    if (!auto || !match?.slug) return undefined;
+    const t = setInterval(() => setFrame((f) => (f % 3) + 1), 1200);
+    return () => clearInterval(t);
+  }, [auto, match?.slug]);
 
   // Section 7: stop reading when the guide closes.
   useEffect(() => () => { try { window.speechSynthesis?.cancel(); } catch { /* noop */ } }, [name]);
@@ -46,6 +76,7 @@ export default function ExerciseGuideModal({ name = undefined, detail = undefine
       title={name || ''}
       subtitle={guide ? `${guide.muscle} · ${LEVEL[guide.level] || ''}${guide.impact === 'high' ? ' · High impact' : ''}` : match ? `${match.primaryMuscle} · ${match.equipment}` : undefined}
       icon="menu_book"
+      zIndex={140}
       footer={onToggleExclude ? (
         <button type="button" onClick={toggle} disabled={busy}
           className="h-10 px-4 rounded-lg border text-[13px] font-semibold disabled:opacity-50"
@@ -57,12 +88,10 @@ export default function ExerciseGuideModal({ name = undefined, detail = undefine
     >
       {match?.slug && (
         <div className="mb-4">
-          <div className="rounded-xl overflow-hidden border flex items-center justify-center" style={{ background: '#fff', borderColor: 'var(--border-light)', aspectRatio: '4 / 3' }}>
-            <img src={frameUrl(match.slug, frame)} alt={`${name}, step ${frame} of 3`} className="max-h-full max-w-full object-contain" loading="lazy" />
-          </div>
-          <div className="flex justify-center gap-1.5 mt-2" role="group" aria-label="Picture steps">
+          <ExerciseFrame key={match.slug} slug={match.slug} frame={frame} name={name} />
+          <div className="flex items-center justify-center gap-1.5 mt-2" role="group" aria-label="Picture steps">
             {[1, 2, 3].map((f) => (
-              <button key={f} type="button" onClick={() => setFrame(f)} aria-pressed={frame === f} aria-label={`Show picture ${f}`}
+              <button key={f} type="button" onClick={() => { setAuto(false); setFrame(f); }} aria-pressed={frame === f} aria-label={`Show picture ${f}`}
                 className="h-8 min-w-8 px-2 rounded-md text-[12px] font-semibold border"
                 style={{
                   background: frame === f ? 'var(--accent-bg)' : 'transparent',
@@ -72,6 +101,12 @@ export default function ExerciseGuideModal({ name = undefined, detail = undefine
                 {f}
               </button>
             ))}
+            <button type="button" onClick={() => setAuto((a) => !a)} aria-pressed={auto}
+              aria-label={auto ? 'Pause pictures' : 'Play pictures'}
+              className="h-8 w-8 rounded-md border flex items-center justify-center"
+              style={{ borderColor: 'var(--border-light)', color: 'var(--text-muted)' }}>
+              <Icon name={auto ? 'pause' : 'play_arrow'} className="text-[16px]" />
+            </button>
           </div>
         </div>
       )}

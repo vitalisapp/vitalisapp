@@ -147,6 +147,8 @@ export default defineConfig(({ mode }) => {
             // Pose runtime (~10-15 MB): cached on first camera use below,
             // never precached on install for users who don't use the camera.
             'mediapipe/**',
+            // Exercise pictures load on demand, not on install (8 MB).
+            'exercise-frames/**',
           ],
           globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg,woff2,webp}'],
           // SPA fallback for route reloads: any navigation that isn't a

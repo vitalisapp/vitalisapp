@@ -8,6 +8,7 @@
     "dev": "vite",
     "prebuild": "node scripts/copy-mediapipe.mjs",
     "build": "vite build",
+    "frames": "node scripts/copy-plan-frames.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "eslint . && node --test \"tests/unit/**/*.test.js\"",

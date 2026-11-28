@@ -13,6 +13,7 @@
 //   exclusions      → categories and specific exercises never recommended
 const { EXERCISES, EXCLUSION_CATEGORIES } = require('../constants/exercisePool');
 const { classifyBmi } = require('./health');
+const { planExerciseGuides, norm: planGuideNorm } = require('../constants/planExerciseGuides');
 
 const EXPERIENCE_LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
 const EXCLUSION_KEYS = EXCLUSION_CATEGORIES.map((c) => c.key);
@@ -315,9 +316,14 @@ function humanGoal(g) {
 
 /** Public exercise guide (instructions) for the frontend. */
 function exerciseGuide() {
-  return EXERCISES.map(({ name, pattern, equip, level, impact, flags, measure, muscle, steps, cues, mistakes }) => ({
+  const pool = EXERCISES.map(({ name, pattern, equip, level, impact, flags, measure, muscle, steps, cues, mistakes }) => ({
     name, pattern, equip, level, impact, flags, measure, muscle, steps, cues, mistakes,
   }));
+  // Seeded plan templates use their own exercise names — add those too, never
+  // overriding a recommender-pool entry of the same name.
+  const have = new Set(pool.map((e) => planGuideNorm(e.name)));
+  const extra = planExerciseGuides().filter((e) => !have.has(planGuideNorm(e.name)));
+  return [...pool, ...extra];
 }
 
 module.exports = {

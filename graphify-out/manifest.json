@@ -1182,9 +1182,9 @@
     "semantic_hash": ""
   },
   "frontend/package.json": {
-    "mtime": 1795658762.8325722,
-    "seen": 1795659493.4494462,
-    "ast_hash": "2a3c1381b5a8efe191dea2bcb29f8f48",
+    "mtime": 1795855854.7963703,
+    "seen": 1795855914.2104323,
+    "ast_hash": "3855e279692149e8136eb7a1a42ca1b4",
     "semantic_hash": ""
   },
   "frontend/public/manifest-snippet.json": {
@@ -1368,9 +1368,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ui/Modal.jsx": {
-    "mtime": 1795397172.2663186,
-    "seen": 1795411848.707424,
-    "ast_hash": "272f259f19cfe6edb75729c696008dfc",
+    "mtime": 1795855625.4277034,
+    "seen": 1795855647.3181336,
+    "ast_hash": "180f20fbde4313a46ddfa899a52e5bd5",
     "semantic_hash": ""
   },
   "frontend/src/components/ui/Spinner.jsx": {
@@ -2502,9 +2502,9 @@
     "semantic_hash": ""
   },
   "frontend/vite.config.js": {
-    "mtime": 1795658636.7986784,
-    "seen": 1795659493.633859,
-    "ast_hash": "bea5f0cc4d6c07d6e709f683ad026805",
+    "mtime": 1795855949.178973,
+    "seen": 1795855997.5488417,
+    "ast_hash": "729e6206c8d93d1b6789c4c83c5b4af6",
     "semantic_hash": ""
   },
   "package.json": {
@@ -2982,9 +2982,9 @@
     "semantic_hash": ""
   },
   "backend/src/utils/workoutRecommender.js": {
-    "mtime": 1795311205.443223,
-    "seen": 1795311886.0977802,
-    "ast_hash": "1c4bd80772b9b07a2bd58fa726269856",
+    "mtime": 1795855448.360052,
+    "seen": 1795855492.8758986,
+    "ast_hash": "e879d95d8e3876f88c06d4249170b6b3",
     "semantic_hash": ""
   },
   "backend/tests/unit/goal-personalization.test.js": {
@@ -2994,9 +2994,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/components/ExerciseGuideModal.jsx": {
-    "mtime": 1795853735.5614686,
-    "seen": 1795853761.8345459,
-    "ast_hash": "f001fd727a9a73cfafc28d588600fd67",
+    "mtime": 1795856117.2535968,
+    "seen": 1795856159.2008858,
+    "ast_hash": "fd6bc7163bcfebe59837d2f6550bd8db",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/components/GoalPlansPanel.jsx": {
@@ -3006,9 +3006,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/hooks/useExerciseGuide.js": {
-    "mtime": 1795311206.0929432,
-    "seen": 1795311886.109213,
-    "ast_hash": "76fae164f034107874f408667ab273c5",
+    "mtime": 1795855458.7596538,
+    "seen": 1795855492.9821377,
+    "ast_hash": "e73be49934bf44e9ecb654162ad1b733",
     "semantic_hash": ""
   },
   "frontend/src/lib/goalSetup.js": {
@@ -3546,9 +3546,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/components/DayTracker.jsx": {
-    "mtime": 1795854787.921133,
-    "seen": 1795854825.9436693,
-    "ast_hash": "45aae4b5318cb3eba117832063fe4b62",
+    "mtime": 1795855458.7622974,
+    "seen": 1795855492.9786434,
+    "ast_hash": "f9333409efcae3de4aa7e8199b3d1941",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/components/ExerciseLibrary.jsx": {
@@ -4209,6 +4209,1506 @@
     "mtime": 1795854740.056944,
     "seen": 1795854760.489865,
     "ast_hash": "be4156814121612c2243176be9c4deaa",
+    "semantic_hash": ""
+  },
+  "backend/src/constants/planExerciseGuides.js": {
+    "mtime": 1795855440.3323307,
+    "seen": 1795855492.8025706,
+    "ast_hash": "077f5e68d800005d436683b1a3d33ed7",
+    "semantic_hash": ""
+  },
+  "backend/tests/unit/plan-exercise-guides.test.js": {
+    "mtime": 1795855448.4008987,
+    "seen": 1795855492.8991337,
+    "ast_hash": "d1355d2f71df0edf24da3e74eff8b9ab",
+    "semantic_hash": ""
+  },
+  "frontend/scripts/copy-plan-frames.mjs": {
+    "mtime": 1795855840.1908162,
+    "seen": 1795855914.2107887,
+    "ast_hash": "09d9dedaee3f400c2e19a35fee9df52d",
+    "semantic_hash": ""
+  },
+  "frontend/scripts/plan-exercise-names.txt": {
+    "mtime": 1795855840.2501676,
+    "seen": 1795855914.2766516,
+    "ast_hash": "75333ba66ee6919f3baa84b4b348fae3",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/arm-circles/frame-1.png": {
+    "mtime": 1791956302.179825,
+    "seen": 1795855914.2813456,
+    "ast_hash": "7658a50b231c69df5d2ab6d77cf36b53",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/arm-circles/frame-2.png": {
+    "mtime": 1791956349.5109136,
+    "seen": 1795855914.2813485,
+    "ast_hash": "ca523b2eb4c566843d073bf9baf79797",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/arm-circles/frame-3.png": {
+    "mtime": 1791956360.329745,
+    "seen": 1795855914.2813504,
+    "ast_hash": "fd2f1ef626fab91c07f294e2af7bb6ac",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/band-pull-apart/frame-1.png": {
+    "mtime": 1791956306.9741292,
+    "seen": 1795855914.2813525,
+    "ast_hash": "9867f8fdbe25a85994fccf5aeda2a636",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/band-pull-apart/frame-2.png": {
+    "mtime": 1791956350.0363941,
+    "seen": 1795855914.2813544,
+    "ast_hash": "9ab797f8a4e0a221a85d4b0877ce70df",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/band-pull-apart/frame-3.png": {
+    "mtime": 1791956360.4897273,
+    "seen": 1795855914.2813573,
+    "ast_hash": "1a86a6c55dfdfbf98c52e7e4522cac50",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/banded-glute-bridge/frame-1.png": {
+    "mtime": 1791956308.8976314,
+    "seen": 1795855914.2813594,
+    "ast_hash": "e7ac5e69cfbe56dbc1880a8d9b94987e",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/banded-glute-bridge/frame-2.png": {
+    "mtime": 1791956350.3849673,
+    "seen": 1795855914.281361,
+    "ast_hash": "b97eedaf42bfe32d992ca4ef29a84040",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/banded-glute-bridge/frame-3.png": {
+    "mtime": 1791956360.584828,
+    "seen": 1795855914.281364,
+    "ast_hash": "99fa825be9a355bdb3f44412d90d857f",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/banded-pallof-press/frame-1.png": {
+    "mtime": 1791956310.9791584,
+    "seen": 1795855914.2813666,
+    "ast_hash": "0ea835078257dc6dd8db674f46bdacda",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/banded-pallof-press/frame-2.png": {
+    "mtime": 1791956350.8556738,
+    "seen": 1795855914.281369,
+    "ast_hash": "948ac8eb41431df2a8063a2080f2a5f0",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/banded-pallof-press/frame-3.png": {
+    "mtime": 1791956360.7118518,
+    "seen": 1795855914.2813709,
+    "ast_hash": "d60397c79f3b513fafe1030ae5161cf8",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/banded-row/frame-1.png": {
+    "mtime": 1791956311.2949712,
+    "seen": 1795855914.2813733,
+    "ast_hash": "07801f2fb0c79bde00057f510b4b5bf9",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/banded-row/frame-2.png": {
+    "mtime": 1791956350.899651,
+    "seen": 1795855914.2813752,
+    "ast_hash": "de76bec059448e3e6b6af89b9bcd59d7",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/banded-row/frame-3.png": {
+    "mtime": 1791956360.718446,
+    "seen": 1795855914.281377,
+    "ast_hash": "7a4d260782ba7d3f99ea2c7ac77396bb",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/banded-squat/frame-1.png": {
+    "mtime": 1791956312.3789508,
+    "seen": 1795855914.2813787,
+    "ast_hash": "db15f814d7b3f9df4e382c62a0ac20f5",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/banded-squat/frame-2.png": {
+    "mtime": 1791956350.9835663,
+    "seen": 1795855914.2813811,
+    "ast_hash": "694f8ffb2119097ec8f544ac636a6a85",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/banded-squat/frame-3.png": {
+    "mtime": 1791956360.7661657,
+    "seen": 1795855914.2813828,
+    "ast_hash": "69cae04380c8e33ed87804ab9cc145e4",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/barbell-row/frame-1.png": {
+    "mtime": 1791956314.361946,
+    "seen": 1795855914.2813847,
+    "ast_hash": "efc218f2f0eb1465ded5526f690b8caf",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/barbell-row/frame-2.png": {
+    "mtime": 1791956351.1612396,
+    "seen": 1795855914.2813869,
+    "ast_hash": "7e2a46056451b06e73f375681b50f94b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/barbell-row/frame-3.png": {
+    "mtime": 1791956360.8184319,
+    "seen": 1795855914.2813885,
+    "ast_hash": "ba1d4319fb6e3a96dfe087604aebbdad",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bench-dip/frame-1.png": {
+    "mtime": 1791956318.4326043,
+    "seen": 1795855914.2813902,
+    "ast_hash": "e249bbbf1a55b4e7359227356c0c57d8",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bench-dip/frame-2.png": {
+    "mtime": 1791956351.3773572,
+    "seen": 1795855914.281392,
+    "ast_hash": "4c8025075621d91adbe235dbae50fc21",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bench-dip/frame-3.png": {
+    "mtime": 1791956360.8534536,
+    "seen": 1795855914.281394,
+    "ast_hash": "9e50d99422be4f9fa4d90caf9a3ad534",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bench-press/frame-1.png": {
+    "mtime": 1791956319.486171,
+    "seen": 1795855914.2813957,
+    "ast_hash": "e4bb41a996c635988a24744b53a13b0d",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bench-press/frame-2.png": {
+    "mtime": 1791956351.4143147,
+    "seen": 1795855914.2813978,
+    "ast_hash": "241f513c5592a73dee8c49ad390844c1",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bench-press/frame-3.png": {
+    "mtime": 1791956360.8932853,
+    "seen": 1795855914.2813995,
+    "ast_hash": "ea6b85e79ca2482535aae75cd788dcd6",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bicep-curl/frame-1.png": {
+    "mtime": 1791956320.2263865,
+    "seen": 1795855914.2814014,
+    "ast_hash": "4a778da46a996cf1255261ef3d297579",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bicep-curl/frame-2.png": {
+    "mtime": 1791956351.464758,
+    "seen": 1795855914.281403,
+    "ast_hash": "adabae8aa77942419b7688620651ba9c",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bicep-curl/frame-3.png": {
+    "mtime": 1791956360.931186,
+    "seen": 1795855914.281405,
+    "ast_hash": "186dfe8854b12806399114c7437ce44e",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bicycle-crunch/frame-1.png": {
+    "mtime": 1791956320.518324,
+    "seen": 1795855914.2814066,
+    "ast_hash": "68e81060ee123d20ede2092ce53abc9b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bicycle-crunch/frame-2.png": {
+    "mtime": 1791956351.4888945,
+    "seen": 1795855914.2814085,
+    "ast_hash": "66ec3729636f46c27620350a185d38ff",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bicycle-crunch/frame-3.png": {
+    "mtime": 1791956360.937222,
+    "seen": 1795855914.2814102,
+    "ast_hash": "081620a84f7a7a749b96d66387be7baf",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bird-dog/frame-1.png": {
+    "mtime": 1791956320.879397,
+    "seen": 1795855914.2814121,
+    "ast_hash": "9ed6c8d37015abfd73cef15c2062b350",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bird-dog/frame-2.png": {
+    "mtime": 1791956351.5400445,
+    "seen": 1795855914.2814138,
+    "ast_hash": "218952beb16b6dabf6968b8f68a5ec2e",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bird-dog/frame-3.png": {
+    "mtime": 1791956360.966974,
+    "seen": 1795855914.2814155,
+    "ast_hash": "701f5989f1411fa93835eba689e5a1ce",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bodyweight-squat/frame-1.png": {
+    "mtime": 1791956321.1056268,
+    "seen": 1795855914.2814171,
+    "ast_hash": "9445581c147a5abe22861af80465bc30",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bodyweight-squat/frame-2.png": {
+    "mtime": 1791956351.6072536,
+    "seen": 1795855914.281419,
+    "ast_hash": "548ff49f6003fe614638704da1fda625",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bodyweight-squat/frame-3.png": {
+    "mtime": 1791956360.980623,
+    "seen": 1795855914.2814205,
+    "ast_hash": "d2d3eb7e84afad1c1c2906c35f871ca8",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bulgarian-split-squat/frame-1.png": {
+    "mtime": 1791956321.461977,
+    "seen": 1795855914.2814224,
+    "ast_hash": "e141fdc2b6300b42f96be822a0da76ab",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bulgarian-split-squat/frame-2.png": {
+    "mtime": 1791956351.6763372,
+    "seen": 1795855914.281424,
+    "ast_hash": "939be6648e1055148476e46780931ebc",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/bulgarian-split-squat/frame-3.png": {
+    "mtime": 1791956361.0408807,
+    "seen": 1795855914.2814257,
+    "ast_hash": "4cfa03096875aae9bd64c91d79b5df2d",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/burpee/frame-1.png": {
+    "mtime": 1791956321.6887248,
+    "seen": 1795855914.2814276,
+    "ast_hash": "f194fa52a6663556b40c38ca2ef1c3ed",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/burpee/frame-2.png": {
+    "mtime": 1791956351.7256498,
+    "seen": 1795855914.2814293,
+    "ast_hash": "d166a1d88bc30ac43d7f3cf75ab4f30d",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/burpee/frame-3.png": {
+    "mtime": 1791956361.0523021,
+    "seen": 1795855914.281431,
+    "ast_hash": "421e4b9b592edb5a24563f814ade18c0",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/butterfly-stretch/frame-1.png": {
+    "mtime": 1791956321.8995674,
+    "seen": 1795855914.2814329,
+    "ast_hash": "f84b3956a0f691e0ffe30a154f5f6d65",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/butterfly-stretch/frame-2.png": {
+    "mtime": 1791956351.7663307,
+    "seen": 1795855914.2814345,
+    "ast_hash": "b1fb8e70fa5625ce36d3b79a02b12db5",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/butterfly-stretch/frame-3.png": {
+    "mtime": 1791956361.0651045,
+    "seen": 1795855914.2814362,
+    "ast_hash": "f1d7f675c420adb41393b8877d92c2f8",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cable-fly/frame-1.png": {
+    "mtime": 1791956322.3660398,
+    "seen": 1795855914.2814379,
+    "ast_hash": "a3c71e5880dd6d23bac4588768b880b2",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cable-fly/frame-2.png": {
+    "mtime": 1791956351.851958,
+    "seen": 1795855914.2814398,
+    "ast_hash": "5c219bd4f50803f1bfe354fd7a6d6203",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cable-fly/frame-3.png": {
+    "mtime": 1791956361.1288404,
+    "seen": 1795855914.2814415,
+    "ast_hash": "3469241a1000e2585a196be31bf4ebe8",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cable-lateral-raise/frame-1.png": {
+    "mtime": 1791956322.82224,
+    "seen": 1795855914.2814434,
+    "ast_hash": "850f16801949e6e492d8ff3f3858a2b0",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cable-lateral-raise/frame-2.png": {
+    "mtime": 1791956351.9767582,
+    "seen": 1795855914.281445,
+    "ast_hash": "448f851891c94acd89ed11382006fe41",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cable-lateral-raise/frame-3.png": {
+    "mtime": 1791956361.191768,
+    "seen": 1795855914.2814467,
+    "ast_hash": "636ea8f2b0f5ea266b6e2412a48b683f",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cat-cow-stretch/frame-1.png": {
+    "mtime": 1791956325.0345213,
+    "seen": 1795855914.2814481,
+    "ast_hash": "a731c70f92a71ca6ec26c3435cdb5600",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cat-cow-stretch/frame-2.png": {
+    "mtime": 1791956352.3907058,
+    "seen": 1795855914.2814503,
+    "ast_hash": "0f45790843d4268b410fa2abe9d29009",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cat-cow-stretch/frame-3.png": {
+    "mtime": 1791956361.3171823,
+    "seen": 1795855914.2814517,
+    "ast_hash": "fc1f7ac91cf712f97173e1b637110581",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/chest-supported-row/frame-1.png": {
+    "mtime": 1791956325.4541352,
+    "seen": 1795855914.2814536,
+    "ast_hash": "97b5381d1333eed128ceb5ba0b47dd8f",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/chest-supported-row/frame-2.png": {
+    "mtime": 1791956352.5515938,
+    "seen": 1795855914.281455,
+    "ast_hash": "1d972f8f989a5e7de07ad52c4b0812f7",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/chest-supported-row/frame-3.png": {
+    "mtime": 1791956361.3373213,
+    "seen": 1795855914.2814574,
+    "ast_hash": "1fe5fbd5b0bf862f0415ce632572ac96",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/childs-pose/frame-1.png": {
+    "mtime": 1791956325.5645945,
+    "seen": 1795855914.2814589,
+    "ast_hash": "168901b90fe0b4b51a6a9a56c163a295",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/childs-pose/frame-2.png": {
+    "mtime": 1791956352.58784,
+    "seen": 1795855914.281461,
+    "ast_hash": "c2cb3b14b7a255e118dd676bb638e4ba",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/childs-pose/frame-3.png": {
+    "mtime": 1791956361.3573005,
+    "seen": 1795855914.2814631,
+    "ast_hash": "54b35fe1393e0f5ed85486eba1532cf6",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cross-body-shoulder-stretch/frame-1.png": {
+    "mtime": 1791956327.451827,
+    "seen": 1795855914.281465,
+    "ast_hash": "8a150dd215c350b5f2095c827e1706d2",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cross-body-shoulder-stretch/frame-2.png": {
+    "mtime": 1791956352.9754994,
+    "seen": 1795855914.281467,
+    "ast_hash": "2324758a65ac64add11359e13aa79447",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cross-body-shoulder-stretch/frame-3.png": {
+    "mtime": 1791956361.4847126,
+    "seen": 1795855914.2814686,
+    "ast_hash": "4da114f30879cfd117c6a62d0026d4a3",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cycling/frame-1.png": {
+    "mtime": 1791956328.048806,
+    "seen": 1795855914.2814705,
+    "ast_hash": "a743904598d469eda0b7c7cbb75d172c",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cycling/frame-2.png": {
+    "mtime": 1791956353.0918531,
+    "seen": 1795855914.281472,
+    "ast_hash": "98c1f86b26c9521bb4dd4b2b0d701702",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/cycling/frame-3.png": {
+    "mtime": 1791956361.5192583,
+    "seen": 1795855914.2814739,
+    "ast_hash": "240ec92334d30e456a2b21b4aebea70f",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/dead-bug/frame-1.png": {
+    "mtime": 1791956328.2388334,
+    "seen": 1795855914.2814755,
+    "ast_hash": "453c7454075ecb84b54f3f15db10d8fa",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/dead-bug/frame-2.png": {
+    "mtime": 1791956353.119623,
+    "seen": 1795855914.2814777,
+    "ast_hash": "22927e483fd24c8c8c2010caeaef5bb1",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/dead-bug/frame-3.png": {
+    "mtime": 1791956361.5252964,
+    "seen": 1795855914.2814794,
+    "ast_hash": "39924cc121046c9e97310586477eb3d6",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/deadlift/frame-1.png": {
+    "mtime": 1791956328.5785875,
+    "seen": 1795855914.2814813,
+    "ast_hash": "65a47757d6b29fe243110d72b404deef",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/deadlift/frame-2.png": {
+    "mtime": 1791956353.1846561,
+    "seen": 1795855914.281483,
+    "ast_hash": "de08d6dc2eb645320a2afe4ea531d90b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/deadlift/frame-3.png": {
+    "mtime": 1791956361.537853,
+    "seen": 1795855914.2814848,
+    "ast_hash": "8e12bc3c665101c3369a802394145fcc",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/doorway-chest-stretch/frame-1.png": {
+    "mtime": 1791956330.6574361,
+    "seen": 1795855914.2814867,
+    "ast_hash": "9c4314d88c75dfb28a20e106f4b15a71",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/doorway-chest-stretch/frame-2.png": {
+    "mtime": 1791956353.5381916,
+    "seen": 1795855914.2814887,
+    "ast_hash": "2779ec27db6fdfd3e2849d56de845407",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/doorway-chest-stretch/frame-3.png": {
+    "mtime": 1791956361.6684394,
+    "seen": 1795855914.2814908,
+    "ast_hash": "ae4b1beee7b954b3963c092777ef3cd5",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/dumbbell-bench-press/frame-1.png": {
+    "mtime": 1791956331.1179664,
+    "seen": 1795855914.2814925,
+    "ast_hash": "057d9a9c5f3d62ae11658f86bff67b4e",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/dumbbell-bench-press/frame-2.png": {
+    "mtime": 1791956353.685573,
+    "seen": 1795855914.2814944,
+    "ast_hash": "7bbad3303751e37bc65f13fe858589ae",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/dumbbell-bench-press/frame-3.png": {
+    "mtime": 1791956361.7180185,
+    "seen": 1795855914.2814963,
+    "ast_hash": "effdaa699463931b1ae61e8f38a589aa",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/dumbbell-hip-thrust/frame-1.png": {
+    "mtime": 1791956331.7431495,
+    "seen": 1795855914.2814984,
+    "ast_hash": "4301a54e2ea81dd893fdd49623bc1ff1",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/dumbbell-hip-thrust/frame-2.png": {
+    "mtime": 1791956353.9287577,
+    "seen": 1795855914.2815,
+    "ast_hash": "2503a2ba52d17626546028dcd69d553c",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/dumbbell-hip-thrust/frame-3.png": {
+    "mtime": 1791956361.8470998,
+    "seen": 1795855914.281502,
+    "ast_hash": "974e496c13de44723247083a0c350dc7",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/dumbbell-romanian-deadlift/frame-1.png": {
+    "mtime": 1791956332.1658995,
+    "seen": 1795855914.2815037,
+    "ast_hash": "fa9ce48ea4ae9dfed51ceb459f240afb",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/dumbbell-romanian-deadlift/frame-2.png": {
+    "mtime": 1791956354.071365,
+    "seen": 1795855914.2815058,
+    "ast_hash": "09d6b4ba2a0cb5520cab586a7f92defe",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/dumbbell-romanian-deadlift/frame-3.png": {
+    "mtime": 1791956361.9931538,
+    "seen": 1795855914.2815075,
+    "ast_hash": "0a3c6acc84c0f06a8194cd69169ed438",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/face-pull/frame-1.png": {
+    "mtime": 1791956333.1918168,
+    "seen": 1795855914.2815094,
+    "ast_hash": "bb70bb8e6379f0c3e95f4f8671f22a67",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/face-pull/frame-2.png": {
+    "mtime": 1791956354.512714,
+    "seen": 1795855914.2815113,
+    "ast_hash": "6b9b349af9fb03ab6d866cef285dc29f",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/face-pull/frame-3.png": {
+    "mtime": 1791956362.2401698,
+    "seen": 1795855914.2815132,
+    "ast_hash": "e5a1a74d72b746eea828c6dc76565364",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/fast-feet/frame-1.png": {
+    "mtime": 1791956333.4022572,
+    "seen": 1795855914.2815151,
+    "ast_hash": "665c786e6cc6c977aaf526b9bfe62170",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/fast-feet/frame-2.png": {
+    "mtime": 1791956354.634616,
+    "seen": 1795855914.2815168,
+    "ast_hash": "ee95ecbae65c7f1ecb196cf78b6ed930",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/fast-feet/frame-3.png": {
+    "mtime": 1791956362.288727,
+    "seen": 1795855914.2815182,
+    "ast_hash": "944472fb8510468e8128474269324f08",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/forward-lunge/frame-1.png": {
+    "mtime": 1791956333.8747034,
+    "seen": 1795855914.2815201,
+    "ast_hash": "5d0e7165069c79826e1f4042a65d51dd",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/forward-lunge/frame-2.png": {
+    "mtime": 1791956354.795286,
+    "seen": 1795855914.281522,
+    "ast_hash": "9cd5be469164e16160e6a1b0ffe75f6e",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/forward-lunge/frame-3.png": {
+    "mtime": 1791956362.397995,
+    "seen": 1795855914.2815237,
+    "ast_hash": "ec072cda5cb63a9db484d4b5e34e4e28",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/front-squat/frame-1.png": {
+    "mtime": 1791956334.4103463,
+    "seen": 1795855914.2815251,
+    "ast_hash": "66edfd3b0dfb57de7252f8ee11336380",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/front-squat/frame-2.png": {
+    "mtime": 1791956354.9004192,
+    "seen": 1795855914.281527,
+    "ast_hash": "01a6dc73fbd7057db66ecfda47ae6558",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/front-squat/frame-3.png": {
+    "mtime": 1791956362.5336914,
+    "seen": 1795855914.281529,
+    "ast_hash": "d7b17cf3c73ea743dac924a8dee483a7",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/glute-bridge/frame-1.png": {
+    "mtime": 1791956334.8381238,
+    "seen": 1795855914.2815306,
+    "ast_hash": "1099bae47e40b6d733ddf8b354263981",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/glute-bridge/frame-2.png": {
+    "mtime": 1791956354.9548955,
+    "seen": 1795855914.2815325,
+    "ast_hash": "4931a28d7639b2a10a39c4f02689f94b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/glute-bridge/frame-3.png": {
+    "mtime": 1791956362.583055,
+    "seen": 1795855914.2815347,
+    "ast_hash": "328e6e7df6eed7d204e0e8416f9602df",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/goblet-squat/frame-1.png": {
+    "mtime": 1791956335.0032084,
+    "seen": 1795855914.2815366,
+    "ast_hash": "2d2a1038aaff9fe22a3583b1e7935ca4",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/goblet-squat/frame-2.png": {
+    "mtime": 1791956355.0021408,
+    "seen": 1795855914.2815382,
+    "ast_hash": "04ce4afa299fe0f73432d9e2b6199d0d",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/goblet-squat/frame-3.png": {
+    "mtime": 1791956362.8495421,
+    "seen": 1795855914.28154,
+    "ast_hash": "e5d7c448529c92f2587a2bdfa3a8ab9a",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/hamstring-stretch/frame-1.png": {
+    "mtime": 1791956335.5152645,
+    "seen": 1795855914.2815416,
+    "ast_hash": "9c2030cbd86570f1656be2b2fba2cdbf",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/hamstring-stretch/frame-2.png": {
+    "mtime": 1791956355.1752937,
+    "seen": 1795855914.2815437,
+    "ast_hash": "f20949def04f009384b779712b32058b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/hamstring-stretch/frame-3.png": {
+    "mtime": 1791956363.1323326,
+    "seen": 1795855914.2815456,
+    "ast_hash": "8cdc40b8c89401489dd59d5bc2749f16",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/hanging-knee-raise/frame-1.png": {
+    "mtime": 1791956335.7995436,
+    "seen": 1795855914.2815473,
+    "ast_hash": "4d26a5d9681d620d126e777077c800ea",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/hanging-knee-raise/frame-2.png": {
+    "mtime": 1791956355.257487,
+    "seen": 1795855914.281549,
+    "ast_hash": "4fc8cd140c5f0cfbbc806a0e95908a1b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/hanging-knee-raise/frame-3.png": {
+    "mtime": 1791956363.2066698,
+    "seen": 1795855914.2815506,
+    "ast_hash": "c0b25f42be836ed71f162cd3a829919a",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/hanging-leg-raise/frame-1.png": {
+    "mtime": 1791956335.9234066,
+    "seen": 1795855914.281552,
+    "ast_hash": "4a50529f5a04ddcd187af545c635ff00",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/hanging-leg-raise/frame-2.png": {
+    "mtime": 1791956355.2905586,
+    "seen": 1795855914.281554,
+    "ast_hash": "e7e89dcb95cd7960436ef9a6f1538652",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/hanging-leg-raise/frame-3.png": {
+    "mtime": 1791956363.2722378,
+    "seen": 1795855914.2815557,
+    "ast_hash": "75b05b906c86fcd25a0dc3b2b5b17a90",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/high-knees/frame-1.png": {
+    "mtime": 1791956336.1348486,
+    "seen": 1795855914.2815576,
+    "ast_hash": "b7ad937c7e183144d5b3fd6f409febd5",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/high-knees/frame-2.png": {
+    "mtime": 1791956355.4155624,
+    "seen": 1795855914.281559,
+    "ast_hash": "eda60e5b6e47aa3eb614e60764bb783b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/high-knees/frame-3.png": {
+    "mtime": 1791956363.6889813,
+    "seen": 1795855914.281561,
+    "ast_hash": "5513ce40fcb6279e9314d0d4e3ec77a6",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/incline-dumbbell-press/frame-1.png": {
+    "mtime": 1791956337.5103936,
+    "seen": 1795855914.2815626,
+    "ast_hash": "e786b562fc83671132c4c8622eb1dc3e",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/incline-dumbbell-press/frame-2.png": {
+    "mtime": 1791956355.8358815,
+    "seen": 1795855914.2815642,
+    "ast_hash": "dc462400e010639039c204c86c92e389",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/incline-dumbbell-press/frame-3.png": {
+    "mtime": 1791956364.6837788,
+    "seen": 1795855914.281566,
+    "ast_hash": "bc027459a16aaa042b3facbe6cb8b1ae",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/incline-push-up/frame-1.png": {
+    "mtime": 1791956337.635895,
+    "seen": 1795855914.281568,
+    "ast_hash": "969a116350ee28d882c6fa3ace074fde",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/incline-push-up/frame-2.png": {
+    "mtime": 1791956355.8532448,
+    "seen": 1795855914.2815697,
+    "ast_hash": "b607f7ee7bdca030e3b6cf40cf24a232",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/incline-push-up/frame-3.png": {
+    "mtime": 1791956364.6917806,
+    "seen": 1795855914.2815716,
+    "ast_hash": "090c10bef37ea7e66dbb7ff8a7441e00",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/inverted-row/frame-1.png": {
+    "mtime": 1791956337.7201846,
+    "seen": 1795855914.2815733,
+    "ast_hash": "9e6c11d42ace150f43f58117e0efa90d",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/inverted-row/frame-2.png": {
+    "mtime": 1791956355.879627,
+    "seen": 1795855914.2815754,
+    "ast_hash": "880928c12bff97c3fb417efeac9301e3",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/inverted-row/frame-3.png": {
+    "mtime": 1791956364.6998196,
+    "seen": 1795855914.281577,
+    "ast_hash": "ac1eaca88a6e5f1cb0578febd7b1fb94",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/jump-squat/frame-1.png": {
+    "mtime": 1791956337.8812163,
+    "seen": 1795855914.281579,
+    "ast_hash": "12edb139b52ca0f8c18c83a0264b47ab",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/jump-squat/frame-2.png": {
+    "mtime": 1791956355.9616244,
+    "seen": 1795855914.2815807,
+    "ast_hash": "2585af4de26b02c569baf59d952134fb",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/jump-squat/frame-3.png": {
+    "mtime": 1791956364.726171,
+    "seen": 1795855914.2815826,
+    "ast_hash": "9b1faff1931d799a512d2633c3f2a06f",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/jumping-jack/frame-1.png": {
+    "mtime": 1791956337.9619489,
+    "seen": 1795855914.281585,
+    "ast_hash": "88418167f178179334437c270a388238",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/jumping-jack/frame-2.png": {
+    "mtime": 1791956356.0025086,
+    "seen": 1795855914.2815864,
+    "ast_hash": "5257860d9c42b66cf6c506cde33eaff6",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/jumping-jack/frame-3.png": {
+    "mtime": 1791956364.7538877,
+    "seen": 1795855914.2815886,
+    "ast_hash": "8cb944a0534e4fdce197975c88d293bc",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/kettlebell-swing/frame-1.png": {
+    "mtime": 1791956338.1210318,
+    "seen": 1795855914.2815905,
+    "ast_hash": "3f993bd39201d2b683fd65e5eafdd7b8",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/kettlebell-swing/frame-2.png": {
+    "mtime": 1791956356.0858667,
+    "seen": 1795855914.2815924,
+    "ast_hash": "327be3f3bfb02b789527c43b309b79ff",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/kettlebell-swing/frame-3.png": {
+    "mtime": 1791956364.8292723,
+    "seen": 1795855914.281594,
+    "ast_hash": "a33632e2d5711946f9bb3f41c0788d71",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/knee-push-up/frame-1.png": {
+    "mtime": 1791956338.2319176,
+    "seen": 1795855914.2815957,
+    "ast_hash": "b25102557a1dea2507db29a3846acf52",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/knee-push-up/frame-2.png": {
+    "mtime": 1791956356.1103618,
+    "seen": 1795855914.2815971,
+    "ast_hash": "c16588c39699b8270ff5d308536ba35b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/knee-push-up/frame-3.png": {
+    "mtime": 1791956364.8885064,
+    "seen": 1795855914.281599,
+    "ast_hash": "22a5b7648297d91540a7b26e651eb9a0",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/kneeling-hip-flexor-stretch/frame-1.png": {
+    "mtime": 1791956338.3041966,
+    "seen": 1795855914.2816007,
+    "ast_hash": "c0d9f0d020db30696766c8bb73f6d709",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/kneeling-hip-flexor-stretch/frame-2.png": {
+    "mtime": 1791956356.166745,
+    "seen": 1795855914.2816026,
+    "ast_hash": "09647fd4a5bf764fb5c786d5c80fa286",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/kneeling-hip-flexor-stretch/frame-3.png": {
+    "mtime": 1791956365.0301843,
+    "seen": 1795855914.2816045,
+    "ast_hash": "89f65f49c1a56acfe7e51f1184946533",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/lateral-lunge/frame-1.png": {
+    "mtime": 1791956338.9754567,
+    "seen": 1795855914.2816064,
+    "ast_hash": "8034d14590fe0fabf4be09dc61c53938",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/lateral-lunge/frame-2.png": {
+    "mtime": 1791956356.5050268,
+    "seen": 1795855914.2816083,
+    "ast_hash": "989baa67798b68e7042439382279a0ce",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/lateral-lunge/frame-3.png": {
+    "mtime": 1791956365.654979,
+    "seen": 1795855914.2816105,
+    "ast_hash": "28b88de65b6124151dc8f9e6fd829e71",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/lateral-shuffle/frame-1.png": {
+    "mtime": 1791956339.4632952,
+    "seen": 1795855914.2816126,
+    "ast_hash": "8799ea54b432f49b9a3d248f7bbb6fd9",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/lateral-shuffle/frame-2.png": {
+    "mtime": 1791956356.5691323,
+    "seen": 1795855914.2816143,
+    "ast_hash": "71453d8598462b4f20f8539940457650",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/lateral-shuffle/frame-3.png": {
+    "mtime": 1791956365.7176988,
+    "seen": 1795855914.2816164,
+    "ast_hash": "f0471182fa3c6c7171a0dde6b3140a9a",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/leg-press/frame-1.png": {
+    "mtime": 1791956339.756084,
+    "seen": 1795855914.2816179,
+    "ast_hash": "7bb82173de889e63aa5398cfd5a9361e",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/leg-press/frame-2.png": {
+    "mtime": 1791956356.666491,
+    "seen": 1795855914.2816198,
+    "ast_hash": "312bc0d3ac53d8c253477f3cc7a31b7c",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/leg-press/frame-3.png": {
+    "mtime": 1791956365.8511682,
+    "seen": 1795855914.2816215,
+    "ast_hash": "1dd11208e1d2ba40eea5a8f9718b14f0",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/lying-leg-curl/frame-1.png": {
+    "mtime": 1791956339.9710264,
+    "seen": 1795855914.2816234,
+    "ast_hash": "47da7a5c03efa420713b4df636c658f8",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/lying-leg-curl/frame-2.png": {
+    "mtime": 1791956356.898128,
+    "seen": 1795855914.281625,
+    "ast_hash": "79622f5ebbef91e770bbfc722c766b20",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/lying-leg-curl/frame-3.png": {
+    "mtime": 1791956365.9360397,
+    "seen": 1795855914.281627,
+    "ast_hash": "37a1847a8f919aecc5691edac159a9af",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/mountain-climber/frame-1.png": {
+    "mtime": 1791956340.991346,
+    "seen": 1795855914.2816288,
+    "ast_hash": "cdc21b722a738d91ffa59f5f9542e108",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/mountain-climber/frame-2.png": {
+    "mtime": 1791956357.1342564,
+    "seen": 1795855914.281631,
+    "ast_hash": "75063499da42d81b2d67c2554a051806",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/mountain-climber/frame-3.png": {
+    "mtime": 1791956366.3112614,
+    "seen": 1795855914.2816327,
+    "ast_hash": "a89d38a61c67e9e6df1972dec43c4525",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/negative-pull-up/frame-1.png": {
+    "mtime": 1791956341.0726001,
+    "seen": 1795855914.2816346,
+    "ast_hash": "8218322900ebb02dc6e6d468f23ee5da",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/negative-pull-up/frame-2.png": {
+    "mtime": 1791956357.1781132,
+    "seen": 1795855914.2816362,
+    "ast_hash": "adf591919a7a0da5f64d1e39b95defb0",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/negative-pull-up/frame-3.png": {
+    "mtime": 1791956366.3746467,
+    "seen": 1795855914.2816384,
+    "ast_hash": "77be7a4ad0516f644d98b1c8106f0e4b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/one-arm-dumbbell-row/frame-1.png": {
+    "mtime": 1791956341.5243611,
+    "seen": 1795855914.2816403,
+    "ast_hash": "0984245b13707742baad03e5da10e38a",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/one-arm-dumbbell-row/frame-2.png": {
+    "mtime": 1791956357.3133187,
+    "seen": 1795855914.281642,
+    "ast_hash": "7f0cdf5e517c107a2e50d47a4a5c73c8",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/one-arm-dumbbell-row/frame-3.png": {
+    "mtime": 1791956366.471917,
+    "seen": 1795855914.2816436,
+    "ast_hash": "47b1a103cb08f29942f29f065b2e9478",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/overhead-press/frame-1.png": {
+    "mtime": 1791956341.6174545,
+    "seen": 1795855914.2816455,
+    "ast_hash": "85117e0ccba6e1cc0ea93045212a6f69",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/overhead-press/frame-2.png": {
+    "mtime": 1791956357.3484986,
+    "seen": 1795855914.2816474,
+    "ast_hash": "dfbcf58fafe6147cf9619c795889c3d8",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/overhead-press/frame-3.png": {
+    "mtime": 1791956366.4919105,
+    "seen": 1795855914.281649,
+    "ast_hash": "e81272bab0db05aac1eaf4e5bee54817",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/pallof-press/frame-1.png": {
+    "mtime": 1791956341.7937918,
+    "seen": 1795855914.281651,
+    "ast_hash": "04e9a68511721b9661ec4ac3fcc13b74",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/pallof-press/frame-2.png": {
+    "mtime": 1791956357.460406,
+    "seen": 1795855914.2816525,
+    "ast_hash": "4eb684eff7000df9a738a3dbdd5904b1",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/pallof-press/frame-3.png": {
+    "mtime": 1791956366.5435627,
+    "seen": 1795855914.2816546,
+    "ast_hash": "7685f903bb12ecd69f90e173da318c21",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/pike-push-up/frame-1.png": {
+    "mtime": 1791956342.008405,
+    "seen": 1795855914.2816567,
+    "ast_hash": "5a323e97171eb73e3c2c8e1c777f5a09",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/pike-push-up/frame-2.png": {
+    "mtime": 1791956357.5549011,
+    "seen": 1795855914.281659,
+    "ast_hash": "d6ad946f811d15e25639b82c5b907dd0",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/pike-push-up/frame-3.png": {
+    "mtime": 1791956366.9528446,
+    "seen": 1795855914.2816603,
+    "ast_hash": "c62f06abad55a0cacbb981f27a74f623",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/plank/frame-1.png": {
+    "mtime": 1791956342.3911715,
+    "seen": 1795855914.2816622,
+    "ast_hash": "c5226d4d8c5a0ef7d957a7986c0dae32",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/plank/frame-2.png": {
+    "mtime": 1791956357.6485083,
+    "seen": 1795855914.281664,
+    "ast_hash": "127fafdb065a0b5f7e9cbd010ddc58bb",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/plank/frame-3.png": {
+    "mtime": 1791956367.107257,
+    "seen": 1795855914.2816658,
+    "ast_hash": "90a52ff43f792860e41328a50dd03ebf",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/prone-y-raise/frame-1.png": {
+    "mtime": 1791956342.6840127,
+    "seen": 1795855914.281668,
+    "ast_hash": "64b22cfb5ca528f975fd1daa6427ff87",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/prone-y-raise/frame-2.png": {
+    "mtime": 1791956357.7210298,
+    "seen": 1795855914.2816696,
+    "ast_hash": "34773a909929a65500b4d7fc5ca8eded",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/prone-y-raise/frame-3.png": {
+    "mtime": 1791956367.241241,
+    "seen": 1795855914.2816715,
+    "ast_hash": "1929759431935d7807c0d3bf3f332b6a",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/pull-up/frame-1.png": {
+    "mtime": 1791956342.7693517,
+    "seen": 1795855914.2816732,
+    "ast_hash": "e0b46eaca55abd8fff3f90b2fe175a04",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/pull-up/frame-2.png": {
+    "mtime": 1791956357.7637699,
+    "seen": 1795855914.281675,
+    "ast_hash": "8f67d8e7cfcc263c75c5ac6eb7d4068b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/pull-up/frame-3.png": {
+    "mtime": 1791956367.253455,
+    "seen": 1795855914.2816765,
+    "ast_hash": "eeaedbd5720f94e6421ffda6d3f08368",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/push-up/frame-1.png": {
+    "mtime": 1791956343.0066464,
+    "seen": 1795855914.2816784,
+    "ast_hash": "c265f91b773cc004c26a9d9dc9306fbc",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/push-up/frame-2.png": {
+    "mtime": 1791956357.8741074,
+    "seen": 1795855914.2816799,
+    "ast_hash": "ce76348509485e5a65395f6258a246e5",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/push-up/frame-3.png": {
+    "mtime": 1791956367.302364,
+    "seen": 1795855914.281682,
+    "ast_hash": "770cb0f6f1ad7d45081a4d75ea2cb9b6",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/reverse-lunge/frame-1.png": {
+    "mtime": 1791956343.5486817,
+    "seen": 1795855914.281684,
+    "ast_hash": "e0d402aee3d0d4ab00d5be50fe5f9d03",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/reverse-lunge/frame-2.png": {
+    "mtime": 1791956358.0304732,
+    "seen": 1795855914.2816858,
+    "ast_hash": "1e88f2dac7daff9ec2a350cf90d3f40c",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/reverse-lunge/frame-3.png": {
+    "mtime": 1791956367.4626975,
+    "seen": 1795855914.2816875,
+    "ast_hash": "f8f2a6eb8d08561e7de9efdbc1a21c9e",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/romanian-deadlift/frame-1.png": {
+    "mtime": 1791956343.8077295,
+    "seen": 1795855914.2816894,
+    "ast_hash": "e495d4b0ee73572844acf75692e3e2ad",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/romanian-deadlift/frame-2.png": {
+    "mtime": 1791956358.1398687,
+    "seen": 1795855914.2816908,
+    "ast_hash": "ace749382ef2e9f373f27b6e568340f8",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/romanian-deadlift/frame-3.png": {
+    "mtime": 1791956367.6246636,
+    "seen": 1795855914.2816927,
+    "ast_hash": "7f09ad2d06aced800818ffa6d19dc9cf",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/rope-tricep-pushdown/frame-1.png": {
+    "mtime": 1791956344.1329436,
+    "seen": 1795855914.2816947,
+    "ast_hash": "c468c62f5be2558a439c9040bd9b46d9",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/rope-tricep-pushdown/frame-2.png": {
+    "mtime": 1791956358.1814976,
+    "seen": 1795855914.2816963,
+    "ast_hash": "572d6e3d16f37ab2f578cf14d4625cc7",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/rope-tricep-pushdown/frame-3.png": {
+    "mtime": 1791956367.6720707,
+    "seen": 1795855914.281698,
+    "ast_hash": "5fd2c192e8a39a5de2ac0d9e8aee53de",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/rowing/frame-1.png": {
+    "mtime": 1791956344.202451,
+    "seen": 1795855914.2817,
+    "ast_hash": "9faf70d1ba2d8bac3e44660712f48a0a",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/rowing/frame-2.png": {
+    "mtime": 1791956358.201809,
+    "seen": 1795855914.2817016,
+    "ast_hash": "b1690d9a26a697283749b7cd53566490",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/rowing/frame-3.png": {
+    "mtime": 1791956367.694574,
+    "seen": 1795855914.2817035,
+    "ast_hash": "f9c1fad046bb7f0ad68709ed00bd714f",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/running/frame-1.png": {
+    "mtime": 1791956344.3023992,
+    "seen": 1795855914.2817054,
+    "ast_hash": "d8b19d2662caf8da6608da06fb4b4a75",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/running/frame-2.png": {
+    "mtime": 1791956358.2562943,
+    "seen": 1795855914.2817075,
+    "ast_hash": "5ef9de0c65ddf8eb4855260e4b2b7d34",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/running/frame-3.png": {
+    "mtime": 1791956367.7479281,
+    "seen": 1795855914.2817092,
+    "ast_hash": "54d3f0049a26ad64fa0b6acafc1c460a",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/seated-dumbbell-press/frame-1.png": {
+    "mtime": 1791956344.925188,
+    "seen": 1795855914.281711,
+    "ast_hash": "790acf6155332947fa669a62b8326ec3",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/seated-dumbbell-press/frame-2.png": {
+    "mtime": 1791956358.441325,
+    "seen": 1795855914.281713,
+    "ast_hash": "15f27522b3d876c32e9af31868de7e75",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/seated-dumbbell-press/frame-3.png": {
+    "mtime": 1791956368.0231605,
+    "seen": 1795855914.2817147,
+    "ast_hash": "1cc0027833090d4c9e52d5cc6a025ddc",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/seated-forward-fold-stretch/frame-1.png": {
+    "mtime": 1791956344.971934,
+    "seen": 1795855914.281717,
+    "ast_hash": "f7ec1f827337e2ceed34576182e69e8b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/seated-forward-fold-stretch/frame-2.png": {
+    "mtime": 1791956358.483201,
+    "seen": 1795855914.281719,
+    "ast_hash": "7b7ad4d8762d1801f26eb2387d3092ae",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/seated-forward-fold-stretch/frame-3.png": {
+    "mtime": 1791956368.0830247,
+    "seen": 1795855914.281721,
+    "ast_hash": "35e9a31def400f3d0e2ac28781d0cf7b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/seated-row/frame-1.png": {
+    "mtime": 1791956345.1814506,
+    "seen": 1795855914.2817225,
+    "ast_hash": "0a4c775c2a2bc7feac2e7f346f1522a4",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/seated-row/frame-2.png": {
+    "mtime": 1791956358.547748,
+    "seen": 1795855914.2817247,
+    "ast_hash": "1b1a5ef4b684dea0edec00875d43e3ed",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/seated-row/frame-3.png": {
+    "mtime": 1791956368.2574708,
+    "seen": 1795855914.2817261,
+    "ast_hash": "9e484b00f5dda635a4eeba74d699fe51",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/side-plank/frame-1.png": {
+    "mtime": 1791956345.536823,
+    "seen": 1795855914.281728,
+    "ast_hash": "813923226bb98f00bc1189759d0441ee",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/side-plank/frame-2.png": {
+    "mtime": 1791956358.6739578,
+    "seen": 1795855914.28173,
+    "ast_hash": "a40dab4f5e5b1eec2b8de81c77ea2fd2",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/side-plank/frame-3.png": {
+    "mtime": 1791956368.5212886,
+    "seen": 1795855914.2817316,
+    "ast_hash": "8568ccb61be0edf4bf2a4809fa67b1a0",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/squat/frame-1.png": {
+    "mtime": 1791956346.9451106,
+    "seen": 1795855914.2817333,
+    "ast_hash": "fda57af8b092eca6513cbf83e28614c4",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/squat/frame-2.png": {
+    "mtime": 1791956359.4253616,
+    "seen": 1795855914.2817352,
+    "ast_hash": "6aba38740fdaa5b5c5d1755566b3e52b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/squat/frame-3.png": {
+    "mtime": 1791956369.285195,
+    "seen": 1795855914.2817369,
+    "ast_hash": "c2f863ef88e473637bd4e7377dbda9d5",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/standing-calf-raise/frame-1.png": {
+    "mtime": 1791956347.0744255,
+    "seen": 1795855914.2817388,
+    "ast_hash": "1345f2d16e4b376b6f03f0957b4b9353",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/standing-calf-raise/frame-2.png": {
+    "mtime": 1791956359.453212,
+    "seen": 1795855914.2817404,
+    "ast_hash": "690f863c8f81e302047a54942daf9b43",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/standing-calf-raise/frame-3.png": {
+    "mtime": 1791956369.3384564,
+    "seen": 1795855914.2817423,
+    "ast_hash": "c1b6418e209d50f2774d9e038b94d5d3",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/standing-quad-stretch/frame-1.png": {
+    "mtime": 1791956347.172585,
+    "seen": 1795855914.2817438,
+    "ast_hash": "5917cafab2b854fbcc99e00a863acce5",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/standing-quad-stretch/frame-2.png": {
+    "mtime": 1791956359.5080676,
+    "seen": 1795855914.281746,
+    "ast_hash": "90b9d5e3ce7d0c309146c9ef2ca5ae9a",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/standing-quad-stretch/frame-3.png": {
+    "mtime": 1791956369.3719049,
+    "seen": 1795855914.2817478,
+    "ast_hash": "5ef13ddfd8312f455501a91f12af8169",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/step-up/frame-1.png": {
+    "mtime": 1791956347.250558,
+    "seen": 1795855914.2817495,
+    "ast_hash": "559455a303c0c8fd0c82c0b687ee268f",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/step-up/frame-2.png": {
+    "mtime": 1791956359.5222495,
+    "seen": 1795855914.2817514,
+    "ast_hash": "002247fae463c326329e2acf34dce021",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/step-up/frame-3.png": {
+    "mtime": 1791956369.416074,
+    "seen": 1795855914.281753,
+    "ast_hash": "1739033bab0226e69021f3287c3ba478",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/superman/frame-1.png": {
+    "mtime": 1791956347.4942362,
+    "seen": 1795855914.281755,
+    "ast_hash": "7bbbe412a67eaa3e9ad6094cfeac42e9",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/superman/frame-2.png": {
+    "mtime": 1791956359.5657563,
+    "seen": 1795855914.2817564,
+    "ast_hash": "69a8bbb1261e15a6c91f84eeedca9e0e",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/superman/frame-3.png": {
+    "mtime": 1791956369.6997178,
+    "seen": 1795855914.2817588,
+    "ast_hash": "e5eea26dd4ed306412da5718c52e8dd9",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/torso-twist-stretch/frame-1.png": {
+    "mtime": 1791956347.7393627,
+    "seen": 1795855914.2817605,
+    "ast_hash": "ef5dae393708fc66a7c37269c288a7a4",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/torso-twist-stretch/frame-2.png": {
+    "mtime": 1791956359.6737611,
+    "seen": 1795855914.2817621,
+    "ast_hash": "0682f952cddf8cc325e2be376f63ca92",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/torso-twist-stretch/frame-3.png": {
+    "mtime": 1791956369.7871737,
+    "seen": 1795855914.281764,
+    "ast_hash": "ba370be09e721f3a010752b6c85fe085",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/walking-lunge/frame-1.png": {
+    "mtime": 1791956348.3727844,
+    "seen": 1795855914.2817664,
+    "ast_hash": "a7fcc6fc88c0445e65277fba34ca3b8f",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/walking-lunge/frame-2.png": {
+    "mtime": 1791956360.0085409,
+    "seen": 1795855914.281768,
+    "ast_hash": "cfe594742b5dbe8630667a0cfd2b7426",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/walking-lunge/frame-3.png": {
+    "mtime": 1791956369.9888608,
+    "seen": 1795855914.2817702,
+    "ast_hash": "9a45f47e2a8d0a1375c16c09ee9ac319",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/walking/frame-1.png": {
+    "mtime": 1791956348.4357195,
+    "seen": 1795855914.2817721,
+    "ast_hash": "83e4df5e863a77f7a044a83035a89347",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/walking/frame-2.png": {
+    "mtime": 1791956360.0240724,
+    "seen": 1795855914.2817738,
+    "ast_hash": "fc1e182ac6609f240cebb8d3819bcc6e",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/walking/frame-3.png": {
+    "mtime": 1791956370.0053258,
+    "seen": 1795855914.2817757,
+    "ast_hash": "c8f4f0f22192ed76ad62f915d7883007",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/wall-calf-stretch/frame-1.png": {
+    "mtime": 1791956348.5021122,
+    "seen": 1795855914.2817771,
+    "ast_hash": "ac5621ee9c1954e147e133d6c5a77761",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/wall-calf-stretch/frame-2.png": {
+    "mtime": 1791956360.0583022,
+    "seen": 1795855914.2817795,
+    "ast_hash": "59223858619876132c08905a88027aab",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/wall-calf-stretch/frame-3.png": {
+    "mtime": 1791956370.011531,
+    "seen": 1795855914.281781,
+    "ast_hash": "8b80d927b4ece64ec54515388330ec63",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/wall-sit/frame-1.png": {
+    "mtime": 1791956348.6293728,
+    "seen": 1795855914.281783,
+    "ast_hash": "ea08ff7ee8903047d38ba7d0fd70ea2d",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/wall-sit/frame-2.png": {
+    "mtime": 1791956360.103554,
+    "seen": 1795855914.2817848,
+    "ast_hash": "f8813369f2d006238e6cf8a2d769b74b",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/wall-sit/frame-3.png": {
+    "mtime": 1791956370.0339532,
+    "seen": 1795855914.2817874,
+    "ast_hash": "31f2d552ee7fdad3e7daa3b7a9596633",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/weighted-dip/frame-1.png": {
+    "mtime": 1791956348.8995185,
+    "seen": 1795855914.2817888,
+    "ast_hash": "07699f8ea032007800106291144f5020",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/weighted-dip/frame-2.png": {
+    "mtime": 1791956360.1682067,
+    "seen": 1795855914.2817907,
+    "ast_hash": "107265f688941aac431edb3290d5a880",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/weighted-dip/frame-3.png": {
+    "mtime": 1791956370.1011353,
+    "seen": 1795855914.2817924,
+    "ast_hash": "0485921ccb9d01f1e801ae0757fc09c5",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/worlds-greatest-stretch/frame-1.png": {
+    "mtime": 1791956349.1871688,
+    "seen": 1795855914.2817948,
+    "ast_hash": "73e5d291025a44e5822e59f0ad52c689",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/worlds-greatest-stretch/frame-2.png": {
+    "mtime": 1791956360.269042,
+    "seen": 1795855914.2817965,
+    "ast_hash": "4034b7bbfe6ec5a7d3f7aebbc8b8feda",
+    "semantic_hash": ""
+  },
+  "frontend/public/exercise-frames/worlds-greatest-stretch/frame-3.png": {
+    "mtime": 1791956370.2117555,
+    "seen": 1795855914.2817981,
+    "ast_hash": "e5393bb4df49182c0c226c5e5d35b457",
     "semantic_hash": ""
   },
   "backend/package-lock.json": {

@@ -496,7 +496,12 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
                       return (
                       <div
                         key={`${activeDayData.day_number}-${idx}`}
-                        className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl border"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`How to do ${ex.name}`}
+                        onClick={() => setGuideName(ex.name)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setGuideName(ex.name); } }}
+                        className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl border cursor-pointer transition-colors hover:bg-[var(--bg-active)]"
                         style={{ background: 'var(--bg-hover)', borderColor: 'var(--border-light)' }}
                       >
                         <span className="text-[length:var(--fs-9)] sm:text-[length:var(--fs-10)] font-black w-5 sm:w-6 flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
@@ -517,7 +522,7 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
                         </div>
                         {/* Section 3 — written instructions + "don't recommend" */}
                         <button
-                          onClick={() => setGuideName(ex.name)}
+                          onClick={(e) => { e.stopPropagation(); setGuideName(ex.name); }}
                           title={`How to do ${ex.name}`}
                           aria-label={`How to do ${ex.name}`}
                           className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center cursor-pointer transition-all hover:bg-[var(--bg-active)]"
@@ -527,7 +532,7 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
                         </button>
                         {/* Module 5 — equipment-compatible alternatives (user's gear) */}
                         <button
-                          onClick={() => setAltExName(ex.name)}
+                          onClick={(e) => { e.stopPropagation(); setAltExName(ex.name); }}
                           title={`Alternatives for ${ex.name}`}
                           aria-label={`Show alternatives for ${ex.name}`}
                           className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center cursor-pointer transition-all hover:bg-[var(--bg-active)]"

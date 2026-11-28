@@ -28,6 +28,8 @@ export default function Modal({
   className = '',
   headerClassName = '',
   onExited = undefined,
+  // Raise above full-screen overlays (e.g. the plan day tracker at z-110).
+  zIndex = undefined,
 }) {
   // Stay mounted briefly after isOpen → false so the exit animation can play.
   const { mounted, closing } = usePresence(isOpen, EXIT_MS);
@@ -95,7 +97,7 @@ export default function Modal({
     <>
       <div
         className={`v-motion-backdrop${motionState} fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-[2px]`}
-        style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))', paddingTop: 'max(16px, env(safe-area-inset-top, 0px))' }}
+        style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))', paddingTop: 'max(16px, env(safe-area-inset-top, 0px))', ...(zIndex ? { zIndex } : {}) }}
         onMouseDown={(e) => {
           if (closing) return;
           if (closeOnBackdrop && e.target === e.currentTarget) onClose?.();

@@ -24,12 +24,16 @@ function load() {
 
 /** Returns the guide entry for `name` (or null), plus a loading flag. */
 export function useExerciseGuide(name) {
-  const [state, setState] = useState(() => ({ guide: cache?.get(norm(name)) ?? null, loading: !cache }));
+  const [state, setState] = useState(() => ({ name, guide: cache?.get(norm(name)) ?? null, loading: !cache }));
   useEffect(() => {
     if (!name) return undefined;
     let alive = true;
-    load().then((map) => { if (alive) setState({ guide: map.get(norm(name)) ?? null, loading: false }); });
+    load().then((map) => { if (alive) setState({ name, guide: map.get(norm(name)) ?? null, loading: false }); });
     return () => { alive = false; };
   }, [name]);
+  // Never show the previous exercise's steps while the next one resolves.
+  if (state.name !== name) {
+    return { guide: cache?.get(norm(name)) ?? null, loading: !cache };
+  }
   return state;
 }
