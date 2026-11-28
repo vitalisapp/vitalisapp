@@ -207,7 +207,7 @@ const BodyMetricsPanel = ({ USER_ID = undefined, initialWeight = undefined, init
         }
         if (Object.keys(identity).length > 0) {
           try {
-            const data = await apiFetch(`/api/goals/${USER_ID}/active`, {
+            const data = await apiFetch(`/api/goals/active/${USER_ID}`, {
               method: 'PATCH',
               body: JSON.stringify(identity),
             });

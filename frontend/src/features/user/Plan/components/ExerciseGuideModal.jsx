@@ -10,7 +10,7 @@ const LEVEL = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' };
 
 // Section 3 — how to do an exercise: pictures, steps, form cues, common
 // mistakes, and a "Don't recommend this" action that feeds the recommender.
-export default function ExerciseGuideModal({ name = undefined, onClose = undefined, excluded = false, onToggleExclude = undefined }) {
+export default function ExerciseGuideModal({ name = undefined, detail = undefined, onClose = undefined, excluded = false, onToggleExclude = undefined }) {
   const { guide, loading } = useExerciseGuide(name);
   const match = name ? matchExercise(name) : null;
   const [frame, setFrame] = useState(1);
@@ -76,11 +76,19 @@ export default function ExerciseGuideModal({ name = undefined, onClose = undefin
         </div>
       )}
 
+      {detail && (
+        <p className="mb-3 text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+          Today: {detail}
+        </p>
+      )}
+
       {loading && <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>Loading instructions…</p>}
 
       {!loading && !guide && (
         <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-          Written steps for this exercise are not available yet. Follow the pictures and move slowly with good control.
+          {match
+            ? `Works your ${String(match.primaryMuscle || 'body').toLowerCase()} (${match.equipment || 'bodyweight'}). Follow the pictures, move slowly with good control, and stop if you feel sharp pain.`
+            : 'Written steps for this exercise are not available yet. Follow the pictures and move slowly with good control.'}
         </p>
       )}
 

@@ -130,11 +130,17 @@ async function insertPersonalPlan(conn, userId, { title, tag, intensity, targetF
     return planId;
 }
 
+// A plan is visible to a user when it is a shared template (no owner) or their own
+// personal plan. Someone else's personal plan answers 404 so its id is not confirmable.
+function canSeePlan(plan, userId) {
+    return plan.owner_user_id == null || String(plan.owner_user_id) === String(userId);
+}
+
 // Enroll in a marketplace template. Identity comes from JWT (userId), never body.
 async function enroll(userId, planId) {
-    // 404 (not 500 FK) when plan doesn't exist
+    // 404 (not 500 FK) when plan doesn't exist or belongs to another user
     const [[plan]] = await db.execute('SELECT * FROM plans WHERE id = ? LIMIT 1', [planId]);
-    if (!plan) throw new AppError('Plan not found', 404, 'PLAN_NOT_FOUND');
+    if (!plan || !canSeePlan(plan, userId)) throw new AppError('Plan not found', 404, 'PLAN_NOT_FOUND');
     // Revision #4: Advanced / Extreme curated plans need the matching level.
     // Already-enrolled users hit ALREADY_ENROLLED below and keep access.
     const [[already]] = await db.execute('SELECT id FROM user_plans WHERE user_id = ? AND plan_id = ? LIMIT 1', [userId, planId]);
@@ -175,9 +181,9 @@ async function getProgress(userId, planId) {
     return rows;
 }
 
-async function getPlanContent(planId) {
-    const [[plan]] = await db.execute('SELECT id FROM plans WHERE id = ? LIMIT 1', [planId]);
-    if (!plan) throw new AppError('Plan not found', 404, 'PLAN_NOT_FOUND');
+async function getPlanContent(userId, planId) {
+    const [[plan]] = await db.execute('SELECT id, owner_user_id FROM plans WHERE id = ? LIMIT 1', [planId]);
+    if (!plan || !canSeePlan(plan, userId)) throw new AppError('Plan not found', 404, 'PLAN_NOT_FOUND');
     const [days] = await db.execute(
         `SELECT id, day_number, title, activity_type, description, duration_mins
          FROM plan_contents WHERE plan_id = ? ORDER BY day_number ASC`,
@@ -222,6 +228,8 @@ async function getPlanContent(planId) {
 // day itself (works for generated AND curated plans) and the user's level,
 // goals and safety settings; the routine logic is pure (warmupRecommender).
 async function getDayRoutine(userId, planId, dayNumber) {
+    const [[owned]] = await db.execute('SELECT id, owner_user_id FROM plans WHERE id = ? LIMIT 1', [planId]);
+    if (!owned || !canSeePlan(owned, userId)) throw new AppError('Plan day not found', 404, 'PLAN_DAY_NOT_FOUND');
     const [[day]] = await db.execute(
         `SELECT id, day_number, title, activity_type, duration_mins
            FROM plan_contents WHERE plan_id = ? AND day_number = ? LIMIT 1`,
@@ -259,8 +267,9 @@ async function getPlansForUser(userId) {
         `SELECT p.*, IF(up.user_id IS NULL, 0, 1) as is_enrolled
          FROM plans p
          LEFT JOIN user_plans up ON p.id = up.plan_id AND up.user_id = ?
+         WHERE p.owner_user_id IS NULL OR p.owner_user_id = ?
          ORDER BY p.id ASC`,
-        [userId]
+        [userId, userId]
     );
     // Per-plan completed-day counts (separate query so list works even
     // when 032 columns/progress table differ pre-migration).

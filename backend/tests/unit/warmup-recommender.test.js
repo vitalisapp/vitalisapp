@@ -137,6 +137,10 @@ describe('GET routine service', () => {
     const servicePath = require.resolve('../../src/services/plans.service');
     const prefsPath = require.resolve('../../src/services/trainingPrefs.service');
     const execute = async (sql, params = []) => {
+      // Plan ownership lookup: plan 5 is a shared template, plan 6 belongs to user 77.
+      if (/FROM plans WHERE id = \? LIMIT 1/.test(sql)) {
+        return [[{ id: params[0], owner_user_id: params[0] === 6 ? 77 : null }]];
+      }
       if (/FROM plan_contents WHERE plan_id = \? AND day_number = \?/.test(sql)) {
         if (params[1] !== 2) return [[]];
         return [[{ id: 9, day_number: 2, title: 'Upper Body Push', activity_type: 'Workout', duration_mins: 30 }]];
@@ -162,6 +166,10 @@ describe('GET routine service', () => {
       assert.ok(!r.warmup.moves.some((m) => m.key === 'inchworm'));
       // Unknown day → 404, never a generic routine.
       await assert.rejects(service.getDayRoutine(1, 5, 99), (e) => e.code === 'PLAN_DAY_NOT_FOUND' && e.status === 404);
+      // Someone else's personal plan is a 404 too — its existence is not revealed.
+      await assert.rejects(service.getDayRoutine(1, 6, 2), (e) => e.code === 'PLAN_DAY_NOT_FOUND' && e.status === 404);
+      // …but its owner can read it.
+      assert.equal((await service.getDayRoutine(77, 6, 2)).level, 'ADVANCED');
     } finally {
       if (realDb) require.cache[dbPath] = realDb; else delete require.cache[dbPath];
       if (realPrefs) require.cache[prefsPath] = realPrefs; else delete require.cache[prefsPath];

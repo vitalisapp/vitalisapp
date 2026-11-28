@@ -240,15 +240,15 @@
     "semantic_hash": ""
   },
   "backend/src/config/db.js": {
-    "mtime": 1792887172.7463367,
-    "seen": 1795221113.1619062,
-    "ast_hash": "546d0dc150cebc0332084374d887b0b8",
+    "mtime": 1795851936.503806,
+    "seen": 1795853478.270446,
+    "ast_hash": "67b994e953a678250d909af1de2e2f82",
     "semantic_hash": ""
   },
   "backend/src/config/env.js": {
-    "mtime": 1795311204.6027088,
-    "seen": 1795311886.0880704,
-    "ast_hash": "a1b3cf98fac08a6d2f2b34d6a5494334",
+    "mtime": 1795851922.680926,
+    "seen": 1795853478.270452,
+    "ast_hash": "019e796b70f64a857fb646bd49ee9811",
     "semantic_hash": ""
   },
   "backend/src/config/gemini.js": {
@@ -384,9 +384,9 @@
     "semantic_hash": ""
   },
   "backend/src/controllers/plans.controller.js": {
-    "mtime": 1795656527.9252734,
-    "seen": 1795656681.873033,
-    "ast_hash": "d3d5babdc84de7afecf920e0e12ee5f6",
+    "mtime": 1795853275.7735744,
+    "seen": 1795853478.2862904,
+    "ast_hash": "5001d252706e7a925828e6596506b939",
     "semantic_hash": ""
   },
   "backend/src/controllers/profile.controller.js": {
@@ -450,9 +450,9 @@
     "semantic_hash": ""
   },
   "backend/src/db/migrate.js": {
-    "mtime": 1795311205.2970636,
-    "seen": 1795311886.0911198,
-    "ast_hash": "e045c2d085a2a55b1a41cab46dd743dc",
+    "mtime": 1795851922.6829357,
+    "seen": 1795853478.2897813,
+    "ast_hash": "bafe51b536143ce62b3e30bde20c7e65",
     "semantic_hash": ""
   },
   "backend/src/emails/components/button.js": {
@@ -822,9 +822,9 @@
     "semantic_hash": ""
   },
   "backend/src/services/foodLogs.service.js": {
-    "mtime": 1795653363.0379984,
-    "seen": 1795653418.0316517,
-    "ast_hash": "3d5f962c46594cbbae4964ef8d6a5d20",
+    "mtime": 1795853275.7808712,
+    "seen": 1795853478.3396852,
+    "ast_hash": "514e428bdc76f27fd263ba16bb56b74e",
     "semantic_hash": ""
   },
   "backend/src/services/forgotpassword.service.js": {
@@ -870,9 +870,9 @@
     "semantic_hash": ""
   },
   "backend/src/services/plans.service.js": {
-    "mtime": 1795656527.923274,
-    "seen": 1795656681.9399905,
-    "ast_hash": "9ad41683cfd81c460c79661aef482401",
+    "mtime": 1795853275.7839992,
+    "seen": 1795853478.344558,
+    "ast_hash": "aff31cc1cb35659a1d7e10415ec70e57",
     "semantic_hash": ""
   },
   "backend/src/services/profile.service.js": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "backend/src/services/public.service.js": {
-    "mtime": 1795311204.6169474,
-    "seen": 1795311886.0957832,
-    "ast_hash": "cf58d8cd5b42537f0a5a88b488643c20",
+    "mtime": 1795853275.7945397,
+    "seen": 1795853478.3455298,
+    "ast_hash": "8bfb149748ebe2dac659444fdd411132",
     "semantic_hash": ""
   },
   "backend/src/services/security.service.js": {
@@ -960,9 +960,9 @@
     "semantic_hash": ""
   },
   "backend/src/utils/cookies.js": {
-    "mtime": 1791956008.6493897,
-    "seen": 1795221113.1622307,
-    "ast_hash": "f2dbd6834fb3e39af195b782945140d9",
+    "mtime": 1795852337.58526,
+    "seen": 1795853478.35331,
+    "ast_hash": "82f5df15d33ca062da990ab6bb6d0516",
     "semantic_hash": ""
   },
   "backend/src/utils/errors.js": {
@@ -1104,9 +1104,9 @@
     "semantic_hash": ""
   },
   "backend/tests/unit/migrations.test.js": {
-    "mtime": 1795678748.7777545,
-    "seen": 1795678858.2785466,
-    "ast_hash": "1617288aebf832b09e474b9fd2d35dbb",
+    "mtime": 1795852982.0552092,
+    "seen": 1795853478.3959925,
+    "ast_hash": "ebc4d4cd28fde7d6499a14cfc1af2adc",
     "semantic_hash": ""
   },
   "backend/tests/unit/nutrition.test.js": {
@@ -2190,9 +2190,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/utils/exerciseMatch.js": {
-    "mtime": 1792807151.9049385,
-    "seen": 1795221113.1629307,
-    "ast_hash": "dac67b1099025517ee7d03ec708340b3",
+    "mtime": 1795854074.167962,
+    "seen": 1795854108.0046346,
+    "ast_hash": "37e90202ca2cff2d1547046ab9a8beb3",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/utils/planFormat.js": {
@@ -2286,9 +2286,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Profile/pages/Profile.jsx": {
-    "mtime": 1795679761.3955638,
-    "seen": 1795770914.549333,
-    "ast_hash": "05d3608e691236ff48f755a058ac479d",
+    "mtime": 1795853225.2315452,
+    "seen": 1795853478.5736704,
+    "ast_hash": "113193934c6bca6b3a8aa98a4a7623f6",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Profile/utils/avatar.js": {
@@ -2532,9 +2532,9 @@
     "semantic_hash": ""
   },
   "backend/migrations/README.md": {
-    "mtime": 1795664885.4988806,
-    "seen": 1795665984.1791537,
-    "ast_hash": "e0b361d2d03e25ad6c96eb8d417d2f2e",
+    "mtime": 1795851458.8536353,
+    "seen": 1795853478.627144,
+    "ast_hash": "ab75b5f4a344296764dd542189b96395",
     "semantic_hash": ""
   },
   "backend/src/controllers/README.md": {
@@ -2994,9 +2994,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/components/ExerciseGuideModal.jsx": {
-    "mtime": 1795311206.0859027,
-    "seen": 1795311886.1092038,
-    "ast_hash": "6dfbfbeb294e11394343823a48859801",
+    "mtime": 1795853735.5614686,
+    "seen": 1795853761.8345459,
+    "ast_hash": "f001fd727a9a73cfafc28d588600fd67",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/components/GoalPlansPanel.jsx": {
@@ -3258,9 +3258,9 @@
     "semantic_hash": ""
   },
   "backend/scripts/build-database-sql.js": {
-    "mtime": 1795679324.0765185,
-    "seen": 1795770914.4018028,
-    "ast_hash": "866119f091f2ffede26501775ea5ffe8",
+    "mtime": 1795850996.2300994,
+    "seen": 1795853478.2645247,
+    "ast_hash": "60d89ce89041a56f21a5d7235f8a6d76",
     "semantic_hash": ""
   },
   "backend/src/utils/taskNotifications.js": {
@@ -3546,9 +3546,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/components/DayTracker.jsx": {
-    "mtime": 1795655548.1336136,
-    "seen": 1795655923.0277965,
-    "ast_hash": "bbbc264e78ece5e375fd2b46a4c4fca5",
+    "mtime": 1795853734.6392033,
+    "seen": 1795853761.834542,
+    "ast_hash": "e2f93eda94004052f35e3f090b13a0cc",
     "semantic_hash": ""
   },
   "frontend/src/features/user/Plan/components/ExerciseLibrary.jsx": {
@@ -3738,9 +3738,9 @@
     "semantic_hash": ""
   },
   "backend/tests/unit/warmup-recommender.test.js": {
-    "mtime": 1795655360.1452086,
-    "seen": 1795655922.779006,
-    "ast_hash": "e884f899a6d048f3cdc7fcaaafb4e6f8",
+    "mtime": 1795853509.6616857,
+    "seen": 1795853761.7929437,
+    "ast_hash": "2536d64b5fde7ec39fc93b91d2800f2f",
     "semantic_hash": ""
   },
   "frontend/src/components/WarningBadge.jsx": {
@@ -4185,6 +4185,30 @@
     "mtime": 1795823659.9004664,
     "seen": 1795823945.2450013,
     "ast_hash": "0bacd7a79c017883b319fb3161d8e936",
+    "semantic_hash": ""
+  },
+  "backend/src/config/loadEnv.js": {
+    "mtime": 1795851912.8928783,
+    "seen": 1795853478.2722325,
+    "ast_hash": "8c6ffe3e4e09928a30597bb3e30f4843",
+    "semantic_hash": ""
+  },
+  "backend/tests/jest/api/plans-isolation.test.js": {
+    "mtime": 1795853258.7216704,
+    "seen": 1795853478.3818264,
+    "ast_hash": "829b5b108537463c35774d99047307e9",
+    "semantic_hash": ""
+  },
+  "backend/tests/unit/cookies.test.js": {
+    "mtime": 1795852357.489952,
+    "seen": 1795853478.3884199,
+    "ast_hash": "3a77c565b08f4e46b0db03e456bf26f2",
+    "semantic_hash": ""
+  },
+  "frontend/tests/unit/planStartMatch.test.js": {
+    "mtime": 1795854085.7234514,
+    "seen": 1795854108.0369666,
+    "ast_hash": "29087e544f44b74f2d6bc403eae5ffb8",
     "semantic_hash": ""
   },
   "backend/package-lock.json": {

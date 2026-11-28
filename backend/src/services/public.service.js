@@ -75,7 +75,7 @@ async function getLandingStats() {
   let featuredPlans = [];
   try {
     const [rows] = await db.execute(
-      'SELECT id, COALESCE(title, name) AS title, tag, difficulty, duration_days FROM plans ORDER BY id ASC LIMIT 6'
+      'SELECT id, COALESCE(title, name) AS title, tag, difficulty, duration_days FROM plans WHERE owner_user_id IS NULL ORDER BY id ASC LIMIT 6'
     );
     featuredPlans = rows;
   } catch {

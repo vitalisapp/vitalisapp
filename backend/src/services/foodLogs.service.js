@@ -255,8 +255,9 @@ async function suggestPlan(userId, body) {
         `SELECT p.*, IF(up.user_id IS NULL, 0, 1) AS is_enrolled
          FROM plans p
          LEFT JOIN user_plans up ON p.id = up.plan_id AND up.user_id = ?
+         WHERE p.owner_user_id IS NULL OR p.owner_user_id = ?
          ORDER BY p.id ASC`,
-        [userId],
+        [userId, userId],
       )
       .then(([r]) => r),
     db

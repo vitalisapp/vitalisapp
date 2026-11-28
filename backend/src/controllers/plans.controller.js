@@ -97,7 +97,7 @@ async function getprogressUserIdPlanId(req, res, next) {
 async function getcontentPlanId(req, res, next) {
     try {
         const { planId } = req.params;
-        const result = await plansService.getPlanContent(planId);
+        const result = await plansService.getPlanContent(req.user.id, planId);
         res.json(result);
     } catch (err) {
         if (err instanceof AppError) return sendPlanError(err, res, next);

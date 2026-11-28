@@ -37,6 +37,8 @@ const EXPECTED = [
   '061_progression.sql',
   '062_activity_calories.sql',
   '063_normalize_activity_level.sql',
+  '064_plans_owner_fk.sql',
+  '065_seed_original_plan_content.sql',
 ];
 
 describe('migrations per-table baseline', () => {

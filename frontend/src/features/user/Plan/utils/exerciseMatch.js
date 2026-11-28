@@ -41,10 +41,35 @@ export function _nameIndex() {
 
 let cachedIndex = null;
 
+// Plan exercise names that have no same-named catalog entry, mapped to the
+// closest camera-workout slug so Start Workout can always auto-select them.
+const PLAN_ALIASES = {
+  'Barbell Bent-Over Row': 'barbell-row',
+  'Single-Arm Dumbbell Row': 'one-arm-dumbbell-row',
+  'Resistance Band Rows': 'banded-row',
+  'Triceps Rope Pushdown': 'rope-tricep-pushdown',
+  'Cat-Cow Flow': 'cat-cow-stretch',
+  'Seated Spinal Twist': 'torso-twist-stretch',
+  'Standing Forward Fold': 'seated-forward-fold-stretch',
+  'Deep Lunge Hip Opener': 'kneeling-hip-flexor-stretch',
+  'Brisk Walk': 'walking',
+  'Easy-Paced Walk': 'walking',
+  'Easy Run / Bike / Row': 'running',
+  'Jog / Bike / Row - Moderate Pace': 'running',
+  'Long Steady Run / Bike': 'running',
+  'Tempo Intervals': 'running',
+  'Sprint Intervals': 'running',
+  'Hill Sprints or Resisted Intervals': 'running',
+  'Bike or Row Cross-Train': 'rowing',
+};
+const aliasIndex = new Map(Object.entries(PLAN_ALIASES).map(([k, v]) => [normalizeName(k), v]));
+
 export function matchExercise(name) {
   if (!cachedIndex) cachedIndex = _nameIndex();
   const norm = normalizeName(name);
   if (!norm) return null;
+  const aliasSlug = aliasIndex.get(norm);
+  if (aliasSlug && cachedIndex.has(normalizeName(aliasSlug))) return cachedIndex.get(normalizeName(aliasSlug));
   if (cachedIndex.has(norm)) return cachedIndex.get(norm);
   // Partial: either side contains the other (≥5 chars to avoid noise).
   for (const [key, ex] of cachedIndex) {

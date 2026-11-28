@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../../../../components/Icon.jsx';
 import { formatExerciseDetail, REST_ACTIVITY_TYPES } from '../utils/planFormat.js';
 import ExerciseGuideModal from '../components/ExerciseGuideModal.jsx';
-import { muscleFor, summarizeMuscles, suggestAlternatives } from '../utils/exerciseMatch.js';
+import { muscleFor, matchExercise, summarizeMuscles, suggestAlternatives } from '../utils/exerciseMatch.js';
 import { fitDayToMinutes } from '../utils/sessionFit.js';
 import PlanDayRoutine from './PlanDayRoutine.jsx';
 
@@ -148,8 +148,14 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
 
   const handleStartWorkout = () => {
     if (!activeDayData) return;
+    // Auto-select the day's first exercise the camera can run (like a real
+    // workout app) instead of dropping the user on the generic chooser.
+    const firstMatch = (activeExercises || [])
+      .map((ex) => matchExercise(ex?.name))
+      .find((m) => m?.slug);
     navigate('/workouts', {
       state: {
+        ...(firstMatch ? { exerciseId: firstMatch.slug } : {}),
         fromPlan: {
           planId:       plan.id,
           planTitle:    plan.title,
@@ -610,6 +616,10 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
       {/* Module 5 — alternatives sheet: same muscle, user-compatible equipment */}
       <ExerciseGuideModal
         name={guideName}
+        detail={(() => {
+          const ex = (activeExercises || []).find((e) => e.name === guideName);
+          return ex ? formatExerciseDetail(ex) : undefined;
+        })()}
         onClose={() => setGuideName(null)}
         excluded={Boolean(guideName) && excludedNames.some((n) => n.toLowerCase() === String(guideName).toLowerCase())}
         onToggleExclude={onToggleExclude}
