@@ -1,7 +1,7 @@
 # Graph Report - vitalisapp  (2026-11-28)
 
 ## Corpus Check
-- 703 files · ~509,446 words
+- 703 files · ~509,587 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 33 file(s) not represented in the graph (top: .css 25, (none) 3, .example 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `686807ec`
+- Built from commit: `3607a2e0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -908,15 +908,15 @@ Nodes (4): installChunkErrorRecovery(), isChunkLoadError(), lazyWithReload(), re
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react-router-dom` connect `Preferences.jsx` to `VerifyEmail.jsx`, `src/components/index.js`, `ForgotPassword.jsx`, `CameraWorkout.jsx`, `app/config/env.js`, `Log.jsx`, `Landing.jsx`, `Icon`, `main.jsx`, `AppRoutes.jsx`, `routePaths.test.js`, `Profile.jsx`, `frontend/package.json`, `useUrlFilters`, `useAuth`, `Dashboard.jsx`, `react`, `workoutGuide.js`, `DayTracker.jsx`, `AdminOverview.jsx`, `lib/goalSetup.js`, `useProfile.js`, `Onboarding.jsx`, `Register.jsx`, `MealTracker.jsx`, `Topbar.jsx`, `CommunityFeed.jsx`, `ActivityMap.jsx`, `lib/progression.js`?**
-  _High betweenness centrality (0.102) - this node is a cross-community bridge._
+  _High betweenness centrality (0.108) - this node is a cross-community bridge._
 - **Should `ForgotPassword.jsx` be split into smaller, more focused modules?**
   _Cohesion score 0.1330049261083744 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `react` to `VerifyEmail.jsx`, `src/components/index.js`, `ForgotPassword.jsx`, `CameraWorkout.jsx`, `app/config/env.js`, `WebcamFeed.jsx`, `WeekCalendarCard.jsx`, `Log.jsx`, `Landing.jsx`, `react`, `Icon`, `main.jsx`, `ScanResult.jsx`, `AppRoutes.jsx`, `Preferences.jsx`, `FoodInfoCard.jsx`, `Profile.jsx`, `frontend/package.json`, `ExerciseBriefing.jsx`, `useUrlFilters`, `Dashboard.jsx`, `geo.js`, `usePoseEngine.js`, `workoutGuide.js`, `RoutinePlayer.jsx`, `goalSelection.js`, `useAuth.jsx`, `RightPanel.jsx`, `AddWorkoutModal.jsx`, `StatsTab.jsx`, `AdminOverview.jsx`, `MealTracker`, `DayTracker.jsx`, `lazyWithReload.js`, `HistoryTab.jsx`, `lib/goalSetup.js`, `useProfile.js`, `MessengerPanel.jsx`, `Onboarding.jsx`, `Register.jsx`, `MealTracker.jsx`, `StreakJourney.jsx`, `Topbar.jsx`, `CommunityFeed.jsx`, `useNutritionTracker.js`, `ActivityMap.jsx`?**
-  _High betweenness centrality (0.094) - this node is a cross-community bridge._
+  _High betweenness centrality (0.095) - this node is a cross-community bridge._
 - **Should `escapeHtml` be split into smaller, more focused modules?**
   _Cohesion score 0.07621326042378673 - nodes in this community are weakly interconnected._
 - **Why does `Icon()` connect `Icon` to `WebcamFeed.jsx`, `src/components/index.js`, `CameraWorkout.jsx`, `Log.jsx`, `WeekCalendarCard.jsx`, `react`, `ScanResult.jsx`, `Preferences.jsx`, `FoodInfoCard.jsx`, `ExerciseBriefing.jsx`, `Dashboard.jsx`, `App.jsx`, `react`, `workoutGuide.js`, `RoutinePlayer.jsx`, `goalSelection.js`, `RightPanel.jsx`, `MealTracker`, `StatsTab.jsx`, `AdminOverview.jsx`, `CoachCard.jsx`, `HistoryTab.jsx`, `lib/goalSetup.js`, `Onboarding.jsx`, `Notifications.jsx`, `Register.jsx`, `MealTracker.jsx`, `bmi.js`, `StreakJourney.jsx`, `Topbar.jsx`, `foodInfo.test.js`, `DashboardWidgets.jsx`, `ActivityMap.jsx`, `lib/progression.js`?**
-  _High betweenness centrality (0.057) - this node is a cross-community bridge._
+  _High betweenness centrality (0.043) - this node is a cross-community bridge._
 - **Should `gemini.js` be split into smaller, more focused modules?**
   _Cohesion score 0.07137254901960784 - nodes in this community are weakly interconnected._
 - **Should `Log.jsx` be split into smaller, more focused modules?**

@@ -61,6 +61,16 @@ const PLAN_ALIASES = {
   'Sprint Intervals': 'running',
   'Hill Sprints or Resisted Intervals': 'running',
   'Bike or Row Cross-Train': 'rowing',
+  'Ankle Rocks': 'wall-calf-stretch',
+  'Band/PVC Shoulder Pass-Throughs': 'arm-circles',
+  'Diaphragmatic Breathing': 'childs-pose',
+  'Foam Roll - Calves & IT Band': 'wall-calf-stretch',
+  'Foam Rolling - Full Body': 'worlds-greatest-stretch',
+  'Full-Body Flow Sequence': 'worlds-greatest-stretch',
+  'Hip 90/90 Stretch': 'butterfly-stretch',
+  'Long-Held Passive Stretch Sequence': 'hamstring-stretch',
+  'Thoracic Extension Stretch': 'doorway-chest-stretch',
+  'Thoracic Spine Rotations': 'torso-twist-stretch',
 };
 const aliasIndex = new Map(Object.entries(PLAN_ALIASES).map(([k, v]) => [normalizeName(k), v]));
 

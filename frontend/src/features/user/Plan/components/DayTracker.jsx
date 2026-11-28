@@ -95,6 +95,11 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
   const daySchedule = useMemo(() => mapPlanSchedule(content, prefs?.preferredDays), [content, prefs]);
   const todayWeekday = new Date().getDay();
 
+  // First exercise of the day the camera can run (auto-selected on start).
+  const firstMatch = (activeExercises || [])
+    .map((ex) => matchExercise(ex?.name))
+    .find((m) => m?.slug) || null;
+
   // EMPTY STATE
   if (totalDays === 0) {
     return (
@@ -157,9 +162,6 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
     if (!activeDayData || isLocked(activeDay)) return;
     // Auto-select the day's first exercise the camera can run (like a real
     // workout app) instead of dropping the user on the generic chooser.
-    const firstMatch = (activeExercises || [])
-      .map((ex) => matchExercise(ex?.name))
-      .find((m) => m?.slug);
     navigate('/workouts', {
       state: {
         ...(firstMatch ? { exerciseId: firstMatch.slug } : {}),
@@ -579,11 +581,23 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
                     <Icon name="verified" className="text-[length:var(--fs-18)] shrink-0" fill={1} /> Day Complete
                   </button>
                 ) : isRestDay ? (
+                  <>
+                    {firstMatch && (
+                      <button
+                        onClick={handleStartWorkout}
+                        className="flex-1 py-3.5 min-h-[48px] rounded-xl font-black text-xs sm:text-sm tracking-wide uppercase transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                        style={{ background: 'var(--accent)', color: 'var(--text-inverse)' }}
+                      >
+                        <Icon name="play_circle" className="text-[length:var(--fs-18)] shrink-0" fill={1} /> Start Workout
+                      </button>
+                    )}
                   <button
                     onClick={handleComplete}
                     disabled={completing}
                     className="flex-1 py-3.5 min-h-[48px] rounded-xl font-black text-xs sm:text-sm tracking-wide uppercase transition-all flex items-center justify-center gap-2"
-                    style={{ background: 'var(--accent)', color: 'var(--text-inverse)', opacity: completing ? 0.7 : 1 }}
+                    style={firstMatch
+                      ? { background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border-medium)', opacity: completing ? 0.7 : 1 }
+                      : { background: 'var(--accent)', color: 'var(--text-inverse)', opacity: completing ? 0.7 : 1 }}
                   >
                     {completing ? (
                       <><span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> Saving...</>
@@ -591,6 +605,7 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
                       <><Icon name="check_circle" className="text-[length:var(--fs-18)] shrink-0" fill={1} /> Mark Complete</>
                     )}
                   </button>
+                  </>
                 ) : (
                   <button
                     onClick={handleStartWorkout}
@@ -605,7 +620,7 @@ const DayTracker = ({ plan = undefined, content = undefined, progress = undefine
               {!isDayComplete && (
                 <p className="text-center text-[length:var(--fs-10)] sm:text-[length:var(--fs-11)] mt-3 sm:mt-4" style={{ color: 'var(--text-muted)' }}>
                   {isRestDay
-                    ? `Complete this day to unlock Day ${activeDayData.day_number + 1}`
+                    ? `${firstMatch ? 'Finish the session or mark it done' : 'Complete this day'} to unlock Day ${activeDayData.day_number + 1}`
                     : `Finish your workout session to automatically unlock Day ${activeDayData.day_number + 1}`}
                 </p>
               )}
